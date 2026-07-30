@@ -34,6 +34,11 @@ public static class CliCommandFactory
         ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
         RootCommand rootCommand = new(Description);
         rootCommand.Subcommands.Add(CompareCommandFactory.Create(currentDirectory));
+        rootCommand.Subcommands.Add(ValidateCommandFactory.Create(currentDirectory));
+        rootCommand.Subcommands.Add(
+            CanonicaliseCommandFactory.Create(currentDirectory));
+        rootCommand.Subcommands.Add(CorpusCommandFactory.Create(currentDirectory));
+        rootCommand.Subcommands.Add(BenchCommandFactory.Create(currentDirectory));
         rootCommand.SetAction(parseResult =>
         {
             parseResult.InvocationConfiguration.Error.Write(MissingCommandError);
