@@ -198,8 +198,7 @@ jobs:
           package_version="${package_version%.nupkg}"
           dotnet tool install \
             --tool-path release-tool \
-            --add-source release \
-            --ignore-failed-sources \
+            --configfile NuGet.ReleaseSmoke.config \
             --no-cache \
             SarifRegress.Tool \
             --version "${package_version}"
@@ -207,8 +206,11 @@ jobs:
             openssl dgst -sha512 -binary "${package_files[0]}" |
               base64 -w 0
           )"
-          installed_hash_files=(
-            "${NUGET_PACKAGES}"/sarifregress.tool/*/sarifregress.tool.*.nupkg.sha512
+          mapfile -d '' installed_hash_files < <(
+            find release-tool/.store \
+              -type f \
+              -iname 'sarifregress.tool.*.nupkg.sha512' \
+              -print0
           )
           test "${#installed_hash_files[@]}" -eq 1
           test "$(
@@ -262,8 +264,7 @@ jobs:
           $packageVersion = $packageMatch.Groups[1].Value
           & dotnet tool install `
             --tool-path release-tool `
-            --add-source release `
-            --ignore-failed-sources `
+            --configfile NuGet.ReleaseSmoke.config `
             --no-cache `
             SarifRegress.Tool `
             --version $packageVersion
@@ -283,7 +284,7 @@ jobs:
 
           $installedHashFiles = @(
             Get-ChildItem `
-              -LiteralPath (Join-Path $env:NUGET_PACKAGES 'sarifregress.tool') `
+              -LiteralPath (Join-Path release-tool '.store') `
               -Filter 'sarifregress.tool.*.nupkg.sha512' `
               -File `
               -Recurse
