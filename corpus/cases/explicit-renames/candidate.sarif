@@ -1,0 +1,619 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "corpus/explicit-renames"
+      },
+      "tool": {
+        "driver": {
+          "name": "SarifRegress Corpus Analyzer",
+          "semanticVersion": "1.0.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 000"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-000.cs"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 1,
+                  "endLine": 50,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_000();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-001.cs"
+                },
+                "region": {
+                  "startLine": 51,
+                  "startColumn": 1,
+                  "endLine": 51,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_001();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 002"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-002.cs"
+                },
+                "region": {
+                  "startLine": 52,
+                  "startColumn": 1,
+                  "endLine": 52,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_002();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 003"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-003.cs"
+                },
+                "region": {
+                  "startLine": 53,
+                  "startColumn": 1,
+                  "endLine": 53,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_003();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 004"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-004.cs"
+                },
+                "region": {
+                  "startLine": 54,
+                  "startColumn": 1,
+                  "endLine": 54,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_004();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 005"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-005.cs"
+                },
+                "region": {
+                  "startLine": 55,
+                  "startColumn": 1,
+                  "endLine": 55,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_005();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 006"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-006.cs"
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 1,
+                  "endLine": 56,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_006();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 007"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-007.cs"
+                },
+                "region": {
+                  "startLine": 57,
+                  "startColumn": 1,
+                  "endLine": 57,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_007();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 008"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-008.cs"
+                },
+                "region": {
+                  "startLine": 58,
+                  "startColumn": 1,
+                  "endLine": 58,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_008();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 009"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-009.cs"
+                },
+                "region": {
+                  "startLine": 59,
+                  "startColumn": 1,
+                  "endLine": 59,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_009();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 010"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-010.cs"
+                },
+                "region": {
+                  "startLine": 60,
+                  "startColumn": 1,
+                  "endLine": 60,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_010();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 011"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-011.cs"
+                },
+                "region": {
+                  "startLine": 61,
+                  "startColumn": 1,
+                  "endLine": 61,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_011();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 012"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-012.cs"
+                },
+                "region": {
+                  "startLine": 62,
+                  "startColumn": 1,
+                  "endLine": 62,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_012();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 013"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-013.cs"
+                },
+                "region": {
+                  "startLine": 63,
+                  "startColumn": 1,
+                  "endLine": 63,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_013();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 014"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-014.cs"
+                },
+                "region": {
+                  "startLine": 64,
+                  "startColumn": 1,
+                  "endLine": 64,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_014();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 015"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-015.cs"
+                },
+                "region": {
+                  "startLine": 65,
+                  "startColumn": 1,
+                  "endLine": 65,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_015();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 016"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-016.cs"
+                },
+                "region": {
+                  "startLine": 66,
+                  "startColumn": 1,
+                  "endLine": 66,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_016();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 017"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-017.cs"
+                },
+                "region": {
+                  "startLine": 67,
+                  "startColumn": 1,
+                  "endLine": 67,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_017();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 018"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-018.cs"
+                },
+                "region": {
+                  "startLine": 68,
+                  "startColumn": 1,
+                  "endLine": 68,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_018();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 019"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-019.cs"
+                },
+                "region": {
+                  "startLine": 69,
+                  "startColumn": 1,
+                  "endLine": 69,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_019();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 020"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-020.cs"
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 1,
+                  "endLine": 70,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_020();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 021"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-021.cs"
+                },
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 1,
+                  "endLine": 71,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_021();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 022"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-022.cs"
+                },
+                "region": {
+                  "startLine": 72,
+                  "startColumn": 1,
+                  "endLine": 72,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_022();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 023"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-023.cs"
+                },
+                "region": {
+                  "startLine": 73,
+                  "startColumn": 1,
+                  "endLine": 73,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_023();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Renamed defect 024"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/component-024.cs"
+                },
+                "region": {
+                  "startLine": 74,
+                  "startColumn": 1,
+                  "endLine": 74,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "rename_anchor_024();"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

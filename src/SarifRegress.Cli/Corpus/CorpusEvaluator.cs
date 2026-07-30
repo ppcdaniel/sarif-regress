@@ -25,23 +25,34 @@ public static class CorpusEvaluator
         ArgumentNullException.ThrowIfNull(decisions);
 
         var expectedPairs = labels.Pairs
-            .Select(pair => CreatePairKey(pair.BaselineKey, pair.CandidateKey))
-            .ToHashSet(StringComparer.Ordinal);
+            .ToDictionary(
+                pair => CreatePairKey(pair.BaselineKey, pair.CandidateKey),
+                pair => pair,
+                StringComparer.Ordinal);
 
         FindingDecision[] decisionArray = decisions.ToArray();
-        var acceptedPairs = decisionArray
+        var acceptedDecisions = decisionArray
             .Where(IsAcceptedPair)
+            .ToArray();
+        var acceptedPairs = acceptedDecisions
             .Select(decision => CreatePairKey(
                 decision.Baseline!.FindingKey,
                 decision.Candidate!.FindingKey))
             .ToHashSet(StringComparer.Ordinal);
 
-        var truePositives = acceptedPairs.Count(expectedPairs.Contains);
+        var truePositives = acceptedPairs.Count(expectedPairs.ContainsKey);
         var falsePositives = acceptedPairs.Count - truePositives;
         var falseNegatives = expectedPairs.Count - truePositives;
+        var classificationMismatches = acceptedDecisions.Count(decision =>
+        {
+            var pairKey = CreatePairKey(
+                decision.Baseline!.FindingKey,
+                decision.Candidate!.FindingKey);
+            return expectedPairs.TryGetValue(pairKey, out var expected)
+                && expected.Classification != decision.Classification;
+        });
 
-        var silentlyMatchedAmbiguous = decisionArray
-            .Where(IsAcceptedPair)
+        var silentlyMatchedAmbiguous = acceptedDecisions
             .SelectMany(decision =>
                 new[]
                 {
@@ -50,6 +61,15 @@ public static class CorpusEvaluator
                 })
             .Distinct(StringComparer.Ordinal)
             .Count(labels.ExpectedAmbiguous.Contains);
+        var actualAmbiguous = GetFindingKeys(
+            decisionArray,
+            FindingClassification.Ambiguous);
+        var actualResolved = GetFindingKeys(
+            decisionArray,
+            FindingClassification.Resolved);
+        var actualNew = GetFindingKeys(
+            decisionArray,
+            FindingClassification.New);
 
         CorpusMetrics metrics = CreateMetrics(
             expectedPairs.Count,
@@ -57,7 +77,39 @@ public static class CorpusEvaluator
             falsePositives,
             falseNegatives,
             labels.ExpectedAmbiguous.Count,
-            silentlyMatchedAmbiguous);
+            silentlyMatchedAmbiguous) with
+        {
+            ClassificationMismatches = classificationMismatches,
+            CorrectAmbiguous = IntersectionCount(
+                labels.ExpectedAmbiguous,
+                actualAmbiguous),
+            MissingAmbiguous = ExceptCount(
+                labels.ExpectedAmbiguous,
+                actualAmbiguous),
+            UnexpectedAmbiguous = ExceptCount(
+                actualAmbiguous,
+                labels.ExpectedAmbiguous),
+            ExpectedResolved = labels.ExpectedResolved.Count,
+            CorrectResolved = IntersectionCount(
+                labels.ExpectedResolved,
+                actualResolved),
+            MissingResolved = ExceptCount(
+                labels.ExpectedResolved,
+                actualResolved),
+            UnexpectedResolved = ExceptCount(
+                actualResolved,
+                labels.ExpectedResolved),
+            ExpectedNew = labels.ExpectedNew.Count,
+            CorrectNew = IntersectionCount(
+                labels.ExpectedNew,
+                actualNew),
+            MissingNew = ExceptCount(
+                labels.ExpectedNew,
+                actualNew),
+            UnexpectedNew = ExceptCount(
+                actualNew,
+                labels.ExpectedNew),
+        };
 
         return new CorpusCaseEvaluation(caseName, metrics);
     }
@@ -81,7 +133,22 @@ public static class CorpusEvaluator
             cases.Sum(item => item.Metrics.FalsePositives),
             cases.Sum(item => item.Metrics.FalseNegatives),
             cases.Sum(item => item.Metrics.ExpectedAmbiguous),
-            cases.Sum(item => item.Metrics.SilentAmbiguousMatches));
+            cases.Sum(item => item.Metrics.SilentAmbiguousMatches)) with
+        {
+            ClassificationMismatches =
+                cases.Sum(item => item.Metrics.ClassificationMismatches),
+            CorrectAmbiguous = cases.Sum(item => item.Metrics.CorrectAmbiguous),
+            MissingAmbiguous = cases.Sum(item => item.Metrics.MissingAmbiguous),
+            UnexpectedAmbiguous = cases.Sum(item => item.Metrics.UnexpectedAmbiguous),
+            ExpectedResolved = cases.Sum(item => item.Metrics.ExpectedResolved),
+            CorrectResolved = cases.Sum(item => item.Metrics.CorrectResolved),
+            MissingResolved = cases.Sum(item => item.Metrics.MissingResolved),
+            UnexpectedResolved = cases.Sum(item => item.Metrics.UnexpectedResolved),
+            ExpectedNew = cases.Sum(item => item.Metrics.ExpectedNew),
+            CorrectNew = cases.Sum(item => item.Metrics.CorrectNew),
+            MissingNew = cases.Sum(item => item.Metrics.MissingNew),
+            UnexpectedNew = cases.Sum(item => item.Metrics.UnexpectedNew),
+        };
 
         return new CorpusEvaluation(cases, aggregate);
     }
@@ -142,5 +209,35 @@ public static class CorpusEvaluator
     private static string CreatePairKey(string baselineKey, string candidateKey)
     {
         return $"{baselineKey.Length}:{baselineKey}{candidateKey.Length}:{candidateKey}";
+    }
+
+    private static HashSet<string> GetFindingKeys(
+        IEnumerable<FindingDecision> decisions,
+        FindingClassification classification)
+    {
+        return decisions
+            .Where(item => item.Classification == classification)
+            .SelectMany(item => new[]
+            {
+                item.Baseline?.FindingKey,
+                item.Candidate?.FindingKey,
+            })
+            .Where(item => item is not null)
+            .Select(item => item!)
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
+    private static int IntersectionCount(
+        IEnumerable<string> left,
+        IReadOnlySet<string> right)
+    {
+        return left.Count(right.Contains);
+    }
+
+    private static int ExceptCount(
+        IEnumerable<string> left,
+        IReadOnlySet<string> right)
+    {
+        return left.Count(item => !right.Contains(item));
     }
 }

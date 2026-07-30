@@ -1,0 +1,964 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "corpus/line-shifts"
+      },
+      "tool": {
+        "driver": {
+          "name": "SarifRegress Corpus Analyzer",
+          "semanticVersion": "1.0.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 000"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-000.cs"
+                },
+                "region": {
+                  "startLine": 130,
+                  "startColumn": 1,
+                  "endLine": 130,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_000();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-000"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-001.cs"
+                },
+                "region": {
+                  "startLine": 131,
+                  "startColumn": 1,
+                  "endLine": 131,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_001();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-001"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 002"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-002.cs"
+                },
+                "region": {
+                  "startLine": 132,
+                  "startColumn": 1,
+                  "endLine": 132,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_002();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-002"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 003"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-003.cs"
+                },
+                "region": {
+                  "startLine": 133,
+                  "startColumn": 1,
+                  "endLine": 133,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_003();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-003"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 004"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-004.cs"
+                },
+                "region": {
+                  "startLine": 134,
+                  "startColumn": 1,
+                  "endLine": 134,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_004();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-004"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 005"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-005.cs"
+                },
+                "region": {
+                  "startLine": 135,
+                  "startColumn": 1,
+                  "endLine": 135,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_005();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-005"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 006"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-006.cs"
+                },
+                "region": {
+                  "startLine": 136,
+                  "startColumn": 1,
+                  "endLine": 136,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_006();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-006"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 007"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-007.cs"
+                },
+                "region": {
+                  "startLine": 137,
+                  "startColumn": 1,
+                  "endLine": 137,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_007();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-007"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 008"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-008.cs"
+                },
+                "region": {
+                  "startLine": 138,
+                  "startColumn": 1,
+                  "endLine": 138,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_008();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-008"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 009"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-009.cs"
+                },
+                "region": {
+                  "startLine": 139,
+                  "startColumn": 1,
+                  "endLine": 139,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_009();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-009"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 010"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-010.cs"
+                },
+                "region": {
+                  "startLine": 140,
+                  "startColumn": 1,
+                  "endLine": 140,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_010();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-010"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 011"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-011.cs"
+                },
+                "region": {
+                  "startLine": 141,
+                  "startColumn": 1,
+                  "endLine": 141,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_011();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-011"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 012"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-012.cs"
+                },
+                "region": {
+                  "startLine": 142,
+                  "startColumn": 1,
+                  "endLine": 142,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_012();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-012"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 013"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-013.cs"
+                },
+                "region": {
+                  "startLine": 143,
+                  "startColumn": 1,
+                  "endLine": 143,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_013();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-013"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 014"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-014.cs"
+                },
+                "region": {
+                  "startLine": 144,
+                  "startColumn": 1,
+                  "endLine": 144,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_014();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-014"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 015"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-015.cs"
+                },
+                "region": {
+                  "startLine": 145,
+                  "startColumn": 1,
+                  "endLine": 145,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_015();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-015"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 016"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-016.cs"
+                },
+                "region": {
+                  "startLine": 146,
+                  "startColumn": 1,
+                  "endLine": 146,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_016();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-016"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 017"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-017.cs"
+                },
+                "region": {
+                  "startLine": 147,
+                  "startColumn": 1,
+                  "endLine": 147,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_017();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-017"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 018"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-018.cs"
+                },
+                "region": {
+                  "startLine": 148,
+                  "startColumn": 1,
+                  "endLine": 148,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_018();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-018"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 019"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-019.cs"
+                },
+                "region": {
+                  "startLine": 149,
+                  "startColumn": 1,
+                  "endLine": 149,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_019();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-019"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 020"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-020.cs"
+                },
+                "region": {
+                  "startLine": 150,
+                  "startColumn": 1,
+                  "endLine": 150,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_020();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-020"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 021"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-021.cs"
+                },
+                "region": {
+                  "startLine": 151,
+                  "startColumn": 1,
+                  "endLine": 151,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_021();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-021"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 022"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-022.cs"
+                },
+                "region": {
+                  "startLine": 152,
+                  "startColumn": 1,
+                  "endLine": 152,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_022();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-022"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 023"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-023.cs"
+                },
+                "region": {
+                  "startLine": 153,
+                  "startColumn": 1,
+                  "endLine": 153,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_023();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-023"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 024"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-024.cs"
+                },
+                "region": {
+                  "startLine": 154,
+                  "startColumn": 1,
+                  "endLine": 154,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_024();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-024"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 025"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-025.cs"
+                },
+                "region": {
+                  "startLine": 155,
+                  "startColumn": 1,
+                  "endLine": 155,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_025();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-025"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 026"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-026.cs"
+                },
+                "region": {
+                  "startLine": 156,
+                  "startColumn": 1,
+                  "endLine": 156,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_026();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-026"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 027"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-027.cs"
+                },
+                "region": {
+                  "startLine": 157,
+                  "startColumn": 1,
+                  "endLine": 157,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_027();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-027"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 028"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-028.cs"
+                },
+                "region": {
+                  "startLine": 158,
+                  "startColumn": 1,
+                  "endLine": 158,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_028();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-028"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 029"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-029.cs"
+                },
+                "region": {
+                  "startLine": 159,
+                  "startColumn": 1,
+                  "endLine": 159,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_029();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-029"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 030"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-030.cs"
+                },
+                "region": {
+                  "startLine": 160,
+                  "startColumn": 1,
+                  "endLine": 160,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_030();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-030"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 031"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-031.cs"
+                },
+                "region": {
+                  "startLine": 161,
+                  "startColumn": 1,
+                  "endLine": 161,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_031();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-031"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 032"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-032.cs"
+                },
+                "region": {
+                  "startLine": 162,
+                  "startColumn": 1,
+                  "endLine": 162,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_032();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-032"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 033"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-033.cs"
+                },
+                "region": {
+                  "startLine": 163,
+                  "startColumn": 1,
+                  "endLine": 163,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_033();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-033"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Shifted defect 034"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/shift-034.cs"
+                },
+                "region": {
+                  "startLine": 164,
+                  "startColumn": 1,
+                  "endLine": 164,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "shift_sensitive_034();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "shift-034"
+          }
+        }
+      ]
+    }
+  ]
+}

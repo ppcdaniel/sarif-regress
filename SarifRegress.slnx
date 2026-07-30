@@ -7,8 +7,10 @@
     <Project Path="src/SarifRegress.Sarif/SarifRegress.Sarif.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/SarifRegress.CorpusTests/SarifRegress.CorpusTests.csproj" />
     <Project Path="tests/SarifRegress.DeterminismTests/SarifRegress.DeterminismTests.csproj" />
     <Project Path="tests/SarifRegress.IntegrationTests/SarifRegress.IntegrationTests.csproj" />
+    <Project Path="tests/SarifRegress.PropertyTests/SarifRegress.PropertyTests.csproj" />
     <Project Path="tests/SarifRegress.UnitTests/SarifRegress.UnitTests.csproj" />
   </Folder>
 </Solution>

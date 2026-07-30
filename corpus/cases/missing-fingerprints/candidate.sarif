@@ -1,0 +1,739 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "corpus/missing-fingerprints"
+      },
+      "tool": {
+        "driver": {
+          "name": "SarifRegress Corpus Analyzer",
+          "semanticVersion": "1.0.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 000"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-000.cs"
+                },
+                "region": {
+                  "startLine": 60,
+                  "startColumn": 1,
+                  "endLine": 60,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_000();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-001.cs"
+                },
+                "region": {
+                  "startLine": 61,
+                  "startColumn": 1,
+                  "endLine": 61,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_001();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 002"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-002.cs"
+                },
+                "region": {
+                  "startLine": 62,
+                  "startColumn": 1,
+                  "endLine": 62,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_002();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 003"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-003.cs"
+                },
+                "region": {
+                  "startLine": 63,
+                  "startColumn": 1,
+                  "endLine": 63,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_003();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 004"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-004.cs"
+                },
+                "region": {
+                  "startLine": 64,
+                  "startColumn": 1,
+                  "endLine": 64,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_004();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 005"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-005.cs"
+                },
+                "region": {
+                  "startLine": 65,
+                  "startColumn": 1,
+                  "endLine": 65,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_005();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 006"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-006.cs"
+                },
+                "region": {
+                  "startLine": 66,
+                  "startColumn": 1,
+                  "endLine": 66,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_006();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 007"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-007.cs"
+                },
+                "region": {
+                  "startLine": 67,
+                  "startColumn": 1,
+                  "endLine": 67,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_007();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 008"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-008.cs"
+                },
+                "region": {
+                  "startLine": 68,
+                  "startColumn": 1,
+                  "endLine": 68,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_008();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 009"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-009.cs"
+                },
+                "region": {
+                  "startLine": 69,
+                  "startColumn": 1,
+                  "endLine": 69,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_009();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 010"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-010.cs"
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 1,
+                  "endLine": 70,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_010();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 011"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-011.cs"
+                },
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 1,
+                  "endLine": 71,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_011();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 012"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-012.cs"
+                },
+                "region": {
+                  "startLine": 72,
+                  "startColumn": 1,
+                  "endLine": 72,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_012();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 013"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-013.cs"
+                },
+                "region": {
+                  "startLine": 73,
+                  "startColumn": 1,
+                  "endLine": 73,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_013();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 014"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-014.cs"
+                },
+                "region": {
+                  "startLine": 74,
+                  "startColumn": 1,
+                  "endLine": 74,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_014();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 015"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-015.cs"
+                },
+                "region": {
+                  "startLine": 75,
+                  "startColumn": 1,
+                  "endLine": 75,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_015();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 016"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-016.cs"
+                },
+                "region": {
+                  "startLine": 76,
+                  "startColumn": 1,
+                  "endLine": 76,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_016();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 017"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-017.cs"
+                },
+                "region": {
+                  "startLine": 77,
+                  "startColumn": 1,
+                  "endLine": 77,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_017();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 018"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-018.cs"
+                },
+                "region": {
+                  "startLine": 78,
+                  "startColumn": 1,
+                  "endLine": 78,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_018();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 019"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-019.cs"
+                },
+                "region": {
+                  "startLine": 79,
+                  "startColumn": 1,
+                  "endLine": 79,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_019();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 020"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-020.cs"
+                },
+                "region": {
+                  "startLine": 80,
+                  "startColumn": 1,
+                  "endLine": 80,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_020();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 021"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-021.cs"
+                },
+                "region": {
+                  "startLine": 81,
+                  "startColumn": 1,
+                  "endLine": 81,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_021();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 022"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-022.cs"
+                },
+                "region": {
+                  "startLine": 82,
+                  "startColumn": 1,
+                  "endLine": 82,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_022();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 023"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-023.cs"
+                },
+                "region": {
+                  "startLine": 83,
+                  "startColumn": 1,
+                  "endLine": 83,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_023();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 024"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-024.cs"
+                },
+                "region": {
+                  "startLine": 84,
+                  "startColumn": 1,
+                  "endLine": 84,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_024();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 025"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-025.cs"
+                },
+                "region": {
+                  "startLine": 85,
+                  "startColumn": 1,
+                  "endLine": 85,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_025();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 026"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-026.cs"
+                },
+                "region": {
+                  "startLine": 86,
+                  "startColumn": 1,
+                  "endLine": 86,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_026();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 027"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-027.cs"
+                },
+                "region": {
+                  "startLine": 87,
+                  "startColumn": 1,
+                  "endLine": 87,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_027();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 028"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-028.cs"
+                },
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 1,
+                  "endLine": 88,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_028();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Fingerprint-free defect 029"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/no-fingerprint-029.cs"
+                },
+                "region": {
+                  "startLine": 89,
+                  "startColumn": 1,
+                  "endLine": 89,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "derived_identity_029();"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

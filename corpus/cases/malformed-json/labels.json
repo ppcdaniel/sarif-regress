@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1",
+  "pairs": [],
+  "expectedAmbiguous": [],
+  "expectedResolved": [],
+  "expectedNew": [],
+  "expectedInvalidInputs": [
+    "baseline"
+  ]
+}

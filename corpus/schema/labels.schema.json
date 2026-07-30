@@ -67,6 +67,17 @@
       },
       "uniqueItems": true,
       "default": []
+    },
+    "expectedInvalidInputs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "baseline",
+          "candidate"
+        ]
+      },
+      "uniqueItems": true,
+      "default": []
     }
   }
 }
