@@ -4,7 +4,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="SarifRegress.Cli" />
+    <InternalsVisibleTo Include="sarif-regress" />
     <InternalsVisibleTo Include="SarifRegress.DeterminismTests" />
   </ItemGroup>
 </Project>
