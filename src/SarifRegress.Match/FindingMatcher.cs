@@ -202,19 +202,12 @@ public sealed class FindingMatcher
             exactProducerCountsByCandidate,
             configuration.Limits.MaximumCandidateEdgesPerFinding);
 
-        var completeComponents = BuildComponents(
+        var completeGraphSummary = SummarizeCompleteGraph(
             completeGraphSets,
             activeNodes,
-            baselineFindings.Length);
-        var overflowRoots = overflowBaselineNodes
-            .Select(completeGraphSets.Find)
-            .Concat(overflowCandidateIndexes.Select(index =>
-                completeGraphSets.Find(baselineFindings.Length + index)))
-            .ToHashSet();
-        var forcedAmbiguousComponents = completeComponents
-            .Where(item => overflowRoots.Contains(item.Key))
-            .Select(item => item.Value)
-            .ToImmutableArray();
+            baselineFindings.Length,
+            overflowBaselineNodes,
+            overflowCandidateIndexes);
 
         var diagnostics = new List<Diagnostic>();
 
@@ -233,12 +226,12 @@ public sealed class FindingMatcher
 
         return new CandidateGraph(
             retainedEdges,
-            forcedAmbiguousComponents,
+            completeGraphSummary.ForcedAmbiguousComponents,
             overflowBaselineNodes,
             overflowCandidateIndexes,
             exactProducerCountsByBaseline.ToImmutableArray(),
             exactProducerCountsByCandidate.ToImmutableArray(),
-            completeComponents.Count,
+            completeGraphSummary.ComponentCount,
             reportedEdgeCount,
             Diagnostic.Sort(diagnostics),
             PreflightRefusal: null);
@@ -430,6 +423,82 @@ public sealed class FindingMatcher
                 item => item.Value.Build(baselineCount)));
     }
 
+    /// <summary>
+    /// Counts every complete component while materializing only components whose edge cap
+    /// overflowed. Most comparisons contain many independent complete pairs and no overflow,
+    /// so building a component object for every root would retain redundant per-pair arrays.
+    /// </summary>
+    // Time: O((B + C) α(B + C)); Space: O(B + C + O), where O is the number of
+    // nodes in overflowed components.
+    private static CompleteGraphSummary SummarizeCompleteGraph(
+        DisjointSet sets,
+        IReadOnlyList<bool> activeNodes,
+        int baselineCount,
+        ImmutableArray<int> overflowBaselineIndexes,
+        ImmutableArray<int> overflowCandidateIndexes)
+    {
+        bool[]? overflowRoots = null;
+        if (!overflowBaselineIndexes.IsEmpty || !overflowCandidateIndexes.IsEmpty)
+        {
+            overflowRoots = new bool[activeNodes.Count];
+            foreach (var baselineIndex in overflowBaselineIndexes)
+            {
+                overflowRoots[sets.Find(baselineIndex)] = true;
+            }
+
+            foreach (var candidateIndex in overflowCandidateIndexes)
+            {
+                overflowRoots[sets.Find(baselineCount + candidateIndex)] = true;
+            }
+        }
+
+        var seenRoots = new bool[activeNodes.Count];
+        SortedDictionary<int, GraphComponentBuilder>? overflowBuilders = null;
+        var componentCount = 0;
+        for (var node = 0; node < activeNodes.Count; node++)
+        {
+            if (!activeNodes[node])
+            {
+                continue;
+            }
+
+            var root = sets.Find(node);
+            if (!seenRoots[root])
+            {
+                seenRoots[root] = true;
+                componentCount++;
+            }
+
+            if (overflowRoots is null || !overflowRoots[root])
+            {
+                continue;
+            }
+
+            overflowBuilders ??= new SortedDictionary<int, GraphComponentBuilder>();
+            if (!overflowBuilders.TryGetValue(root, out var builder))
+            {
+                builder = new GraphComponentBuilder();
+                overflowBuilders.Add(root, builder);
+            }
+
+            if (node < baselineCount)
+            {
+                builder.BaselineIndexes.Add(node);
+            }
+            else
+            {
+                builder.CandidateIndexes.Add(node - baselineCount);
+            }
+        }
+
+        var forcedAmbiguousComponents = overflowBuilders is null
+            ? ImmutableArray<GraphComponent>.Empty
+            : overflowBuilders
+                .Select(item => item.Value.Build(baselineCount))
+                .ToImmutableArray();
+        return new CompleteGraphSummary(componentCount, forcedAmbiguousComponents);
+    }
+
     private static MatchResult ResolveGraph(
         ImmutableArray<Finding> baselineFindings,
         ImmutableArray<Finding> candidateFindings,
@@ -471,18 +540,21 @@ public sealed class FindingMatcher
             selectedByBaseline,
             selectedByCandidate);
 
-        MarkForcedAmbiguity(
-            baselineFindings,
-            candidateFindings,
-            configuration,
-            graph,
-            selectedByBaseline.Keys.ToHashSet(),
-            selectedByCandidate.Keys.ToHashSet(),
-            ambiguousBaselineIndexes,
-            ambiguousCandidateIndexes,
-            diagnosticsByNode,
-            ambiguousOriginalComponents,
-            resultDiagnostics);
+        if (!graph.ForcedAmbiguousComponents.IsEmpty)
+        {
+            MarkForcedAmbiguity(
+                baselineFindings,
+                candidateFindings,
+                configuration,
+                graph,
+                selectedByBaseline,
+                selectedByCandidate,
+                ambiguousBaselineIndexes,
+                ambiguousCandidateIndexes,
+                diagnosticsByNode,
+                ambiguousOriginalComponents,
+                resultDiagnostics);
+        }
 
         var residualGraph = BuildResidualGraph(
             baselineFindings.Length,
@@ -490,8 +562,8 @@ public sealed class FindingMatcher
             graph.RetainedEdges,
             baselineIndexByKey,
             candidateIndexByKey,
-            selectedByBaseline.Keys,
-            selectedByCandidate.Keys,
+            selectedByBaseline,
+            selectedByCandidate,
             ambiguousBaselineIndexes,
             ambiguousCandidateIndexes);
 
@@ -649,8 +721,8 @@ public sealed class FindingMatcher
         ImmutableArray<Finding> candidateFindings,
         SarifRegressConfiguration configuration,
         CandidateGraph graph,
-        IReadOnlySet<int> committedBaselineIndexes,
-        IReadOnlySet<int> committedCandidateIndexes,
+        IReadOnlyDictionary<int, MatchEdge> committedBaselineIndexes,
+        IReadOnlyDictionary<int, MatchEdge> committedCandidateIndexes,
         ISet<int> ambiguousBaselineIndexes,
         ISet<int> ambiguousCandidateIndexes,
         IDictionary<int, List<Diagnostic>> diagnosticsByNode,
@@ -664,12 +736,12 @@ public sealed class FindingMatcher
             var unresolvedOverflowBaselines = component.BaselineIndexes
                 .Where(index =>
                     overflowBaselineIndexes.Contains(index)
-                    && !committedBaselineIndexes.Contains(index))
+                    && !committedBaselineIndexes.ContainsKey(index))
                 .ToImmutableArray();
             var unresolvedOverflowCandidates = component.CandidateIndexes
                 .Where(index =>
                     overflowCandidateIndexes.Contains(index)
-                    && !committedCandidateIndexes.Contains(index))
+                    && !committedCandidateIndexes.ContainsKey(index))
                 .ToImmutableArray();
             if (unresolvedOverflowBaselines.IsEmpty
                 && unresolvedOverflowCandidates.IsEmpty)
@@ -714,8 +786,8 @@ public sealed class FindingMatcher
             {
                 var isBaseline = node < baselineFindings.Length;
                 var sideIndex = isBaseline ? node : node - baselineFindings.Length;
-                if ((isBaseline && committedBaselineIndexes.Contains(sideIndex))
-                    || (!isBaseline && committedCandidateIndexes.Contains(sideIndex)))
+                if ((isBaseline && committedBaselineIndexes.ContainsKey(sideIndex))
+                    || (!isBaseline && committedCandidateIndexes.ContainsKey(sideIndex)))
                 {
                     continue;
                 }
@@ -753,19 +825,18 @@ public sealed class FindingMatcher
         IDictionary<int, MatchEdge> selectedByBaseline,
         IDictionary<int, MatchEdge> selectedByCandidate)
     {
-        var exactEdges = graph.RetainedEdges
-            .Where(edge => edge.DecisionVector.PrecedenceTier == PrecedenceTier.ExactProducer)
-            .Where(edge =>
-                !ambiguousBaselineIndexes.Contains(
-                    baselineIndexByKey[edge.Baseline.FindingKey])
-                && !ambiguousCandidateIndexes.Contains(
-                    candidateIndexByKey[edge.Candidate.FindingKey]))
-            .ToImmutableArray();
-        foreach (var edge in exactEdges.Order(MatchEdgePreferenceComparer.Instance))
+        foreach (var edge in graph.RetainedEdges)
         {
+            if (edge.DecisionVector.PrecedenceTier != PrecedenceTier.ExactProducer)
+            {
+                continue;
+            }
+
             var baselineIndex = baselineIndexByKey[edge.Baseline.FindingKey];
             var candidateIndex = candidateIndexByKey[edge.Candidate.FindingKey];
-            if (graph.ExactProducerCountsByBaseline[baselineIndex] != 1
+            if (ambiguousBaselineIndexes.Contains(baselineIndex)
+                || ambiguousCandidateIndexes.Contains(candidateIndex)
+                || graph.ExactProducerCountsByBaseline[baselineIndex] != 1
                 || graph.ExactProducerCountsByCandidate[candidateIndex] != 1
                 || selectedByBaseline.ContainsKey(baselineIndex)
                 || selectedByCandidate.ContainsKey(candidateIndex))
@@ -784,24 +855,49 @@ public sealed class FindingMatcher
         ImmutableArray<MatchEdge> retainedEdges,
         IReadOnlyDictionary<string, int> baselineIndexByKey,
         IReadOnlyDictionary<string, int> candidateIndexByKey,
-        IEnumerable<int> committedBaselineIndexes,
-        IEnumerable<int> committedCandidateIndexes,
+        IReadOnlyDictionary<int, MatchEdge> committedBaselineIndexes,
+        IReadOnlyDictionary<int, MatchEdge> committedCandidateIndexes,
         IReadOnlySet<int> ambiguousBaselineIndexes,
         IReadOnlySet<int> ambiguousCandidateIndexes)
     {
-        var committedBaseline = committedBaselineIndexes.ToHashSet();
-        var committedCandidate = committedCandidateIndexes.ToHashSet();
+        if (retainedEdges.IsEmpty
+            || committedBaselineIndexes.Count == baselineCount
+            || committedCandidateIndexes.Count == candidateCount)
+        {
+            return ResidualGraph.Empty;
+        }
+
         var residualEdges = retainedEdges
             .Where(edge =>
             {
                 var baselineIndex = baselineIndexByKey[edge.Baseline.FindingKey];
                 var candidateIndex = candidateIndexByKey[edge.Candidate.FindingKey];
-                return !committedBaseline.Contains(baselineIndex)
-                    && !committedCandidate.Contains(candidateIndex)
+                return !committedBaselineIndexes.ContainsKey(baselineIndex)
+                    && !committedCandidateIndexes.ContainsKey(candidateIndex)
                     && !ambiguousBaselineIndexes.Contains(baselineIndex)
                     && !ambiguousCandidateIndexes.Contains(candidateIndex);
             })
             .ToImmutableArray();
+        if (residualEdges.IsEmpty)
+        {
+            return ResidualGraph.Empty;
+        }
+
+        if (residualEdges.Length == 1)
+        {
+            var edge = residualEdges[0];
+            var baselineIndex = baselineIndexByKey[edge.Baseline.FindingKey];
+            var candidateIndex = candidateIndexByKey[edge.Candidate.FindingKey];
+            return new ResidualGraph(
+            [
+                new ResidualComponent(
+                    new GraphComponent(
+                        [baselineIndex],
+                        [candidateIndex],
+                        [baselineIndex, baselineCount + candidateIndex]),
+                    residualEdges),
+            ]);
+        }
 
         var sets = new DisjointSet(baselineCount + candidateCount);
         var active = new bool[baselineCount + candidateCount];
@@ -898,12 +994,19 @@ public sealed class FindingMatcher
         IReadOnlySet<int> ambiguousCandidateIndexes,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
     {
-        var incidentEdgeIndex = IncidentEdgeIndex.Create(
-            baselineFindings.Length,
-            candidateFindings.Length,
-            edges,
-            baselineIndexByKey,
-            candidateIndexByKey);
+        var allRetainedEdgesWereSelected =
+            ambiguousBaselineIndexes.Count == 0
+            && ambiguousCandidateIndexes.Count == 0
+            && selectedByBaseline.Count == edges.Length
+            && selectedByCandidate.Count == edges.Length;
+        var incidentEdgeIndex = allRetainedEdgesWereSelected
+            ? null
+            : IncidentEdgeIndex.Create(
+                baselineFindings.Length,
+                candidateFindings.Length,
+                edges,
+                baselineIndexByKey,
+                candidateIndexByKey);
         var decisions = new List<FindingDecision>(
             baselineFindings.Length + candidateFindings.Length);
         for (var baselineIndex = 0; baselineIndex < baselineFindings.Length; baselineIndex++)
@@ -916,7 +1019,8 @@ public sealed class FindingMatcher
                     candidate: null,
                     baselineIndex,
                     configuration,
-                    incidentEdgeIndex.ForBaseline(baselineIndex),
+                    incidentEdgeIndex?.ForBaseline(baselineIndex)
+                        ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode));
                 continue;
             }
@@ -929,7 +1033,8 @@ public sealed class FindingMatcher
                     baselineIndex,
                     candidateIndex,
                     configuration,
-                    incidentEdgeIndex.ForMatch(baselineIndex, candidateIndex),
+                    incidentEdgeIndex?.ForMatch(baselineIndex, candidateIndex)
+                        ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode));
                 continue;
             }
@@ -940,7 +1045,8 @@ public sealed class FindingMatcher
                 candidate: null,
                 baselineIndex,
                 configuration,
-                incidentEdgeIndex.ForBaseline(baselineIndex),
+                incidentEdgeIndex?.ForBaseline(baselineIndex)
+                    ?? ImmutableArray<MatchEdge>.Empty,
                 diagnosticsByNode));
         }
 
@@ -959,7 +1065,8 @@ public sealed class FindingMatcher
                     candidate,
                     node,
                     configuration,
-                    incidentEdgeIndex.ForCandidate(candidateIndex),
+                    incidentEdgeIndex?.ForCandidate(candidateIndex)
+                        ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode)
                 : CreateUnmatchedDecision(
                     FindingClassification.New,
@@ -967,7 +1074,8 @@ public sealed class FindingMatcher
                     candidate,
                     node,
                     configuration,
-                    incidentEdgeIndex.ForCandidate(candidateIndex),
+                    incidentEdgeIndex?.ForCandidate(candidateIndex)
+                        ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode));
         }
 
@@ -1493,11 +1601,19 @@ public sealed class FindingMatcher
         string Help);
 
     private sealed record ResidualGraph(
-        ImmutableArray<ResidualComponent> Components);
+        ImmutableArray<ResidualComponent> Components)
+    {
+        public static ResidualGraph Empty { get; } =
+            new(ImmutableArray<ResidualComponent>.Empty);
+    }
 
     private sealed record ResidualComponent(
         GraphComponent Component,
         ImmutableArray<MatchEdge> Edges);
+
+    private sealed record CompleteGraphSummary(
+        int ComponentCount,
+        ImmutableArray<GraphComponent> ForcedAmbiguousComponents);
 
     private sealed record GraphComponent(
         ImmutableArray<int> BaselineIndexes,

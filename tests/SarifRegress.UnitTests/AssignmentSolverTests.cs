@@ -99,6 +99,104 @@ public sealed class AssignmentSolverTests
     }
 
     [Fact]
+    public void Independent_exact_pairs_preserve_component_and_explanation_contracts()
+    {
+        var firstFingerprint = MatchingTestData.ProducerFingerprint("first");
+        var secondFingerprint = MatchingTestData.ProducerFingerprint("second");
+        var result = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:first",
+                    ruleId: "scanner/first",
+                    producerFingerprints: [firstFingerprint]),
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:second",
+                    ruleId: "scanner/second",
+                    producerFingerprints: [secondFingerprint]),
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:resolved",
+                    ruleId: "scanner/resolved")),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:second",
+                    ruleId: "scanner/second",
+                    producerFingerprints: [secondFingerprint]),
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:first",
+                    ruleId: "scanner/first",
+                    producerFingerprints: [firstFingerprint]),
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:new",
+                    ruleId: "scanner/new")));
+
+        Assert.Equal(2, result.CandidateEdgeCount);
+        Assert.Equal(2, result.ComponentCount);
+        Assert.Equal(0, result.AmbiguousComponentCount);
+        var matches = result.Decisions
+            .Where(decision =>
+                decision.Baseline is not null
+                && decision.Candidate is not null)
+            .ToArray();
+        Assert.Equal(2, matches.Length);
+        Assert.All(
+            matches,
+            decision =>
+            {
+                Assert.Equal(
+                    PrecedenceTier.ExactProducer,
+                    decision.Decision.PrecedenceTier);
+                Assert.Empty(decision.Decision.RejectedAlternatives);
+            });
+        Assert.Contains(
+            result.Decisions,
+            decision =>
+                decision.Baseline?.FindingKey == "baseline:resolved"
+                && decision.Classification == FindingClassification.Resolved);
+        Assert.Contains(
+            result.Decisions,
+            decision =>
+                decision.Candidate?.FindingKey == "candidate:new"
+                && decision.Classification == FindingClassification.New);
+    }
+
+    [Fact]
+    public void Single_residual_edge_preserves_exact_canonical_assignment()
+    {
+        var result = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                ExactCanonical(
+                    InputKind.Baseline,
+                    "baseline:one",
+                    "src/one.cs",
+                    "derived")),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                ExactCanonical(
+                    InputKind.Candidate,
+                    "candidate:one",
+                    "src/one.cs",
+                    "derived")));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(1, result.CandidateEdgeCount);
+        Assert.Equal(1, result.ComponentCount);
+        Assert.Equal(FindingClassification.Unchanged, decision.Classification);
+        Assert.Equal(
+            PrecedenceTier.ExactCanonical,
+            decision.Decision.PrecedenceTier);
+        Assert.Empty(decision.Decision.RejectedAlternatives);
+    }
+
+    [Fact]
     public void One_to_two_equal_optimum_is_refused_without_using_stable_keys()
     {
         var baseline = TiedFinding(InputKind.Baseline, "baseline:one");
