@@ -1,0 +1,307 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "corpus/new-and-resolved"
+      },
+      "tool": {
+        "driver": {
+          "name": "SarifRegress Corpus Analyzer",
+          "semanticVersion": "1.0.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "NEW-000",
+          "message": {
+            "text": "New defect 000"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-000.cs"
+                },
+                "region": {
+                  "startLine": 120,
+                  "startColumn": 1,
+                  "endLine": 120,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_000();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-001",
+          "message": {
+            "text": "New defect 001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-001.cs"
+                },
+                "region": {
+                  "startLine": 121,
+                  "startColumn": 1,
+                  "endLine": 121,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_001();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-002",
+          "message": {
+            "text": "New defect 002"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-002.cs"
+                },
+                "region": {
+                  "startLine": 122,
+                  "startColumn": 1,
+                  "endLine": 122,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_002();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-003",
+          "message": {
+            "text": "New defect 003"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-003.cs"
+                },
+                "region": {
+                  "startLine": 123,
+                  "startColumn": 1,
+                  "endLine": 123,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_003();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-004",
+          "message": {
+            "text": "New defect 004"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-004.cs"
+                },
+                "region": {
+                  "startLine": 124,
+                  "startColumn": 1,
+                  "endLine": 124,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_004();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-005",
+          "message": {
+            "text": "New defect 005"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-005.cs"
+                },
+                "region": {
+                  "startLine": 125,
+                  "startColumn": 1,
+                  "endLine": 125,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_005();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-006",
+          "message": {
+            "text": "New defect 006"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-006.cs"
+                },
+                "region": {
+                  "startLine": 126,
+                  "startColumn": 1,
+                  "endLine": 126,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_006();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-007",
+          "message": {
+            "text": "New defect 007"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-007.cs"
+                },
+                "region": {
+                  "startLine": 127,
+                  "startColumn": 1,
+                  "endLine": 127,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_007();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-008",
+          "message": {
+            "text": "New defect 008"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-008.cs"
+                },
+                "region": {
+                  "startLine": 128,
+                  "startColumn": 1,
+                  "endLine": 128,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_008();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-009",
+          "message": {
+            "text": "New defect 009"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-009.cs"
+                },
+                "region": {
+                  "startLine": 129,
+                  "startColumn": 1,
+                  "endLine": 129,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_009();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-010",
+          "message": {
+            "text": "New defect 010"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-010.cs"
+                },
+                "region": {
+                  "startLine": 130,
+                  "startColumn": 1,
+                  "endLine": 130,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_010();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "NEW-011",
+          "message": {
+            "text": "New defect 011"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/new-011.cs"
+                },
+                "region": {
+                  "startLine": 131,
+                  "startColumn": 1,
+                  "endLine": 131,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "new_011();"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

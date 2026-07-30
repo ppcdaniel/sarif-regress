@@ -1,0 +1,321 @@
+using System.Collections.Immutable;
+using System.Security.Cryptography;
+using SarifRegress.Core.Diagnostics;
+using SarifRegress.Core.Matching;
+
+namespace SarifRegress.Cli.Corpus;
+
+/// <summary>
+/// Defines one labelled baseline/candidate identity pair.
+/// </summary>
+public sealed record LabelledPair(
+    string BaselineKey,
+    string CandidateKey,
+    FindingClassification Classification);
+
+/// <summary>
+/// Defines one exact diagnostic expected from a corpus case. Source fields are
+/// either all absent or include both <c>Input</c> and <c>JsonPointer</c>.
+/// </summary>
+public sealed record CorpusDiagnosticExpectation(
+    string Code,
+    DiagnosticSeverity Severity,
+    DiagnosticStage Stage,
+    string Message,
+    InputKind? Input = null,
+    int? RunIndex = null,
+    int? ResultIndex = null,
+    string? JsonPointer = null,
+    string? StandardBasis = null,
+    string? Help = null);
+
+/// <summary>
+/// Defines selected structured explanation fields that must remain stable.
+/// </summary>
+public sealed record CorpusExplanationExpectation(
+    string? BaselineKey,
+    string? CandidateKey,
+    FindingClassification Classification,
+    PrecedenceTier PrecedenceTier,
+    bool Ambiguous,
+    ImmutableArray<string> EvidenceKinds);
+
+/// <summary>
+/// Defines the complete pairing graph and expected refusals for one corpus case.
+/// </summary>
+public sealed record CorpusLabels(
+    string SchemaVersion,
+    ImmutableArray<LabelledPair> Pairs,
+    ImmutableHashSet<string> ExpectedAmbiguous,
+    ImmutableHashSet<string> ExpectedResolved,
+    ImmutableHashSet<string> ExpectedNew)
+{
+    /// <summary>
+    /// Gets inputs that are intentionally malformed and must be rejected by ingestion.
+    /// </summary>
+    public ImmutableHashSet<InputKind> ExpectedInvalidInputs { get; init; } =
+        ImmutableHashSet<InputKind>.Empty;
+
+    /// <summary>
+    /// Gets the exact expected diagnostic set. A default array means that this
+    /// older label does not assert diagnostics; an initialized empty array
+    /// explicitly asserts that no diagnostics are expected.
+    /// </summary>
+    public ImmutableArray<CorpusDiagnosticExpectation> ExpectedDiagnostics
+    {
+        get;
+        init;
+    }
+
+    /// <summary>
+    /// Gets selected explanation/evidence goldens. A default array means that
+    /// this older label does not assert explanation fields.
+    /// </summary>
+    public ImmutableArray<CorpusExplanationExpectation> ExpectedExplanations
+    {
+        get;
+        init;
+    }
+}
+
+/// <summary>
+/// Reports exact corpus quality counts and derived metrics.
+/// </summary>
+public sealed record CorpusMetrics(
+    int LabelledPairs,
+    int TruePositives,
+    int FalsePositives,
+    int FalseNegatives,
+    int ExpectedAmbiguous,
+    int SilentAmbiguousMatches,
+    decimal Precision,
+    decimal Recall,
+    decimal F1)
+{
+    /// <summary>
+    /// Gets accepted labelled pairs whose classification differs from ground truth.
+    /// </summary>
+    public int ClassificationMismatches { get; init; }
+
+    /// <summary>
+    /// Gets expected ambiguous finding identities emitted as ambiguous.
+    /// </summary>
+    public int CorrectAmbiguous { get; init; }
+
+    /// <summary>
+    /// Gets expected ambiguous identities not emitted as ambiguous.
+    /// </summary>
+    public int MissingAmbiguous { get; init; }
+
+    /// <summary>
+    /// Gets emitted ambiguous identities absent from ground truth.
+    /// </summary>
+    public int UnexpectedAmbiguous { get; init; }
+
+    /// <summary>
+    /// Gets the number of baseline identities labelled resolved.
+    /// </summary>
+    public int ExpectedResolved { get; init; }
+
+    /// <summary>
+    /// Gets expected resolved baseline identities emitted as resolved.
+    /// </summary>
+    public int CorrectResolved { get; init; }
+
+    /// <summary>
+    /// Gets expected resolved baseline identities not emitted as resolved.
+    /// </summary>
+    public int MissingResolved { get; init; }
+
+    /// <summary>
+    /// Gets emitted resolved identities absent from ground truth.
+    /// </summary>
+    public int UnexpectedResolved { get; init; }
+
+    /// <summary>
+    /// Gets the number of candidate identities labelled new.
+    /// </summary>
+    public int ExpectedNew { get; init; }
+
+    /// <summary>
+    /// Gets expected new candidate identities emitted as new.
+    /// </summary>
+    public int CorrectNew { get; init; }
+
+    /// <summary>
+    /// Gets expected new candidate identities not emitted as new.
+    /// </summary>
+    public int MissingNew { get; init; }
+
+    /// <summary>
+    /// Gets emitted new identities absent from ground truth.
+    /// </summary>
+    public int UnexpectedNew { get; init; }
+
+    /// <summary>
+    /// Gets whether every classification and expected unmatched/refused set agrees exactly.
+    /// </summary>
+    public bool ExpectationsSatisfied =>
+        ClassificationMismatches == 0
+        && MissingAmbiguous == 0
+        && UnexpectedAmbiguous == 0
+        && MissingResolved == 0
+        && UnexpectedResolved == 0
+        && MissingNew == 0
+        && UnexpectedNew == 0
+        && SilentAmbiguousMatches == 0;
+}
+
+/// <summary>
+/// Reports one case-level corpus evaluation.
+/// </summary>
+public sealed record CorpusCaseEvaluation(
+    string CaseName,
+    CorpusMetrics Metrics);
+
+/// <summary>
+/// Carries the exact stable comparison or diagnostic artifact for one corpus case.
+/// </summary>
+public sealed record CorpusCaseArtifact
+{
+    /// <summary>
+    /// Initializes an immutable case artifact and its exact-byte SHA-256 identity.
+    /// </summary>
+    public CorpusCaseArtifact(string kind, byte[] json)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(kind);
+        ArgumentNullException.ThrowIfNull(json);
+        if (json.Length == 0 || json[^1] != (byte)'\n')
+        {
+            throw new ArgumentException(
+                "A corpus case artifact must be non-empty stable JSON ending in LF.",
+                nameof(json));
+        }
+
+        Kind = kind;
+        Json = json.ToImmutableArray();
+        Sha256 = Convert.ToHexString(SHA256.HashData(json)).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Gets the stable artifact kind.
+    /// </summary>
+    public string Kind { get; }
+
+    /// <summary>
+    /// Gets the exact UTF-8/LF artifact bytes.
+    /// </summary>
+    public ImmutableArray<byte> Json { get; }
+
+    /// <summary>
+    /// Gets the lowercase SHA-256 digest over <see cref="Json"/>.
+    /// </summary>
+    public string Sha256 { get; }
+}
+
+/// <summary>
+/// Reports an aggregate corpus evaluation in stable case-name order.
+/// </summary>
+public sealed record CorpusEvaluation(
+    ImmutableArray<CorpusCaseEvaluation> Cases,
+    CorpusMetrics Aggregate);
+
+/// <summary>
+/// Defines fixed quality gates for one corpus run.
+/// </summary>
+public sealed record CorpusThresholds(
+    decimal MinimumPrecision,
+    decimal MinimumRecall,
+    int MaximumSilentAmbiguousMatches)
+{
+    /// <summary>
+    /// Gets the published MVP corpus gates.
+    /// </summary>
+    public static CorpusThresholds Mvp { get; } = new(
+        MinimumPrecision: 0.95m,
+        MinimumRecall: 0.90m,
+        MaximumSilentAmbiguousMatches: 0);
+
+    /// <summary>
+    /// Validates the threshold contract.
+    /// </summary>
+    public void Validate()
+    {
+        if (MinimumPrecision is < 0 or > 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(MinimumPrecision),
+                MinimumPrecision,
+                "Minimum precision must be between zero and one.");
+        }
+
+        if (MinimumRecall is < 0 or > 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(MinimumRecall),
+                MinimumRecall,
+                "Minimum recall must be between zero and one.");
+        }
+
+        if (MaximumSilentAmbiguousMatches < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(MaximumSilentAmbiguousMatches),
+                MaximumSilentAmbiguousMatches,
+                "The silent-ambiguity limit cannot be negative.");
+        }
+    }
+}
+
+/// <summary>
+/// Reports one fully executed corpus case.
+/// </summary>
+public sealed record CorpusCaseRun(
+    string CaseName,
+    ImmutableArray<InputKind> ExpectedInvalidInputs,
+    ImmutableArray<InputKind> ObservedInvalidInputs,
+    CorpusCaseArtifact Artifact,
+    CorpusMetrics Metrics,
+    bool Passed)
+{
+    /// <summary>
+    /// Gets whether the label asserted an exact diagnostic set.
+    /// </summary>
+    public bool DiagnosticExpectationsAsserted { get; init; }
+
+    /// <summary>
+    /// Gets the number of exact expected diagnostics when asserted.
+    /// </summary>
+    public int ExpectedDiagnosticCount { get; init; }
+
+    /// <summary>
+    /// Gets whether the label asserted selected explanation goldens.
+    /// </summary>
+    public bool ExplanationExpectationsAsserted { get; init; }
+
+    /// <summary>
+    /// Gets the number of selected explanation goldens when asserted.
+    /// </summary>
+    public int ExpectedExplanationCount { get; init; }
+
+    /// <summary>
+    /// Gets exact diagnostic or selected explanation mismatches in stable order.
+    /// </summary>
+    public ImmutableArray<string> ExpectationFailures { get; init; } = [];
+}
+
+/// <summary>
+/// Reports one deterministic corpus execution and its quality-gate outcome.
+/// </summary>
+public sealed record CorpusRunResult(
+    string SchemaVersion,
+    CorpusThresholds Thresholds,
+    ImmutableArray<CorpusCaseRun> Cases,
+    CorpusMetrics Aggregate,
+    ImmutableArray<string> Failures)
+{
+    /// <summary>
+    /// Gets whether all labels, input expectations, and published quality gates passed.
+    /// </summary>
+    public bool Passed => Failures.IsEmpty;
+}

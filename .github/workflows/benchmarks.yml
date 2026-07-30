@@ -1,0 +1,188 @@
+name: Extended benchmark evidence
+
+on:
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: Measure ${{ matrix.size }} ${{ matrix.dataset }} (${{ matrix.platform.label }})
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - label: linux
+            runner: ubuntu-latest
+          - label: windows
+            runner: windows-latest
+        size:
+          - 10000
+          - 100000
+        dataset:
+          - unique
+          - pathological
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Build benchmark executable on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: ./scripts/build.sh
+
+      - name: Build benchmark executable on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\scripts\build.ps1
+
+      - name: Run enforced extended benchmark on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence_directory="artifacts/benchmarks/current"
+          mkdir -p "${evidence_directory}"
+          benchmark_exit=0
+          dotnet run \
+            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            -- \
+            bench \
+            --size "${{ matrix.size }}" \
+            --dataset "${{ matrix.dataset }}" \
+            --enforce-budgets \
+            --json-out "${evidence_directory}/report.json" \
+            --deterministic-out "${evidence_directory}/deterministic.json" ||
+            benchmark_exit=$?
+          if [[ -f "${evidence_directory}/report.json" &&
+                -f "${evidence_directory}/deterministic.json" ]]; then
+            (
+              cd "${evidence_directory}"
+              LC_ALL=C sha256sum \
+                deterministic.json \
+                report.json \
+                > checksums.sha256
+            )
+          fi
+          exit "${benchmark_exit}"
+
+      - name: Run extended deterministic projection on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidenceDirectory = 'artifacts/benchmarks/current'
+          New-Item `
+            -ItemType Directory `
+            -Path $evidenceDirectory `
+            -Force |
+            Out-Null
+          & dotnet run `
+            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            -- `
+            bench `
+            --size '${{ matrix.size }}' `
+            --dataset '${{ matrix.dataset }}' `
+            --json-out "$evidenceDirectory/report.json" `
+            --deterministic-out "$evidenceDirectory/deterministic.json"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Extended benchmark failed with exit code $LASTEXITCODE."
+          }
+
+          $manifestLines = foreach (
+            $name in @('deterministic.json', 'report.json')
+          ) {
+            $hash = Get-FileHash `
+              -LiteralPath (Join-Path $evidenceDirectory $name) `
+              -Algorithm SHA256
+            '{0}  {1}' -f $hash.Hash.ToLowerInvariant(), $name
+          }
+          $manifest = ($manifestLines -join "`n") + "`n"
+          $utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
+          [System.IO.File]::WriteAllText(
+            (Join-Path $evidenceDirectory 'checksums.sha256'),
+            $manifest,
+            $utf8WithoutBom)
+
+      - name: Upload benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: benchmark-${{ matrix.size }}-${{ matrix.dataset }}-${{ matrix.platform.label }}
+          path: artifacts/benchmarks/current
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    name: Compare extended cross-platform hashes
+    if: always()
+    needs: measure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download all extended evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: benchmark-*
+          path: artifacts/download
+
+      - name: Compare application-emitted deterministic bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/verified
+          for size in 10000 100000; do
+            for dataset in unique pathological; do
+              linux_report="artifacts/download/benchmark-${size}-${dataset}-linux/deterministic.json"
+              windows_report="artifacts/download/benchmark-${size}-${dataset}-windows/deterministic.json"
+              linux_hash="$(sha256sum "${linux_report}" | cut -d ' ' -f 1)"
+              windows_hash="$(
+                sha256sum "${windows_report}" |
+                  cut -d ' ' -f 1
+              )"
+              if [[ "${linux_hash}" != "${windows_hash}" ]]; then
+                echo \
+                  "${size} ${dataset} differs: Linux ${linux_hash}, Windows ${windows_hash}." \
+                  >&2
+                exit 1
+              fi
+              cmp --silent -- "${linux_report}" "${windows_report}"
+              cp -- \
+                "${linux_report}" \
+                "artifacts/verified/${size}-${dataset}-deterministic.json"
+            done
+          done
+          (
+            cd artifacts/verified
+            LC_ALL=C sha256sum ./*.json > checksums.sha256
+          )
+
+      - name: Upload verified cross-platform evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: benchmark-cross-platform
+          path: artifacts/verified
+          if-no-files-found: error
+          retention-days: 30

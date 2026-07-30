@@ -1,2 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="SarifRegress.Match" />
+    <InternalsVisibleTo Include="SarifRegress.Sarif" />
+  </ItemGroup>
 </Project>

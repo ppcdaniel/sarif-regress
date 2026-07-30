@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1",
+  "pathRebases": [
+    {
+      "from": "file:///C:/old-agent/work/repo/",
+      "to": "repo:/"
+    },
+    {
+      "from": "file:///opt/new-agent/work/repo/",
+      "to": "repo:/"
+    }
+  ]
+}

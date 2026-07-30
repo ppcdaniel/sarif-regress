@@ -1,0 +1,424 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "corpus/two-findings-one-line"
+      },
+      "tool": {
+        "driver": {
+          "name": "SarifRegress Corpus Analyzer",
+          "semanticVersion": "1.0.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 000"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_000(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-000"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_001(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-001"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 002"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_002(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-002"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 003"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_003(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-003"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 004"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_004(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-004"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 005"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_005(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-005"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 006"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_006(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-006"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 007"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_007(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-007"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 008"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_008(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-008"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 009"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_009(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-009"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 010"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_010(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-010"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 011"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_011(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-011"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 012"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_012(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-012"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 013"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_013(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-013"
+          }
+        },
+        {
+          "ruleId": "SAME-LINE001",
+          "message": {
+            "text": "Distinct same-line defect 014"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/crowded.cs"
+                },
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 1,
+                  "endLine": 100,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "sink_014(input);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "same-line-014"
+          }
+        }
+      ]
+    }
+  ]
+}

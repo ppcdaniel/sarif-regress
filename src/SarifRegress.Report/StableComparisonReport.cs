@@ -1,0 +1,1114 @@
+using System.Collections.Immutable;
+using SarifRegress.Core.Diagnostics;
+using SarifRegress.Core.Findings;
+using SarifRegress.Core.Matching;
+using SarifRegress.Core.Paths;
+using SarifRegress.Core.Reporting;
+using SarifRegress.Core.Security;
+
+namespace SarifRegress.Report;
+
+/// <summary>
+/// Validates stable-report invariants and establishes total array ordering.
+/// </summary>
+internal static class StableComparisonReport
+{
+    private const string ToolName = "sarif-regress";
+
+    /// <summary>
+    /// Returns a validated report whose observable arrays use canonical ordering.
+    /// </summary>
+    /// <param name="report">The report to validate and normalize.</param>
+    /// <param name="limits">Resource bounds for untrusted report content.</param>
+    /// <returns>The canonical report.</returns>
+    // Time: O(n log n), Space: O(n), for n report and trace records.
+    public static ComparisonReport NormalizeAndValidate(
+        ComparisonReport report,
+        ResourceLimits limits)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        ArgumentNullException.ThrowIfNull(limits);
+        limits.Validate();
+
+        ValidateHeader(report, limits);
+        ValidateSummaryRanges(report.Summary);
+        ValidateMetrics(report.Metrics);
+        ValidateCollection(
+            report.Findings,
+            "findings",
+            limits.MaximumRunCollectionItems);
+        ValidateCollection(
+            report.Diagnostics,
+            "diagnostics",
+            limits.MaximumRunCollectionItems);
+
+        var baselineKeys = new HashSet<string>(StringComparer.Ordinal);
+        var candidateKeys = new HashSet<string>(StringComparer.Ordinal);
+        ImmutableArray<FindingReport>.Builder? normalizedFindings = null;
+        for (var findingIndex = 0;
+             findingIndex < report.Findings.Length;
+             findingIndex++)
+        {
+            var finding = report.Findings[findingIndex];
+            if (finding is null)
+            {
+                throw Invalid("The 'findings' array cannot contain null values.");
+            }
+
+            var normalizedFinding = NormalizeFinding(
+                finding,
+                report.Determinism.MatcherAlgorithm,
+                baselineKeys,
+                candidateKeys,
+                limits);
+            if (ReferenceEquals(normalizedFinding, finding)
+                && normalizedFindings is null)
+            {
+                continue;
+            }
+
+            if (normalizedFindings is null)
+            {
+                normalizedFindings =
+                    ImmutableArray.CreateBuilder<FindingReport>(
+                        report.Findings.Length);
+                for (var earlierIndex = 0;
+                     earlierIndex < findingIndex;
+                     earlierIndex++)
+                {
+                    normalizedFindings.Add(
+                        report.Findings[earlierIndex]);
+                }
+            }
+
+            normalizedFindings.Add(normalizedFinding);
+        }
+
+        foreach (var diagnostic in report.Diagnostics)
+        {
+            ValidateDiagnostic(diagnostic, "diagnostics[]", limits);
+        }
+
+        var normalizedFindingArray = normalizedFindings is null
+            ? report.Findings
+            : normalizedFindings.MoveToImmutable();
+        var findings = IsOrdered(
+                normalizedFindingArray,
+                CompareFindingReports)
+            ? normalizedFindingArray
+            : normalizedFindingArray
+                .OrderBy(
+                    item => StableJsonNames.Classification(item.Classification),
+                    StringComparer.Ordinal)
+                .ThenBy(
+                    item => item.Baseline?.FindingKey ?? string.Empty,
+                    StringComparer.Ordinal)
+                .ThenBy(
+                    item => item.Candidate?.FindingKey ?? string.Empty,
+                    StringComparer.Ordinal)
+                .ToImmutableArray();
+        var diagnostics = report.Diagnostics.Length <= 1
+            ? report.Diagnostics
+            : Diagnostic.Sort(report.Diagnostics);
+        var expectedSummary = CreateSummary(findings);
+        if (report.Summary != expectedSummary)
+        {
+            throw Invalid(
+                "The report summary does not match its finding records.");
+        }
+
+        if (report.Metrics.Diagnostics != diagnostics.Length)
+        {
+            throw Invalid(
+                "The report diagnostic metric does not match the global diagnostic array.");
+        }
+
+        return report with
+        {
+            Findings = findings,
+            Diagnostics = diagnostics,
+        };
+    }
+
+    private static void ValidateHeader(
+        ComparisonReport report,
+        ResourceLimits limits)
+    {
+        if (!string.Equals(
+                report.OutputSchemaVersion,
+                ReportContractVersions.OutputSchema,
+                StringComparison.Ordinal))
+        {
+            throw new NotSupportedException(
+                $"Output schema version '{report.OutputSchemaVersion}' is not supported.");
+        }
+
+        if (!string.Equals(report.ToolName, ToolName, StringComparison.Ordinal))
+        {
+            throw Invalid($"The report tool name must be '{ToolName}'.");
+        }
+
+        RequireText(report.ToolVersion, "tool.version", limits);
+        RequireText(report.BaselineInputName, "inputs.baseline", limits);
+        RequireText(report.CandidateInputName, "inputs.candidate", limits);
+        ArgumentNullException.ThrowIfNull(report.Summary);
+        ArgumentNullException.ThrowIfNull(report.Metrics);
+        ArgumentNullException.ThrowIfNull(report.Determinism);
+
+        if (!string.Equals(
+                report.Determinism.JsonCanonicalisation,
+                ReportContractVersions.JsonCanonicalisation,
+                StringComparison.Ordinal))
+        {
+            throw Invalid(
+                "The report JSON canonicalisation identifier is unsupported.");
+        }
+
+        if (!string.Equals(
+                report.Determinism.CrossPlatformNormalisation,
+                ReportContractVersions.CrossPlatformNormalisation,
+                StringComparison.Ordinal))
+        {
+            throw Invalid(
+                "The report cross-platform normalisation identifier is unsupported.");
+        }
+
+        RequireText(
+            report.Determinism.MatcherAlgorithm,
+            "determinism.matcherAlgorithm",
+            limits);
+    }
+
+    private static FindingReport NormalizeFinding(
+        FindingReport finding,
+        string matcherAlgorithm,
+        ISet<string> baselineKeys,
+        ISet<string> candidateKeys,
+        ResourceLimits limits)
+    {
+        _ = StableJsonNames.Classification(finding.Classification);
+        ArgumentNullException.ThrowIfNull(finding.Decision);
+
+        var hasBaseline = finding.Baseline is not null;
+        var hasCandidate = finding.Candidate is not null;
+        ValidateClassificationSides(
+            finding.Classification,
+            hasBaseline,
+            hasCandidate);
+
+        if (finding.BaselineReference is not null && !hasBaseline)
+        {
+            throw Invalid(
+                "A baseline source reference requires a baseline finding snapshot.");
+        }
+
+        if (finding.CandidateReference is not null && !hasCandidate)
+        {
+            throw Invalid(
+                "A candidate source reference requires a candidate finding snapshot.");
+        }
+
+        if (finding.BaselineReference is not null)
+        {
+            ValidateSourceReference(
+                finding.BaselineReference,
+                InputKind.Baseline,
+                "findings[].baselineRef",
+                limits);
+        }
+
+        if (finding.CandidateReference is not null)
+        {
+            ValidateSourceReference(
+                finding.CandidateReference,
+                InputKind.Candidate,
+                "findings[].candidateRef",
+                limits);
+        }
+
+        var baseline = finding.Baseline is null
+            ? null
+            : NormalizeSnapshot(
+                finding.Baseline,
+                baselineKeys,
+                "findings[].baseline",
+                limits);
+        var candidate = finding.Candidate is null
+            ? null
+            : NormalizeSnapshot(
+                finding.Candidate,
+                candidateKeys,
+                "findings[].candidate",
+                limits);
+        var decision = NormalizeDecision(
+            finding.Decision,
+            finding.Classification,
+            matcherAlgorithm,
+            limits);
+
+        if (ReferenceEquals(baseline, finding.Baseline)
+            && ReferenceEquals(candidate, finding.Candidate)
+            && ReferenceEquals(decision, finding.Decision))
+        {
+            return finding;
+        }
+
+        return finding with
+        {
+            Baseline = baseline,
+            Candidate = candidate,
+            Decision = decision,
+        };
+    }
+
+    private static void ValidateClassificationSides(
+        FindingClassification classification,
+        bool hasBaseline,
+        bool hasCandidate)
+    {
+        var valid = classification switch
+        {
+            FindingClassification.New => !hasBaseline && hasCandidate,
+            FindingClassification.Unchanged
+                or FindingClassification.Moved
+                or FindingClassification.Modified => hasBaseline && hasCandidate,
+            FindingClassification.Resolved => hasBaseline && !hasCandidate,
+            FindingClassification.Ambiguous => hasBaseline ^ hasCandidate,
+            _ => false,
+        };
+        if (!valid)
+        {
+            throw Invalid(
+                $"Classification '{StableJsonNames.Classification(classification)}' "
+                + "has an invalid baseline/candidate side combination.");
+        }
+    }
+
+    private static FindingSnapshot NormalizeSnapshot(
+        FindingSnapshot snapshot,
+        ISet<string> observedKeys,
+        string propertyName,
+        ResourceLimits limits)
+    {
+        RequireText(
+            snapshot.FindingKey,
+            new PropertyPath(propertyName, ".findingKey"),
+            limits);
+        RequireText(
+            snapshot.ProducerFamily,
+            new PropertyPath(propertyName, ".producerFamily"),
+            limits);
+        RequireText(
+            snapshot.ProducerToolName,
+            new PropertyPath(propertyName, ".producerToolName"),
+            limits);
+        if (snapshot.ProducerToolVersion is not null
+            && string.IsNullOrWhiteSpace(snapshot.ProducerToolVersion))
+        {
+            throw Invalid(
+                $"The optional '{propertyName}.producerToolVersion' value cannot be blank.");
+        }
+
+        ValidateOptionalText(
+            snapshot.ProducerToolVersion,
+            new PropertyPath(propertyName, ".producerToolVersion"),
+            limits,
+            allowEmpty: false);
+        RequireText(
+            snapshot.AutomaticProducerIdentity,
+            new PropertyPath(propertyName, ".automaticProducerIdentity"),
+            limits);
+        RequireText(
+            snapshot.CanonicalRule,
+            new PropertyPath(propertyName, ".canonicalRule"),
+            limits);
+        ValidateText(
+            snapshot.CanonicalMessage,
+            new PropertyPath(propertyName, ".canonicalMessage"),
+            limits);
+        ValidateOptionalText(
+            snapshot.CanonicalUri,
+            new PropertyPath(propertyName, ".canonicalUri"),
+            limits,
+            allowEmpty: false);
+        ArgumentNullException.ThrowIfNull(snapshot.SourceMetadata);
+        ValidateOptionalText(
+            snapshot.SourceMetadata.Level,
+            new PropertyPath(propertyName, ".sourceMetadata.level"),
+            limits,
+            allowEmpty: true);
+        ValidateOptionalText(
+            snapshot.SourceMetadata.Kind,
+            new PropertyPath(propertyName, ".sourceMetadata.kind"),
+            limits,
+            allowEmpty: true);
+        ValidateOptionalText(
+            snapshot.SourceMetadata.BaselineState,
+            new PropertyPath(
+                propertyName,
+                ".sourceMetadata.baselineState"),
+            limits,
+            allowEmpty: true);
+        if (!observedKeys.Add(snapshot.FindingKey))
+        {
+            throw Invalid(
+                $"Finding key '{snapshot.FindingKey}' occurs more than once on the same input side.");
+        }
+
+        var messageNormalisationFlags = NormalizeStringArray(
+            snapshot.MessageNormalisationFlags,
+            new PropertyPath(
+                propertyName,
+                ".messageNormalisationFlags"),
+            limits);
+        var lossiness = NormalizeStringArray(
+            snapshot.Lossiness,
+            new PropertyPath(propertyName, ".lossiness"),
+            limits);
+        ValidateCollection(
+            snapshot.DerivedFingerprints,
+            new PropertyPath(propertyName, ".derivedFingerprints"),
+            limits.MaximumRunCollectionItems);
+        HashSet<string>? fingerprintNames =
+            snapshot.DerivedFingerprints.Length > 1
+                ? new HashSet<string>(StringComparer.Ordinal)
+                : null;
+        foreach (var fingerprint in snapshot.DerivedFingerprints)
+        {
+            if (fingerprint is null)
+            {
+                throw Invalid(
+                    $"The '{propertyName}.derivedFingerprints' array cannot contain null values.");
+            }
+
+            RequireText(
+                fingerprint.Name,
+                new PropertyPath(
+                    propertyName,
+                    ".derivedFingerprints[].name"),
+                limits);
+            RequireText(
+                fingerprint.Value,
+                new PropertyPath(
+                    propertyName,
+                    ".derivedFingerprints[].value"),
+                limits);
+            RequireText(
+                fingerprint.AlgorithmVersion,
+                new PropertyPath(
+                    propertyName,
+                    ".derivedFingerprints[].algorithmVersion"),
+                limits);
+            if (string.Equals(
+                    fingerprint.Name,
+                    ReportContractVersions.SarifFingerprint,
+                    StringComparison.Ordinal)
+                && !string.Equals(
+                    fingerprint.AlgorithmVersion,
+                    ReportContractVersions.SarifFingerprintAlgorithm,
+                    StringComparison.Ordinal))
+            {
+                throw Invalid(
+                    $"Derived fingerprint '{fingerprint.Name}' has an unsupported algorithm version.");
+            }
+
+            if (fingerprintNames is not null
+                && !fingerprintNames.Add(fingerprint.Name))
+            {
+                throw Invalid(
+                    $"Derived fingerprint name '{fingerprint.Name}' occurs more than once.");
+            }
+        }
+
+        var fingerprints = snapshot.DerivedFingerprints.Length <= 1
+            || IsOrdered(snapshot.DerivedFingerprints, CompareDerivedFingerprints)
+                ? snapshot.DerivedFingerprints
+                : snapshot.DerivedFingerprints
+                    .OrderBy(item => item.Name, StringComparer.Ordinal)
+                    .ThenBy(item => item.Value, StringComparer.Ordinal)
+                    .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+                    .ToImmutableArray();
+        if (messageNormalisationFlags.Equals(snapshot.MessageNormalisationFlags)
+            && lossiness.Equals(snapshot.Lossiness)
+            && fingerprints.Equals(snapshot.DerivedFingerprints))
+        {
+            return snapshot;
+        }
+
+        return snapshot with
+        {
+            MessageNormalisationFlags = messageNormalisationFlags,
+            Lossiness = lossiness,
+            DerivedFingerprints = fingerprints,
+        };
+    }
+
+    private static ImmutableArray<string> NormalizeStringArray(
+        ImmutableArray<string> values,
+        PropertyPath propertyName,
+        ResourceLimits limits)
+    {
+        ValidateCollection(
+            values,
+            propertyName,
+            limits.MaximumRunCollectionItems);
+        foreach (var value in values)
+        {
+            RequireText(value, propertyName.Append("[]"), limits);
+        }
+
+        if (values.Length <= 1
+            || IsStrictlyOrdered(values, StringComparer.Ordinal.Compare))
+        {
+            return values;
+        }
+
+        return values
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToImmutableArray();
+    }
+
+    private static DecisionTrace NormalizeDecision(
+        DecisionTrace decision,
+        FindingClassification classification,
+        string matcherAlgorithm,
+        ResourceLimits limits)
+    {
+        _ = StableJsonNames.Precedence(decision.PrecedenceTier);
+        _ = StableJsonNames.Confidence(decision.DisplayConfidence);
+        RequireText(
+            decision.MatcherAlgorithmVersion,
+            "findings[].decision.matcherAlgorithmVersion",
+            limits);
+        if (!string.Equals(
+                decision.MatcherAlgorithmVersion,
+                matcherAlgorithm,
+                StringComparison.Ordinal))
+        {
+            throw Invalid(
+                "Every decision must use the report's matcher algorithm version.");
+        }
+
+        var classificationIsAmbiguous =
+            classification == FindingClassification.Ambiguous;
+        if (decision.Ambiguous != classificationIsAmbiguous)
+        {
+            throw Invalid(
+                "The decision ambiguity flag must agree with the finding classification.");
+        }
+
+        ValidateCollection(
+            decision.Evidence,
+            "findings[].evidence",
+            limits.MaximumRunCollectionItems);
+        ValidateCollection(
+            decision.RejectedAlternatives,
+            "findings[].rejectedAlternatives",
+            limits.MaximumRejectedAlternatives);
+        ValidateCollection(
+            decision.Transformations,
+            "findings[].transforms",
+            limits.MaximumRunCollectionItems);
+        ValidateCollection(
+            decision.Diagnostics,
+            "findings[].diagnostics",
+            limits.MaximumRunCollectionItems);
+
+        foreach (var evidence in decision.Evidence)
+        {
+            if (evidence is null)
+            {
+                throw Invalid(
+                    "The 'findings[].evidence' array cannot contain null values.");
+            }
+
+            RequireText(evidence.Kind, "findings[].evidence[].kind", limits);
+            ValidateOptionalText(
+                evidence.BaselineValue,
+                "findings[].evidence[].baselineValue",
+                limits,
+                allowEmpty: true);
+            ValidateOptionalText(
+                evidence.CandidateValue,
+                "findings[].evidence[].candidateValue",
+                limits,
+                allowEmpty: true);
+            _ = StableJsonNames.Origin(evidence.Origin);
+            _ = StableJsonNames.Precedence(evidence.PrecedenceTier);
+            RequireText(
+                evidence.AlgorithmVersion,
+                "findings[].evidence[].algorithmVersion",
+                limits);
+        }
+
+        foreach (var alternative in decision.RejectedAlternatives)
+        {
+            if (alternative is null)
+            {
+                throw Invalid(
+                    "The 'findings[].rejectedAlternatives' array cannot contain null values.");
+            }
+
+            RequireText(
+                alternative.FindingKey,
+                "findings[].rejectedAlternatives[].findingKey",
+                limits);
+            RequireText(
+                alternative.Reason,
+                "findings[].rejectedAlternatives[].reason",
+                limits);
+            _ = StableJsonNames.Precedence(alternative.PrecedenceTier);
+            ValidateDecisionVector(alternative.DecisionVector);
+        }
+
+        foreach (var transformation in decision.Transformations)
+        {
+            if (transformation is null)
+            {
+                throw Invalid(
+                    "The 'findings[].transforms' array cannot contain null values.");
+            }
+
+            RequireText(
+                transformation.Kind,
+                "findings[].transforms[].kind",
+                limits);
+            ValidateOptionalText(
+                transformation.OriginalValue,
+                "findings[].transforms[].originalValue",
+                limits,
+                allowEmpty: true);
+            ValidateOptionalText(
+                transformation.TransformedValue,
+                "findings[].transforms[].transformedValue",
+                limits,
+                allowEmpty: true);
+            RequireText(
+                transformation.AlgorithmVersion,
+                "findings[].transforms[].algorithmVersion",
+                limits);
+        }
+
+        foreach (var diagnostic in decision.Diagnostics)
+        {
+            ValidateDiagnostic(
+                diagnostic,
+                "findings[].diagnostics[]",
+                limits);
+        }
+
+        if (decision.Evidence.IsEmpty
+            && decision.RejectedAlternatives.IsEmpty
+            && decision.Transformations.IsEmpty
+            && decision.Diagnostics.IsEmpty)
+        {
+            return decision;
+        }
+
+        var normalizedEvidence = decision.Evidence.Length <= 1
+            || IsOrdered(decision.Evidence, CompareEvidence)
+                ? decision.Evidence
+                : decision.Evidence
+                    .OrderBy(item => item.Kind, StringComparer.Ordinal)
+                    .ThenBy(item => item.BaselineValue is null ? 0 : 1)
+                    .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.CandidateValue is null ? 0 : 1)
+                    .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.Origin)
+                    .ThenBy(item => item.PrecedenceTier)
+                    .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+                    .ThenBy(item => item.Lossy)
+                    .ToImmutableArray();
+        var rejectedAlternatives = decision.RejectedAlternatives.Length <= 1
+            || IsOrdered(
+                decision.RejectedAlternatives,
+                CompareRejectedAlternatives)
+                ? decision.RejectedAlternatives
+                : decision.RejectedAlternatives
+                    .OrderBy(item => item.FindingKey, StringComparer.Ordinal)
+                    .ThenBy(item => item.Reason, StringComparer.Ordinal)
+                    .ThenBy(item => item.PrecedenceTier)
+                    .ThenBy(item => item.DecisionVector.PrecedenceTier)
+                    .ThenBy(item =>
+                        item.DecisionVector.ProducerFingerprintStrength)
+                    .ThenBy(item => item.DecisionVector.PathMatchKind)
+                    .ThenBy(item => item.DecisionVector.ContextAgreement)
+                    .ThenBy(item => item.DecisionVector.CodeFlowAgreement)
+                    .ThenBy(item => item.DecisionVector.MessageAgreement)
+                    .ThenBy(item => item.DecisionVector.RegionDriftBand)
+                    .ToImmutableArray();
+        var transformations = decision.Transformations.Length <= 1
+            || IsOrdered(decision.Transformations, CompareTransformations)
+                ? decision.Transformations
+                : decision.Transformations
+                    .OrderBy(item => item.Kind, StringComparer.Ordinal)
+                    .ThenBy(item => item.OriginalValue is null ? 0 : 1)
+                    .ThenBy(item => item.OriginalValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.TransformedValue is null ? 0 : 1)
+                    .ThenBy(item => item.TransformedValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.IsLossy)
+                    .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+                    .ToImmutableArray();
+        var diagnostics = decision.Diagnostics.Length <= 1
+            ? decision.Diagnostics
+            : Diagnostic.Sort(decision.Diagnostics);
+        if (normalizedEvidence.Equals(decision.Evidence)
+            && rejectedAlternatives.Equals(decision.RejectedAlternatives)
+            && transformations.Equals(decision.Transformations)
+            && diagnostics.Equals(decision.Diagnostics))
+        {
+            return decision;
+        }
+
+        return decision with
+        {
+            Evidence = normalizedEvidence,
+            RejectedAlternatives = rejectedAlternatives,
+            Transformations = transformations,
+            Diagnostics = diagnostics,
+        };
+    }
+
+    private static void ValidateDecisionVector(DecisionVector vector)
+    {
+        _ = StableJsonNames.Precedence(vector.PrecedenceTier);
+        _ = StableJsonNames.PathMatch(vector.PathMatchKind);
+        _ = StableJsonNames.Agreement(vector.ContextAgreement);
+        _ = StableJsonNames.Agreement(vector.CodeFlowAgreement);
+        _ = StableJsonNames.Agreement(vector.MessageAgreement);
+        if (vector.ProducerFingerprintStrength < 0)
+        {
+            throw Invalid(
+                "A rejected alternative's producer fingerprint strength cannot be negative.");
+        }
+
+        if (vector.RegionDriftBand < 0)
+        {
+            throw Invalid(
+                "A rejected alternative's region drift band cannot be negative.");
+        }
+    }
+
+    private static void ValidateDiagnostic(
+        Diagnostic diagnostic,
+        PropertyPath propertyName,
+        ResourceLimits limits)
+    {
+        if (diagnostic is null)
+        {
+            throw Invalid($"The '{propertyName}' value cannot be null.");
+        }
+
+        RequireText(
+            diagnostic.Code,
+            propertyName.Append(".code"),
+            limits);
+        _ = StableJsonNames.Severity(diagnostic.Severity);
+        _ = StableJsonNames.Stage(diagnostic.Stage);
+        RequireText(
+            diagnostic.Message,
+            propertyName.Append(".message"),
+            limits);
+        ValidateOptionalText(
+            diagnostic.StandardBasis,
+            propertyName.Append(".standardBasis"),
+            limits,
+            allowEmpty: false);
+        ValidateOptionalText(
+            diagnostic.Help,
+            propertyName.Append(".help"),
+            limits,
+            allowEmpty: false);
+        if (diagnostic.SourceReference is not null)
+        {
+            ValidateSourceReference(
+                diagnostic.SourceReference,
+                expectedInput: null,
+                propertyName.Append(".sourceRef"),
+                limits);
+        }
+    }
+
+    private static void ValidateSourceReference(
+        SourceReference sourceReference,
+        InputKind? expectedInput,
+        PropertyPath propertyName,
+        ResourceLimits limits)
+    {
+        _ = StableJsonNames.Input(sourceReference.Input);
+        if (expectedInput.HasValue && sourceReference.Input != expectedInput.Value)
+        {
+            throw Invalid(
+                $"The '{propertyName}.input' value does not identify the expected report side.");
+        }
+
+        ValidateText(
+            sourceReference.JsonPointer,
+            propertyName.Append(".jsonPointer"),
+            limits);
+    }
+
+    private static int CompareFindingReports(
+        FindingReport left,
+        FindingReport right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(
+            StableJsonNames.Classification(left.Classification),
+            StableJsonNames.Classification(right.Classification));
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(
+            left.Baseline?.FindingKey ?? string.Empty,
+            right.Baseline?.FindingKey ?? string.Empty);
+        return comparison != 0
+            ? comparison
+            : StringComparer.Ordinal.Compare(
+                left.Candidate?.FindingKey ?? string.Empty,
+                right.Candidate?.FindingKey ?? string.Empty);
+    }
+
+    private static int CompareDerivedFingerprints(
+        DerivedFingerprint left,
+        DerivedFingerprint right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(left.Name, right.Name);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(left.Value, right.Value);
+        return comparison != 0
+            ? comparison
+            : StringComparer.Ordinal.Compare(
+                left.AlgorithmVersion,
+                right.AlgorithmVersion);
+    }
+
+    private static int CompareEvidence(
+        EvidenceRecord left,
+        EvidenceRecord right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(left.Kind, right.Kind);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.BaselineValue,
+            right.BaselineValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.CandidateValue,
+            right.CandidateValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.Origin.CompareTo(right.Origin);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.PrecedenceTier.CompareTo(right.PrecedenceTier);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(
+            left.AlgorithmVersion,
+            right.AlgorithmVersion);
+        return comparison != 0
+            ? comparison
+            : left.Lossy.CompareTo(right.Lossy);
+    }
+
+    private static int CompareRejectedAlternatives(
+        RejectedAlternative left,
+        RejectedAlternative right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(
+            left.FindingKey,
+            right.FindingKey);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(left.Reason, right.Reason);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.PrecedenceTier.CompareTo(right.PrecedenceTier);
+        return comparison != 0
+            ? comparison
+            : CompareDecisionVectors(
+                left.DecisionVector,
+                right.DecisionVector);
+    }
+
+    private static int CompareDecisionVectors(
+        DecisionVector left,
+        DecisionVector right)
+    {
+        var comparison = left.PrecedenceTier.CompareTo(right.PrecedenceTier);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.ProducerFingerprintStrength.CompareTo(
+            right.ProducerFingerprintStrength);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.PathMatchKind.CompareTo(right.PathMatchKind);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.ContextAgreement.CompareTo(right.ContextAgreement);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.CodeFlowAgreement.CompareTo(right.CodeFlowAgreement);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.MessageAgreement.CompareTo(right.MessageAgreement);
+        return comparison != 0
+            ? comparison
+            : left.RegionDriftBand.CompareTo(right.RegionDriftBand);
+    }
+
+    private static int CompareTransformations(
+        TransformationRecord left,
+        TransformationRecord right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(left.Kind, right.Kind);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.OriginalValue,
+            right.OriginalValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.TransformedValue,
+            right.TransformedValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.IsLossy.CompareTo(right.IsLossy);
+        return comparison != 0
+            ? comparison
+            : StringComparer.Ordinal.Compare(
+                left.AlgorithmVersion,
+                right.AlgorithmVersion);
+    }
+
+    private static int CompareNullableText(string? left, string? right)
+    {
+        if (left is null)
+        {
+            return right is null ? 0 : -1;
+        }
+
+        return right is null
+            ? 1
+            : StringComparer.Ordinal.Compare(left, right);
+    }
+
+    private static bool IsOrdered<T>(
+        ImmutableArray<T> values,
+        Comparison<T> comparison)
+    {
+        for (var index = 1; index < values.Length; index++)
+        {
+            if (comparison(values[index - 1], values[index]) > 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsStrictlyOrdered<T>(
+        ImmutableArray<T> values,
+        Comparison<T> comparison)
+    {
+        for (var index = 1; index < values.Length; index++)
+        {
+            if (comparison(values[index - 1], values[index]) >= 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void ValidateSummaryRanges(ComparisonSummary summary)
+    {
+        if (summary.BaselineCount < 0
+            || summary.CandidateCount < 0
+            || summary.New < 0
+            || summary.Unchanged < 0
+            || summary.Moved < 0
+            || summary.Modified < 0
+            || summary.Resolved < 0
+            || summary.Ambiguous < 0)
+        {
+            throw Invalid("Report summary counts cannot be negative.");
+        }
+    }
+
+    private static void ValidateMetrics(ComparisonMetrics metrics)
+    {
+        if (metrics.CandidateEdges < 0
+            || metrics.AssignmentComponents < 0
+            || metrics.AmbiguousComponents < 0
+            || metrics.Diagnostics < 0)
+        {
+            throw Invalid("Report metrics cannot be negative.");
+        }
+
+        if (metrics.AmbiguousComponents > metrics.AssignmentComponents)
+        {
+            throw Invalid(
+                "Ambiguous assignment components cannot exceed all assignment components.");
+        }
+    }
+
+    private static ComparisonSummary CreateSummary(
+        ImmutableArray<FindingReport> findings) =>
+        new(
+            findings.Count(item => item.Baseline is not null),
+            findings.Count(item => item.Candidate is not null),
+            Count(findings, FindingClassification.New),
+            Count(findings, FindingClassification.Unchanged),
+            Count(findings, FindingClassification.Moved),
+            Count(findings, FindingClassification.Modified),
+            Count(findings, FindingClassification.Resolved),
+            Count(findings, FindingClassification.Ambiguous));
+
+    private static int Count(
+        ImmutableArray<FindingReport> findings,
+        FindingClassification classification) =>
+        findings.Count(item => item.Classification == classification);
+
+    private static void ValidateCollection<T>(
+        ImmutableArray<T> values,
+        PropertyPath propertyName,
+        int maximumItems)
+    {
+        if (values.IsDefault)
+        {
+            throw Invalid($"The required '{propertyName}' array is uninitialized.");
+        }
+
+        if (values.Length > maximumItems)
+        {
+            throw Invalid(
+                $"The '{propertyName}' array exceeds the configured {maximumItems}-item limit.");
+        }
+    }
+
+    private static void RequireText(
+        string value,
+        PropertyPath propertyName,
+        ResourceLimits limits)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw Invalid($"The required '{propertyName}' value cannot be blank.");
+        }
+
+        ValidateText(value, propertyName, limits);
+    }
+
+    private static void ValidateText(
+        string value,
+        PropertyPath propertyName,
+        ResourceLimits limits)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (value.Length > limits.MaximumStringCharacters)
+        {
+            throw Invalid(
+                $"The '{propertyName}' value exceeds the configured "
+                + $"{limits.MaximumStringCharacters}-character limit.");
+        }
+    }
+
+    private static void ValidateOptionalText(
+        string? value,
+        PropertyPath propertyName,
+        ResourceLimits limits,
+        bool allowEmpty)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        if (!allowEmpty && value.Length == 0)
+        {
+            throw Invalid($"The optional '{propertyName}' value cannot be empty.");
+        }
+
+        ValidateText(value, propertyName, limits);
+    }
+
+    private readonly record struct PropertyPath(
+        string Prefix,
+        string? Suffix = null,
+        string? Tail = null)
+    {
+        public static implicit operator PropertyPath(string value) =>
+            new(value);
+
+        public PropertyPath Append(string suffix) =>
+            Suffix is null
+                ? new PropertyPath(Prefix, suffix)
+                : Tail is null
+                    ? new PropertyPath(Prefix, Suffix, suffix)
+                    : new PropertyPath(ToString(), suffix);
+
+        public override string ToString() =>
+            string.Concat(Prefix, Suffix, Tail);
+    }
+
+    private static ArgumentException Invalid(string message) =>
+        new(message, "report");
+}

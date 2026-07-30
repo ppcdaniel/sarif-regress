@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/config.schema.json",
+  "title": "SarifRegress configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "repoRoot": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 4194304
+    },
+    "pathRebases": {
+      "type": "array",
+      "maxItems": 250000,
+      "items": {
+        "$ref": "#/$defs/pathRebase"
+      }
+    },
+    "pathAliases": {
+      "type": "array",
+      "maxItems": 250000,
+      "items": {
+        "$ref": "#/$defs/pathAlias"
+      }
+    },
+    "ruleAliases": {
+      "type": "array",
+      "maxItems": 250000,
+      "items": {
+        "$ref": "#/$defs/ruleAlias"
+      }
+    },
+    "matching": {
+      "$ref": "#/$defs/matching"
+    },
+    "policy": {
+      "$ref": "#/$defs/policy"
+    },
+    "reporting": {
+      "$ref": "#/$defs/reporting"
+    },
+    "limits": {
+      "$ref": "#/$defs/limits"
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4194304
+    },
+    "pathRebase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "to": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "pathAlias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline",
+        "candidate"
+      ],
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "candidate": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "ruleAlias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineProducer",
+        "baselineRule",
+        "candidateProducer",
+        "candidateRule"
+      ],
+      "properties": {
+        "baselineProducer": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "baselineRule": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "candidateProducer": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "candidateRule": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "matching": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enableRepoContext": {
+          "type": "boolean",
+          "default": true
+        },
+        "snippetLinesRadius": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 3
+        },
+        "enableTokenWindows": {
+          "type": "boolean",
+          "default": false
+        },
+        "allowWeakMessageSimilarity": {
+          "type": "boolean",
+          "default": false
+        },
+        "pathCaseSensitivity": {
+          "enum": [
+            "sensitive",
+            "ascii-insensitive"
+          ],
+          "default": "sensitive"
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "failOn": {
+          "type": "array",
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "new",
+              "unchanged",
+              "moved",
+              "modified",
+              "resolved",
+              "ambiguous"
+            ]
+          },
+          "default": [
+            "new",
+            "modified",
+            "ambiguous"
+          ]
+        },
+        "treatGithubIncompatibilityAsError": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "emitCanonicalSarif": {
+          "type": "boolean",
+          "default": false
+        },
+        "emitHtml": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maximumInputBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 268435456,
+          "default": 268435456
+        },
+        "maximumJsonDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128,
+          "default": 128
+        },
+        "maximumRuns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 64
+        },
+        "maximumRunCollectionItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 250000,
+          "default": 250000
+        },
+        "maximumLocationsPerResult": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 1000
+        },
+        "maximumCodeFlowsPerResult": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 100
+        },
+        "maximumThreadFlowLocationsPerResult": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 10000
+        },
+        "maximumStringCharacters": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4194304,
+          "default": 4194304
+        },
+        "maximumUriBaseDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32,
+          "default": 32
+        },
+        "maximumRepositoryFileBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4194304,
+          "default": 4194304
+        },
+        "maximumSnippetRadius": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        },
+        "maximumTokenWindowTerms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "default": 256
+        },
+        "maximumCandidateEdgesPerFinding": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 64
+        },
+        "maximumCandidatePairEvaluationsPerFinding": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "default": 256
+        },
+        "maximumCandidatePairEvaluations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "default": 1000000
+        },
+        "maximumRejectedAlternatives": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 100
+        },
+        "maximumAssignmentSideSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12,
+          "default": 12
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "OffsetAnalyzer",
+          "version": "1.0.0",
+          "rules": [
+            {
+              "id": "OFFSET001"
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "OFFSET001",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "A line-based anchor is available."
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "offset-case-001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/offset.cs"
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 1,
+                  "endLine": 7,
+                  "endColumn": 6,
+                  "charOffset": 42,
+                  "charLength": 5,
+                  "snippet": {
+                    "text": "value"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

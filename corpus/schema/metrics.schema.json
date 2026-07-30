@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/corpus/schema/metrics.schema.json",
+  "title": "SarifRegress corpus metrics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "thresholds",
+    "passed",
+    "aggregate",
+    "cases",
+    "failures"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "thresholds": {
+      "$ref": "#/$defs/thresholds"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "aggregate": {
+      "$ref": "#/$defs/metrics"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "caseName",
+          "expectedInvalidInputs",
+          "observedInvalidInputs",
+          "passed",
+          "artifactKind",
+          "artifactSha256",
+          "diagnosticExpectationsAsserted",
+          "expectedDiagnosticCount",
+          "explanationExpectationsAsserted",
+          "expectedExplanationCount",
+          "artifact",
+          "expectationFailures",
+          "metrics"
+        ],
+        "properties": {
+          "caseName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expectedInvalidInputs": {
+            "$ref": "#/$defs/inputSides"
+          },
+          "observedInvalidInputs": {
+            "$ref": "#/$defs/inputSides"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "artifactKind": {
+            "enum": [
+              "comparison",
+              "invalid-input-diagnostics"
+            ]
+          },
+          "artifactSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "diagnosticExpectationsAsserted": {
+            "type": "boolean"
+          },
+          "expectedDiagnosticCount": {
+            "$ref": "#/$defs/count"
+          },
+          "explanationExpectationsAsserted": {
+            "type": "boolean"
+          },
+          "expectedExplanationCount": {
+            "$ref": "#/$defs/count"
+          },
+          "artifact": {
+            "type": "object"
+          },
+          "expectationFailures": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "metrics": {
+            "$ref": "#/$defs/metrics"
+          }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumPrecision",
+        "minimumRecall",
+        "maximumSilentAmbiguousMatches"
+      ],
+      "properties": {
+        "minimumPrecision": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "minimumRecall": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "maximumSilentAmbiguousMatches": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "inputSides": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "baseline",
+          "candidate"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "labelledPairs",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "classificationMismatches",
+        "expectedAmbiguous",
+        "correctAmbiguous",
+        "missingAmbiguous",
+        "unexpectedAmbiguous",
+        "silentAmbiguousMatches",
+        "expectedResolved",
+        "correctResolved",
+        "missingResolved",
+        "unexpectedResolved",
+        "expectedNew",
+        "correctNew",
+        "missingNew",
+        "unexpectedNew",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "labelledPairs": {
+          "$ref": "#/$defs/count"
+        },
+        "truePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falsePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "classificationMismatches": {
+          "$ref": "#/$defs/count"
+        },
+        "expectedAmbiguous": {
+          "$ref": "#/$defs/count"
+        },
+        "correctAmbiguous": {
+          "$ref": "#/$defs/count"
+        },
+        "missingAmbiguous": {
+          "$ref": "#/$defs/count"
+        },
+        "unexpectedAmbiguous": {
+          "$ref": "#/$defs/count"
+        },
+        "silentAmbiguousMatches": {
+          "$ref": "#/$defs/count"
+        },
+        "expectedResolved": {
+          "$ref": "#/$defs/count"
+        },
+        "correctResolved": {
+          "$ref": "#/$defs/count"
+        },
+        "missingResolved": {
+          "$ref": "#/$defs/count"
+        },
+        "unexpectedResolved": {
+          "$ref": "#/$defs/count"
+        },
+        "expectedNew": {
+          "$ref": "#/$defs/count"
+        },
+        "correctNew": {
+          "$ref": "#/$defs/count"
+        },
+        "missingNew": {
+          "$ref": "#/$defs/count"
+        },
+        "unexpectedNew": {
+          "$ref": "#/$defs/count"
+        },
+        "precision": {
+          "$ref": "#/$defs/ratio"
+        },
+        "recall": {
+          "$ref": "#/$defs/ratio"
+        },
+        "f1": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

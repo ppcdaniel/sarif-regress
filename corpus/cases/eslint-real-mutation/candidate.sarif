@@ -1,0 +1,87 @@
+{
+  "version": "2.1.0",
+  "$schema": "http://json.schemastore.org/sarif-2.1.0-rtm.5",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "ESLint",
+          "informationUri": "https://eslint.org",
+          "rules": [
+            {
+              "id": "eqeqeq",
+              "helpUri": "https://eslint.org/docs/latest/rules/eqeqeq",
+              "properties": {},
+              "shortDescription": {
+                "text": "Require the use of `===` and `!==`"
+              }
+            },
+            {
+              "id": "no-eval",
+              "helpUri": "https://eslint.org/docs/latest/rules/no-eval",
+              "properties": {},
+              "shortDescription": {
+                "text": "Disallow the use of `eval()`"
+              }
+            }
+          ],
+          "version": "8.57.1"
+        }
+      },
+      "results": [
+        {
+          "level": "warning",
+          "message": {
+            "text": "Expected '===' and instead saw '=='."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example.js"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 17,
+                  "endLine": 3,
+                  "endColumn": 19,
+                  "snippet": {
+                    "text": "  if (userInput == expected) {"
+                  }
+                }
+              }
+            }
+          ],
+          "ruleId": "eqeqeq",
+          "ruleIndex": 0
+        },
+        {
+          "level": "error",
+          "message": {
+            "text": "eval can be harmful."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example.js"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 12,
+                  "endLine": 4,
+                  "endColumn": 16,
+                  "snippet": {
+                    "text": "    return eval(userInput);"
+                  }
+                }
+              }
+            }
+          ],
+          "ruleId": "no-eval",
+          "ruleIndex": 1
+        }
+      ]
+    }
+  ]
+}

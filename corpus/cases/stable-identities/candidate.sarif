@@ -1,0 +1,964 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "corpus/stable-identities"
+      },
+      "tool": {
+        "driver": {
+          "name": "SarifRegress Corpus Analyzer",
+          "semanticVersion": "1.0.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 000"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-000.cs"
+                },
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 1,
+                  "endLine": 20,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_000();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-000"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-001.cs"
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 1,
+                  "endLine": 21,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_001();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-001"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 002"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-002.cs"
+                },
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 1,
+                  "endLine": 22,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_002();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-002"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 003"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-003.cs"
+                },
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 1,
+                  "endLine": 23,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_003();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-003"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 004"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-004.cs"
+                },
+                "region": {
+                  "startLine": 24,
+                  "startColumn": 1,
+                  "endLine": 24,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_004();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-004"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 005"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-005.cs"
+                },
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 1,
+                  "endLine": 25,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_005();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-005"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 006"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-006.cs"
+                },
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 1,
+                  "endLine": 26,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_006();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-006"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 007"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-007.cs"
+                },
+                "region": {
+                  "startLine": 27,
+                  "startColumn": 1,
+                  "endLine": 27,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_007();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-007"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 008"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-008.cs"
+                },
+                "region": {
+                  "startLine": 28,
+                  "startColumn": 1,
+                  "endLine": 28,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_008();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-008"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 009"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-009.cs"
+                },
+                "region": {
+                  "startLine": 29,
+                  "startColumn": 1,
+                  "endLine": 29,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_009();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-009"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 010"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-010.cs"
+                },
+                "region": {
+                  "startLine": 30,
+                  "startColumn": 1,
+                  "endLine": 30,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_010();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-010"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 011"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-011.cs"
+                },
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 1,
+                  "endLine": 31,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_011();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-011"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 012"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-012.cs"
+                },
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 1,
+                  "endLine": 32,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_012();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-012"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 013"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-013.cs"
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 1,
+                  "endLine": 33,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_013();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-013"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 014"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-014.cs"
+                },
+                "region": {
+                  "startLine": 34,
+                  "startColumn": 1,
+                  "endLine": 34,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_014();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-014"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 015"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-015.cs"
+                },
+                "region": {
+                  "startLine": 35,
+                  "startColumn": 1,
+                  "endLine": 35,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_015();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-015"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 016"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-016.cs"
+                },
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 1,
+                  "endLine": 36,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_016();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-016"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 017"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-017.cs"
+                },
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 1,
+                  "endLine": 37,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_017();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-017"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 018"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-018.cs"
+                },
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 1,
+                  "endLine": 38,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_018();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-018"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 019"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-019.cs"
+                },
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 1,
+                  "endLine": 39,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_019();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-019"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 020"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-020.cs"
+                },
+                "region": {
+                  "startLine": 40,
+                  "startColumn": 1,
+                  "endLine": 40,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_020();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-020"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 021"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-021.cs"
+                },
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 1,
+                  "endLine": 41,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_021();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-021"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 022"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-022.cs"
+                },
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 1,
+                  "endLine": 42,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_022();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-022"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 023"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-023.cs"
+                },
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 1,
+                  "endLine": 43,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_023();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-023"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 024"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-024.cs"
+                },
+                "region": {
+                  "startLine": 44,
+                  "startColumn": 1,
+                  "endLine": 44,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_024();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-024"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 025"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-025.cs"
+                },
+                "region": {
+                  "startLine": 45,
+                  "startColumn": 1,
+                  "endLine": 45,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_025();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-025"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 026"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-026.cs"
+                },
+                "region": {
+                  "startLine": 46,
+                  "startColumn": 1,
+                  "endLine": 46,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_026();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-026"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 027"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-027.cs"
+                },
+                "region": {
+                  "startLine": 47,
+                  "startColumn": 1,
+                  "endLine": 47,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_027();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-027"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 028"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-028.cs"
+                },
+                "region": {
+                  "startLine": 48,
+                  "startColumn": 1,
+                  "endLine": 48,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_028();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-028"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 029"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-029.cs"
+                },
+                "region": {
+                  "startLine": 49,
+                  "startColumn": 1,
+                  "endLine": 49,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_029();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-029"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 030"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-030.cs"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 1,
+                  "endLine": 50,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_030();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-030"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 031"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-031.cs"
+                },
+                "region": {
+                  "startLine": 51,
+                  "startColumn": 1,
+                  "endLine": 51,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_031();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-031"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 032"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-032.cs"
+                },
+                "region": {
+                  "startLine": 52,
+                  "startColumn": 1,
+                  "endLine": 52,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_032();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-032"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 033"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-033.cs"
+                },
+                "region": {
+                  "startLine": 53,
+                  "startColumn": 1,
+                  "endLine": 53,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_033();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-033"
+          }
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Stable defect 034"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable-034.cs"
+                },
+                "region": {
+                  "startLine": 54,
+                  "startColumn": 1,
+                  "endLine": 54,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "dangerous_call_034();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "stable-034"
+          }
+        }
+      ]
+    }
+  ]
+}

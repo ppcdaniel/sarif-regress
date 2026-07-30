@@ -10,14 +10,22 @@ public sealed class CommandShapeTests
         "--baseline",
         "--candidate",
         "--config",
+        "--html-out",
         "--json-out",
         "--repo",
+        "--sarif-out",
     ];
 
     [Fact]
     public void Command_tree_exposes_compare_and_all_supported_options()
     {
         var rootCommand = CliCommandFactory.Create();
+        Assert.Equal(
+            ["bench", "canonicalise", "compare", "corpus", "validate"],
+            rootCommand.Subcommands
+                .Select(command => command.Name)
+                .Order(StringComparer.Ordinal));
+
         var compareCommand = Assert.Single(
             rootCommand.Subcommands,
             command => command.Name == "compare");

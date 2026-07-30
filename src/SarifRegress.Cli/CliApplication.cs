@@ -17,17 +17,114 @@ public static class CliApplication
     /// <returns>The exit code produced by parsing or invoking the selected command.</returns>
     public static int Run(string[] args, TextWriter output, TextWriter error)
     {
+        return Run(args, output, error, Directory.GetCurrentDirectory());
+    }
+
+    /// <summary>
+    /// Runs the command-line interface with an explicit invocation directory.
+    /// </summary>
+    /// <param name="args">The command-line arguments to parse.</param>
+    /// <param name="output">The destination for standard output.</param>
+    /// <param name="error">The destination for standard error.</param>
+    /// <param name="currentDirectory">
+    /// The directory against which explicit relative command-line paths are resolved.
+    /// </param>
+    /// <returns>The exit code produced by parsing or invoking the selected command.</returns>
+    public static int Run(
+        string[] args,
+        TextWriter output,
+        TextWriter error,
+        string currentDirectory)
+    {
         ArgumentNullException.ThrowIfNull(args);
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(error);
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
 
-        RootCommand rootCommand = CliCommandFactory.Create();
+        if (!RequestsCompareHelp(args) &&
+            WriteMissingRequiredCompareOptions(args, error))
+        {
+            return ExitCodes.InvalidUsage;
+        }
+
+        RootCommand rootCommand = CliCommandFactory.Create(currentDirectory);
         InvocationConfiguration invocationConfiguration = new()
         {
             Output = output,
             Error = error,
         };
 
-        return rootCommand.Parse(args).Invoke(invocationConfiguration);
+        var parseResult = rootCommand.Parse(args);
+        if (parseResult.Errors.Count > 0)
+        {
+            foreach (var parseError in parseResult.Errors)
+            {
+                error.Write(parseError.Message);
+                error.Write('\n');
+            }
+
+            return ExitCodes.InvalidUsage;
+        }
+
+        return parseResult
+            .InvokeAsync(invocationConfiguration)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    private static bool RequestsCompareHelp(IReadOnlyList<string> args)
+    {
+        if (args.Count == 0 ||
+            !string.Equals(args[0], "compare", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        for (var index = 1; index < args.Count; index++)
+        {
+            if (string.Equals(args[index], "--", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (string.Equals(args[index], "--help", StringComparison.Ordinal) ||
+                string.Equals(args[index], "-h", StringComparison.Ordinal) ||
+                string.Equals(args[index], "-?", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool WriteMissingRequiredCompareOptions(
+        IReadOnlyList<string> args,
+        TextWriter error)
+    {
+        if (args.Count == 0 ||
+            !string.Equals(args[0], "compare", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        bool isMissingOption = false;
+        WriteMissingOption("--baseline");
+        WriteMissingOption("--candidate");
+        return isMissingOption;
+
+        void WriteMissingOption(string optionName)
+        {
+            var assignmentPrefix = string.Concat(optionName, "=");
+            bool isPresent = args.Any(
+                argument =>
+                    string.Equals(argument, optionName, StringComparison.Ordinal) ||
+                    argument.StartsWith(assignmentPrefix, StringComparison.Ordinal));
+            if (!isPresent)
+            {
+                isMissingOption = true;
+                error.Write($"Required option '{optionName}' is missing.\n");
+            }
+        }
     }
 }

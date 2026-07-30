@@ -1,0 +1,619 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "corpus/repository-root-changes"
+      },
+      "tool": {
+        "driver": {
+          "name": "SarifRegress Corpus Analyzer",
+          "semanticVersion": "1.0.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 000"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-000.cs"
+                },
+                "region": {
+                  "startLine": 40,
+                  "startColumn": 1,
+                  "endLine": 40,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_000();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-001.cs"
+                },
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 1,
+                  "endLine": 41,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_001();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 002"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-002.cs"
+                },
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 1,
+                  "endLine": 42,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_002();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 003"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-003.cs"
+                },
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 1,
+                  "endLine": 43,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_003();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 004"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-004.cs"
+                },
+                "region": {
+                  "startLine": 44,
+                  "startColumn": 1,
+                  "endLine": 44,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_004();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 005"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-005.cs"
+                },
+                "region": {
+                  "startLine": 45,
+                  "startColumn": 1,
+                  "endLine": 45,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_005();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 006"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-006.cs"
+                },
+                "region": {
+                  "startLine": 46,
+                  "startColumn": 1,
+                  "endLine": 46,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_006();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 007"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-007.cs"
+                },
+                "region": {
+                  "startLine": 47,
+                  "startColumn": 1,
+                  "endLine": 47,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_007();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 008"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-008.cs"
+                },
+                "region": {
+                  "startLine": 48,
+                  "startColumn": 1,
+                  "endLine": 48,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_008();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 009"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-009.cs"
+                },
+                "region": {
+                  "startLine": 49,
+                  "startColumn": 1,
+                  "endLine": 49,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_009();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 010"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-010.cs"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 1,
+                  "endLine": 50,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_010();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 011"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-011.cs"
+                },
+                "region": {
+                  "startLine": 51,
+                  "startColumn": 1,
+                  "endLine": 51,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_011();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 012"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-012.cs"
+                },
+                "region": {
+                  "startLine": 52,
+                  "startColumn": 1,
+                  "endLine": 52,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_012();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 013"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-013.cs"
+                },
+                "region": {
+                  "startLine": 53,
+                  "startColumn": 1,
+                  "endLine": 53,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_013();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 014"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-014.cs"
+                },
+                "region": {
+                  "startLine": 54,
+                  "startColumn": 1,
+                  "endLine": 54,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_014();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 015"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-015.cs"
+                },
+                "region": {
+                  "startLine": 55,
+                  "startColumn": 1,
+                  "endLine": 55,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_015();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 016"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-016.cs"
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 1,
+                  "endLine": 56,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_016();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 017"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-017.cs"
+                },
+                "region": {
+                  "startLine": 57,
+                  "startColumn": 1,
+                  "endLine": 57,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_017();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 018"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-018.cs"
+                },
+                "region": {
+                  "startLine": 58,
+                  "startColumn": 1,
+                  "endLine": 58,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_018();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 019"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-019.cs"
+                },
+                "region": {
+                  "startLine": 59,
+                  "startColumn": 1,
+                  "endLine": 59,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_019();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 020"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-020.cs"
+                },
+                "region": {
+                  "startLine": 60,
+                  "startColumn": 1,
+                  "endLine": 60,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_020();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 021"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-021.cs"
+                },
+                "region": {
+                  "startLine": 61,
+                  "startColumn": 1,
+                  "endLine": 61,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_021();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 022"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-022.cs"
+                },
+                "region": {
+                  "startLine": 62,
+                  "startColumn": 1,
+                  "endLine": 62,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_022();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 023"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-023.cs"
+                },
+                "region": {
+                  "startLine": 63,
+                  "startColumn": 1,
+                  "endLine": 63,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_023();"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CORPUS001",
+          "message": {
+            "text": "Rebased defect 024"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/new-agent/work/repo/src/root-024.cs"
+                },
+                "region": {
+                  "startLine": 64,
+                  "startColumn": 1,
+                  "endLine": 64,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "root_independent_024();"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

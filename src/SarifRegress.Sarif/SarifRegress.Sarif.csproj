@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <InternalsVisibleTo Include="SarifRegress.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../SarifRegress.Core/SarifRegress.Core.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1",
+  "pathAliases": [
+    {
+      "baseline": "src-old/",
+      "candidate": "src/"
+    }
+  ]
+}

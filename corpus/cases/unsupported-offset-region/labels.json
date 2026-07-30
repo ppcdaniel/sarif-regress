@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1",
+  "pairs": [
+    {
+      "baselineKey": "baseline:0:0",
+      "candidateKey": "candidate:0:0",
+      "classification": "unchanged"
+    }
+  ],
+  "expectedAmbiguous": [],
+  "expectedResolved": [],
+  "expectedNew": [],
+  "expectedInvalidInputs": [],
+  "expectedDiagnostics": [
+    {
+      "input": "baseline",
+      "code": "GHCS0023",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "GitHub's documented supported-property subset does not use region.offsets (1 occurrence).",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30",
+      "help": "The property remains available to SarifRegress where its supported subset uses it; this advisory describes only GitHub's documented subset."
+    },
+    {
+      "input": "baseline",
+      "code": "GHCS0023",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "GitHub's documented supported-property subset does not use region.snippet (1 occurrence).",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30",
+      "help": "The property remains available to SarifRegress where its supported subset uses it; this advisory describes only GitHub's documented subset."
+    },
+    {
+      "input": "baseline",
+      "code": "UNSUPPORTED0101",
+      "severity": "warning",
+      "stage": "unsupported",
+      "message": "SARIF offset-based region properties are not used; the line-and-column region was used.",
+      "runIndex": 0,
+      "resultIndex": 0,
+      "jsonPointer": "/runs/0/results/0/locations/0/physicalLocation/region"
+    },
+    {
+      "input": "candidate",
+      "code": "GHCS0023",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "GitHub's documented supported-property subset does not use region.offsets (1 occurrence).",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30",
+      "help": "The property remains available to SarifRegress where its supported subset uses it; this advisory describes only GitHub's documented subset."
+    },
+    {
+      "input": "candidate",
+      "code": "GHCS0023",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "GitHub's documented supported-property subset does not use region.snippet (1 occurrence).",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30",
+      "help": "The property remains available to SarifRegress where its supported subset uses it; this advisory describes only GitHub's documented subset."
+    },
+    {
+      "input": "candidate",
+      "code": "UNSUPPORTED0101",
+      "severity": "warning",
+      "stage": "unsupported",
+      "message": "SARIF offset-based region properties are not used; the line-and-column region was used.",
+      "runIndex": 0,
+      "resultIndex": 0,
+      "jsonPointer": "/runs/0/results/0/locations/0/physicalLocation/region"
+    }
+  ],
+  "expectedExplanations": [
+    {
+      "baselineKey": "baseline:0:0",
+      "candidateKey": "candidate:0:0",
+      "classification": "unchanged",
+      "precedenceTier": "exact-producer",
+      "ambiguous": false,
+      "evidenceKinds": [
+        "canonical-path",
+        "context-snippet",
+        "derived-fingerprint",
+        "message",
+        "producer-fingerprint",
+        "region",
+        "rule-identity"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,716 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/output.schema.json",
+  "title": "SarifRegress comparison report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "outputSchemaVersion",
+    "tool",
+    "inputs",
+    "summary",
+    "findings",
+    "diagnostics",
+    "metrics",
+    "determinism"
+  ],
+  "properties": {
+    "outputSchemaVersion": {
+      "const": "1"
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "const": "sarif-regress"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline",
+        "candidate"
+      ],
+      "properties": {
+        "baseline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidateEdges",
+        "assignmentComponents",
+        "ambiguousComponents",
+        "diagnostics"
+      ],
+      "properties": {
+        "candidateEdges": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "assignmentComponents": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "ambiguousComponents": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        }
+      }
+    },
+    "determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonCanonicalisation",
+        "crossPlatformNormalisation",
+        "matcherAlgorithm"
+      ],
+      "properties": {
+        "jsonCanonicalisation": {
+          "const": "schema-order-v1"
+        },
+        "crossPlatformNormalisation": {
+          "const": "approved-path-normalisation-v1"
+        },
+        "matcherAlgorithm": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "classification": {
+      "enum": [
+        "new",
+        "unchanged",
+        "moved",
+        "modified",
+        "resolved",
+        "ambiguous"
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineCount",
+        "candidateCount",
+        "new",
+        "unchanged",
+        "moved",
+        "modified",
+        "resolved",
+        "ambiguous"
+      ],
+      "properties": {
+        "baselineCount": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "candidateCount": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "new": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "unchanged": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "moved": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "modified": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "resolved": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "ambiguous": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        }
+      }
+    },
+    "sourceReference": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "runIndex",
+        "resultIndex",
+        "jsonPointer"
+      ],
+      "properties": {
+        "input": {
+          "enum": [
+            "baseline",
+            "candidate",
+            "configuration",
+            "corpus"
+          ]
+        },
+        "runIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "resultIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "jsonPointer": {
+          "type": "string"
+        }
+      }
+    },
+    "region": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "startLine",
+        "startColumn",
+        "endLine",
+        "endColumn"
+      ],
+      "properties": {
+        "startLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "startColumn": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "endLine": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "endColumn": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    },
+    "snapshot": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "findingKey",
+        "producerFamily",
+        "producerToolName",
+        "producerToolVersion",
+        "automaticProducerIdentity",
+        "canonicalRule",
+        "canonicalUri",
+        "region",
+        "canonicalMessage"
+      ],
+      "properties": {
+        "findingKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "producerFamily": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable producer family; never the automatic same-producer key."
+        },
+        "producerToolName": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact source SARIF producer tool name."
+        },
+        "producerToolVersion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Optional source SARIF producer tool version."
+        },
+        "automaticProducerIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Collision-resistant identity used for automatic same-producer decisions."
+        },
+        "canonicalRule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonicalUri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region": {
+          "$ref": "#/$defs/region"
+        },
+        "canonicalMessage": {
+          "type": "string"
+        },
+        "sourceMetadata": {
+          "$ref": "#/$defs/sourceMetadata"
+        },
+        "messageNormalisationFlags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lossiness": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "derivedFingerprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/derivedFingerprint"
+          }
+        }
+      }
+    },
+    "sourceMetadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "kind",
+        "baselineState"
+      ],
+      "properties": {
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baselineState": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "derivedFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value",
+        "algorithmVersion"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "baselineRef",
+        "candidateRef",
+        "baseline",
+        "candidate",
+        "decision",
+        "evidence",
+        "rejectedAlternatives",
+        "transforms",
+        "diagnostics"
+      ],
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/classification"
+        },
+        "baselineRef": {
+          "$ref": "#/$defs/sourceReference"
+        },
+        "candidateRef": {
+          "$ref": "#/$defs/sourceReference"
+        },
+        "baseline": {
+          "$ref": "#/$defs/snapshot"
+        },
+        "candidate": {
+          "$ref": "#/$defs/snapshot"
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "rejectedAlternatives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rejectedAlternative"
+          }
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transformation"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic"
+          }
+        }
+      }
+    },
+    "precedenceTier": {
+      "enum": [
+        "refuse",
+        "weak-contextual",
+        "path-problem",
+        "strong-moved",
+        "exact-canonical",
+        "exact-producer",
+        "override"
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "precedenceTier",
+        "displayConfidence",
+        "ambiguous",
+        "matcherAlgorithmVersion"
+      ],
+      "properties": {
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "displayConfidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "ambiguous": {
+          "type": "boolean"
+        },
+        "matcherAlgorithmVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "baselineValue",
+        "candidateValue",
+        "origin",
+        "precedenceTier",
+        "lossy",
+        "algorithmVersion"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baselineValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "candidateValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "producer",
+            "configuration",
+            "repository",
+            "system"
+          ]
+        },
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "lossy": {
+          "type": "boolean"
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "rejectedAlternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findingKey",
+        "reason",
+        "precedenceTier",
+        "decisionVector"
+      ],
+      "properties": {
+        "findingKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "decisionVector": {
+          "$ref": "#/$defs/decisionVector"
+        }
+      }
+    },
+    "decisionVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "precedenceTier",
+        "producerFingerprintStrength",
+        "pathMatchKind",
+        "contextAgreement",
+        "codeFlowAgreement",
+        "messageAgreement",
+        "regionDriftBand"
+      ],
+      "properties": {
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "producerFingerprintStrength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pathMatchKind": {
+          "enum": [
+            "none",
+            "aliased",
+            "exact"
+          ]
+        },
+        "contextAgreement": {
+          "$ref": "#/$defs/agreementBand"
+        },
+        "codeFlowAgreement": {
+          "$ref": "#/$defs/agreementBand"
+        },
+        "messageAgreement": {
+          "$ref": "#/$defs/agreementBand"
+        },
+        "regionDriftBand": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "agreementBand": {
+      "enum": [
+        "none",
+        "compatible",
+        "exact"
+      ]
+    },
+    "transformation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "originalValue",
+        "transformedValue",
+        "lossy",
+        "algorithmVersion"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "originalValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transformedValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lossy": {
+          "type": "boolean"
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "stage",
+        "message",
+        "sourceRef",
+        "standardBasis",
+        "help"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z]+[0-9]{4}$"
+        },
+        "severity": {
+          "enum": [
+            "note",
+            "warning",
+            "error"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "io",
+            "parse",
+            "schema",
+            "unsupported",
+            "canonicalisation",
+            "repository",
+            "fingerprint",
+            "match",
+            "github-compat",
+            "security",
+            "report",
+            "internal"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceRef": {
+          "$ref": "#/$defs/sourceReference"
+        },
+        "standardBasis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "help": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
