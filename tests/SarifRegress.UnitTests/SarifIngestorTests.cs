@@ -378,8 +378,8 @@ public sealed class SarifIngestorTests
             first.ComparisonInput.Diagnostics.Select(ToStableDiagnosticTuple),
             second.ComparisonInput.Diagnostics.Select(ToStableDiagnosticTuple));
         Assert.Equal(
-            first.Summary.Runs.Select(item => item),
-            second.Summary.Runs.Select(item => item));
+            first.Summary.Runs.Select(ToStableRunSummaryTuple),
+            second.Summary.Runs.Select(ToStableRunSummaryTuple));
         Assert.Equal(first.Summary.Version, second.Summary.Version);
     }
 
@@ -444,5 +444,19 @@ public sealed class SarifIngestorTests
             diagnostic.Code,
             diagnostic.SourceReference?.JsonPointer ?? string.Empty,
             diagnostic.Message
+        );
+
+    private static (SarifRunSummary Summary, string IgnoredProperties)
+        ToStableRunSummaryTuple(SarifRunSummary summary) =>
+        (
+            summary with
+            {
+                IgnoredProperties =
+                    ImmutableArray<GithubIgnoredPropertyFact>.Empty,
+            },
+            string.Join(
+                "|",
+                summary.IgnoredProperties.Select(
+                    item => $"{item.PropertyPath}:{item.Occurrences}"))
         );
 }

@@ -16,7 +16,8 @@ namespace SarifRegress.PropertyTests;
 
 internal static class PropertyTestData
 {
-    public static SarifRegressConfiguration BoundedConfiguration()
+    public static SarifRegressConfiguration BoundedConfiguration(
+        int maximumRunCollectionItems = 8)
     {
         var defaults = SarifRegressConfiguration.Default;
         var limits = ResourceLimits.Default with
@@ -24,7 +25,7 @@ internal static class PropertyTestData
             MaximumInputBytes = 4_096,
             MaximumJsonDepth = 16,
             MaximumRuns = 2,
-            MaximumRunCollectionItems = 8,
+            MaximumRunCollectionItems = maximumRunCollectionItems,
             MaximumLocationsPerResult = 4,
             MaximumCodeFlowsPerResult = 2,
             MaximumThreadFlowLocationsPerResult = 8,

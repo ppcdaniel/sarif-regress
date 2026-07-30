@@ -339,7 +339,8 @@ public sealed class SarifSemanticInvariancePropertyTests
             new SarifIngestionRequest(
                 input,
                 logicalName,
-                PropertyTestData.BoundedConfiguration()),
+                PropertyTestData.BoundedConfiguration(
+                    maximumRunCollectionItems: 32)),
             TestContext.Current.CancellationToken);
     }
 
