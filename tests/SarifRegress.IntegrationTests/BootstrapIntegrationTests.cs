@@ -4,11 +4,31 @@ namespace SarifRegress.IntegrationTests;
 
 public sealed class BootstrapIntegrationTests
 {
-    private const string PlaceholderOutput =
-        "SarifRegress comparison is not implemented yet.\n";
+    private const string SingleFindingSarif =
+        """
+        {
+          "version": "2.1.0",
+          "runs": [{
+            "tool": { "driver": { "name": "Example Analyzer" } },
+            "results": [{
+              "ruleId": "EXAMPLE001",
+              "message": { "text": "Stable message" },
+              "partialFingerprints": {
+                "primaryLocationLineHash/v1": "stable-fingerprint"
+              },
+              "locations": [{
+                "physicalLocation": {
+                  "artifactLocation": { "uri": "src/example.cs" },
+                  "region": { "startLine": 2, "startColumn": 1 }
+                }
+              }]
+            }]
+          }]
+        }
+        """;
 
     [Fact]
-    public async Task Real_cli_process_propagates_placeholder_exit_code_and_output()
+    public async Task Real_cli_process_runs_the_complete_compare_pipeline()
     {
         var repositoryRoot = FindRepositoryRoot();
         var cliProject = Path.Combine(
@@ -16,6 +36,9 @@ public sealed class BootstrapIntegrationTests
             "src",
             "SarifRegress.Cli",
             "SarifRegress.Cli.csproj");
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", SingleFindingSarif);
+        workspace.Write("candidate.sarif", SingleFindingSarif);
         var result = await RunDotnetAsync(
             repositoryRoot,
             "run",
@@ -27,13 +50,73 @@ public sealed class BootstrapIntegrationTests
             "--",
             "compare",
             "--baseline",
-            "baseline.sarif",
+            workspace.PathOf("baseline.sarif"),
             "--candidate",
-            "candidate.sarif");
+            workspace.PathOf("candidate.sarif"),
+            "--json-out",
+            workspace.PathOf("report.json"),
+            "--html-out",
+            workspace.PathOf("report.html"),
+            "--sarif-out",
+            workspace.PathOf("report.sarif"));
 
-        Assert.Equal(2, result.ExitCode);
-        Assert.Equal(PlaceholderOutput, result.StandardOutput);
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal(string.Empty, result.StandardOutput);
         Assert.Equal(string.Empty, result.StandardError);
+        Assert.Contains(
+            "\"unchanged\": 1",
+            workspace.Read("report.json"),
+            StringComparison.Ordinal);
+        Assert.StartsWith(
+            "<!doctype html>\n",
+            workspace.Read("report.html"),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"version\": \"2.1.0\"",
+            workspace.Read("report.sarif"),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            workspace.Root,
+            workspace.Read("report.json"),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Real_cli_process_returns_one_for_malformed_sarif()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var cliProject = Path.Combine(
+            repositoryRoot,
+            "src",
+            "SarifRegress.Cli",
+            "SarifRegress.Cli.csproj");
+        using var workspace = new TestWorkspace();
+        workspace.Write(
+            "baseline.sarif",
+            """{ "version": "2.1.0", "runs": [""");
+        workspace.Write("candidate.sarif", SingleFindingSarif);
+        var result = await RunDotnetAsync(
+            repositoryRoot,
+            "run",
+            "--project",
+            cliProject,
+            "--configuration",
+            "Release",
+            "--no-build",
+            "--",
+            "compare",
+            "--baseline",
+            workspace.PathOf("baseline.sarif"),
+            "--candidate",
+            workspace.PathOf("candidate.sarif"));
+
+        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(string.Empty, result.StandardOutput);
+        Assert.Contains("PARSE0100 error:", result.StandardError, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            workspace.Root,
+            result.StandardError,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -123,4 +206,34 @@ public sealed class BootstrapIntegrationTests
         int ExitCode,
         string StandardOutput,
         string StandardError);
+
+    private sealed class TestWorkspace : IDisposable
+    {
+        public TestWorkspace()
+        {
+            Root = Path.Combine(
+                Path.GetTempPath(),
+                "sarif-regress-integration-tests",
+                Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Root);
+        }
+
+        public string Root { get; }
+
+        public string PathOf(string relativePath) =>
+            Path.Combine(Root, relativePath);
+
+        public void Write(string relativePath, string contents)
+        {
+            File.WriteAllText(PathOf(relativePath), contents);
+        }
+
+        public string Read(string relativePath) =>
+            File.ReadAllText(PathOf(relativePath));
+
+        public void Dispose()
+        {
+            Directory.Delete(Root, recursive: true);
+        }
+    }
 }

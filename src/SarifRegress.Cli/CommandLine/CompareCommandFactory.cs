@@ -3,26 +3,33 @@ using System.CommandLine;
 namespace SarifRegress.Cli.CommandLine;
 
 /// <summary>
-/// Creates the bootstrap implementation of the compare command.
+/// Creates the SARIF comparison command.
 /// </summary>
 public static class CompareCommandFactory
 {
-    /// <summary>
-    /// The deterministic output emitted by a valid placeholder invocation.
-    /// </summary>
-    public const string PlaceholderOutput =
-        "SarifRegress comparison is not implemented yet.\n";
-
     private const string CommandName = "compare";
     private const string CommandDescription =
         "Compare baseline and candidate SARIF files.";
 
     /// <summary>
-    /// Creates the compare command and its bootstrap options.
+    /// Creates the compare command using the process invocation directory.
     /// </summary>
     /// <returns>A configured compare command.</returns>
     public static Command Create()
     {
+        return Create(Directory.GetCurrentDirectory());
+    }
+
+    /// <summary>
+    /// Creates the compare command using an explicit invocation directory.
+    /// </summary>
+    /// <param name="currentDirectory">
+    /// The directory against which explicit relative command-line paths are resolved.
+    /// </param>
+    /// <returns>A configured compare command.</returns>
+    public static Command Create(string currentDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
         Option<string?> baselineOption = CreatePathOption(
             "--baseline",
             "Path to the baseline SARIF file.",
@@ -43,6 +50,14 @@ public static class CompareCommandFactory
             "--json-out",
             "Optional path for the JSON report.",
             isRequired: false);
+        Option<string?> htmlOutputOption = CreatePathOption(
+            "--html-out",
+            "Optional path for the static HTML report.",
+            isRequired: false);
+        Option<string?> sarifOutputOption = CreatePathOption(
+            "--sarif-out",
+            "Optional path for the canonical SARIF report.",
+            isRequired: false);
 
         Command compareCommand = new(CommandName, CommandDescription);
         compareCommand.Options.Add(baselineOption);
@@ -50,11 +65,27 @@ public static class CompareCommandFactory
         compareCommand.Options.Add(repositoryOption);
         compareCommand.Options.Add(configurationOption);
         compareCommand.Options.Add(jsonOutputOption);
-        compareCommand.SetAction(parseResult =>
-        {
-            parseResult.InvocationConfiguration.Output.Write(PlaceholderOutput);
-            return ExitCodes.NotImplemented;
-        });
+        compareCommand.Options.Add(htmlOutputOption);
+        compareCommand.Options.Add(sarifOutputOption);
+        var handler = new CompareCommandHandler(currentDirectory);
+        compareCommand.SetAction(
+            async (parseResult, cancellationToken) =>
+            {
+                var request = new CompareCommandRequest(
+                    parseResult.GetValue(baselineOption)!,
+                    parseResult.GetValue(candidateOption)!,
+                    parseResult.GetValue(repositoryOption),
+                    parseResult.GetValue(configurationOption),
+                    parseResult.GetValue(jsonOutputOption),
+                    parseResult.GetValue(htmlOutputOption),
+                    parseResult.GetValue(sarifOutputOption));
+                return await handler.ExecuteAsync(
+                        request,
+                        parseResult.InvocationConfiguration.Output,
+                        parseResult.InvocationConfiguration.Error,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            });
 
         return compareCommand;
     }

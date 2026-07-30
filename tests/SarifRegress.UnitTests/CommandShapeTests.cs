@@ -10,8 +10,10 @@ public sealed class CommandShapeTests
         "--baseline",
         "--candidate",
         "--config",
+        "--html-out",
         "--json-out",
         "--repo",
+        "--sarif-out",
     ];
 
     [Fact]
