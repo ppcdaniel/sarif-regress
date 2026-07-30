@@ -62,6 +62,13 @@ public static class StableJsonReportSerializer
         var canonicalReport = StableComparisonReport.NormalizeAndValidate(
             report,
             ResourceLimits.Default);
+        return MeasureCanonical(canonicalReport);
+    }
+
+    internal static StableJsonSerializationMeasurement MeasureCanonical(
+        ComparisonReport canonicalReport)
+    {
+        ArgumentNullException.ThrowIfNull(canonicalReport);
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         using var stream = new HashingWriteStream(hash);
         var result = StableJsonReportWriter.Write(stream, canonicalReport);

@@ -87,6 +87,8 @@ public sealed class StableJsonReportTests
         var report = ReportTestData.CreateRepresentativeReport();
         var bytes = StableJsonReportSerializer.Serialize(report);
         var measurement = StableJsonReportSerializer.Measure(report);
+        var canonicalMeasurement = StableJsonReportSerializer.MeasureCanonical(
+            StableJsonReportSerializer.Deserialize(bytes));
         using var document = JsonDocument.Parse(bytes);
         var explanationBytes = document.RootElement
             .GetProperty("findings")
@@ -108,6 +110,7 @@ public sealed class StableJsonReportTests
         Assert.Equal(
             Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
             measurement.OutputSha256);
+        Assert.Equal(measurement, canonicalMeasurement);
     }
 
     [Fact]

@@ -435,6 +435,15 @@ public sealed class FindingMatcher
         CandidateGraph graph,
         ImmutableArray<Diagnostic> fingerprintDiagnostics)
     {
+        if (graph.PreflightRefusal is not null)
+        {
+            return CreatePreflightRefusalResult(
+                baselineFindings,
+                candidateFindings,
+                graph,
+                fingerprintDiagnostics);
+        }
+
         var baselineIndexByKey = baselineFindings
             .Select((finding, index) => (finding.FindingKey, index))
             .ToDictionary(item => item.FindingKey, item => item.index, StringComparer.Ordinal);
@@ -450,16 +459,6 @@ public sealed class FindingMatcher
             .Concat(graph.Diagnostics)
             .ToList();
         var ambiguousOriginalComponents = new HashSet<string>(StringComparer.Ordinal);
-
-        MarkPreflightRefusal(
-            baselineFindings,
-            candidateFindings,
-            graph.PreflightRefusal,
-            ambiguousBaselineIndexes,
-            ambiguousCandidateIndexes,
-            diagnosticsByNode,
-            ambiguousOriginalComponents,
-            resultDiagnostics);
 
         CommitIndisputableProducerMatches(
             graph,
@@ -589,48 +588,58 @@ public sealed class FindingMatcher
             Diagnostic.Sort(resultDiagnostics));
     }
 
-    private static void MarkPreflightRefusal(
+    private static MatchResult CreatePreflightRefusalResult(
         ImmutableArray<Finding> baselineFindings,
         ImmutableArray<Finding> candidateFindings,
-        CandidatePreflightRefusal? refusal,
-        ISet<int> ambiguousBaselineIndexes,
-        ISet<int> ambiguousCandidateIndexes,
-        IDictionary<int, List<Diagnostic>> diagnosticsByNode,
-        ISet<string> ambiguousOriginalComponents,
-        ICollection<Diagnostic> resultDiagnostics)
+        CandidateGraph graph,
+        ImmutableArray<Diagnostic> fingerprintDiagnostics)
     {
-        if (refusal is null)
-        {
-            return;
-        }
-
+        var refusal = graph.PreflightRefusal!;
         var diagnostic = new Diagnostic(
             refusal.Code,
             DiagnosticSeverity.Warning,
             DiagnosticStage.Match,
             refusal.Message,
             help: refusal.Help);
-        resultDiagnostics.Add(diagnostic);
-        ambiguousOriginalComponents.Add("candidate-pair-preflight");
-
-        for (var baselineIndex = 0;
-             baselineIndex < baselineFindings.Length;
-             baselineIndex++)
-        {
-            ambiguousBaselineIndexes.Add(baselineIndex);
-            AddNodeDiagnostic(diagnosticsByNode, baselineIndex, diagnostic);
-        }
-
-        for (var candidateIndex = 0;
-             candidateIndex < candidateFindings.Length;
-             candidateIndex++)
-        {
-            ambiguousCandidateIndexes.Add(candidateIndex);
-            AddNodeDiagnostic(
-                diagnosticsByNode,
-                baselineFindings.Length + candidateIndex,
-                diagnostic);
-        }
+        var trace = new DecisionTrace(
+            PrecedenceTier.Refuse,
+            DisplayConfidence.Low,
+            Ambiguous: true,
+            MatchingAlgorithms.MatcherVersion,
+            ImmutableArray<EvidenceRecord>.Empty,
+            ImmutableArray<RejectedAlternative>.Empty,
+            ImmutableArray<TransformationRecord>.Empty,
+            ImmutableArray<Diagnostic>.Empty);
+        var decisions = baselineFindings
+            .Select(finding => new FindingDecision(
+                FindingClassification.Ambiguous,
+                finding,
+                Candidate: null,
+                trace))
+            .Concat(candidateFindings.Select(finding => new FindingDecision(
+                FindingClassification.Ambiguous,
+                Baseline: null,
+                finding,
+                trace)))
+            .OrderBy(
+                decision => decision.Baseline?.FindingKey
+                    ?? decision.Candidate?.FindingKey
+                    ?? string.Empty,
+                StringComparer.Ordinal)
+            .ThenBy(decision => decision.Baseline is null ? 1 : 0)
+            .ThenBy(
+                decision => decision.Candidate?.FindingKey ?? string.Empty,
+                StringComparer.Ordinal)
+            .ToImmutableArray();
+        return new MatchResult(
+            decisions,
+            graph.CandidateEdgeCount,
+            graph.ComponentCount,
+            AmbiguousComponentCount: 1,
+            Diagnostic.Sort(
+                fingerprintDiagnostics
+                    .Concat(graph.Diagnostics)
+                    .Append(diagnostic)));
     }
 
     private static void MarkForcedAmbiguity(
@@ -887,6 +896,12 @@ public sealed class FindingMatcher
         IReadOnlySet<int> ambiguousCandidateIndexes,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
     {
+        var incidentEdgeIndex = IncidentEdgeIndex.Create(
+            baselineFindings.Length,
+            candidateFindings.Length,
+            edges,
+            baselineIndexByKey,
+            candidateIndexByKey);
         var decisions = new List<FindingDecision>(
             baselineFindings.Length + candidateFindings.Length);
         for (var baselineIndex = 0; baselineIndex < baselineFindings.Length; baselineIndex++)
@@ -899,9 +914,7 @@ public sealed class FindingMatcher
                     candidate: null,
                     baselineIndex,
                     configuration,
-                    edges,
-                    baselineIndexByKey,
-                    candidateIndexByKey,
+                    incidentEdgeIndex.ForBaseline(baselineIndex),
                     diagnosticsByNode));
                 continue;
             }
@@ -914,9 +927,7 @@ public sealed class FindingMatcher
                     baselineIndex,
                     candidateIndex,
                     configuration,
-                    edges,
-                    baselineIndexByKey,
-                    candidateIndexByKey,
+                    incidentEdgeIndex.ForMatch(baselineIndex, candidateIndex),
                     diagnosticsByNode));
                 continue;
             }
@@ -927,9 +938,7 @@ public sealed class FindingMatcher
                 candidate: null,
                 baselineIndex,
                 configuration,
-                edges,
-                baselineIndexByKey,
-                candidateIndexByKey,
+                incidentEdgeIndex.ForBaseline(baselineIndex),
                 diagnosticsByNode));
         }
 
@@ -948,9 +957,7 @@ public sealed class FindingMatcher
                     candidate,
                     node,
                     configuration,
-                    edges,
-                    baselineIndexByKey,
-                    candidateIndexByKey,
+                    incidentEdgeIndex.ForCandidate(candidateIndex),
                     diagnosticsByNode)
                 : CreateUnmatchedDecision(
                     FindingClassification.New,
@@ -958,9 +965,7 @@ public sealed class FindingMatcher
                     candidate,
                     node,
                     configuration,
-                    edges,
-                    baselineIndexByKey,
-                    candidateIndexByKey,
+                    incidentEdgeIndex.ForCandidate(candidateIndex),
                     diagnosticsByNode));
         }
 
@@ -981,17 +986,10 @@ public sealed class FindingMatcher
         int baselineIndex,
         int candidateIndex,
         SarifRegressConfiguration configuration,
-        ImmutableArray<MatchEdge> allEdges,
-        IReadOnlyDictionary<string, int> baselineIndexByKey,
-        IReadOnlyDictionary<string, int> candidateIndexByKey,
+        ImmutableArray<MatchEdge> incidentEdges,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
     {
-        var alternatives = GetIncidentEdges(
-            baselineIndex,
-            candidateIndex,
-            allEdges,
-            baselineIndexByKey,
-            candidateIndexByKey)
+        var alternatives = incidentEdges
             .Where(edge => !ReferenceEquals(edge, selectedEdge))
             .ToImmutableArray();
         var trace = CreateTrace(
@@ -1025,17 +1023,9 @@ public sealed class FindingMatcher
         Finding? candidate,
         int node,
         SarifRegressConfiguration configuration,
-        ImmutableArray<MatchEdge> allEdges,
-        IReadOnlyDictionary<string, int> baselineIndexByKey,
-        IReadOnlyDictionary<string, int> candidateIndexByKey,
+        ImmutableArray<MatchEdge> incidentEdges,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
     {
-        var incidentEdges = GetIncidentEdges(
-            baseline is null ? null : baselineIndexByKey[baseline.FindingKey],
-            candidate is null ? null : candidateIndexByKey[candidate.FindingKey],
-            allEdges,
-            baselineIndexByKey,
-            candidateIndexByKey);
         var sourceReference = (baseline ?? candidate)!.SourceReference;
         var evidence = incidentEdges
             .SelectMany(edge => edge.Evidence)
@@ -1084,17 +1074,9 @@ public sealed class FindingMatcher
         Finding? candidate,
         int node,
         SarifRegressConfiguration configuration,
-        ImmutableArray<MatchEdge> allEdges,
-        IReadOnlyDictionary<string, int> baselineIndexByKey,
-        IReadOnlyDictionary<string, int> candidateIndexByKey,
+        ImmutableArray<MatchEdge> incidentEdges,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
     {
-        var incidentEdges = GetIncidentEdges(
-            baseline is null ? null : baselineIndexByKey[baseline.FindingKey],
-            candidate is null ? null : candidateIndexByKey[candidate.FindingKey],
-            allEdges,
-            baselineIndexByKey,
-            candidateIndexByKey);
         var sourceReference = (baseline ?? candidate)!.SourceReference;
         var outcome = incidentEdges.IsEmpty
             ? baseline is null
@@ -1153,21 +1135,6 @@ public sealed class FindingMatcher
         Finding? finding) =>
         finding?.PrimaryLocation?.Path.Transformations
         ?? ImmutableArray<TransformationRecord>.Empty;
-
-    private static ImmutableArray<MatchEdge> GetIncidentEdges(
-        int? baselineIndex,
-        int? candidateIndex,
-        ImmutableArray<MatchEdge> edges,
-        IReadOnlyDictionary<string, int> baselineIndexByKey,
-        IReadOnlyDictionary<string, int> candidateIndexByKey) =>
-        edges
-            .Where(edge =>
-                (baselineIndex.HasValue
-                    && baselineIndexByKey[edge.Baseline.FindingKey] == baselineIndex.Value)
-                || (candidateIndex.HasValue
-                    && candidateIndexByKey[edge.Candidate.FindingKey] == candidateIndex.Value))
-            .Order(MatchEdgePreferenceComparer.Instance)
-            .ToImmutableArray();
 
     private static ImmutableArray<RejectedAlternative> CreateRejectedAlternatives(
         ImmutableArray<MatchEdge> alternatives,
@@ -1390,6 +1357,90 @@ public sealed class FindingMatcher
             PrecedenceTier.PathProblem => DisplayConfidence.Medium,
             _ => DisplayConfidence.Low,
         };
+
+    private sealed class IncidentEdgeIndex
+    {
+        private readonly ImmutableArray<MatchEdge>[] baselineEdges;
+        private readonly ImmutableArray<MatchEdge>[] candidateEdges;
+
+        private IncidentEdgeIndex(
+            ImmutableArray<MatchEdge>[] baselineEdges,
+            ImmutableArray<MatchEdge>[] candidateEdges)
+        {
+            this.baselineEdges = baselineEdges;
+            this.candidateEdges = candidateEdges;
+        }
+
+        public static IncidentEdgeIndex Create(
+            int baselineCount,
+            int candidateCount,
+            ImmutableArray<MatchEdge> edges,
+            IReadOnlyDictionary<string, int> baselineIndexByKey,
+            IReadOnlyDictionary<string, int> candidateIndexByKey)
+        {
+            var baselineBuilders = new List<MatchEdge>?[baselineCount];
+            var candidateBuilders = new List<MatchEdge>?[candidateCount];
+            foreach (var edge in edges)
+            {
+                var baselineIndex = baselineIndexByKey[edge.Baseline.FindingKey];
+                var candidateIndex = candidateIndexByKey[edge.Candidate.FindingKey];
+                (baselineBuilders[baselineIndex] ??= []).Add(edge);
+                (candidateBuilders[candidateIndex] ??= []).Add(edge);
+            }
+
+            return new IncidentEdgeIndex(
+                Freeze(baselineBuilders),
+                Freeze(candidateBuilders));
+        }
+
+        public ImmutableArray<MatchEdge> ForBaseline(int baselineIndex) =>
+            baselineEdges[baselineIndex];
+
+        public ImmutableArray<MatchEdge> ForCandidate(int candidateIndex) =>
+            candidateEdges[candidateIndex];
+
+        public ImmutableArray<MatchEdge> ForMatch(
+            int baselineIndex,
+            int candidateIndex)
+        {
+            var baseline = ForBaseline(baselineIndex);
+            var candidate = ForCandidate(candidateIndex);
+            if (baseline.IsEmpty)
+            {
+                return candidate;
+            }
+
+            if (candidate.IsEmpty
+                || (baseline.Length == 1
+                    && candidate.Length == 1
+                    && ReferenceEquals(baseline[0], candidate[0])))
+            {
+                return baseline;
+            }
+
+            return baseline
+                .Concat(candidate)
+                .DistinctBy(edge => edge.StableIdentityKey, StringComparer.Ordinal)
+                .Order(MatchEdgePreferenceComparer.Instance)
+                .ToImmutableArray();
+        }
+
+        private static ImmutableArray<MatchEdge>[] Freeze(
+            List<MatchEdge>?[] builders)
+        {
+            var result = new ImmutableArray<MatchEdge>[builders.Length];
+            for (var index = 0; index < builders.Length; index++)
+            {
+                result[index] = builders[index] is null
+                    ? ImmutableArray<MatchEdge>.Empty
+                    : builders[index]!
+                        .Order(MatchEdgePreferenceComparer.Instance)
+                        .ToImmutableArray();
+            }
+
+            return result;
+        }
+    }
 
     private sealed record CandidateGraph(
         ImmutableArray<MatchEdge> RetainedEdges,

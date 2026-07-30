@@ -77,7 +77,7 @@ public sealed class BenchmarkRunner
                 candidate.ComparisonInput.LogicalName,
                 ProductInformation.MatcherAlgorithmVersion));
         var serialization =
-            StableJsonReportSerializer.Measure(comparisonReport);
+            StableJsonReportSerializer.MeasureCanonical(comparisonReport);
         stopwatch.Stop();
         var serializeElapsed = stopwatch.Elapsed;
 

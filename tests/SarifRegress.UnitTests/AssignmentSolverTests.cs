@@ -210,10 +210,19 @@ public sealed class AssignmentSolverTests
         Assert.Equal(1_001, result.Decisions.Length);
         Assert.All(
             result.Decisions,
-            decision => Assert.Equal(
-                FindingClassification.Ambiguous,
-                decision.Classification));
-        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MATCH0007");
+            decision =>
+            {
+                Assert.Equal(
+                    FindingClassification.Ambiguous,
+                    decision.Classification);
+                Assert.True(decision.Decision.Ambiguous);
+                Assert.Equal(PrecedenceTier.Refuse, decision.Decision.PrecedenceTier);
+                Assert.Empty(decision.Decision.Diagnostics);
+            });
+        var diagnostic = Assert.Single(
+            result.Diagnostics,
+            diagnostic => diagnostic.Code == "MATCH0007");
+        Assert.Null(diagnostic.SourceReference);
     }
 
     [Fact]

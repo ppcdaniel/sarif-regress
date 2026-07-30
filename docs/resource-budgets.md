@@ -24,6 +24,8 @@ budgets, not guaranteed performance on every machine.
   Cartesian product.
 - Coarse pairs are preflighted before scoring, with limits of 256 pairs on either side of a finding
   and 1,000,000 pairs for one comparison.
+- A comparison-wide preflight refusal emits one source-less top-level diagnostic; every affected
+  finding retains a minimal structured `refuse` trace without copying that global diagnostic.
 - Retained candidate edges are capped per finding.
 - The assignment graph is split into connected components.
 - Components within the exact bound use a maximum-cardinality lexicographic solver.

@@ -130,6 +130,13 @@ public static class ComparisonReportFactory
     private static DecisionTrace SortDecision(DecisionTrace decision)
     {
         ArgumentNullException.ThrowIfNull(decision);
+        if (decision.Evidence.IsEmpty
+            && decision.RejectedAlternatives.IsEmpty
+            && decision.Transformations.IsEmpty
+            && decision.Diagnostics.IsEmpty)
+        {
+            return decision;
+        }
 
         var evidence = decision.Evidence
             .OrderBy(item => item.Kind, StringComparer.Ordinal)

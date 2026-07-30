@@ -507,6 +507,14 @@ internal static class StableComparisonReport
                 limits);
         }
 
+        if (decision.Evidence.IsEmpty
+            && decision.RejectedAlternatives.IsEmpty
+            && decision.Transformations.IsEmpty
+            && decision.Diagnostics.IsEmpty)
+        {
+            return decision;
+        }
+
         return decision with
         {
             Evidence = decision.Evidence
