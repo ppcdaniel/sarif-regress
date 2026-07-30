@@ -96,7 +96,10 @@ public static class StableJsonReportSerializer
                 + $"{limits.MaximumInputBytes}-byte limit.");
         }
 
-        if (utf8Json.StartsWith([0xEF, 0xBB, 0xBF]))
+        if (utf8Json.Length >= 3
+            && utf8Json[0] == 0xEF
+            && utf8Json[1] == 0xBB
+            && utf8Json[2] == 0xBF)
         {
             throw new JsonException(
                 "Stable comparison JSON must use UTF-8 without a byte-order mark.");
