@@ -537,7 +537,7 @@ public sealed class AuxiliaryCommandTests
         Assert.NotEmpty(bytes);
         Assert.Equal((byte)'\n', bytes[^1]);
         Assert.DoesNotContain((byte)'\r', bytes);
-        Assert.False(bytes.AsSpan().StartsWith([0xEF, 0xBB, 0xBF]));
+        Assert.False(bytes.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF }));
     }
 
     private static async Task<InvocationResult> InvokeAsync(

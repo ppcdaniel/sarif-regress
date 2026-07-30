@@ -204,7 +204,7 @@ public sealed class AuxiliaryOutputDeterminismTests
         Assert.Equal((byte)'\n', firstProjection[^1]);
         Assert.DoesNotContain((byte)'\r', firstProjection);
         Assert.False(
-            firstProjection.AsSpan().StartsWith([0xEF, 0xBB, 0xBF]));
+            firstProjection.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF }));
     }
 
     private static void AssertStablePropertyEqual(
