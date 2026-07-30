@@ -116,7 +116,8 @@ public sealed class ProjectReferenceBoundaryTests
     private static bool IsWithinDirectory(string directory, string path)
     {
         var relativePath = Path.GetRelativePath(directory, path);
-        return !string.Equals(relativePath, "..", StringComparison.Ordinal) &&
+        return !Path.IsPathRooted(relativePath) &&
+            !string.Equals(relativePath, "..", StringComparison.Ordinal) &&
             !relativePath.StartsWith(
                 $"..{Path.DirectorySeparatorChar}",
                 StringComparison.Ordinal);

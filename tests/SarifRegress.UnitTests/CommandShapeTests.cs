@@ -19,7 +19,8 @@ public sealed class CommandShapeTests
     {
         var rootCommand = CliCommandFactory.Create();
         var compareCommand = Assert.Single(
-            rootCommand.Subcommands.Where(command => command.Name == "compare"));
+            rootCommand.Subcommands,
+            command => command.Name == "compare");
 
         var actualOptionNames = compareCommand.Options
             .Select(option => option.Name)
