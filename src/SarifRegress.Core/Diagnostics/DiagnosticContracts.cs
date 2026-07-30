@@ -282,6 +282,11 @@ public sealed record Diagnostic
     public static ImmutableArray<Diagnostic> Sort(IEnumerable<Diagnostic> diagnostics)
     {
         ArgumentNullException.ThrowIfNull(diagnostics);
+        if (TryGetTrivialSequence(diagnostics, out var sorted))
+        {
+            return sorted;
+        }
+
         return diagnostics
             .OrderBy(item => item.Stage)
             .ThenBy(item => item.Code, StringComparer.Ordinal)
@@ -296,6 +301,34 @@ public sealed record Diagnostic
             .ThenBy(item => item.StandardBasis ?? string.Empty, StringComparer.Ordinal)
             .ThenBy(item => item.Help ?? string.Empty, StringComparer.Ordinal)
             .ToImmutableArray();
+    }
+
+    private static bool TryGetTrivialSequence(
+        IEnumerable<Diagnostic> diagnostics,
+        out ImmutableArray<Diagnostic> sorted)
+    {
+        if (diagnostics is ImmutableArray<Diagnostic> immutable)
+        {
+            if (immutable.IsDefault || immutable.Length > 1)
+            {
+                sorted = default;
+                return false;
+            }
+
+            sorted = immutable;
+            return true;
+        }
+
+        if (!diagnostics.TryGetNonEnumeratedCount(out var count) || count > 1)
+        {
+            sorted = default;
+            return false;
+        }
+
+        sorted = count == 0
+            ? ImmutableArray<Diagnostic>.Empty
+            : diagnostics.ToImmutableArray();
+        return true;
     }
 
     private static bool IsValidCode(string? code)

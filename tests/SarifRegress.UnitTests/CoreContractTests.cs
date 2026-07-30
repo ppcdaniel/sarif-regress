@@ -73,6 +73,139 @@ public sealed class CoreContractTests
     }
 
     [Fact]
+    public void Diagnostic_sort_reuses_trivial_immutable_sequences()
+    {
+        var empty = ImmutableArray<Diagnostic>.Empty;
+        var diagnostic = new Diagnostic(
+            "IO0001",
+            DiagnosticSeverity.Error,
+            DiagnosticStage.Io,
+            "Input failed.");
+        var singleton = ImmutableArray.Create(diagnostic);
+
+        Assert.True(empty.Equals(Diagnostic.Sort(empty)));
+        Assert.True(singleton.Equals(Diagnostic.Sort(singleton)));
+    }
+
+    [Fact]
+    public void Finding_collection_normalisation_reuses_trivial_immutable_sequences()
+    {
+        var producerFingerprints = ImmutableArray.Create(
+            new ProducerFingerprint(
+                "primary/v1",
+                "primary",
+                1,
+                "producer-value",
+                FingerprintReliability.High,
+                ProducerFingerprintSource.PartialFingerprint));
+        var derivedFingerprints = ImmutableArray.Create(
+            new DerivedFingerprint(
+                "sarifregress/test/v1",
+                "derived-value",
+                "test/v1"));
+        var relatedLocations = ImmutableArray.Create(
+            new RelatedLocation(
+                Path: null,
+                Region: null,
+                StableKey: "related:0"));
+        var lossiness = ImmutableArray.Create("collapsed-whitespace");
+        var diagnostics = ImmutableArray.Create(
+            new Diagnostic(
+                "CANON0001",
+                DiagnosticSeverity.Note,
+                DiagnosticStage.Canonicalisation,
+                "Canonicalised."));
+
+        var finding = CreateFinding(
+            producerFingerprints,
+            derivedFingerprints,
+            relatedLocations,
+            lossiness,
+            diagnostics);
+
+        Assert.True(
+            producerFingerprints.Equals(finding.ProducerFingerprints));
+        Assert.True(derivedFingerprints.Equals(finding.DerivedFingerprints));
+        Assert.True(relatedLocations.Equals(finding.RelatedLocations));
+        Assert.True(lossiness.Equals(finding.Lossiness));
+        Assert.True(diagnostics.Equals(finding.Diagnostics));
+
+        var emptyFinding = CreateFinding();
+        Assert.Empty(emptyFinding.ProducerFingerprints);
+        Assert.Empty(emptyFinding.DerivedFingerprints);
+        Assert.Empty(emptyFinding.RelatedLocations);
+        Assert.Empty(emptyFinding.Lossiness);
+        Assert.Empty(emptyFinding.Diagnostics);
+    }
+
+    [Fact]
+    public void Finding_collection_normalisation_preserves_multi_item_ordering()
+    {
+        ProducerFingerprint[] producerFingerprints =
+        [
+            new(
+                "zeta/v1",
+                "zeta",
+                1,
+                "zeta-value",
+                FingerprintReliability.High,
+                ProducerFingerprintSource.PartialFingerprint),
+            new(
+                "alpha/v1",
+                "alpha",
+                1,
+                "alpha-value",
+                FingerprintReliability.High,
+                ProducerFingerprintSource.PartialFingerprint),
+        ];
+        DerivedFingerprint[] derivedFingerprints =
+        [
+            new("zeta", "zeta-value", "test/v1"),
+            new("alpha", "alpha-value", "test/v1"),
+        ];
+        RelatedLocation[] relatedLocations =
+        [
+            new(Path: null, Region: null, StableKey: "zeta"),
+            new(Path: null, Region: null, StableKey: "alpha"),
+        ];
+        string[] lossiness = ["zeta", "alpha", "zeta"];
+        Diagnostic[] diagnostics =
+        [
+            new(
+                "PARSE0001",
+                DiagnosticSeverity.Error,
+                DiagnosticStage.Parse,
+                "Parse failed."),
+            new(
+                "IO0001",
+                DiagnosticSeverity.Error,
+                DiagnosticStage.Io,
+                "Input failed."),
+        ];
+
+        var finding = CreateFinding(
+            producerFingerprints,
+            derivedFingerprints,
+            relatedLocations,
+            lossiness,
+            diagnostics);
+
+        Assert.Equal(
+            ["alpha", "zeta"],
+            finding.ProducerFingerprints.Select(item => item.Family));
+        Assert.Equal(
+            ["alpha", "zeta"],
+            finding.DerivedFingerprints.Select(item => item.Name));
+        Assert.Equal(
+            ["alpha", "zeta"],
+            finding.RelatedLocations.Select(item => item.StableKey));
+        Assert.Equal(["alpha", "zeta"], finding.Lossiness);
+        Assert.Equal(
+            ["IO0001", "PARSE0001"],
+            finding.Diagnostics.Select(item => item.Code));
+    }
+
+    [Fact]
     public void Drive_relative_and_drive_absolute_paths_are_distinct_values()
     {
         CanonicalPath driveRelative = new(
@@ -178,4 +311,38 @@ public sealed class CoreContractTests
 
         Assert.Equal(ProductInformation.Version, versionPrefix);
     }
+
+    private static Finding CreateFinding(
+        IEnumerable<ProducerFingerprint>? producerFingerprints = null,
+        IEnumerable<DerivedFingerprint>? derivedFingerprints = null,
+        IEnumerable<RelatedLocation>? relatedLocations = null,
+        IEnumerable<string>? lossiness = null,
+        IEnumerable<Diagnostic>? diagnostics = null) =>
+        new(
+            "candidate:0:0",
+            new SourceReference(
+                InputKind.Candidate,
+                runIndex: 0,
+                resultIndex: 0,
+                "/runs/0/results/0"),
+            new RunIdentity(0, AutomationCategory: null, "candidate:0"),
+            new ProducerIdentity(
+                "Test tool",
+                ToolVersion: "1.0.0",
+                Family: "test",
+                AutomationCategory: null),
+            new RuleIdentity("TEST0001", "test/TEST0001", AliasApplied: false),
+            primaryLocation: null,
+            new MessageIdentity(
+                "Message.",
+                "Message.",
+                "message.",
+                ImmutableArray<string>.Empty),
+            producerFingerprints,
+            derivedFingerprints,
+            context: null,
+            relatedLocations,
+            codeFlow: null,
+            lossiness,
+            diagnostics);
 }

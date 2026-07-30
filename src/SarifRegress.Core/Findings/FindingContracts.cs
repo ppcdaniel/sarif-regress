@@ -263,30 +263,114 @@ public sealed record Finding
         Rule = rule;
         PrimaryLocation = primaryLocation;
         Message = message;
-        ProducerFingerprints = (producerFingerprints ?? [])
-            .OrderBy(item => item.Family, StringComparer.Ordinal)
-            .ThenByDescending(item => item.Version)
-            .ThenBy(item => item.Name, StringComparer.Ordinal)
-            .ThenBy(item => item.Value, StringComparer.Ordinal)
-            .ToImmutableArray();
-        DerivedFingerprints = (derivedFingerprints ?? [])
-            .OrderBy(item => item.Name, StringComparer.Ordinal)
-            .ThenBy(item => item.Value, StringComparer.Ordinal)
-            .ToImmutableArray();
+        ProducerFingerprints = NormalizeProducerFingerprints(
+            producerFingerprints);
+        DerivedFingerprints = NormalizeDerivedFingerprints(
+            derivedFingerprints);
         Context = context;
-        RelatedLocations = (relatedLocations ?? [])
-            .OrderBy(item => item.StableKey, StringComparer.Ordinal)
-            .ToImmutableArray();
+        RelatedLocations = NormalizeRelatedLocations(relatedLocations);
         CodeFlow = codeFlow;
         Metadata = metadata ?? new FindingMetadata(
             Level: null,
             Kind: null,
             BaselineState: null);
-        Lossiness = (lossiness ?? [])
+        Lossiness = NormalizeLossiness(lossiness);
+        Diagnostics = diagnostics is null
+            ? ImmutableArray<Diagnostic>.Empty
+            : Diagnostic.Sort(diagnostics);
+    }
+
+    private static ImmutableArray<ProducerFingerprint>
+        NormalizeProducerFingerprints(
+            IEnumerable<ProducerFingerprint>? producerFingerprints)
+    {
+        if (TryGetTrivialSequence(producerFingerprints, out var normalized))
+        {
+            return normalized;
+        }
+
+        return producerFingerprints!
+            .OrderBy(item => item.Family, StringComparer.Ordinal)
+            .ThenByDescending(item => item.Version)
+            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ThenBy(item => item.Value, StringComparer.Ordinal)
+            .ToImmutableArray();
+    }
+
+    private static ImmutableArray<DerivedFingerprint>
+        NormalizeDerivedFingerprints(
+            IEnumerable<DerivedFingerprint>? derivedFingerprints)
+    {
+        if (TryGetTrivialSequence(derivedFingerprints, out var normalized))
+        {
+            return normalized;
+        }
+
+        return derivedFingerprints!
+            .OrderBy(item => item.Name, StringComparer.Ordinal)
+            .ThenBy(item => item.Value, StringComparer.Ordinal)
+            .ToImmutableArray();
+    }
+
+    private static ImmutableArray<RelatedLocation> NormalizeRelatedLocations(
+        IEnumerable<RelatedLocation>? relatedLocations)
+    {
+        if (TryGetTrivialSequence(relatedLocations, out var normalized))
+        {
+            return normalized;
+        }
+
+        return relatedLocations!
+            .OrderBy(item => item.StableKey, StringComparer.Ordinal)
+            .ToImmutableArray();
+    }
+
+    private static ImmutableArray<string> NormalizeLossiness(
+        IEnumerable<string>? lossiness)
+    {
+        if (TryGetTrivialSequence(lossiness, out var normalized))
+        {
+            return normalized;
+        }
+
+        return lossiness!
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToImmutableArray();
-        Diagnostics = Diagnostic.Sort(diagnostics ?? []);
+    }
+
+    private static bool TryGetTrivialSequence<T>(
+        IEnumerable<T>? items,
+        out ImmutableArray<T> normalized)
+    {
+        if (items is null)
+        {
+            normalized = ImmutableArray<T>.Empty;
+            return true;
+        }
+
+        if (items is ImmutableArray<T> immutable)
+        {
+            if (immutable.IsDefault || immutable.Length > 1)
+            {
+                normalized = default;
+                return false;
+            }
+
+            normalized = immutable;
+            return true;
+        }
+
+        if (!items.TryGetNonEnumeratedCount(out var count) || count > 1)
+        {
+            normalized = default;
+            return false;
+        }
+
+        normalized = count == 0
+            ? ImmutableArray<T>.Empty
+            : items.ToImmutableArray();
+        return true;
     }
 
     /// <summary>
