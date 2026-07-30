@@ -1096,23 +1096,63 @@ public sealed class FindingMatcher
             baselineIndexByKey,
             candidateIndexByKey);
         var sourceReference = (baseline ?? candidate)!.SourceReference;
+        var outcome = incidentEdges.IsEmpty
+            ? baseline is null
+                ? "no-admissible-baseline"
+                : "no-admissible-candidate"
+            : "not-selected-after-one-to-one-assignment";
+        var evidence = incidentEdges
+            .SelectMany(edge => edge.Evidence)
+            .Append(new EvidenceRecord(
+                "assignment-outcome",
+                baseline is null ? null : outcome,
+                candidate is null ? null : outcome,
+                EvidenceOrigin.System,
+                PrecedenceTier.Refuse,
+                Lossy: false,
+                MatchingAlgorithms.AssignmentOutcomeVersion))
+            .Distinct()
+            .OrderBy(item => item.Kind, StringComparer.Ordinal)
+            .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
+            .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
+            .ThenBy(item => item.Origin)
+            .ThenBy(item => item.PrecedenceTier)
+            .ThenBy(item => item.Lossy)
+            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+            .ToImmutableArray();
+        var transformations = incidentEdges
+            .SelectMany(edge => edge.Transformations)
+            .Concat(GetFindingTransformations(baseline))
+            .Concat(GetFindingTransformations(candidate))
+            .Distinct()
+            .OrderBy(item => item.Kind, StringComparer.Ordinal)
+            .ThenBy(item => item.OriginalValue, StringComparer.Ordinal)
+            .ThenBy(item => item.TransformedValue, StringComparer.Ordinal)
+            .ThenBy(item => item.IsLossy)
+            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+            .ToImmutableArray();
         var trace = CreateTrace(
             PrecedenceTier.Refuse,
             DisplayConfidence.Low,
             ambiguous: false,
-            ImmutableArray<EvidenceRecord>.Empty,
+            evidence,
             CreateRejectedAlternatives(
                 incidentEdges,
                 baseline,
                 candidate,
                 "The alternative was consumed by a lexicographically better "
                 + "maximum-cardinality assignment."),
-            ImmutableArray<TransformationRecord>.Empty,
+            transformations,
             GetNodeDiagnostics(diagnosticsByNode, node, sourceReference),
             configuration.Limits.MaximumRejectedAlternatives,
             sourceReference);
         return new FindingDecision(classification, baseline, candidate, trace);
     }
+
+    private static ImmutableArray<TransformationRecord> GetFindingTransformations(
+        Finding? finding) =>
+        finding?.PrimaryLocation?.Path.Transformations
+        ?? ImmutableArray<TransformationRecord>.Empty;
 
     private static ImmutableArray<MatchEdge> GetIncidentEdges(
         int? baselineIndex,

@@ -66,7 +66,7 @@ public sealed class CliInvocationTests
         workspace.Write("baseline.sarif", SingleFindingSarif);
         workspace.Write("candidate.sarif", SingleFindingSarif);
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -95,7 +95,7 @@ public sealed class CliInvocationTests
         workspace.Write("baseline.sarif", SingleFindingSarif);
         workspace.Write("candidate.sarif", SingleFindingSarif);
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -145,7 +145,7 @@ public sealed class CliInvocationTests
             "repository/src/example.cs",
             "namespace Example;\ninternal sealed class ExampleType { }\n");
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -185,7 +185,7 @@ public sealed class CliInvocationTests
             "repository/src/example.cs",
             "namespace Example;\ninternal sealed class ExampleType { }\n");
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -213,7 +213,7 @@ public sealed class CliInvocationTests
             """{ "version": "2.1.0", "runs": [] }""");
         workspace.Write("candidate.sarif", SingleFindingSarif);
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -248,7 +248,7 @@ public sealed class CliInvocationTests
             }
             """);
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -310,7 +310,7 @@ public sealed class CliInvocationTests
             }
             """);
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -340,7 +340,7 @@ public sealed class CliInvocationTests
         workspace.Write("out/report.html", "existing-html");
         workspace.Write("out/report.sarif", "existing-sarif");
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -373,7 +373,7 @@ public sealed class CliInvocationTests
         workspace.Write("baseline.sarif", SingleFindingSarif);
         workspace.Write("candidate.sarif", SingleFindingSarif);
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -397,7 +397,7 @@ public sealed class CliInvocationTests
         workspace.Write("candidate.sarif", SingleFindingSarif);
         workspace.Write("z-blocked", "not-a-directory");
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -431,7 +431,7 @@ public sealed class CliInvocationTests
             "regress.json",
             """{ "schemaVersion": "future" }""");
 
-        var invocation = Invoke(
+        var invocation = InvokeFromDirectory(
             workspace.Root,
             "compare",
             "--baseline",
@@ -452,10 +452,10 @@ public sealed class CliInvocationTests
 
     private static CliInvocationResult Invoke(params string[] arguments)
     {
-        return Invoke(Directory.GetCurrentDirectory(), arguments);
+        return InvokeFromDirectory(Directory.GetCurrentDirectory(), arguments);
     }
 
-    private static CliInvocationResult Invoke(
+    private static CliInvocationResult InvokeFromDirectory(
         string currentDirectory,
         params string[] arguments)
     {

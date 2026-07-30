@@ -67,6 +67,13 @@ public sealed class MatchingEngineTests
         Assert.Contains(
             result.Decisions,
             decision => decision.Classification == FindingClassification.New);
+        Assert.All(
+            result.Decisions,
+            decision => Assert.Contains(
+                decision.Decision.Evidence,
+                evidence =>
+                    evidence.Kind == "assignment-outcome"
+                    && evidence.PrecedenceTier == PrecedenceTier.Refuse));
         Assert.Equal(0, result.CandidateEdgeCount);
     }
 
@@ -392,7 +399,7 @@ public sealed class MatchingEngineTests
     }
 
     [Fact]
-    public void Related_location_path_can_supply_bounded_supporting_evidence()
+    public void Related_location_path_alone_cannot_create_a_match()
     {
         var baseline = MatchingTestData.Finding(
             InputKind.Baseline,
@@ -409,11 +416,15 @@ public sealed class MatchingEngineTests
             MatchingTestData.Input(InputKind.Baseline, baseline),
             MatchingTestData.Input(InputKind.Candidate, candidate));
 
-        var decision = Assert.Single(result.Decisions);
-        Assert.Equal(PrecedenceTier.PathProblem, decision.Decision.PrecedenceTier);
-        Assert.Contains(
-            decision.Decision.Evidence,
-            evidence => evidence.Kind == "related-location-paths");
+        Assert.Equal(0, result.CandidateEdgeCount);
+        Assert.Collection(
+            result.Decisions,
+            decision => Assert.Equal(
+                FindingClassification.Resolved,
+                decision.Classification),
+            decision => Assert.Equal(
+                FindingClassification.New,
+                decision.Classification));
     }
 
     [Fact]

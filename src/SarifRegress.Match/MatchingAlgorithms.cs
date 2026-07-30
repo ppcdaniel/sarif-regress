@@ -21,6 +21,8 @@ internal static class MatchingAlgorithms
     public const string CodeFlowSetVersion = "sarifregress/code-flow-set/v1";
     public const string RelatedLocationSetVersion =
         "sarifregress/related-location-set/v1";
+    public const string AssignmentOutcomeVersion =
+        "sarifregress/assignment-outcome/v1";
 }
 
 internal sealed class DecisionVectorComparer : IComparer<DecisionVector>

@@ -491,13 +491,11 @@ internal sealed class CandidateEdgeFactory
         ICollection<EvidenceDraft> evidence)
     {
         var codeFlowAgreement = CompareCodeFlow(baseline.CodeFlow, candidate.CodeFlow, evidence);
-        var relatedLocationAgreement = CompareRelatedLocations(
+        _ = CompareRelatedLocations(
             baseline.RelatedLocations,
             candidate.RelatedLocations,
             evidence);
-        return codeFlowAgreement >= relatedLocationAgreement
-            ? codeFlowAgreement
-            : relatedLocationAgreement;
+        return codeFlowAgreement;
     }
 
     private AgreementBand CompareCodeFlow(
