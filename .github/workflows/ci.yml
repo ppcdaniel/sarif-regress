@@ -13,6 +13,7 @@ jobs:
   build-test:
     name: Verify (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -47,6 +48,7 @@ jobs:
     name: Enforce MVP resource budgets
     needs: build-test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Check out repository
@@ -96,6 +98,7 @@ jobs:
     name: Package (${{ matrix.label }})
     needs: build-test
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -170,12 +173,15 @@ jobs:
               -Filter 'SarifRegress.Tool.*.nupkg' `
               -File
           )
-          if ($packageFiles.Count -ne 1 -or
-              $packageFiles[0].Name -notmatch
-                '^SarifRegress\.Tool\.(.+)\.nupkg$') {
+          $packageMatch = if ($packageFiles.Count -eq 1) {
+            [regex]::Match(
+              $packageFiles[0].Name,
+              '^SarifRegress\.Tool\.(.+)\.nupkg$')
+          }
+          if ($packageFiles.Count -ne 1 -or -not $packageMatch.Success) {
             throw 'Expected exactly one versioned .NET tool package.'
           }
-          $packageVersion = $Matches[1]
+          $packageVersion = $packageMatch.Groups[1].Value
           & dotnet tool install `
             --tool-path artifacts/tool `
             --add-source artifacts/release `

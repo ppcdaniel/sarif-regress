@@ -10,9 +10,14 @@ permissions:
   contents: read
 
 jobs:
+  cross-platform-determinism:
+    name: Verify release determinism
+    uses: ./.github/workflows/determinism.yml
+
   verify:
     name: Verify release source (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -47,6 +52,7 @@ jobs:
     name: Build release bundle
     needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Check out repository
@@ -64,6 +70,12 @@ jobs:
       - name: Package .NET tool and self-contained binaries
         shell: bash
         run: ./scripts/package.sh
+
+      - name: Record the exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse 'HEAD^{commit}' > artifacts/release/source-commit.txt
 
       - name: Enforce labelled-corpus quality gates
         shell: bash
@@ -89,7 +101,9 @@ jobs:
               --size 1000 \
               --dataset "${dataset}" \
               --enforce-budgets \
-              --json-out "artifacts/release/benchmark-${dataset}.json"
+              --json-out "artifacts/release/benchmark-${dataset}.json" \
+              --deterministic-out \
+                "artifacts/release/benchmark-${dataset}-deterministic.json"
           done
 
       - name: Add corpus metrics to the release manifest
@@ -102,7 +116,8 @@ jobs:
             ./benchmark-*.json \
             ./corpus-report.json \
             ./sarif-regress-linux-x64 \
-            ./sarif-regress-win-x64.exe |
+            ./sarif-regress-win-x64.exe \
+            ./source-commit.txt |
             sed 's#  \./#  #' > checksums.sha256
 
       - name: Verify release checksums
@@ -130,11 +145,173 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  publish-release:
-    name: Publish tagged GitHub release
-    if: startsWith(github.ref, 'refs/tags/')
+  smoke-release-bundle:
+    name: Smoke exact release bundle (${{ matrix.label }})
     needs: package
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux
+            os: ubuntu-latest
+          - label: windows
+            os: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Download exact release bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sarif-regress-release
+          path: release
+
+      - name: Verify and execute exact Linux assets
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          NUGET_PACKAGES: ${{ runner.temp }}/release-nuget-packages
+        run: |
+          set -euo pipefail
+          (
+            cd release
+            sha256sum --check checksums.sha256
+          )
+          chmod 755 release/sarif-regress-linux-x64
+          release/sarif-regress-linux-x64 --help >/dev/null
+          shopt -s nullglob
+          package_files=(release/SarifRegress.Tool.*.nupkg)
+          test "${#package_files[@]}" -eq 1
+          package_name="$(basename -- "${package_files[0]}")"
+          package_version="${package_name#SarifRegress.Tool.}"
+          package_version="${package_version%.nupkg}"
+          dotnet tool install \
+            --tool-path release-tool \
+            --add-source release \
+            --ignore-failed-sources \
+            --no-cache \
+            SarifRegress.Tool \
+            --version "${package_version}"
+          expected_package_sha512="$(
+            openssl dgst -sha512 -binary "${package_files[0]}" |
+              base64 -w 0
+          )"
+          installed_hash_files=(
+            "${NUGET_PACKAGES}"/sarifregress.tool/*/sarifregress.tool.*.nupkg.sha512
+          )
+          test "${#installed_hash_files[@]}" -eq 1
+          test "$(
+            tr -d '\r\n' < "${installed_hash_files[0]}"
+          )" = "${expected_package_sha512}"
+          release-tool/sarif-regress --help >/dev/null
+
+      - name: Verify and execute exact Windows assets
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          NUGET_PACKAGES: ${{ runner.temp }}/release-nuget-packages
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($line in Get-Content release/checksums.sha256) {
+            $parts = $line -split '  ', 2
+            if ($parts.Count -ne 2) {
+              throw "Invalid checksum manifest line."
+            }
+
+            $actual = (
+              Get-FileHash `
+                -LiteralPath (Join-Path release $parts[1]) `
+                -Algorithm SHA256
+            ).Hash.ToLowerInvariant()
+            if ($actual -ne $parts[0]) {
+              throw "Checksum mismatch for $($parts[1])."
+            }
+          }
+
+          & .\release\sarif-regress-win-x64.exe --help | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The exact Windows release executable failed."
+          }
+
+          $packageFiles = @(
+            Get-ChildItem `
+              -LiteralPath release `
+              -Filter 'SarifRegress.Tool.*.nupkg' `
+              -File
+          )
+          $packageMatch = if ($packageFiles.Count -eq 1) {
+            [regex]::Match(
+              $packageFiles[0].Name,
+              '^SarifRegress\.Tool\.(.+)\.nupkg$')
+          }
+          if ($packageFiles.Count -ne 1 -or -not $packageMatch.Success) {
+            throw 'Expected exactly one versioned .NET tool package.'
+          }
+
+          $packageVersion = $packageMatch.Groups[1].Value
+          & dotnet tool install `
+            --tool-path release-tool `
+            --add-source release `
+            --ignore-failed-sources `
+            --no-cache `
+            SarifRegress.Tool `
+            --version $packageVersion
+          if ($LASTEXITCODE -ne 0) {
+            throw "The exact .NET tool package could not be installed."
+          }
+
+          $sha512 = [System.Security.Cryptography.SHA512]::Create()
+          try {
+            $expectedPackageHash = [Convert]::ToBase64String(
+              $sha512.ComputeHash(
+                [System.IO.File]::ReadAllBytes($packageFiles[0].FullName)))
+          }
+          finally {
+            $sha512.Dispose()
+          }
+
+          $installedHashFiles = @(
+            Get-ChildItem `
+              -LiteralPath (Join-Path $env:NUGET_PACKAGES 'sarifregress.tool') `
+              -Filter 'sarifregress.tool.*.nupkg.sha512' `
+              -File `
+              -Recurse
+          )
+          if ($installedHashFiles.Count -ne 1) {
+            throw "Expected one installed tool-package hash."
+          }
+
+          $installedPackageHash = (
+            Get-Content -LiteralPath $installedHashFiles[0].FullName -Raw
+          ).Trim()
+          if ($installedPackageHash -ne $expectedPackageHash) {
+            throw "The installed tool package bytes differ from the bundle."
+          }
+
+          & .\release-tool\sarif-regress.exe --help | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The exact installed .NET tool failed."
+          }
+
+  create-release-draft:
+    name: Create tagged GitHub release draft
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs:
+      - cross-platform-determinism
+      - package
+      - smoke-release-bundle
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
 
@@ -150,7 +327,7 @@ jobs:
         working-directory: release
         run: sha256sum --check checksums.sha256
 
-      - name: Publish immutable release assets
+      - name: Create draft with verified release assets
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -161,6 +338,39 @@ jobs:
             echo "Release ${GITHUB_REF_NAME} already exists; refusing to overwrite it." >&2
             exit 1
           fi
+          expected_commit="$(
+            tr -d '\r\n' < release/source-commit.txt
+          )"
+          if [[ ! "${expected_commit}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The release bundle has an invalid source commit." >&2
+            exit 1
+          fi
+          read -r tag_object tag_type < <(
+            gh api \
+              "repos/${GH_REPO}/git/ref/tags/${GITHUB_REF_NAME}" \
+              --jq '[.object.sha, .object.type] | @tsv'
+          )
+          for _ in {1..8}; do
+            if [[ "${tag_type}" == "commit" ]]; then
+              break
+            fi
+            if [[ "${tag_type}" != "tag" ]]; then
+              echo "Release tag does not resolve to a commit." >&2
+              exit 1
+            fi
+            read -r tag_object tag_type < <(
+              gh api \
+                "repos/${GH_REPO}/git/tags/${tag_object}" \
+                --jq '[.object.sha, .object.type] | @tsv'
+            )
+          done
+          if [[ "${tag_type}" != "commit" ||
+                "${tag_object}" != "${expected_commit}" ]]; then
+            echo \
+              "Release tag resolves to ${tag_object}, but the bundle was built from ${expected_commit}." \
+              >&2
+            exit 1
+          fi
           gh release create \
             "${GITHUB_REF_NAME}" \
             release/*.nupkg \
@@ -168,7 +378,9 @@ jobs:
             release/corpus-report.json \
             release/sarif-regress-linux-x64 \
             release/sarif-regress-win-x64.exe \
+            release/source-commit.txt \
             release/checksums.sha256 \
+            --draft \
             --verify-tag \
             --generate-notes \
             --title "SarifRegress ${GITHUB_REF_NAME}"

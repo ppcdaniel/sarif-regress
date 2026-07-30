@@ -6,14 +6,16 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
   produce:
-    name: Produce approved corpus report (${{ matrix.label }})
+    name: Produce deterministic reports (${{ matrix.label }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -46,10 +48,11 @@ jobs:
         shell: pwsh
         run: .\scripts\build.ps1
 
-      - name: Produce approved corpus report on Linux
+      - name: Produce deterministic reports on Linux
         if: runner.os == 'Linux'
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p artifacts/determinism
           dotnet run \
             --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
@@ -60,19 +63,22 @@ jobs:
             corpus run \
             --corpus corpus \
             --json-out artifacts/determinism/corpus-report.json
-          dotnet run \
-            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
-            --configuration Release \
-            --no-build \
-            --no-restore \
-            -- \
-            bench \
-            --size 1000 \
-            --dataset unique \
-            --enforce-budgets \
-            --json-out artifacts/determinism/benchmark-report.json
+          for dataset in unique pathological; do
+            dotnet run \
+              --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              bench \
+              --size 1000 \
+              --dataset "${dataset}" \
+              --json-out "artifacts/determinism/benchmark-${dataset}-report.json" \
+              --deterministic-out \
+                "artifacts/determinism/benchmark-${dataset}-deterministic.json"
+          done
 
-      - name: Produce approved corpus report on Windows
+      - name: Produce deterministic reports on Windows
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
@@ -90,22 +96,26 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "Corpus evaluation failed with exit code $LASTEXITCODE."
           }
-          & dotnet run `
-            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj `
-            --configuration Release `
-            --no-build `
-            --no-restore `
-            -- `
-            bench `
-            --size 1000 `
-            --dataset unique `
-            --enforce-budgets `
-            --json-out artifacts/determinism/benchmark-report.json
-          if ($LASTEXITCODE -ne 0) {
-            throw "Benchmark budget failed with exit code $LASTEXITCODE."
+          foreach ($dataset in @('unique', 'pathological')) {
+            & dotnet run `
+              --project src/SarifRegress.Cli/SarifRegress.Cli.csproj `
+              --configuration Release `
+              --no-build `
+              --no-restore `
+              -- `
+              bench `
+              --size 1000 `
+              --dataset $dataset `
+              --json-out `
+                "artifacts/determinism/benchmark-$dataset-report.json" `
+              --deterministic-out `
+                "artifacts/determinism/benchmark-$dataset-deterministic.json"
+            if ($LASTEXITCODE -ne 0) {
+              throw "Benchmark $dataset failed with exit code $LASTEXITCODE."
+            }
           }
 
-      - name: Upload deterministic report
+      - name: Upload deterministic reports
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: determinism-${{ matrix.label }}
@@ -117,6 +127,7 @@ jobs:
     name: Compare Windows and Linux report bytes
     needs: produce
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Download Linux report
@@ -135,33 +146,33 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          linux_report="artifacts/download/linux/corpus-report.json"
-          windows_report="artifacts/download/windows/corpus-report.json"
-          linux_hash="$(sha256sum "${linux_report}" | cut -d ' ' -f 1)"
-          windows_hash="$(sha256sum "${windows_report}" | cut -d ' ' -f 1)"
-          test "${linux_hash}" = "${windows_hash}"
-          cmp --silent -- "${linux_report}" "${windows_report}"
           mkdir -p artifacts/verified
-          cp -- "${linux_report}" artifacts/verified/corpus-report.json
-          jq -S \
-            'del(.observations, .budget.passed, .budget.failureCodes)' \
-            artifacts/download/linux/benchmark-report.json \
-            > artifacts/verified/benchmark-linux.json
-          jq -S \
-            'del(.observations, .budget.passed, .budget.failureCodes)' \
-            artifacts/download/windows/benchmark-report.json \
-            > artifacts/verified/benchmark-windows.json
-          cmp --silent \
-            artifacts/verified/benchmark-linux.json \
-            artifacts/verified/benchmark-windows.json
-          mv \
-            artifacts/verified/benchmark-linux.json \
-            artifacts/verified/benchmark-deterministic.json
-          rm -- artifacts/verified/benchmark-windows.json
+          for report_name in \
+            corpus-report.json \
+            benchmark-unique-deterministic.json \
+            benchmark-pathological-deterministic.json
+          do
+            linux_report="artifacts/download/linux/${report_name}"
+            windows_report="artifacts/download/windows/${report_name}"
+            linux_hash="$(sha256sum "${linux_report}" | cut -d ' ' -f 1)"
+            windows_hash="$(sha256sum "${windows_report}" | cut -d ' ' -f 1)"
+            if [[ "${linux_hash}" != "${windows_hash}" ]]; then
+              echo \
+                "${report_name} hash differs: Linux ${linux_hash}, Windows ${windows_hash}." \
+                >&2
+              exit 1
+            fi
+            if ! cmp --silent -- "${linux_report}" "${windows_report}"; then
+              echo "${report_name} bytes differ despite equal hashes." >&2
+              exit 1
+            fi
+            cp -- "${linux_report}" "artifacts/verified/${report_name}"
+          done
           (
             cd artifacts/verified
             LC_ALL=C sha256sum \
-              benchmark-deterministic.json \
+              benchmark-pathological-deterministic.json \
+              benchmark-unique-deterministic.json \
               corpus-report.json \
               > checksums.sha256
           )

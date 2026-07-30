@@ -56,6 +56,23 @@ internal sealed class BenchCommandHandler
             }
 
             var outputPath = ResolveOutputPath(request.JsonOutputPath);
+            var deterministicOutputPath = ResolveOutputPath(
+                request.DeterministicOutputPath);
+            if (outputPath is not null &&
+                deterministicOutputPath is not null &&
+                (PathIdentityResolver.Comparer.Equals(
+                     outputPath,
+                     deterministicOutputPath) ||
+                 PathIdentityResolver.Comparer.Equals(
+                     PathIdentityResolver.ResolveOutputIdentity(outputPath),
+                     PathIdentityResolver.ResolveOutputIdentity(
+                         deterministicOutputPath))))
+            {
+                return WriteInputFailure(
+                    error,
+                    "Benchmark output paths must be distinct.");
+            }
+
             var report = await new BenchmarkRunner()
                 .RunAsync(
                     findingCount,
@@ -63,17 +80,30 @@ internal sealed class BenchCommandHandler
                     cancellationToken)
                 .ConfigureAwait(false);
             var json = BenchmarkReportSerializer.Serialize(report);
+            var deterministicJson =
+                BenchmarkReportSerializer.SerializeDeterministicProjection(
+                    report);
+            var artifacts = ImmutableArray.CreateBuilder<OutputArtifact>(2);
+            if (outputPath is not null)
+            {
+                artifacts.Add(new OutputArtifact(outputPath, json));
+            }
+
+            if (deterministicOutputPath is not null)
+            {
+                artifacts.Add(
+                    new OutputArtifact(
+                        deterministicOutputPath,
+                        deterministicJson));
+            }
+
+            await AtomicOutputWriter.WriteAsync(
+                    artifacts.ToImmutable(),
+                    cancellationToken)
+                .ConfigureAwait(false);
             if (outputPath is null)
             {
                 output.Write(StableUtf8.GetString(json));
-            }
-            else
-            {
-                await AtomicOutputWriter.WriteAsync(
-                        ImmutableArray.Create(
-                            new OutputArtifact(outputPath, json)),
-                        cancellationToken)
-                    .ConfigureAwait(false);
             }
 
             return request.EnforceBudgets && !report.Budget.Passed

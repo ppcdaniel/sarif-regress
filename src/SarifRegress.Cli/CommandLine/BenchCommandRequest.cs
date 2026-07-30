@@ -7,4 +7,5 @@ internal sealed record BenchCommandRequest(
     int? FindingCount,
     string? Dataset,
     string? JsonOutputPath,
+    string? DeterministicOutputPath,
     bool EnforceBudgets);

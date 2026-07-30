@@ -46,7 +46,13 @@ public sealed class AuxiliaryCommandTests
             ["--config", "--input", "--repo", "--sarif-out"],
             OptionNames(canonicalise));
         Assert.Equal(
-            ["--dataset", "--enforce-budgets", "--json-out", "--size"],
+            [
+                "--dataset",
+                "--deterministic-out",
+                "--enforce-budgets",
+                "--json-out",
+                "--size",
+            ],
             OptionNames(bench));
         Assert.True(
             Assert.Single(
@@ -193,6 +199,43 @@ public sealed class AuxiliaryCommandTests
         Assert.Equal(ValidSarif, workspace.Read("input.sarif"));
     }
 
+    [Fact]
+    public async Task Canonicalise_refuses_to_overwrite_an_aliased_input()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("real/input.sarif", ValidSarif);
+        try
+        {
+            File.CreateSymbolicLink(
+                Path.Combine(workspace.Root, "input-link.sarif"),
+                Path.Combine(workspace.Root, "real", "input.sarif"));
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                or UnauthorizedAccessException
+                or PlatformNotSupportedException)
+        {
+            return;
+        }
+
+        var invocation = await InvokeAsync(
+            CanonicaliseCommandFactory.Create(workspace.Root),
+            TestContext.Current.CancellationToken,
+            "canonicalise",
+            "--input",
+            "input-link.sarif",
+            "--sarif-out",
+            "real/input.sarif");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains(
+            "CLI0011 error:",
+            invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.Equal(ValidSarif, workspace.Read("real/input.sarif"));
+    }
+
     [Theory]
     [InlineData("--size", "999")]
     [InlineData("--dataset", "unknown")]
@@ -244,10 +287,13 @@ public sealed class AuxiliaryCommandTests
     [Fact]
     public async Task Bench_default_smoke_emits_expected_counts_and_hash()
     {
+        using var workspace = new TestWorkspace();
         var invocation = await InvokeAsync(
-            BenchCommandFactory.Create(),
+            BenchCommandFactory.Create(workspace.Root),
             TestContext.Current.CancellationToken,
-            "bench");
+            "bench",
+            "--deterministic-out",
+            "benchmark-deterministic.json");
 
         Assert.Equal(0, invocation.ExitCode);
         Assert.Equal(string.Empty, invocation.StandardError);
@@ -297,6 +343,155 @@ public sealed class AuxiliaryCommandTests
             report.RootElement
                 .GetProperty("budget")
                 .TryGetProperty("passed", out _));
+        var projectionText = workspace.Read("benchmark-deterministic.json");
+        using var projection = JsonDocument.Parse(projectionText);
+        Assert.Equal(
+            "1",
+            projection.RootElement
+                .GetProperty("benchmarkDeterminismSchemaVersion")
+                .GetString());
+        Assert.False(
+            projection.RootElement.TryGetProperty("observations", out _));
+        Assert.False(
+            projection.RootElement
+                .GetProperty("budgetLimits")
+                .TryGetProperty("passed", out _));
+        Assert.Equal(
+            operations.GetProperty("comparisonOutputSha256").GetString(),
+            projection.RootElement
+                .GetProperty("operations")
+                .GetProperty("comparisonOutputSha256")
+                .GetString());
+        Assert.EndsWith("\n", projectionText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Bench_rejects_duplicate_report_paths()
+    {
+        using var workspace = new TestWorkspace();
+        var invocation = await InvokeAsync(
+            BenchCommandFactory.Create(workspace.Root),
+            TestContext.Current.CancellationToken,
+            "bench",
+            "--json-out",
+            "report.json",
+            "--deterministic-out",
+            "report.json");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains(
+            "Benchmark output paths must be distinct.",
+            invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(workspace.Root, "report.json")));
+    }
+
+    [Fact]
+    public async Task Bench_writes_both_report_files_as_one_transaction()
+    {
+        using var workspace = new TestWorkspace();
+        var invocation = await InvokeAsync(
+            BenchCommandFactory.Create(workspace.Root),
+            TestContext.Current.CancellationToken,
+            "bench",
+            "--json-out",
+            "benchmark.json",
+            "--deterministic-out",
+            "benchmark-deterministic.json");
+
+        Assert.Equal(0, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Equal(string.Empty, invocation.StandardError);
+        var fullBytes = workspace.ReadBytes("benchmark.json");
+        var deterministicBytes =
+            workspace.ReadBytes("benchmark-deterministic.json");
+        using var full = JsonDocument.Parse(fullBytes);
+        using var deterministic = JsonDocument.Parse(deterministicBytes);
+        Assert.Equal(
+            full.RootElement
+                .GetProperty("operations")
+                .GetProperty("comparisonOutputSha256")
+                .GetString(),
+            deterministic.RootElement
+                .GetProperty("operations")
+                .GetProperty("comparisonOutputSha256")
+                .GetString());
+        AssertStableUtf8(fullBytes);
+        AssertStableUtf8(deterministicBytes);
+    }
+
+    [Fact]
+    public async Task Bench_rejects_parent_directory_aliases()
+    {
+        using var workspace = new TestWorkspace();
+        Directory.CreateDirectory(Path.Combine(workspace.Root, "real"));
+        try
+        {
+            Directory.CreateSymbolicLink(
+                Path.Combine(workspace.Root, "alias"),
+                Path.Combine(workspace.Root, "real"));
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                or UnauthorizedAccessException
+                or PlatformNotSupportedException)
+        {
+            return;
+        }
+
+        var invocation = await InvokeAsync(
+            BenchCommandFactory.Create(workspace.Root),
+            TestContext.Current.CancellationToken,
+            "bench",
+            "--json-out",
+            "real/report.json",
+            "--deterministic-out",
+            "alias/report.json");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains(
+            "Benchmark output paths must be distinct.",
+            invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.False(
+            File.Exists(Path.Combine(workspace.Root, "real", "report.json")));
+    }
+
+    [Fact]
+    public async Task Bench_restores_existing_output_when_second_commit_fails()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("a-report.json", "original");
+        Directory.CreateDirectory(Path.Combine(workspace.Root, "z-directory"));
+
+        var invocation = await InvokeAsync(
+            BenchCommandFactory.Create(workspace.Root),
+            TestContext.Current.CancellationToken,
+            "bench",
+            "--json-out",
+            "a-report.json",
+            "--deterministic-out",
+            "z-directory");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains(
+            "CLI0033 error:",
+            invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.Equal("original", workspace.Read("a-report.json"));
+        Assert.True(
+            Directory.Exists(Path.Combine(workspace.Root, "z-directory")));
+        Assert.DoesNotContain(
+            Directory.EnumerateFiles(workspace.Root),
+            path => Path.GetFileName(path).Contains(
+                ".tmp",
+                StringComparison.Ordinal) ||
+                Path.GetFileName(path).Contains(
+                    ".bak",
+                    StringComparison.Ordinal));
     }
 
     [Fact]
@@ -336,6 +531,14 @@ public sealed class AuxiliaryCommandTests
             .Select(item => item.Name)
             .Order(StringComparer.Ordinal)
             .ToArray();
+
+    private static void AssertStableUtf8(byte[] bytes)
+    {
+        Assert.NotEmpty(bytes);
+        Assert.Equal((byte)'\n', bytes[^1]);
+        Assert.DoesNotContain((byte)'\r', bytes);
+        Assert.False(bytes.AsSpan().StartsWith([0xEF, 0xBB, 0xBF]));
+    }
 
     private static async Task<InvocationResult> InvokeAsync(
         Command command,
@@ -390,6 +593,9 @@ public sealed class AuxiliaryCommandTests
 
         public string Read(string relativePath) =>
             File.ReadAllText(Path.Combine(Root, relativePath));
+
+        public byte[] ReadBytes(string relativePath) =>
+            File.ReadAllBytes(Path.Combine(Root, relativePath));
 
         public void Dispose()
         {

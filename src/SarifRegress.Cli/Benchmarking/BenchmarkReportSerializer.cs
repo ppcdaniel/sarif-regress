@@ -34,29 +34,56 @@ public static class BenchmarkReportSerializer
         {
             writer.WriteStartObject();
             writer.WriteString("benchmarkSchemaVersion", "1");
-            writer.WriteStartObject("tool");
-            writer.WriteString("name", ProductInformation.Name);
-            writer.WriteString("version", ProductInformation.Version);
-            writer.WriteEndObject();
+            WriteTool(writer);
             WriteDataset(writer, report);
             WriteLimits(writer, report);
             WriteOperations(writer, report.Operations);
             WriteObservations(writer, report.Observations);
             WriteBudget(writer, report.Budget);
-            writer.WriteStartObject("determinism");
-            writer.WriteString(
-                "datasetGenerator",
-                "sarifregress/benchmark-dataset/v1");
-            writer.WriteString(
-                "comparisonOutputHash",
-                "sha256");
-            writer.WriteEndObject();
+            WriteDeterminism(writer);
             writer.WriteEndObject();
             writer.Flush();
         }
 
         stream.WriteByte(LineFeed);
         return stream.ToArray();
+    }
+
+    /// <summary>
+    /// Serializes only deterministic benchmark identity, limits, and operation
+    /// counts for direct byte comparison across platforms.
+    /// </summary>
+    /// <param name="report">The completed benchmark report.</param>
+    /// <returns>UTF-8 JSON without a BOM and with a final LF.</returns>
+    public static byte[] SerializeDeterministicProjection(
+        BenchmarkReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream, WriterOptions))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("benchmarkDeterminismSchemaVersion", "1");
+            WriteTool(writer);
+            WriteDataset(writer, report);
+            WriteLimits(writer, report);
+            WriteOperations(writer, report.Operations);
+            WriteBudgetLimits(writer, report.Budget);
+            WriteDeterminism(writer);
+            writer.WriteEndObject();
+            writer.Flush();
+        }
+
+        stream.WriteByte(LineFeed);
+        return stream.ToArray();
+    }
+
+    private static void WriteTool(Utf8JsonWriter writer)
+    {
+        writer.WriteStartObject("tool");
+        writer.WriteString("name", ProductInformation.Name);
+        writer.WriteString("version", ProductInformation.Version);
+        writer.WriteEndObject();
     }
 
     private static void WriteDataset(
@@ -211,12 +238,7 @@ public static class BenchmarkReportSerializer
         BenchmarkBudgetEvaluation budget)
     {
         writer.WriteStartObject("budget");
-        writer.WriteNumber(
-            "maximumPipelineLatencyMilliseconds",
-            budget.MaximumPipelineLatencyMilliseconds);
-        writer.WriteNumber(
-            "maximumPeakWorkingSetBytes",
-            budget.MaximumPeakWorkingSetBytes);
+        WriteBudgetLimitValues(writer, budget);
         writer.WriteBoolean("passed", budget.Passed);
         writer.WriteStartArray("failureCodes");
         foreach (var failure in budget.FailureCodes
@@ -227,6 +249,39 @@ public static class BenchmarkReportSerializer
         }
 
         writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteBudgetLimits(
+        Utf8JsonWriter writer,
+        BenchmarkBudgetEvaluation budget)
+    {
+        writer.WriteStartObject("budgetLimits");
+        WriteBudgetLimitValues(writer, budget);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteBudgetLimitValues(
+        Utf8JsonWriter writer,
+        BenchmarkBudgetEvaluation budget)
+    {
+        writer.WriteNumber(
+            "maximumPipelineLatencyMilliseconds",
+            budget.MaximumPipelineLatencyMilliseconds);
+        writer.WriteNumber(
+            "maximumPeakWorkingSetBytes",
+            budget.MaximumPeakWorkingSetBytes);
+    }
+
+    private static void WriteDeterminism(Utf8JsonWriter writer)
+    {
+        writer.WriteStartObject("determinism");
+        writer.WriteString(
+            "datasetGenerator",
+            "sarifregress/benchmark-dataset/v1");
+        writer.WriteString(
+            "comparisonOutputHash",
+            "sha256");
         writer.WriteEndObject();
     }
 

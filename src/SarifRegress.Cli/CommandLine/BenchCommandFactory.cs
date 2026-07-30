@@ -40,6 +40,11 @@ public static class BenchCommandFactory
         {
             Description = "Optional path for the benchmark JSON report.",
         };
+        Option<string?> deterministicOutputOption = new("--deterministic-out")
+        {
+            Description =
+                "Optional path for the byte-stable benchmark projection.",
+        };
         Option<bool> enforceBudgetsOption = new("--enforce-budgets")
         {
             Description =
@@ -52,6 +57,7 @@ public static class BenchCommandFactory
         command.Options.Add(sizeOption);
         command.Options.Add(datasetOption);
         command.Options.Add(jsonOutputOption);
+        command.Options.Add(deterministicOutputOption);
         command.Options.Add(enforceBudgetsOption);
         var handler = new BenchCommandHandler(currentDirectory);
         command.SetAction(
@@ -61,6 +67,7 @@ public static class BenchCommandFactory
                     parseResult.GetValue(sizeOption),
                     parseResult.GetValue(datasetOption),
                     parseResult.GetValue(jsonOutputOption),
+                    parseResult.GetValue(deterministicOutputOption),
                     parseResult.GetValue(enforceBudgetsOption));
                 return await handler.ExecuteAsync(
                         request,

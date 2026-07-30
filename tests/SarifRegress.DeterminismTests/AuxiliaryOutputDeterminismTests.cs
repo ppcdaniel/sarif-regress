@@ -148,17 +148,25 @@ public sealed class AuxiliaryOutputDeterminismTests
                 AllocatedBytesProxy: 17,
                 WorkingSetBytes: 18,
                 PeakWorkingSetBytes: 19),
+            Budget = new BenchmarkBudgetEvaluation(
+                MaximumPipelineLatencyMilliseconds: 10_000,
+                MaximumPeakWorkingSetBytes: 512L * 1024 * 1024,
+                Passed: false,
+                FailureCodes: ["latency-budget-exceeded"]),
         };
 
         var firstJson = BenchmarkReportSerializer.Serialize(first);
         var secondJson = BenchmarkReportSerializer.Serialize(second);
+        var firstProjection =
+            BenchmarkReportSerializer.SerializeDeterministicProjection(first);
+        var secondProjection =
+            BenchmarkReportSerializer.SerializeDeterministicProjection(second);
         using var firstDocument = JsonDocument.Parse(firstJson);
         using var secondDocument = JsonDocument.Parse(secondJson);
         AssertStablePropertyEqual(firstDocument, secondDocument, "tool");
         AssertStablePropertyEqual(firstDocument, secondDocument, "dataset");
         AssertStablePropertyEqual(firstDocument, secondDocument, "limits");
         AssertStablePropertyEqual(firstDocument, secondDocument, "operations");
-        AssertStablePropertyEqual(firstDocument, secondDocument, "budget");
         AssertStablePropertyEqual(firstDocument, secondDocument, "determinism");
         Assert.NotEqual(
             firstDocument.RootElement
@@ -167,6 +175,23 @@ public sealed class AuxiliaryOutputDeterminismTests
             secondDocument.RootElement
                 .GetProperty("observations")
                 .GetRawText());
+        Assert.NotEqual(
+            firstDocument.RootElement
+                .GetProperty("budget")
+                .GetRawText(),
+            secondDocument.RootElement
+                .GetProperty("budget")
+                .GetRawText());
+        Assert.Equal(firstProjection, secondProjection);
+        using var projectionDocument = JsonDocument.Parse(firstProjection);
+        Assert.False(
+            projectionDocument.RootElement.TryGetProperty(
+                "observations",
+                out _));
+        Assert.False(
+            projectionDocument.RootElement
+                .GetProperty("budgetLimits")
+                .TryGetProperty("passed", out _));
 
         var text = Encoding.UTF8.GetString(firstJson);
         Assert.True(
@@ -176,6 +201,10 @@ public sealed class AuxiliaryOutputDeterminismTests
             text.IndexOf("\"limits\"", StringComparison.Ordinal) <
             text.IndexOf("\"operations\"", StringComparison.Ordinal));
         Assert.EndsWith("\n", text, StringComparison.Ordinal);
+        Assert.Equal((byte)'\n', firstProjection[^1]);
+        Assert.DoesNotContain((byte)'\r', firstProjection);
+        Assert.False(
+            firstProjection.AsSpan().StartsWith([0xEF, 0xBB, 0xBF]));
     }
 
     private static void AssertStablePropertyEqual(

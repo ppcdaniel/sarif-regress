@@ -40,9 +40,23 @@ internal static class ValidateCommandSupport
 
         if (output is not null)
         {
-            var comparer = PathComparer();
-            if (comparer.Equals(output, input) ||
-                configuration is not null && comparer.Equals(output, configuration))
+            var outputIdentity =
+                PathIdentityResolver.ResolveOutputIdentity(output);
+            var inputIdentity =
+                PathIdentityResolver.ResolveInputIdentity(input);
+            var configurationIdentity = configuration is null
+                ? null
+                : PathIdentityResolver.ResolveInputIdentity(configuration);
+            if (PathIdentityResolver.Comparer.Equals(output, input) ||
+                configuration is not null &&
+                PathIdentityResolver.Comparer.Equals(output, configuration) ||
+                PathIdentityResolver.Comparer.Equals(
+                    outputIdentity,
+                    inputIdentity) ||
+                configurationIdentity is not null &&
+                PathIdentityResolver.Comparer.Equals(
+                    outputIdentity,
+                    configurationIdentity))
             {
                 throw new ValidateCommandInputException(
                     CreateDiagnostic(
@@ -226,11 +240,6 @@ internal static class ValidateCommandSupport
                 CreateDiagnostic("CLI0010", DiagnosticStage.Io, errorMessage));
         }
     }
-
-    private static StringComparer PathComparer() =>
-        OperatingSystem.IsWindows()
-            ? StringComparer.OrdinalIgnoreCase
-            : StringComparer.Ordinal;
 
     private static StringComparison PathComparison() =>
         OperatingSystem.IsWindows()

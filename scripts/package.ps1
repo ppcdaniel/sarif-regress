@@ -47,13 +47,6 @@ Invoke-DotNet -Arguments @(
 foreach ($runtimeIdentifier in @('linux-x64', 'win-x64')) {
     $runtimeOutput = Join-Path $publishDirectory $runtimeIdentifier
     Invoke-DotNet -Arguments @(
-        'restore',
-        $cliProject,
-        '--locked-mode',
-        '--runtime',
-        $runtimeIdentifier
-    )
-    Invoke-DotNet -Arguments @(
         'publish',
         $cliProject,
         '--configuration',

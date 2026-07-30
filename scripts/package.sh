@@ -23,10 +23,6 @@ dotnet pack \
 
 for runtime_identifier in linux-x64 win-x64; do
     runtime_output="${publish_directory}/${runtime_identifier}"
-    dotnet restore \
-        "${cli_project}" \
-        --locked-mode \
-        --runtime "${runtime_identifier}"
     dotnet publish \
         "${cli_project}" \
         --configuration Release \

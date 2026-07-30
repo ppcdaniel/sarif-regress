@@ -24,7 +24,9 @@ internal static class AtomicOutputWriter
             return;
         }
 
+        ValidateDistinctPaths(artifacts);
         var staged = new List<StagedArtifact>(artifacts.Length);
+        var committed = false;
         try
         {
             foreach (var artifact in artifacts.OrderBy(
@@ -40,20 +42,22 @@ internal static class AtomicOutputWriter
                     directory,
                     System.IO.Path.GetFileName(artifact.Path),
                     ".tmp");
-                await File.WriteAllBytesAsync(
-                        temporaryPath,
-                        artifact.Bytes,
-                        cancellationToken)
-                    .ConfigureAwait(false);
                 staged.Add(
                     new StagedArtifact(
                         artifact.Path,
                         temporaryPath,
                         BackupPath: null,
                         DestinationReplaced: false));
+                await File.WriteAllBytesAsync(
+                        temporaryPath,
+                        artifact.Bytes,
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
 
+            ValidateDistinctPaths(artifacts);
             Commit(staged);
+            committed = true;
         }
         catch
         {
@@ -62,7 +66,22 @@ internal static class AtomicOutputWriter
         }
         finally
         {
-            CleanUp(staged);
+            CleanUp(staged, deleteBackups: committed);
+        }
+    }
+
+    private static void ValidateDistinctPaths(
+        ImmutableArray<OutputArtifact> artifacts)
+    {
+        var identities = artifacts
+            .Select(artifact =>
+                PathIdentityResolver.ResolveOutputIdentity(artifact.Path))
+            .ToArray();
+        if (identities.Distinct(PathIdentityResolver.Comparer).Count() !=
+            identities.Length)
+        {
+            throw new IOException(
+                "Two output paths resolve to the same destination.");
         }
     }
 
@@ -123,12 +142,14 @@ internal static class AtomicOutputWriter
         }
     }
 
-    private static void CleanUp(IEnumerable<StagedArtifact> staged)
+    private static void CleanUp(
+        IEnumerable<StagedArtifact> staged,
+        bool deleteBackups)
     {
         foreach (var artifact in staged)
         {
             TryDelete(artifact.TemporaryPath);
-            if (artifact.BackupPath is not null)
+            if (deleteBackups && artifact.BackupPath is not null)
             {
                 TryDelete(artifact.BackupPath);
             }

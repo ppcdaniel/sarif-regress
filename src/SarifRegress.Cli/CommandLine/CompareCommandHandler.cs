@@ -427,12 +427,17 @@ internal sealed class CompareCommandHandler
         string? configurationPath,
         params string?[] outputPaths)
     {
-        var comparer = PathComparer();
         var outputs = outputPaths
             .Where(path => path is not null)
             .Cast<string>()
             .ToArray();
-        if (outputs.Distinct(comparer).Count() != outputs.Length)
+        var outputIdentities = outputs
+            .Select(PathIdentityResolver.ResolveOutputIdentity)
+            .ToArray();
+        if (outputs.Distinct(PathIdentityResolver.Comparer).Count() !=
+                outputs.Length ||
+            outputIdentities.Distinct(PathIdentityResolver.Comparer).Count() !=
+                outputIdentities.Length)
         {
             throw new CommandInputException(
                 CreateCliDiagnostic(
@@ -447,8 +452,18 @@ internal sealed class CompareCommandHandler
             candidatePath,
             configurationPath,
         }.Where(path => path is not null).Cast<string>();
+        var protectedInputPaths = protectedInputs.ToArray();
+        var protectedInputIdentities = protectedInputPaths
+            .Select(PathIdentityResolver.ResolveInputIdentity)
+            .ToArray();
         if (outputs.Any(
-                outputPath => protectedInputs.Contains(outputPath, comparer)))
+                outputPath => protectedInputPaths.Contains(
+                    outputPath,
+                    PathIdentityResolver.Comparer)) ||
+            outputIdentities.Any(
+                outputIdentity => protectedInputIdentities.Contains(
+                    outputIdentity,
+                    PathIdentityResolver.Comparer)))
         {
             throw new CommandInputException(
                 CreateCliDiagnostic(
@@ -526,11 +541,6 @@ internal sealed class CompareCommandHandler
             error.Write(formatted);
         }
     }
-
-    private static StringComparer PathComparer() =>
-        OperatingSystem.IsWindows()
-            ? StringComparer.OrdinalIgnoreCase
-            : StringComparer.Ordinal;
 
     private static StringComparison PathComparison() =>
         OperatingSystem.IsWindows()
