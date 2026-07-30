@@ -175,8 +175,10 @@ public sealed class SarifIngestionFuzzTests
             ",",
             Enumerable.Range(0, resultCount)
                 .Select(_ => "null"));
-        return
-            $$"""{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"T"}},"results":[{{results}}]}]}""";
+        return string.Concat(
+            """{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"T"}},"results":[""",
+            results,
+            "]}]}");
     }
 
     private static string CreateResultWithLocations(int locationCount)
@@ -185,8 +187,10 @@ public sealed class SarifIngestionFuzzTests
             ",",
             Enumerable.Range(0, locationCount)
                 .Select(_ => "null"));
-        return
-            $$"""{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"T"}},"results":[{"ruleId":"R","message":{"text":"m"},"locations":[{{locations}}]}]}]}""";
+        return string.Concat(
+            """{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"T"}},"results":[{"ruleId":"R","message":{"text":"m"},"locations":[""",
+            locations,
+            "]}]}]}");
     }
 
     private static string CreateDeepDocument(int depth) =>

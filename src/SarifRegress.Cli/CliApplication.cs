@@ -27,7 +27,7 @@ public static class CliApplication
     /// <param name="output">The destination for standard output.</param>
     /// <param name="error">The destination for standard error.</param>
     /// <param name="currentDirectory">
-    /// The directory against which explicit relative command-line paths ar resolved.
+    /// The directory against which explicit relative command-line paths are resolved.
     /// </param>
     /// <returns>The exit code produced by parsing or invoking the selected command.</returns>
     public static int Run(
@@ -91,7 +91,7 @@ public static class CliApplication
                     argument.StartsWith(assignmentPrefix, StringComparison.Ordinal));
             if (!isPresent)
             {
-                error.Write($_"Required option '{optionName}' is missing.\n");
+                error.Write($"Required option '{optionName}' is missing.\n");
             }
         }
     }
