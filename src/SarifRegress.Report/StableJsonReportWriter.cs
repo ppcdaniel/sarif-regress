@@ -216,6 +216,14 @@ internal static class StableJsonReportWriter
         writer.WriteStartObject(propertyName);
         writer.WriteString("findingKey", snapshot.FindingKey);
         writer.WriteString("producerFamily", snapshot.ProducerFamily);
+        writer.WriteString("producerToolName", snapshot.ProducerToolName);
+        WriteNullableString(
+            writer,
+            "producerToolVersion",
+            snapshot.ProducerToolVersion);
+        writer.WriteString(
+            "automaticProducerIdentity",
+            snapshot.AutomaticProducerIdentity);
         writer.WriteString("canonicalRule", snapshot.CanonicalRule);
         WriteNullableString(
             writer,

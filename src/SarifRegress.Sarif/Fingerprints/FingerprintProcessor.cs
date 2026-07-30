@@ -25,13 +25,13 @@ public static class FingerprintProcessor
     /// Gets the first derived fingerprint name.
     /// </summary>
     public const string DerivedFingerprintName =
-        "sarifregress/rule-path-context/v1";
+        "sarifregress/rule-path-context/v2";
 
     /// <summary>
     /// Gets the derived fingerprint algorithm identifier.
     /// </summary>
     public const string DerivedAlgorithmVersion =
-        "rule-path-context/v1";
+        "rule-path-context/v2";
 
     private const string EmbeddedSnippetAlgorithmVersion =
         "embedded-snippet/v1";
@@ -267,7 +267,7 @@ public static class FingerprintProcessor
 
         var value = VersionedHash.Compute(
             DerivedAlgorithmVersion,
-            finding.Producer.Family,
+            finding.Producer.AutomaticIdentity,
             finding.Rule.CanonicalId,
             repositoryPath,
             contextHash);

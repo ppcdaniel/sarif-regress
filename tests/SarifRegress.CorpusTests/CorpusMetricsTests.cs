@@ -340,7 +340,12 @@ public sealed class CorpusMetricsTests
                 resultIndex,
                 $"/runs/0/results/{resultIndex}"),
             new RunIdentity(0, null, $"{input}:0"),
-            new ProducerIdentity("Corpus", "1.0", "corpus", null),
+            new ProducerIdentity(
+                "Corpus",
+                "1.0",
+                "corpus",
+                AutomationCategory: null,
+                AutomaticIdentity: "corpus"),
             new RuleIdentity("R1", "corpus/R1", false),
             null,
             new MessageIdentity("Message", "Message", "message", []));

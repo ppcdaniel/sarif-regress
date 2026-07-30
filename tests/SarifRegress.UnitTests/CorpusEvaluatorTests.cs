@@ -113,7 +113,12 @@ public sealed class CorpusEvaluatorTests
                 resultIndex,
                 $"/runs/0/results/{resultIndex}"),
             new RunIdentity(0, null, "run:0"),
-            new ProducerIdentity("Test", "1.0", "test", null),
+            new ProducerIdentity(
+                "Test",
+                "1.0",
+                "test",
+                AutomationCategory: null,
+                AutomaticIdentity: "test"),
             new RuleIdentity("R1", "test/R1", false),
             null,
             new MessageIdentity("Message", "Message", "message", []));

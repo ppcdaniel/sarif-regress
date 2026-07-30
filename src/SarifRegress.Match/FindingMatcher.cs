@@ -116,9 +116,10 @@ public sealed class FindingMatcher
     /// Generates admissible edges through producer/rule buckets and unions the complete graph.
     /// Edges retained for solving are independently bounded per baseline finding.
     /// </summary>
-    // Time: O(P × (E + log S) + (B + C) α(B + C)); Space: O(P + B + C), where
-    // P is preflight-bounded candidate pairs, E is bounded evidence work, and S is the
-    // per-finding selection bound.
+    // Time: O(P × (E + L + log S) + (B + C) α(B + C)); Space: O(P + B + C), where
+    // P is preflight-bounded candidate pairs, E is bounded non-path evidence work, L is
+    // the compared path length (independent of alias count), and S is the per-finding
+    // selection bound.
     private static CandidateGraph BuildCandidateGraph(
         ImmutableArray<Finding> baselineFindings,
         ImmutableArray<Finding> candidateFindings,
@@ -1675,7 +1676,7 @@ internal sealed class CandidateBucketIndex
             Add(
                 defaultBuilders,
                 new DefaultRuleBucket(
-                    candidate.Producer.Family,
+                    candidate.Producer.AutomaticIdentity,
                     candidate.Rule.CanonicalId),
                 candidateIndex);
 
@@ -1684,25 +1685,19 @@ internal sealed class CandidateBucketIndex
                 continue;
             }
 
-            var producerTokens = new[]
-            {
-                candidate.Producer.Family,
-                candidate.Producer.ToolName,
-            }.Distinct(StringComparer.Ordinal);
             var ruleTokens = new[]
             {
                 candidate.Rule.CanonicalId,
                 candidate.Rule.OriginalId,
             }.Distinct(StringComparer.Ordinal);
-            foreach (var producer in producerTokens)
+            foreach (var rule in ruleTokens)
             {
-                foreach (var rule in ruleTokens)
-                {
-                    Add(
-                        aliasBuilders,
-                        new AliasLookupBucket(producer, rule),
-                        candidateIndex);
-                }
+                Add(
+                    aliasBuilders,
+                    new AliasLookupBucket(
+                        candidate.Producer.AutomaticIdentity,
+                        rule),
+                    candidateIndex);
             }
         }
 
@@ -1710,10 +1705,18 @@ internal sealed class CandidateBucketIndex
             new Dictionary<AliasLookupBucket, List<AliasLookupBucket>>();
         foreach (var alias in aliases)
         {
+            var baselineProducer = ProducerIdentityResolver.Resolve(
+                alias.BaselineProducer);
+            var candidateProducer = ProducerIdentityResolver.Resolve(
+                alias.CandidateProducer);
             Add(
                 aliasTargetBuilders,
-                new AliasLookupBucket(alias.BaselineProducer, alias.BaselineRule),
-                new AliasLookupBucket(alias.CandidateProducer, alias.CandidateRule));
+                new AliasLookupBucket(
+                    baselineProducer.AutomaticIdentity,
+                    alias.BaselineRule),
+                new AliasLookupBucket(
+                    candidateProducer.AutomaticIdentity,
+                    alias.CandidateRule));
         }
 
         return new CandidateBucketIndex(
@@ -1741,7 +1744,7 @@ internal sealed class CandidateBucketIndex
         {
             if (!defaultBuckets.TryGetValue(
                     new DefaultRuleBucket(
-                        baseline.Producer.Family,
+                        baseline.Producer.AutomaticIdentity,
                         baseline.Rule.CanonicalId),
                     out var directCandidates))
             {
@@ -1759,7 +1762,7 @@ internal sealed class CandidateBucketIndex
         var selectionWorkCount = 0;
         if (defaultBuckets.TryGetValue(
             new DefaultRuleBucket(
-                baseline.Producer.Family,
+                baseline.Producer.AutomaticIdentity,
                 baseline.Rule.CanonicalId),
             out var defaultCandidates))
         {
@@ -1846,20 +1849,16 @@ internal sealed class CandidateBucketIndex
 
     private static IEnumerable<AliasLookupBucket> BaselineAliasBuckets(Finding baseline)
     {
-        var producerTokens = new[]
-        {
-            baseline.Producer.Family,
-            baseline.Producer.ToolName,
-        }.Distinct(StringComparer.Ordinal);
         var ruleTokens = new[]
         {
             baseline.Rule.CanonicalId,
             baseline.Rule.OriginalId,
         }.Distinct(StringComparer.Ordinal);
 
-        return producerTokens
-            .SelectMany(producer => ruleTokens.Select(rule =>
-                new AliasLookupBucket(producer, rule)))
+        return ruleTokens
+            .Select(rule => new AliasLookupBucket(
+                baseline.Producer.AutomaticIdentity,
+                rule))
             .OrderBy(item => item.Producer, StringComparer.Ordinal)
             .ThenBy(item => item.Rule, StringComparer.Ordinal);
     }
@@ -1891,7 +1890,7 @@ internal sealed class CandidateBucketIndex
     }
 
     private readonly record struct DefaultRuleBucket(
-        string ProducerFamily,
+        string ProducerIdentity,
         string CanonicalRule);
 
     private readonly record struct AliasLookupBucket(

@@ -19,6 +19,7 @@ internal sealed class CandidateEdgeFactory
 
     private readonly SarifRegressConfiguration configuration;
     private readonly ProducerFingerprintOccurrenceIndex fingerprintOccurrences;
+    private readonly PathAliasIndex pathAliases;
     private readonly RuleAliasIndex ruleAliases;
 
     public CandidateEdgeFactory(
@@ -27,6 +28,9 @@ internal sealed class CandidateEdgeFactory
     {
         this.configuration = configuration;
         this.fingerprintOccurrences = fingerprintOccurrences;
+        pathAliases = PathAliasIndex.Create(
+            configuration.PathAliases,
+            configuration.Matching.PathCaseSensitivity);
         ruleAliases = RuleAliasIndex.Create(configuration.RuleAliases);
     }
 
@@ -109,8 +113,8 @@ internal sealed class CandidateEdgeFactory
 
     private static bool IsSameDefaultRule(Finding baseline, Finding candidate) =>
         string.Equals(
-            baseline.Producer.Family,
-            candidate.Producer.Family,
+            baseline.Producer.AutomaticIdentity,
+            candidate.Producer.AutomaticIdentity,
             StringComparison.Ordinal)
         && string.Equals(
             baseline.Rule.CanonicalId,
@@ -407,13 +411,12 @@ internal sealed class CandidateEdgeFactory
             return PathMatchKind.Exact;
         }
 
-        foreach (var alias in configuration.PathAliases)
+        var alias = pathAliases.Find(
+            baselinePath,
+            candidatePath,
+            out _);
+        if (alias is not null)
         {
-            if (!AliasMapsPaths(alias, baselinePath, candidatePath))
-            {
-                continue;
-            }
-
             evidence.Add(new EvidenceDraft(
                 "path-alias",
                 alias.Baseline,
@@ -437,48 +440,6 @@ internal sealed class CandidateEdgeFactory
 
     private static bool HasLossyTransform(CanonicalPath path) =>
         path.Transformations.Any(item => item.IsLossy);
-
-    private bool AliasMapsPaths(
-        PathAlias alias,
-        CanonicalPath baselinePath,
-        CanonicalPath candidatePath)
-    {
-        var pathPairs = new[]
-        {
-            (
-                Baseline: baselinePath.RepositoryRelativePath,
-                Candidate: candidatePath.RepositoryRelativePath),
-            (
-                Baseline: baselinePath.CanonicalUri,
-                Candidate: candidatePath.CanonicalUri),
-        };
-
-        return pathPairs.Any(pair =>
-            pair.Baseline is not null
-            && pair.Candidate is not null
-            && HasMappedSuffix(
-                pair.Baseline,
-                alias.Baseline,
-                pair.Candidate,
-                alias.Candidate));
-    }
-
-    private bool HasMappedSuffix(
-        string baselinePath,
-        string baselinePrefix,
-        string candidatePath,
-        string candidatePrefix)
-    {
-        if (!PathStartsWith(baselinePath, baselinePrefix)
-            || !PathStartsWith(candidatePath, candidatePrefix))
-        {
-            return false;
-        }
-
-        return PathEquals(
-            baselinePath[baselinePrefix.Length..],
-            candidatePath[candidatePrefix.Length..]);
-    }
 
     private AgreementBand CompareContext(
         ContextEvidence? baseline,
@@ -818,25 +779,6 @@ internal sealed class CandidateEdgeFactory
             ? string.Equals(left, right, StringComparison.Ordinal)
             : AsciiEqualsIgnoreCase(left, right);
 
-    private bool PathStartsWith(string value, string prefix)
-    {
-        if (prefix.Length == 0 || prefix.Length > value.Length)
-        {
-            return false;
-        }
-
-        if (!PathEquals(value[..prefix.Length], prefix))
-        {
-            return false;
-        }
-
-        return value.Length == prefix.Length
-            || IsPathSeparator(prefix[^1])
-            || IsPathSeparator(value[prefix.Length]);
-    }
-
-    private static bool IsPathSeparator(char value) => value is '/' or '\\';
-
     private string NormalizePathForComparison(string path)
     {
         if (configuration.Matching.PathCaseSensitivity == PathCaseSensitivity.Sensitive)
@@ -1047,7 +989,7 @@ internal sealed class ProducerFingerprintOccurrenceIndex
             .Where(item => item.Value > 1)
             .OrderBy(item => item.Key.Input)
             .ThenBy(item => item.Key.RunKey, StringComparer.Ordinal)
-            .ThenBy(item => item.Key.ProducerFamily, StringComparer.Ordinal)
+            .ThenBy(item => item.Key.ProducerIdentity, StringComparer.Ordinal)
             .ThenBy(item => item.Key.RuleId, StringComparer.Ordinal)
             .ThenBy(item => item.Key.FingerprintFamily, StringComparer.Ordinal)
             .ThenByDescending(item => item.Key.Version)
@@ -1121,7 +1063,7 @@ internal sealed class ProducerFingerprintOccurrenceIndex
         new(
             input,
             finding.Run.StableRunKey,
-            finding.Producer.Family,
+            finding.Producer.AutomaticIdentity,
             finding.Rule.CanonicalId,
             fingerprint.Family,
             fingerprint.Version,
@@ -1135,7 +1077,7 @@ internal sealed class ProducerFingerprintOccurrenceIndex
     private readonly record struct OccurrenceKey(
         InputKind Input,
         string RunKey,
-        string ProducerFamily,
+        string ProducerIdentity,
         string RuleId,
         string FingerprintFamily,
         int? Version,
@@ -1156,11 +1098,15 @@ internal sealed class RuleAliasIndex
         var indexed = new Dictionary<RuleAliasKey, RuleAlias>();
         foreach (var alias in aliases)
         {
+            var baselineProducer = ProducerIdentityResolver.Resolve(
+                alias.BaselineProducer);
+            var candidateProducer = ProducerIdentityResolver.Resolve(
+                alias.CandidateProducer);
             indexed.TryAdd(
                 new RuleAliasKey(
-                    alias.BaselineProducer,
+                    baselineProducer.AutomaticIdentity,
                     alias.BaselineRule,
-                    alias.CandidateProducer,
+                    candidateProducer.AutomaticIdentity,
                     alias.CandidateRule),
                 alias);
         }
@@ -1171,25 +1117,19 @@ internal sealed class RuleAliasIndex
     public ImmutableArray<RuleAlias> FindApplicable(Finding baseline, Finding candidate)
     {
         var matches = new HashSet<RuleAlias>();
-        foreach (var baselineProducer in ProducerTokens(baseline.Producer))
+        foreach (var baselineRule in RuleTokens(baseline.Rule))
         {
-            foreach (var baselineRule in RuleTokens(baseline.Rule))
+            foreach (var candidateRule in RuleTokens(candidate.Rule))
             {
-                foreach (var candidateProducer in ProducerTokens(candidate.Producer))
+                if (aliases.TryGetValue(
+                    new RuleAliasKey(
+                        baseline.Producer.AutomaticIdentity,
+                        baselineRule,
+                        candidate.Producer.AutomaticIdentity,
+                        candidateRule),
+                    out var alias))
                 {
-                    foreach (var candidateRule in RuleTokens(candidate.Rule))
-                    {
-                        if (aliases.TryGetValue(
-                            new RuleAliasKey(
-                                baselineProducer,
-                                baselineRule,
-                                candidateProducer,
-                                candidateRule),
-                            out var alias))
-                        {
-                            matches.Add(alias);
-                        }
-                    }
+                    matches.Add(alias);
                 }
             }
         }
@@ -1201,13 +1141,6 @@ internal sealed class RuleAliasIndex
             .ThenBy(item => item.CandidateRule, StringComparer.Ordinal)
             .ToImmutableArray();
     }
-
-    private static IEnumerable<string> ProducerTokens(ProducerIdentity producer) =>
-        new[]
-        {
-            producer.Family,
-            producer.ToolName,
-        }.Distinct(StringComparer.Ordinal);
 
     private static IEnumerable<string> RuleTokens(RuleIdentity rule) =>
         new[]

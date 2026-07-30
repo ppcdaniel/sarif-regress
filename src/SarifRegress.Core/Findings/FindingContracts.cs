@@ -15,11 +15,23 @@ public sealed record RunIdentity(
 /// <summary>
 /// Identifies a static-analysis producer family and observed version.
 /// </summary>
+/// <param name="ToolName">The original SARIF tool name.</param>
+/// <param name="ToolVersion">The optional observed tool version.</param>
+/// <param name="Family">
+/// The human-readable canonical family label. This value is display metadata
+/// and must not be used as the automatic same-producer identity.
+/// </param>
+/// <param name="AutomationCategory">The optional SARIF automation category.</param>
+/// <param name="AutomaticIdentity">
+/// The deterministic, collision-resistant identity used for automatic
+/// same-producer matching and derived fingerprints.
+/// </param>
 public sealed record ProducerIdentity(
     string ToolName,
     string? ToolVersion,
     string Family,
-    string? AutomationCategory);
+    string? AutomationCategory,
+    string AutomaticIdentity);
 
 /// <summary>
 /// Preserves original and canonical rule identities.
@@ -255,6 +267,8 @@ public sealed record Finding
         ArgumentNullException.ThrowIfNull(producer);
         ArgumentNullException.ThrowIfNull(rule);
         ArgumentNullException.ThrowIfNull(message);
+        ArgumentException.ThrowIfNullOrWhiteSpace(
+            producer.AutomaticIdentity);
 
         FindingKey = findingKey;
         SourceReference = sourceReference;

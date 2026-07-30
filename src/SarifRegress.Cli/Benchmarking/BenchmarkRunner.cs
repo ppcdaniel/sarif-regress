@@ -235,12 +235,12 @@ public sealed class BenchmarkRunner
             ? after - before
             : 0;
 
-    private static ImmutableArray<int> MeasureCandidateBucketSizes(
+    internal static ImmutableArray<int> MeasureCandidateBucketSizes(
         ImmutableArray<Finding> findings) =>
         findings
             .GroupBy(
                 finding => (
-                    finding.Producer.Family,
+                    finding.Producer.AutomaticIdentity,
                     finding.Rule.CanonicalId))
             .Select(group => group.Count())
             .Order()

@@ -1,6 +1,7 @@
 name: Extended benchmark evidence
 
 on:
+  pull_request:
   schedule:
     - cron: '23 4 * * 1'
   workflow_dispatch:

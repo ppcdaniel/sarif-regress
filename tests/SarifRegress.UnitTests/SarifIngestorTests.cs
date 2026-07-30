@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using System.Text.Json;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Findings;
@@ -155,6 +156,7 @@ public sealed class SarifIngestorTests
             [
                 "collapsed-whitespace",
                 "invariant-case-fold",
+                "producer-family-allowlist",
                 "trimmed-whitespace",
             ],
             finding.Lossiness);
@@ -179,6 +181,128 @@ public sealed class SarifIngestorTests
         Assert.Equal("2.1.0", result.Summary.Version);
         Assert.Equal(512L, result.Summary.CompressedUploadBytes);
         Assert.Empty(result.ComparisonInput.Diagnostics);
+    }
+
+    [Theory]
+    [InlineData("Scanner.A", "Scanner A")]
+    [InlineData("Scanner", "scanner")]
+    [InlineData("掃描器甲", "掃描器乙")]
+    [InlineData("CodeQL-Evil", "CodeQL")]
+    [InlineData("CodeQL Scanner", "CodeQL")]
+    [InlineData("CodeQLicious", "CodeQL")]
+    [InlineData("Semgrep CLI", "Semgrep")]
+    [InlineData("Semgrepper", "Semgrep")]
+    public async Task Distinct_tool_names_have_distinct_automatic_identities(
+        string baselineToolName,
+        string candidateToolName)
+    {
+        var baseline = await IngestSingleFindingAsync(
+            baselineToolName,
+            "1.0.0",
+            InputKind.Baseline);
+        var candidate = await IngestSingleFindingAsync(
+            candidateToolName,
+            "1.0.0",
+            InputKind.Candidate);
+
+        Assert.NotEqual(
+            baseline.Producer.AutomaticIdentity,
+            candidate.Producer.AutomaticIdentity);
+        Assert.NotEqual(
+            Assert.Single(baseline.DerivedFingerprints).Value,
+            Assert.Single(candidate.DerivedFingerprints).Value);
+    }
+
+    [Theory]
+    [InlineData(
+        "CodeQL",
+        "CodeQL command-line toolchain",
+        "codeql")]
+    [InlineData("semgrep", "Semgrep", "semgrep")]
+    public async Task Allowlisted_family_names_share_identity_across_versions(
+        string baselineToolName,
+        string candidateToolName,
+        string expectedFamily)
+    {
+        var baseline = await IngestSingleFindingAsync(
+            baselineToolName,
+            "1.0.0",
+            InputKind.Baseline);
+        var candidate = await IngestSingleFindingAsync(
+            candidateToolName,
+            "2.0.0",
+            InputKind.Candidate);
+
+        Assert.Equal(expectedFamily, baseline.Producer.Family);
+        Assert.Equal(expectedFamily, candidate.Producer.Family);
+        Assert.Equal(
+            baseline.Producer.AutomaticIdentity,
+            candidate.Producer.AutomaticIdentity);
+        Assert.Equal(
+            Assert.Single(baseline.DerivedFingerprints).Value,
+            Assert.Single(candidate.DerivedFingerprints).Value);
+        Assert.Equal("1.0.0", baseline.Producer.ToolVersion);
+        Assert.Equal("2.0.0", candidate.Producer.ToolVersion);
+        Assert.Contains(
+            ProducerIdentityResolver.AllowlistLossinessIdentifier,
+            baseline.Lossiness);
+        Assert.Contains(
+            ProducerIdentityResolver.AllowlistLossinessIdentifier,
+            candidate.Lossiness);
+    }
+
+    [Fact]
+    public async Task Exact_tool_name_identity_excludes_tool_version()
+    {
+        var baseline = await IngestSingleFindingAsync(
+            "Custom Scanner",
+            "1.0.0",
+            InputKind.Baseline);
+        var candidate = await IngestSingleFindingAsync(
+            "Custom Scanner",
+            "2.0.0",
+            InputKind.Candidate);
+
+        Assert.Equal(
+            baseline.Producer.AutomaticIdentity,
+            candidate.Producer.AutomaticIdentity);
+        Assert.StartsWith(
+            "producer-tool-name/v1/",
+            baseline.Producer.AutomaticIdentity,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            ProducerIdentityResolver.AllowlistLossinessIdentifier,
+            baseline.Lossiness);
+        Assert.DoesNotContain(
+            ProducerIdentityResolver.AllowlistLossinessIdentifier,
+            candidate.Lossiness);
+    }
+
+    [Theory]
+    [InlineData("CodeQL", "CodeQL-Evil")]
+    [InlineData("Scanner.A", "Scanner A")]
+    public async Task Rule_alias_producer_names_use_collision_safe_identity(
+        string configuredProducer,
+        string actualProducer)
+    {
+        var configuration = CreateConfiguration(
+            repositoryRoot: null,
+            ruleAliases:
+            [
+                new RuleAlias(
+                    configuredProducer,
+                    "R1",
+                    "Other Scanner",
+                    "R2"),
+            ]);
+
+        var finding = await IngestSingleFindingAsync(
+            actualProducer,
+            "1.0.0",
+            InputKind.Baseline,
+            configuration);
+
+        Assert.False(finding.Rule.AliasApplied);
     }
 
     [Fact]
@@ -242,7 +366,9 @@ public sealed class SarifIngestorTests
             {
               "version": "2.1.0",
               "runs": [{
-                "tool": { "driver": { "name": "CodeQL" } },
+                "tool": {
+                  "driver": { "name": "CodeQL command-line toolchain" }
+                },
                 "results": [{
                   "ruleId": "old/rule",
                   "message": { "text": "message" }
@@ -394,6 +520,71 @@ public sealed class SarifIngestorTests
             stream,
             request,
             TestContext.Current.CancellationToken);
+    }
+
+    private static async Task<Finding> IngestSingleFindingAsync(
+        string toolName,
+        string toolVersion,
+        InputKind input,
+        SarifRegressConfiguration? configuration = null)
+    {
+        var sarif = JsonSerializer.Serialize(
+            new
+            {
+                version = "2.1.0",
+                runs = new[]
+                {
+                    new
+                    {
+                        tool = new
+                        {
+                            driver = new
+                            {
+                                name = toolName,
+                                semanticVersion = toolVersion,
+                            },
+                        },
+                        results = new[]
+                        {
+                            new
+                            {
+                                ruleId = "R1",
+                                message = new { text = "message" },
+                                locations = new[]
+                                {
+                                    new
+                                    {
+                                        physicalLocation = new
+                                        {
+                                            artifactLocation = new
+                                            {
+                                                uri = "src/example.cs",
+                                            },
+                                            region = new
+                                            {
+                                                startLine = 1,
+                                                snippet = new
+                                                {
+                                                    text = "example();",
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        var result = await IngestAsync(
+            sarif,
+            new SarifIngestionRequest(
+                input,
+                input.ToString(),
+                configuration ?? SarifRegressConfiguration.Default));
+
+        Assert.True(result.IsValid);
+        return Assert.Single(result.ComparisonInput.Findings);
     }
 
     private static SarifRegressConfiguration CreateConfiguration(

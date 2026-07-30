@@ -1,8 +1,10 @@
+using System.Collections.Immutable;
 using System.CommandLine;
 using System.Globalization;
 using System.Text.Json;
 using SarifRegress.Cli.Benchmarking;
 using SarifRegress.Cli.CommandLine;
+using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Security;
 
 namespace SarifRegress.UnitTests;
@@ -524,6 +526,29 @@ public sealed class AuxiliaryCommandTests
         Assert.Equal(
             ResourceLimits.DefaultMaximumCandidatePairEvaluationsPerFinding,
             report.MaximumCandidatePairsPerFinding);
+    }
+
+    [Fact]
+    public void Benchmark_bucket_metrics_use_automatic_producer_identity()
+    {
+        var findings = ImmutableArray.Create(
+            MatchingTestData.Finding(
+                InputKind.Candidate,
+                "candidate:one",
+                producerFamily: "scanner-a",
+                toolName: "Scanner.A",
+                ruleId: "scanner-a/rule"),
+            MatchingTestData.Finding(
+                InputKind.Candidate,
+                "candidate:two",
+                producerFamily: "scanner-a",
+                toolName: "Scanner A",
+                ruleId: "scanner-a/rule"));
+
+        var bucketSizes = BenchmarkRunner.MeasureCandidateBucketSizes(
+            findings);
+
+        Assert.Equal([1, 1], bucketSizes);
     }
 
     private static string[] OptionNames(Command command) =>

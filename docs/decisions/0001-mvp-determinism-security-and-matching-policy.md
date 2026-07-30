@@ -47,9 +47,10 @@ Stable text is UTF-8 without a byte-order mark and uses LF line endings. Derived
 SHA-256 over a versioned, length-prefixed sequence of UTF-8 fields. Length prefixes prevent
 concatenation ambiguity. Hashes are lowercase hexadecimal.
 
-The first derived fingerprint is `sarifregress/rule-path-context/v1`. Its fields are producer
-family, canonical rule, canonical repository-relative path when available, and bounded context
-hash. Absolute line numbers and machine-specific repository roots are excluded.
+The derived fingerprint is `sarifregress/rule-path-context/v2`. Its fields are the
+collision-resistant automatic producer identity, canonical rule, canonical repository-relative
+path when available, and bounded context hash. Absolute line numbers and machine-specific
+repository roots are excluded. Version 2 replaces the display-family input used by version 1.
 
 ### Paths and aliases
 
@@ -66,11 +67,17 @@ characters remain encoded. Traversal above a known logical root is rejected.
 
 ### Fingerprints and candidate buckets
 
-The coarse automatic bucket key is canonical producer family plus canonical rule identity.
-Cross-producer bucket entry requires an explicit rule alias. Producer fingerprint names use a
-terminal `/vN` version when present; the greatest common numeric version within the same family is
-compared. Duplicate name/value pairs inside a run-and-rule bucket are degraded and cannot produce
-an indisputable exact match.
+The coarse automatic bucket key is collision-resistant automatic producer identity plus canonical
+rule identity. The readable canonical producer family is display-only. Exact allowlisted CodeQL
+and Semgrep names share stable known-family identities; every other complete tool name is exposed
+as a self-describing `producer-tool-name/v1/<sha256>` identity. Cross-producer bucket entry requires
+an explicit rule alias resolved through the
+same identity path. This changes rule-alias canonical bytes and matching eligibility, so those
+contracts are versioned as `sarifregress/rule-alias/v2` and `sarifregress/matcher/v2`.
+
+Producer fingerprint names use a terminal `/vN` version when present; the greatest common numeric
+version within the same family is compared. Duplicate name/value pairs inside a run-and-rule
+bucket are degraded and cannot produce an indisputable exact match.
 
 Candidate-pair limits are checked before semantic edge scoring. Per-finding limits apply to both
 outgoing baseline pairs and incoming candidate pairs. Exceeding a per-finding or comparison-wide
@@ -115,10 +122,12 @@ The labelled Alpha corpus contains 200–500 result pairs and must report:
 - zero silently matched labelled ambiguity;
 - byte-identical approved output on Windows and Linux.
 
-The pull-request benchmark smoke uses 1,000 findings and a 10-second/512-MiB advisory budget on a
-standard GitHub-hosted runner. The full published benchmark includes 1,000, 10,000, and 100,000
-findings with a 60-second/1-GiB target for 100,000 findings. Wall-clock budgets are reported, while
-deterministic operation and allocation bounds are the non-flaky CI gates.
+The pull-request benchmark smoke uses 1,000 findings and enforces a 10-second/512-MiB budget on a
+standard GitHub-hosted Ubuntu runner. The full published benchmark includes 1,000, 10,000, and
+100,000 findings; its Linux jobs enforce the 60-second/1-GiB ceilings for 100,000 findings, while
+Windows emits the same deterministic projections for cross-platform verification. Deterministic
+operation and refusal checks complement those elapsed-time and working-set gates; allocation
+measurements remain evidence rather than a separate enforced ceiling.
 
 ## Consequences
 

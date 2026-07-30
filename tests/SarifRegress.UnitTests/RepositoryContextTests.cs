@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Net.Sockets;
 using System.Text;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Findings;
@@ -215,9 +217,15 @@ public sealed class RepositoryContextTests
             var outside = Directory.CreateDirectory(
                 Path.Combine(parent.FullName, "outside"));
             var outsideFile = Path.Combine(outside.FullName, "secret.txt");
+            var regularFile = Path.Combine(root.FullName, "regular.txt");
             await File.WriteAllTextAsync(
                 outsideFile,
                 "secret",
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(
+                regularFile,
+                "regular",
                 Encoding.UTF8,
                 TestContext.Current.CancellationToken);
 
@@ -249,9 +257,10 @@ public sealed class RepositoryContextTests
                 new Region(1, null, null, null),
                 lineRadius: 0,
                 cancellationToken: TestContext.Current.CancellationToken);
-            var rootResult = await new FileSystemRepositoryContext(rootLink)
+            var rootResult = await new FileSystemRepositoryContext(
+                $"{rootLink}{Path.DirectorySeparatorChar}")
                 .ReadAsync(
-                    "file-link.txt",
+                    "regular.txt",
                     new Region(1, null, null, null),
                     lineRadius: 0,
                     cancellationToken: TestContext.Current.CancellationToken);
@@ -265,10 +274,321 @@ public sealed class RepositoryContextTests
             Assert.Contains(
                 rootResult.Diagnostics,
                 item => item.Code == "SECURITY0002");
+            Assert.Null(fileResult.Snippet);
+            Assert.Null(directoryResult.Snippet);
+            Assert.Null(rootResult.Snippet);
         }
         finally
         {
             parent.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Windows_intermediate_junction_is_rejected()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var parent = Directory.CreateTempSubdirectory(
+            "sarif-regress-junction-");
+        var junctionPath = Path.Combine(
+            parent.FullName,
+            "root",
+            "nested",
+            "junction");
+        try
+        {
+            var root = Directory.CreateDirectory(
+                Path.Combine(parent.FullName, "root"));
+            Directory.CreateDirectory(
+                Path.Combine(root.FullName, "nested"));
+            var outside = Directory.CreateDirectory(
+                Path.Combine(parent.FullName, "outside"));
+            await File.WriteAllTextAsync(
+                Path.Combine(outside.FullName, "secret.txt"),
+                "outside content",
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
+
+            var commandProcessor = Path.Combine(
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder.System),
+                "cmd.exe");
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = commandProcessor,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true,
+            };
+            startInfo.ArgumentList.Add("/d");
+            startInfo.ArgumentList.Add("/c");
+            startInfo.ArgumentList.Add("mklink");
+            startInfo.ArgumentList.Add("/J");
+            startInfo.ArgumentList.Add(junctionPath);
+            startInfo.ArgumentList.Add(outside.FullName);
+            using var process = Process.Start(startInfo)
+                ?? throw new InvalidOperationException(
+                    "The junction-creation process could not be started.");
+            var standardErrorTask = process.StandardError
+                .ReadToEndAsync(TestContext.Current.CancellationToken);
+            var standardOutputTask = process.StandardOutput
+                .ReadToEndAsync(TestContext.Current.CancellationToken);
+            await process.WaitForExitAsync(
+                TestContext.Current.CancellationToken);
+            var standardError = await standardErrorTask;
+            var standardOutput = await standardOutputTask;
+            if (process.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"mklink /J failed with exit code {process.ExitCode}: "
+                    + standardError
+                    + standardOutput);
+            }
+
+            var result = await new FileSystemRepositoryContext(
+                    root.FullName)
+                .ReadAsync(
+                    Path.Combine(
+                        "nested",
+                        "junction",
+                        "secret.txt"),
+                    new Region(1, null, null, null),
+                    lineRadius: 0,
+                    cancellationToken:
+                        TestContext.Current.CancellationToken);
+
+            Assert.True(result.Exists);
+            Assert.Null(result.Snippet);
+            Assert.Contains(
+                result.Diagnostics,
+                diagnostic =>
+                    diagnostic.Code == "SECURITY0002"
+                    && diagnostic.Stage ==
+                        DiagnosticStage.Security);
+        }
+        finally
+        {
+            if (Directory.Exists(junctionPath))
+            {
+                Directory.Delete(junctionPath);
+            }
+
+            parent.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Opened_repository_handle_cannot_be_redirected_by_a_later_link()
+    {
+        var parent = Directory.CreateTempSubdirectory(
+            "sarif-regress-handle-anchor-");
+        try
+        {
+            var root = Directory.CreateDirectory(
+                Path.Combine(parent.FullName, "root"));
+            var outside = Directory.CreateDirectory(
+                Path.Combine(parent.FullName, "outside"));
+            var sourceDirectory = Directory.CreateDirectory(
+                Path.Combine(root.FullName, "nested"));
+            var sourcePath = Path.Combine(
+                sourceDirectory.FullName,
+                "source.txt");
+            var retainedPath = Path.Combine(
+                sourceDirectory.FullName,
+                "retained.txt");
+            var outsidePath = Path.Combine(outside.FullName, "secret.txt");
+            var capabilityProbe = Path.Combine(root.FullName, "link-probe");
+            await File.WriteAllTextAsync(
+                sourcePath,
+                "approved content",
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(
+                outsidePath,
+                "outside content",
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
+
+            try
+            {
+                File.CreateSymbolicLink(capabilityProbe, outsidePath);
+                File.Delete(capabilityProbe);
+            }
+            catch (Exception exception)
+                when (exception is IOException
+                    or UnauthorizedAccessException
+                    or PlatformNotSupportedException)
+            {
+                return;
+            }
+
+            var openResult = RepositoryFileHandleOpener.Open(
+                root.FullName,
+                Path.Combine("nested", "source.txt"));
+            await using var sourceStream = Assert.IsType<FileStream>(
+                openResult.Stream);
+
+            File.Move(sourcePath, retainedPath);
+            File.CreateSymbolicLink(sourcePath, outsidePath);
+            using var reader = new StreamReader(
+                sourceStream,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true);
+
+            var content = await reader
+                .ReadToEndAsync(TestContext.Current.CancellationToken);
+
+            Assert.Equal("approved content", content);
+            Assert.Equal(RepositoryFileOpenFailure.None, openResult.Failure);
+        }
+        finally
+        {
+            parent.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Native_open_errors_have_deterministic_fail_closed_classifications()
+    {
+        Assert.Equal(
+            RepositoryFileOpenFailure.UnsafePath,
+            LinuxRepositoryFileOpener.ClassifyError(
+                LinuxRepositoryFileOpener.ErrorIsSymbolicLink));
+        Assert.Equal(
+            RepositoryFileOpenFailure.SafetyUnavailable,
+            LinuxRepositoryFileOpener.ClassifyError(
+                LinuxRepositoryFileOpener.ErrorNoSystemCall));
+        Assert.Equal(
+            RepositoryFileOpenFailure.UnsupportedFileType,
+            LinuxRepositoryFileOpener.ClassifyError(
+                LinuxRepositoryFileOpener.ErrorNoSuchDeviceOrAddress));
+        Assert.Equal(
+            RepositoryFileOpenFailure.UnsafePath,
+            WindowsRepositoryFileOpener.ClassifyStatus(
+                WindowsRepositoryFileOpener.StatusReparsePointEncountered,
+                WindowsRepositoryFileOpener.ErrorFileNotFound));
+        Assert.Equal(
+            RepositoryFileOpenFailure.SafetyUnavailable,
+            WindowsRepositoryFileOpener.ClassifyError(
+                WindowsRepositoryFileOpener.ErrorNotSupported));
+        Assert.Equal(
+            RepositoryFileOpenFailure.UnsupportedFileType,
+            WindowsRepositoryFileOpener.ClassifyStatus(
+                WindowsRepositoryFileOpener.StatusFileIsDirectory,
+                WindowsRepositoryFileOpener.ErrorAccessDenied));
+    }
+
+    [Fact]
+    public async Task Directory_targets_are_rejected_as_non_regular_files()
+    {
+        var root = Directory.CreateTempSubdirectory("sarif-regress-directory-");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root.FullName, "source"));
+            var context = new FileSystemRepositoryContext(root.FullName);
+
+            var result = await context.ReadAsync(
+                "source",
+                new Region(1, null, null, null),
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.True(result.Exists);
+            Assert.Contains(
+                result.Diagnostics,
+                diagnostic => diagnostic.Code == "SECURITY0005");
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Linux_fifo_targets_are_rejected_without_blocking()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var root = Directory.CreateTempSubdirectory("sarif-regress-fifo-");
+        try
+        {
+            var fifoPath = Path.Combine(root.FullName, "source.pipe");
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "mkfifo",
+                UseShellExecute = false,
+            };
+            startInfo.ArgumentList.Add(fifoPath);
+            using var process = Process.Start(startInfo)
+                ?? throw new InvalidOperationException(
+                    "The mkfifo process could not be started.");
+            await process.WaitForExitAsync(
+                TestContext.Current.CancellationToken);
+            Assert.Equal(0, process.ExitCode);
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(
+                TestContext.Current.CancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(5));
+            var context = new FileSystemRepositoryContext(root.FullName);
+
+            var result = await context.ReadAsync(
+                "source.pipe",
+                new Region(1, null, null, null),
+                lineRadius: 0,
+                cancellationToken: timeout.Token);
+
+            Assert.True(result.Exists);
+            Assert.Contains(
+                result.Diagnostics,
+                diagnostic => diagnostic.Code == "SECURITY0005");
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Linux_socket_targets_are_rejected_as_non_regular_files()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var root = Directory.CreateTempSubdirectory("sarif-regress-socket-");
+        try
+        {
+            var socketPath = Path.Combine(root.FullName, "source.socket");
+            using var socket = new Socket(
+                AddressFamily.Unix,
+                SocketType.Stream,
+                ProtocolType.Unspecified);
+            socket.Bind(new UnixDomainSocketEndPoint(socketPath));
+            var context = new FileSystemRepositoryContext(root.FullName);
+
+            var result = await context.ReadAsync(
+                "source.socket",
+                new Region(1, null, null, null),
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.True(result.Exists);
+            Assert.Contains(
+                result.Diagnostics,
+                diagnostic => diagnostic.Code == "SECURITY0005");
+        }
+        finally
+        {
+            root.Delete(recursive: true);
         }
     }
 }

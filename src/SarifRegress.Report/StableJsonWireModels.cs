@@ -63,35 +63,35 @@ internal sealed class SummaryDto
 {
     [JsonPropertyName("baselineCount")]
     [JsonPropertyOrder(0)]
-    public int BaselineCount { get; init; }
+    public required int BaselineCount { get; init; }
 
     [JsonPropertyName("candidateCount")]
     [JsonPropertyOrder(1)]
-    public int CandidateCount { get; init; }
+    public required int CandidateCount { get; init; }
 
     [JsonPropertyName("new")]
     [JsonPropertyOrder(2)]
-    public int New { get; init; }
+    public required int New { get; init; }
 
     [JsonPropertyName("unchanged")]
     [JsonPropertyOrder(3)]
-    public int Unchanged { get; init; }
+    public required int Unchanged { get; init; }
 
     [JsonPropertyName("moved")]
     [JsonPropertyOrder(4)]
-    public int Moved { get; init; }
+    public required int Moved { get; init; }
 
     [JsonPropertyName("modified")]
     [JsonPropertyOrder(5)]
-    public int Modified { get; init; }
+    public required int Modified { get; init; }
 
     [JsonPropertyName("resolved")]
     [JsonPropertyOrder(6)]
-    public int Resolved { get; init; }
+    public required int Resolved { get; init; }
 
     [JsonPropertyName("ambiguous")]
     [JsonPropertyOrder(7)]
-    public int Ambiguous { get; init; }
+    public required int Ambiguous { get; init; }
 }
 
 internal sealed class FindingReportDto
@@ -102,19 +102,19 @@ internal sealed class FindingReportDto
 
     [JsonPropertyName("baselineRef")]
     [JsonPropertyOrder(1)]
-    public SourceReferenceDto? BaselineReference { get; init; }
+    public required SourceReferenceDto? BaselineReference { get; init; }
 
     [JsonPropertyName("candidateRef")]
     [JsonPropertyOrder(2)]
-    public SourceReferenceDto? CandidateReference { get; init; }
+    public required SourceReferenceDto? CandidateReference { get; init; }
 
     [JsonPropertyName("baseline")]
     [JsonPropertyOrder(3)]
-    public FindingSnapshotDto? Baseline { get; init; }
+    public required FindingSnapshotDto? Baseline { get; init; }
 
     [JsonPropertyName("candidate")]
     [JsonPropertyOrder(4)]
-    public FindingSnapshotDto? Candidate { get; init; }
+    public required FindingSnapshotDto? Candidate { get; init; }
 
     [JsonPropertyName("decision")]
     [JsonPropertyOrder(5)]
@@ -145,11 +145,11 @@ internal sealed class SourceReferenceDto
 
     [JsonPropertyName("runIndex")]
     [JsonPropertyOrder(1)]
-    public int? RunIndex { get; init; }
+    public required int? RunIndex { get; init; }
 
     [JsonPropertyName("resultIndex")]
     [JsonPropertyOrder(2)]
-    public int? ResultIndex { get; init; }
+    public required int? ResultIndex { get; init; }
 
     [JsonPropertyName("jsonPointer")]
     [JsonPropertyOrder(3)]
@@ -166,36 +166,48 @@ internal sealed class FindingSnapshotDto
     [JsonPropertyOrder(1)]
     public required string ProducerFamily { get; init; }
 
-    [JsonPropertyName("canonicalRule")]
+    [JsonPropertyName("producerToolName")]
     [JsonPropertyOrder(2)]
+    public required string ProducerToolName { get; init; }
+
+    [JsonPropertyName("producerToolVersion")]
+    [JsonPropertyOrder(3)]
+    public required string? ProducerToolVersion { get; init; }
+
+    [JsonPropertyName("automaticProducerIdentity")]
+    [JsonPropertyOrder(4)]
+    public required string AutomaticProducerIdentity { get; init; }
+
+    [JsonPropertyName("canonicalRule")]
+    [JsonPropertyOrder(5)]
     public required string CanonicalRule { get; init; }
 
     [JsonPropertyName("canonicalUri")]
-    [JsonPropertyOrder(3)]
-    public string? CanonicalUri { get; init; }
+    [JsonPropertyOrder(6)]
+    public required string? CanonicalUri { get; init; }
 
     [JsonPropertyName("region")]
-    [JsonPropertyOrder(4)]
-    public RegionDto? Region { get; init; }
+    [JsonPropertyOrder(7)]
+    public required RegionDto? Region { get; init; }
 
     [JsonPropertyName("canonicalMessage")]
-    [JsonPropertyOrder(5)]
+    [JsonPropertyOrder(8)]
     public required string CanonicalMessage { get; init; }
 
     [JsonPropertyName("sourceMetadata")]
-    [JsonPropertyOrder(6)]
+    [JsonPropertyOrder(9)]
     public SourceMetadataDto? SourceMetadata { get; init; }
 
     [JsonPropertyName("messageNormalisationFlags")]
-    [JsonPropertyOrder(7)]
+    [JsonPropertyOrder(10)]
     public string[] MessageNormalisationFlags { get; init; } = [];
 
     [JsonPropertyName("lossiness")]
-    [JsonPropertyOrder(8)]
+    [JsonPropertyOrder(11)]
     public string[] Lossiness { get; init; } = [];
 
     [JsonPropertyName("derivedFingerprints")]
-    [JsonPropertyOrder(9)]
+    [JsonPropertyOrder(12)]
     public DerivedFingerprintDto[] DerivedFingerprints { get; init; } = [];
 }
 
@@ -203,15 +215,15 @@ internal sealed class SourceMetadataDto
 {
     [JsonPropertyName("level")]
     [JsonPropertyOrder(0)]
-    public string? Level { get; init; }
+    public required string? Level { get; init; }
 
     [JsonPropertyName("kind")]
     [JsonPropertyOrder(1)]
-    public string? Kind { get; init; }
+    public required string? Kind { get; init; }
 
     [JsonPropertyName("baselineState")]
     [JsonPropertyOrder(2)]
-    public string? BaselineState { get; init; }
+    public required string? BaselineState { get; init; }
 }
 
 internal sealed class DerivedFingerprintDto
@@ -233,19 +245,19 @@ internal sealed class RegionDto
 {
     [JsonPropertyName("startLine")]
     [JsonPropertyOrder(0)]
-    public int? StartLine { get; init; }
+    public required int? StartLine { get; init; }
 
     [JsonPropertyName("startColumn")]
     [JsonPropertyOrder(1)]
-    public int? StartColumn { get; init; }
+    public required int? StartColumn { get; init; }
 
     [JsonPropertyName("endLine")]
     [JsonPropertyOrder(2)]
-    public int? EndLine { get; init; }
+    public required int? EndLine { get; init; }
 
     [JsonPropertyName("endColumn")]
     [JsonPropertyOrder(3)]
-    public int? EndColumn { get; init; }
+    public required int? EndColumn { get; init; }
 }
 
 internal sealed class DecisionDto
@@ -260,7 +272,7 @@ internal sealed class DecisionDto
 
     [JsonPropertyName("ambiguous")]
     [JsonPropertyOrder(2)]
-    public bool Ambiguous { get; init; }
+    public required bool Ambiguous { get; init; }
 
     [JsonPropertyName("matcherAlgorithmVersion")]
     [JsonPropertyOrder(3)]
@@ -275,11 +287,11 @@ internal sealed class EvidenceDto
 
     [JsonPropertyName("baselineValue")]
     [JsonPropertyOrder(1)]
-    public string? BaselineValue { get; init; }
+    public required string? BaselineValue { get; init; }
 
     [JsonPropertyName("candidateValue")]
     [JsonPropertyOrder(2)]
-    public string? CandidateValue { get; init; }
+    public required string? CandidateValue { get; init; }
 
     [JsonPropertyName("origin")]
     [JsonPropertyOrder(3)]
@@ -291,7 +303,7 @@ internal sealed class EvidenceDto
 
     [JsonPropertyName("lossy")]
     [JsonPropertyOrder(5)]
-    public bool Lossy { get; init; }
+    public required bool Lossy { get; init; }
 
     [JsonPropertyName("algorithmVersion")]
     [JsonPropertyOrder(6)]
@@ -325,7 +337,7 @@ internal sealed class DecisionVectorDto
 
     [JsonPropertyName("producerFingerprintStrength")]
     [JsonPropertyOrder(1)]
-    public int ProducerFingerprintStrength { get; init; }
+    public required int ProducerFingerprintStrength { get; init; }
 
     [JsonPropertyName("pathMatchKind")]
     [JsonPropertyOrder(2)]
@@ -345,7 +357,7 @@ internal sealed class DecisionVectorDto
 
     [JsonPropertyName("regionDriftBand")]
     [JsonPropertyOrder(6)]
-    public int RegionDriftBand { get; init; }
+    public required int RegionDriftBand { get; init; }
 }
 
 internal sealed class TransformationDto
@@ -356,15 +368,15 @@ internal sealed class TransformationDto
 
     [JsonPropertyName("originalValue")]
     [JsonPropertyOrder(1)]
-    public string? OriginalValue { get; init; }
+    public required string? OriginalValue { get; init; }
 
     [JsonPropertyName("transformedValue")]
     [JsonPropertyOrder(2)]
-    public string? TransformedValue { get; init; }
+    public required string? TransformedValue { get; init; }
 
     [JsonPropertyName("lossy")]
     [JsonPropertyOrder(3)]
-    public bool Lossy { get; init; }
+    public required bool Lossy { get; init; }
 
     [JsonPropertyName("algorithmVersion")]
     [JsonPropertyOrder(4)]
@@ -391,34 +403,34 @@ internal sealed class DiagnosticDto
 
     [JsonPropertyName("sourceRef")]
     [JsonPropertyOrder(4)]
-    public SourceReferenceDto? SourceReference { get; init; }
+    public required SourceReferenceDto? SourceReference { get; init; }
 
     [JsonPropertyName("standardBasis")]
     [JsonPropertyOrder(5)]
-    public string? StandardBasis { get; init; }
+    public required string? StandardBasis { get; init; }
 
     [JsonPropertyName("help")]
     [JsonPropertyOrder(6)]
-    public string? Help { get; init; }
+    public required string? Help { get; init; }
 }
 
 internal sealed class MetricsDto
 {
     [JsonPropertyName("candidateEdges")]
     [JsonPropertyOrder(0)]
-    public int CandidateEdges { get; init; }
+    public required int CandidateEdges { get; init; }
 
     [JsonPropertyName("assignmentComponents")]
     [JsonPropertyOrder(1)]
-    public int AssignmentComponents { get; init; }
+    public required int AssignmentComponents { get; init; }
 
     [JsonPropertyName("ambiguousComponents")]
     [JsonPropertyOrder(2)]
-    public int AmbiguousComponents { get; init; }
+    public required int AmbiguousComponents { get; init; }
 
     [JsonPropertyName("diagnostics")]
     [JsonPropertyOrder(3)]
-    public int Diagnostics { get; init; }
+    public required int Diagnostics { get; init; }
 }
 
 internal sealed class DeterminismDto

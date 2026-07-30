@@ -330,7 +330,8 @@ public sealed class CoreContractTests
                 "Test tool",
                 ToolVersion: "1.0.0",
                 Family: "test",
-                AutomationCategory: null),
+                AutomationCategory: null,
+                AutomaticIdentity: "test"),
             new RuleIdentity("TEST0001", "test/TEST0001", AliasApplied: false),
             primaryLocation: null,
             new MessageIdentity(

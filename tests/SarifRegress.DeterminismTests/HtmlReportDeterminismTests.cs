@@ -64,6 +64,22 @@ public sealed class HtmlReportDeterminismTests
             html,
             StringComparison.Ordinal);
         Assert.Contains(
+            "<dt>Producer family</dt><dd>test-scanner</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>Producer tool</dt><dd>Test scanner</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>Producer version</dt><dd>4.2</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>Automatic producer identity</dt><dd>test-scanner</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "<dt>Message normalisation</dt><dd>collapsed-whitespace, invariant-case-fold</dd>",
             html,
             StringComparison.Ordinal);

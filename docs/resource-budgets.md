@@ -20,8 +20,14 @@ budgets, not guaranteed performance on every machine.
 
 ## Complexity controls
 
-- Candidate generation uses producer-family and canonical-rule buckets rather than a global
-  Cartesian product.
+- Candidate generation uses collision-resistant automatic-producer-identity and canonical-rule
+  buckets rather than a global Cartesian product.
+- Path rebases are compiled once into an immutable compressed complete-prefix index.
+  Canonicalising one path visits only its own prefix characters; it does not scan every configured
+  rebase, and structural nodes scale with configured entries rather than prefix characters.
+- Path aliases are compiled once into paired immutable compressed complete-prefix indexes. Each
+  candidate edge traverses the two path representations, compares their suffix once, and directly
+  probes matched terminal pairs; unrelated aliases do not multiply pair-scoring work.
 - Coarse pairs are preflighted before scoring, with limits of 256 pairs on either side of a finding
   and 1,000,000 pairs for one comparison.
 - A comparison-wide preflight refusal emits one source-less top-level diagnostic; every affected
@@ -31,6 +37,9 @@ budgets, not guaranteed performance on every machine.
 - Components within the exact bound use a maximum-cardinality lexicographic solver.
 - Larger components are classified as ambiguous and produce a bounded explanation.
 - Report alternatives and source reads are capped independently.
+- Each result independently caps both the total thread-flow objects across all code flows and the
+  total thread-flow locations at `maximumThreadFlowLocationsPerResult`. Both counters are enforced
+  while their JSON array items are read, before an oversized nested graph can be materialized.
 - Optional repository token-window evidence uses algorithm `token-window/v1`. It is disabled by
   default, ignores whitespace and blank-line-only movement, and is bounded by repository-file,
   string, and term-count ceilings.

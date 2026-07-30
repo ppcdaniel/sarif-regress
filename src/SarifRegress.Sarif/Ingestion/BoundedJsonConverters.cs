@@ -428,36 +428,54 @@ internal sealed class BoundedStringConverter : JsonConverter<string>
 
 internal sealed class JsonReadBudget
 {
-    private readonly int maximumThreadFlowLocationsPerResult;
+    private const string ThreadFlowCollectionKind =
+        "thread-flow collection";
+    private const string ThreadFlowLocationCollectionKind =
+        "thread-flow location collection";
+    private readonly int maximumThreadFlowItemsPerResult;
     private readonly CancellationToken cancellationToken;
+    private int threadFlowsInCurrentResult;
     private int threadFlowLocationsInCurrentResult;
 
     public JsonReadBudget(
-        int maximumThreadFlowLocationsPerResult,
+        int maximumThreadFlowItemsPerResult,
         CancellationToken cancellationToken)
     {
-        this.maximumThreadFlowLocationsPerResult =
-            maximumThreadFlowLocationsPerResult;
+        this.maximumThreadFlowItemsPerResult =
+            maximumThreadFlowItemsPerResult;
         this.cancellationToken = cancellationToken;
     }
 
     public void BeginResult()
     {
         cancellationToken.ThrowIfCancellationRequested();
+        threadFlowsInCurrentResult = 0;
         threadFlowLocationsInCurrentResult = 0;
     }
 
+    public void AddThreadFlow() =>
+        AddItem(
+            ref threadFlowsInCurrentResult,
+            ThreadFlowCollectionKind);
+
     public void AddThreadFlowLocation()
     {
+        AddItem(
+            ref threadFlowLocationsInCurrentResult,
+            ThreadFlowLocationCollectionKind);
+    }
+
+    private void AddItem(ref int currentCount, string collectionKind)
+    {
         cancellationToken.ThrowIfCancellationRequested();
-        if (threadFlowLocationsInCurrentResult >=
-            maximumThreadFlowLocationsPerResult)
+        if (currentCount >= maximumThreadFlowItemsPerResult)
         {
             throw new JsonCollectionLimitExceededException(
-                "thread-flow location collection",
-                maximumThreadFlowLocationsPerResult);
+                collectionKind,
+                maximumThreadFlowItemsPerResult);
         }
-        threadFlowLocationsInCurrentResult++;
+
+        currentCount++;
     }
 }
 
@@ -542,6 +560,11 @@ internal sealed class BoundedListConverterFactory : JsonConverterFactory
                 if (typeof(T) == typeof(SarifResultWire))
                 {
                     budget?.BeginResult();
+                }
+
+                if (typeof(T) == typeof(SarifThreadFlowWire))
+                {
+                    budget?.AddThreadFlow();
                 }
 
                 if (typeof(T) == typeof(SarifThreadFlowLocationWire))

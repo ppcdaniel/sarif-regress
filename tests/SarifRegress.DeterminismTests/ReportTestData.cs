@@ -13,7 +13,7 @@ internal static class ReportTestData
 {
     public const string DerivedFingerprintValue =
         "1111111111111111111111111111111111111111111111111111111111111111";
-    public const string MatcherAlgorithmVersion = "matcher-v1";
+    public const string MatcherAlgorithmVersion = "matcher-v2";
     public const string NewDerivedFingerprintValue =
         "2222222222222222222222222222222222222222222222222222222222222222";
     public const string ToolVersion = "0.1.0-test";
@@ -222,6 +222,29 @@ internal static class ReportTestData
                 MatcherAlgorithmVersion));
     }
 
+    public static FindingSnapshot CreateProducerSnapshot(
+        string toolName,
+        string? toolVersion = null)
+    {
+        var resolution = ProducerIdentityResolver.Resolve(toolName);
+        var producer = new ProducerIdentity(
+            toolName,
+            toolVersion,
+            resolution.Family,
+            AutomationCategory: null,
+            resolution.AutomaticIdentity);
+        var finding = CreateFinding(
+            InputKind.Candidate,
+            "candidate:producer",
+            resultIndex: 0,
+            canonicalUri: "repo://src/producer.cs",
+            canonicalMessage: "producer identity",
+            derivedFingerprintValue: null,
+            producer: producer);
+
+        return FindingSnapshotFactory.Create(finding);
+    }
+
     private static Finding CreateFinding(
         InputKind input,
         string findingKey,
@@ -235,7 +258,8 @@ internal static class ReportTestData
         string? kind = null,
         string? baselineState = null,
         IEnumerable<string>? messageNormalisationFlags = null,
-        IEnumerable<string>? lossiness = null)
+        IEnumerable<string>? lossiness = null,
+        ProducerIdentity? producer = null)
     {
         var sourceReference = new SourceReference(
             input,
@@ -253,11 +277,13 @@ internal static class ReportTestData
             findingKey,
             sourceReference,
             new RunIdentity(0, AutomationCategory: null, StableRunKey: "run:0"),
-            new ProducerIdentity(
-                "Test scanner",
-                ToolVersion: "4.2",
-                Family: "test-scanner",
-                AutomationCategory: null),
+            producer
+                ?? new ProducerIdentity(
+                    "Test scanner",
+                    ToolVersion: "4.2",
+                    Family: "test-scanner",
+                    AutomationCategory: null,
+                    AutomaticIdentity: "test-scanner"),
             new RuleIdentity(
                 "RULE-001",
                 "test-scanner/RULE-001",

@@ -177,6 +177,9 @@ internal static class StableJsonWireMapper
         {
             FindingKey = snapshot.FindingKey,
             ProducerFamily = snapshot.ProducerFamily,
+            ProducerToolName = snapshot.ProducerToolName,
+            ProducerToolVersion = snapshot.ProducerToolVersion,
+            AutomaticProducerIdentity = snapshot.AutomaticProducerIdentity,
             CanonicalRule = snapshot.CanonicalRule,
             CanonicalUri = snapshot.CanonicalUri,
             Region = snapshot.Region is null ? null : ToDto(snapshot.Region),
@@ -192,6 +195,9 @@ internal static class StableJsonWireMapper
         new(
             snapshot.FindingKey,
             snapshot.ProducerFamily,
+            snapshot.ProducerToolName,
+            snapshot.ProducerToolVersion,
+            snapshot.AutomaticProducerIdentity,
             snapshot.CanonicalRule,
             snapshot.CanonicalUri,
             snapshot.Region is null ? null : FromDto(snapshot.Region),

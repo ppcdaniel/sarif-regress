@@ -47,6 +47,14 @@ public sealed class SarifIngestionFuzzTests
                     secondDiagnostics,
                     StringComparer.Ordinal),
                 $"case={testCase.Id}; field=diagnostic-stability");
+            if (testCase.ExpectedDiagnosticCode is not null)
+            {
+                Assert.Contains(
+                    first.Result.ComparisonInput.Diagnostics,
+                    diagnostic =>
+                        diagnostic.Code == testCase.ExpectedDiagnosticCode);
+            }
+
             Assert.True(
                 first.Result.ComparisonInput.Findings.Length ==
                 second.Result.ComparisonInput.Findings.Length,
@@ -140,6 +148,13 @@ public sealed class SarifIngestionFuzzTests
                 "too-many-locations",
                 Utf8.GetBytes(CreateResultWithLocations(locationCount: 5))),
             new(
+                "aggregate-thread-flows",
+                Utf8.GetBytes(
+                    CreateResultWithThreadFlows(
+                        codeFlowCount: 2,
+                        threadFlowsPerCodeFlow: 5)),
+                ExpectedDiagnosticCode: "SECURITY0102"),
+            new(
                 "overlong-string",
                 Utf8.GetBytes(
                     $$"""{"version":"{{new string('v', 129)}}","runs":[]}""")),
@@ -193,6 +208,24 @@ public sealed class SarifIngestionFuzzTests
             "]}]}]}");
     }
 
+    private static string CreateResultWithThreadFlows(
+        int codeFlowCount,
+        int threadFlowsPerCodeFlow)
+    {
+        var threadFlows = string.Join(
+            ",",
+            Enumerable.Repeat("{}", threadFlowsPerCodeFlow));
+        var codeFlows = string.Join(
+            ",",
+            Enumerable.Repeat(
+                $$"""{"threadFlows":[{{threadFlows}}]}""",
+                codeFlowCount));
+        return string.Concat(
+            """{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"T"}},"results":[{"ruleId":"R","message":{"text":"m"},"codeFlows":[""",
+            codeFlows,
+            "]}]}]}");
+    }
+
     private static string CreateDeepDocument(int depth) =>
         """{"version":"2.1.0","runs":[],"extension":"""
         + new string('[', depth)
@@ -228,7 +261,10 @@ public sealed class SarifIngestionFuzzTests
             .Select(PropertyTestData.DiagnosticSignature)
             .ToArray();
 
-    private sealed record FuzzCase(string Id, byte[] Bytes);
+    private sealed record FuzzCase(
+        string Id,
+        byte[] Bytes,
+        string? ExpectedDiagnosticCode = null);
 
     private sealed record IngestionCapture(
         SarifIngestionResult? Result,

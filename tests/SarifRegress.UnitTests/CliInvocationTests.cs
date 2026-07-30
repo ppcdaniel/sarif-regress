@@ -59,6 +59,21 @@ public sealed class CliInvocationTests
             StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("--help")]
+    [InlineData("-h")]
+    [InlineData("-?")]
+    public void Compare_help_does_not_require_input_options(string helpOption)
+    {
+        var invocation = Invoke("compare", helpOption);
+        var combinedOutput = invocation.StandardOutput + invocation.StandardError;
+
+        Assert.Equal(0, invocation.ExitCode);
+        Assert.Contains("--baseline", combinedOutput, StringComparison.Ordinal);
+        Assert.Contains("--candidate", combinedOutput, StringComparison.Ordinal);
+        Assert.DoesNotContain("is missing", combinedOutput, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Valid_compare_writes_stable_json_to_standard_output()
     {

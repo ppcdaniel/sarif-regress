@@ -37,8 +37,19 @@ before evidence scoring; SarifRegress never scores a truncated prefix.
 
 Repository context is optional. Paths are first canonicalised lexically, then mapped to a
 repository-relative path. The adapter rejects rooted, parent-traversing, symlink, or junction paths
-that escape the approved root. Reads are bounded by file size and snippet radius. Newlines are
-normalised before hashing.
+that escape the approved root. The source file is opened relative to an anchored repository
+directory handle: Linux uses `openat2` with beneath/no-link resolution and Windows uses a relative
+segment-by-segment `NtCreateFile` walk. Every Windows segment is opened relative to the retained
+parent handle with `FILE_OPEN_REPARSE_POINT`, then rejected by handle if it is a reparse point or
+has the wrong directory/file type. The returned file handle, not a later pathname lookup, is the
+only object read. If the operating system cannot provide that containment primitive, repository
+context fails closed with `SECURITY0004`; it does not fall back to pathname rechecks.
+Only regular files are accepted; directories, devices, sockets, and named pipes fail with
+`SECURITY0005` before any content read. Reads are bounded by file size and snippet radius. Newlines
+are normalised before hashing.
+
+The native Linux containment path currently supports x64 and Arm64 kernels that expose `openat2`
+and `statx`. Other Linux architectures and older kernels fail closed with `SECURITY0004`.
 
 Optional `token-window/v1` evidence is enabled only by
 `matching.enableTokenWindows`. It normalises whitespace and ignores blank-line-only movement, but

@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Text;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
@@ -18,7 +17,7 @@ public sealed class PathCanonicalizer
 
     private const string RepositoryScheme = "repo:/";
     private readonly string? normalizedRepositoryRoot;
-    private readonly ImmutableArray<PathRebase> pathRebases;
+    private readonly CompletePrefixRebaseIndex pathRebases;
     private readonly PathCaseSensitivity caseSensitivity;
 
     /// <summary>
@@ -29,9 +28,11 @@ public sealed class PathCanonicalizer
     {
         var effectiveConfiguration =
             configuration ?? SarifRegressConfiguration.Default;
-        pathRebases = effectiveConfiguration.PathRebases;
         caseSensitivity =
             effectiveConfiguration.Matching.PathCaseSensitivity;
+        pathRebases = CompletePrefixRebaseIndex.Create(
+            effectiveConfiguration.PathRebases,
+            caseSensitivity);
         normalizedRepositoryRoot = NormalizeRepositoryRoot(
             effectiveConfiguration.RepositoryRoot);
     }
@@ -310,24 +311,22 @@ public sealed class PathCanonicalizer
         string value,
         ICollection<TransformationRecord> transformations)
     {
-        foreach (var rebase in pathRebases)
+        var rebase = pathRebases.FindLongest(
+            value,
+            out _);
+        if (rebase is null)
         {
-            if (!HasCompletePrefix(value, rebase.From))
-            {
-                continue;
-            }
-
-            var rebased = rebase.To + value[rebase.From.Length..];
-            RecordChange(
-                transformations,
-                "configured-path-rebase",
-                value,
-                rebased,
-                isLossy: false);
-            return rebased;
+            return value;
         }
 
-        return value;
+        var rebased = rebase.To + value[rebase.From.Length..];
+        RecordChange(
+            transformations,
+            "configured-path-rebase",
+            value,
+            rebased,
+            isLossy: false);
+        return rebased;
     }
 
     private bool TryGetRepositoryRelativePath(
@@ -668,59 +667,6 @@ public sealed class PathCanonicalizer
         value is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
 
     private static bool IsSeparator(char value) => value is '/' or '\\';
-
-    private bool HasCompletePrefix(string value, string prefix)
-    {
-        if (prefix.Length == 0)
-        {
-            return false;
-        }
-
-        var prefixMatches =
-            caseSensitivity == PathCaseSensitivity.AsciiInsensitive
-                ? StartsWithAsciiIgnoreCase(value, prefix)
-                : value.StartsWith(prefix, StringComparison.Ordinal);
-        if (!prefixMatches)
-        {
-            return false;
-        }
-
-        return value.Length == prefix.Length ||
-            IsSeparator(prefix[^1]) ||
-            IsSeparator(value[prefix.Length]);
-    }
-
-    private static bool StartsWithAsciiIgnoreCase(
-        string value,
-        string prefix)
-    {
-        if (value.Length < prefix.Length)
-        {
-            return false;
-        }
-
-        for (var index = 0; index < prefix.Length; index++)
-        {
-            var valueCharacter = value[index];
-            var prefixCharacter = prefix[index];
-            if (valueCharacter is >= 'A' and <= 'Z')
-            {
-                valueCharacter = (char)(valueCharacter + ('a' - 'A'));
-            }
-
-            if (prefixCharacter is >= 'A' and <= 'Z')
-            {
-                prefixCharacter = (char)(prefixCharacter + ('a' - 'A'));
-            }
-
-            if (valueCharacter != prefixCharacter)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     private static bool TryParseHexByte(char high, char low, out byte value)
     {

@@ -299,6 +299,26 @@ internal static class StableComparisonReport
             new PropertyPath(propertyName, ".producerFamily"),
             limits);
         RequireText(
+            snapshot.ProducerToolName,
+            new PropertyPath(propertyName, ".producerToolName"),
+            limits);
+        if (snapshot.ProducerToolVersion is not null
+            && string.IsNullOrWhiteSpace(snapshot.ProducerToolVersion))
+        {
+            throw Invalid(
+                $"The optional '{propertyName}.producerToolVersion' value cannot be blank.");
+        }
+
+        ValidateOptionalText(
+            snapshot.ProducerToolVersion,
+            new PropertyPath(propertyName, ".producerToolVersion"),
+            limits,
+            allowEmpty: false);
+        RequireText(
+            snapshot.AutomaticProducerIdentity,
+            new PropertyPath(propertyName, ".automaticProducerIdentity"),
+            limits);
+        RequireText(
             snapshot.CanonicalRule,
             new PropertyPath(propertyName, ".canonicalRule"),
             limits);

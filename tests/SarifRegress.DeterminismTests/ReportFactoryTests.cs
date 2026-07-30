@@ -25,6 +25,15 @@ public sealed class ReportFactoryTests
         Assert.Equal(
             ReportTestData.DerivedFingerprintValue,
             report.Findings[0].Candidate!.DerivedFingerprints[0].Value);
+        Assert.Equal(
+            "Test scanner",
+            report.Findings[0].Candidate!.ProducerToolName);
+        Assert.Equal(
+            "4.2",
+            report.Findings[0].Candidate!.ProducerToolVersion);
+        Assert.Equal(
+            "test-scanner",
+            report.Findings[0].Candidate!.AutomaticProducerIdentity);
         Assert.Equal("error", report.Findings[0].Candidate!.SourceMetadata.Level);
         Assert.Equal("review", report.Findings[0].Candidate!.SourceMetadata.Kind);
         Assert.Equal(
@@ -36,6 +45,21 @@ public sealed class ReportFactoryTests
         Assert.Equal(
             ["collapsed-whitespace", "message-markdown-fallback"],
             report.Findings[0].Candidate!.Lossiness);
+    }
+
+    [Fact]
+    public void WireMapper_PreservesProducerExplanation()
+    {
+        var report = ReportTestData.CreateRepresentativeReport();
+
+        var document = StableJsonWireMapper.ToDto(report);
+        var roundTripped = StableJsonWireMapper.FromDto(document);
+        var snapshot = roundTripped.Findings[0].Candidate!;
+
+        Assert.Equal("Test scanner", snapshot.ProducerToolName);
+        Assert.Equal("4.2", snapshot.ProducerToolVersion);
+        Assert.Equal("test-scanner", snapshot.ProducerFamily);
+        Assert.Equal("test-scanner", snapshot.AutomaticProducerIdentity);
     }
 
     [Fact]

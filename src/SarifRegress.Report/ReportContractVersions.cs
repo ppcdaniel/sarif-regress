@@ -23,10 +23,10 @@ public static class ReportContractVersions
     /// <summary>
     /// The canonical SARIF projection fingerprint algorithm.
     /// </summary>
-    public const string SarifFingerprint = "sarifregress/rule-path-context/v1";
+    public const string SarifFingerprint = "sarifregress/rule-path-context/v2";
 
     /// <summary>
     /// The algorithm identifier recorded with the canonical SARIF fingerprint.
     /// </summary>
-    public const string SarifFingerprintAlgorithm = "rule-path-context/v1";
+    public const string SarifFingerprintAlgorithm = "rule-path-context/v2";
 }

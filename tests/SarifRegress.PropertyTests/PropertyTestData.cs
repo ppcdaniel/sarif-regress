@@ -94,7 +94,8 @@ internal static class PropertyTestData
                 "Property scanner",
                 ToolVersion: "1.0.0",
                 Family: "property-scanner",
-                AutomationCategory: null),
+                AutomationCategory: null,
+                AutomaticIdentity: "property-scanner"),
             new RuleIdentity(
                 "RULE-001",
                 "property-scanner/RULE-001",

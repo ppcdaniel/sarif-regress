@@ -254,7 +254,16 @@ public static class StaticHtmlReportRenderer
 
         html.Append("    <dl>\n");
         AppendDefinition(html, "Key", snapshot.FindingKey);
-        AppendDefinition(html, "Producer", snapshot.ProducerFamily);
+        AppendDefinition(html, "Producer family", snapshot.ProducerFamily);
+        AppendDefinition(html, "Producer tool", snapshot.ProducerToolName);
+        AppendDefinition(
+            html,
+            "Producer version",
+            snapshot.ProducerToolVersion ?? "Not available");
+        AppendDefinition(
+            html,
+            "Automatic producer identity",
+            snapshot.AutomaticProducerIdentity);
         AppendDefinition(html, "Rule", snapshot.CanonicalRule);
         AppendDefinition(html, "URI", snapshot.CanonicalUri ?? "Not available");
         AppendDefinition(html, "Region", FormatRegion(snapshot));

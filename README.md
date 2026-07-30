@@ -28,9 +28,10 @@ The MVP surface:
 - evaluates a labelled corpus against precision, recall, classification, and ambiguity gates;
 - provides bounded synthetic benchmark datasets and checksummed release packaging.
 
-Automatic matching is intended for the same producer family. Cross-producer rule equivalence
-requires an explicit `ruleAliases` entry and still needs qualifying location or context evidence.
-Equal semantic alternatives are never resolved by array order.
+Automatic matching uses a collision-resistant producer identity and permits tool-version changes;
+the readable producer family is display metadata, not the match key. Cross-producer rule
+equivalence requires an explicit `ruleAliases` entry and still needs both a qualifying path and
+exact context evidence. Equal semantic alternatives are never resolved by array order.
 
 ## Non-goals
 

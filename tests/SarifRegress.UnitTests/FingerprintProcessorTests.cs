@@ -137,7 +137,7 @@ public sealed class FingerprintProcessorTests
         Assert.Equal(firstFingerprint?.Name, secondFingerprint?.Name);
         Assert.Equal(firstFingerprint?.Value, secondFingerprint?.Value);
         Assert.Equal(
-            "sarifregress/rule-path-context/v1",
+            "sarifregress/rule-path-context/v2",
             firstFingerprint?.Name);
     }
 
@@ -181,7 +181,12 @@ public sealed class FingerprintProcessorTests
             key,
             sourceReference,
             new RunIdentity(0, null, "baseline:0"),
-            new ProducerIdentity("Tool", "1.0", "tool", null),
+            new ProducerIdentity(
+                "Tool",
+                "1.0",
+                "tool",
+                AutomationCategory: null,
+                AutomaticIdentity: "tool"),
             new RuleIdentity("R1", "tool/R1", false),
             new PrimaryLocation(
                 path,

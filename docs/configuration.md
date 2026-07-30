@@ -94,9 +94,13 @@ and folds ASCII only; it is not inferred from the host operating system.
 
 `ruleAliases` allow two producer/rule identities to enter the same candidate bucket. This is
 required for cross-producer matching and may also describe a rule rename within one producer.
+Producer fields use the same collision-resistant resolution as ingested SARIF tool names:
+the closed CodeQL/Semgrep allowlist is case-insensitive, while every other producer name is exact,
+ordinal, and case-sensitive. A display-only `producerFamily` value is not a wildcard.
 
-An alias is not an override pairing. Location, reliable fingerprint, or context evidence must
-still qualify, and equal rivals remain ambiguous.
+An alias is not an override pairing. Cross-producer candidates still require both a qualifying path
+and exact context evidence; a reliable fingerprint alone does not qualify them, and equal rivals
+remain ambiguous.
 
 ## Matching
 

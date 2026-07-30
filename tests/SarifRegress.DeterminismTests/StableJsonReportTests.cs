@@ -48,7 +48,7 @@ public sealed class StableJsonReportTests
               "determinism": {
                 "jsonCanonicalisation": "schema-order-v1",
                 "crossPlatformNormalisation": "approved-path-normalisation-v1",
-                "matcherAlgorithm": "matcher-v1"
+                "matcherAlgorithm": "matcher-v2"
               }
             }
             """;
@@ -151,6 +151,9 @@ public sealed class StableJsonReportTests
             [
                 "findingKey",
                 "producerFamily",
+                "producerToolName",
+                "producerToolVersion",
+                "automaticProducerIdentity",
                 "canonicalRule",
                 "canonicalUri",
                 "region",
@@ -161,6 +164,17 @@ public sealed class StableJsonReportTests
                 "derivedFingerprints",
             ],
             snapshot.EnumerateObject().Select(item => item.Name));
+        Assert.Equal(
+            "Test scanner",
+            snapshot.GetProperty("producerToolName").GetString());
+        Assert.Equal(
+            "4.2",
+            snapshot.GetProperty("producerToolVersion").GetString());
+        Assert.Equal(
+            "test-scanner",
+            snapshot
+                .GetProperty("automaticProducerIdentity")
+                .GetString());
         Assert.Equal(
             ["level", "kind", "baselineState"],
             snapshot
@@ -194,6 +208,73 @@ public sealed class StableJsonReportTests
     }
 
     [Fact]
+    public void Snapshot_ProducerExplanation_IsCollisionSafeAndDeterministic()
+    {
+        var dotted = ReportTestData.CreateProducerSnapshot(
+            "Scanner.A",
+            toolVersion: "1.0");
+        var repeated = ReportTestData.CreateProducerSnapshot(
+            "Scanner.A",
+            toolVersion: "1.0");
+        var spaced = ReportTestData.CreateProducerSnapshot(
+            "Scanner A",
+            toolVersion: null);
+        var codeQl = ReportTestData.CreateProducerSnapshot(
+            "CodeQL",
+            toolVersion: "2.20.0");
+        var commandLine = ReportTestData.CreateProducerSnapshot(
+            "CodeQL command-line toolchain",
+            toolVersion: "2.21.0");
+
+        Assert.Equal(dotted, repeated);
+        Assert.Equal(dotted.ProducerFamily, spaced.ProducerFamily);
+        Assert.Equal("Scanner.A", dotted.ProducerToolName);
+        Assert.Equal("Scanner A", spaced.ProducerToolName);
+        Assert.NotEqual(
+            dotted.AutomaticProducerIdentity,
+            spaced.AutomaticProducerIdentity);
+        Assert.Equal("1.0", dotted.ProducerToolVersion);
+        Assert.Null(spaced.ProducerToolVersion);
+
+        Assert.Equal("CodeQL", codeQl.ProducerToolName);
+        Assert.Equal(
+            "CodeQL command-line toolchain",
+            commandLine.ProducerToolName);
+        Assert.Equal(codeQl.ProducerFamily, commandLine.ProducerFamily);
+        Assert.Equal(
+            codeQl.AutomaticProducerIdentity,
+            commandLine.AutomaticProducerIdentity);
+    }
+
+    [Fact]
+    public void Serialize_NullProducerVersion_IsExplicitAndRoundTrips()
+    {
+        var report = ReportTestData.CreateRepresentativeReport();
+        var finding = report.Findings[0];
+        var candidate = finding.Candidate! with
+        {
+            ProducerToolVersion = null,
+        };
+        var withoutVersion = report with
+        {
+            Findings = report.Findings.SetItem(
+                0,
+                finding with { Candidate = candidate }),
+        };
+
+        var bytes = StableJsonReportSerializer.Serialize(withoutVersion);
+        using var document = JsonDocument.Parse(bytes);
+        var version = document.RootElement
+            .GetProperty("findings")[0]
+            .GetProperty("candidate")
+            .GetProperty("producerToolVersion");
+        var roundTripped = StableJsonReportSerializer.Deserialize(bytes);
+
+        Assert.Equal(JsonValueKind.Null, version.ValueKind);
+        Assert.Null(roundTripped.Findings[0].Candidate!.ProducerToolVersion);
+    }
+
+    [Fact]
     public void Serialize_FidelitySnapshot_MatchesByteGolden()
     {
         var json = Encoding.UTF8.GetString(
@@ -211,6 +292,9 @@ public sealed class StableJsonReportTests
                   "baseline": {
                     "findingKey": "baseline:0:2",
                     "producerFamily": "test-scanner",
+                    "producerToolName": "Test scanner",
+                    "producerToolVersion": "4.2",
+                    "automaticProducerIdentity": "test-scanner",
                     "canonicalRule": "test-scanner/RULE-001",
                     "canonicalUri": "repo://src/old.cs",
                     "region": {
@@ -235,9 +319,9 @@ public sealed class StableJsonReportTests
                     ],
                     "derivedFingerprints": [
                       {
-                        "name": "sarifregress/rule-path-context/v1",
+                        "name": "sarifregress/rule-path-context/v2",
                         "value": "1111111111111111111111111111111111111111111111111111111111111111",
-                        "algorithmVersion": "rule-path-context/v1"
+                        "algorithmVersion": "rule-path-context/v2"
                       }
                     ]
                   }
@@ -378,10 +462,51 @@ public sealed class StableJsonReportTests
     }
 
     [Fact]
+    public void Deserialize_MissingRequiredNullableAndValueFields_RejectsJson()
+    {
+        var missingProducerVersion = ParseRepresentativeJson();
+        missingProducerVersion["findings"]![0]!["baseline"]!
+            .AsObject()
+            .Remove("producerToolVersion");
+
+        var missingBaselineReference = ParseRepresentativeJson();
+        missingBaselineReference["findings"]![0]!
+            .AsObject()
+            .Remove("baselineRef");
+
+        var missingMetric = ParseRepresentativeJson();
+        missingMetric["metrics"]!
+            .AsObject()
+            .Remove("candidateEdges");
+
+        Assert.Throws<JsonException>(
+            () => StableJsonReportSerializer.Deserialize(
+                ToBytes(missingProducerVersion)));
+        Assert.Throws<JsonException>(
+            () => StableJsonReportSerializer.Deserialize(
+                ToBytes(missingBaselineReference)));
+        Assert.Throws<JsonException>(
+            () => StableJsonReportSerializer.Deserialize(
+                ToBytes(missingMetric)));
+    }
+
+    [Fact]
     public void Deserialize_BlankInputsAndInvalidFindingSides_RejectsJson()
     {
         var blankInput = ParseRepresentativeJson();
         blankInput["inputs"]!["baseline"] = string.Empty;
+
+        var blankProducerName = ParseRepresentativeJson();
+        blankProducerName["findings"]![0]!["baseline"]!["producerToolName"] =
+            string.Empty;
+
+        var blankAutomaticIdentity = ParseRepresentativeJson();
+        blankAutomaticIdentity["findings"]![0]!["baseline"]!
+            ["automaticProducerIdentity"] = string.Empty;
+
+        var blankProducerVersion = ParseRepresentativeJson();
+        blankProducerVersion["findings"]![0]!["baseline"]!
+            ["producerToolVersion"] = " ";
 
         var missingSides = ParseRepresentativeJson();
         var finding = missingSides["findings"]![0]!;
@@ -394,6 +519,15 @@ public sealed class StableJsonReportTests
 
         Assert.Throws<JsonException>(
             () => StableJsonReportSerializer.Deserialize(ToBytes(blankInput)));
+        Assert.Throws<JsonException>(
+            () => StableJsonReportSerializer.Deserialize(
+                ToBytes(blankProducerName)));
+        Assert.Throws<JsonException>(
+            () => StableJsonReportSerializer.Deserialize(
+                ToBytes(blankAutomaticIdentity)));
+        Assert.Throws<JsonException>(
+            () => StableJsonReportSerializer.Deserialize(
+                ToBytes(blankProducerVersion)));
         Assert.Throws<JsonException>(
             () => StableJsonReportSerializer.Deserialize(ToBytes(missingSides)));
     }

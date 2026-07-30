@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Text;
 using System.Text.Json;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
@@ -23,7 +22,6 @@ public sealed class SarifIngestor
     /// </summary>
     public const string SupportedSarifVersion = "2.1.0";
 
-    private const string RuleAliasAlgorithmVersion = "rule-alias/v1";
     private const string RelatedLocationAlgorithmVersion = "related-location/v1";
     private const string CodeFlowContextAlgorithmVersion = "code-flow-context/v1";
     private readonly IRepositoryContext? repositoryContext;
@@ -172,6 +170,9 @@ public sealed class SarifIngestor
                 diagnostics);
         }
 
+        var ruleAliasIndex = RuleAliasResolutionIndex.Create(
+            request.Input,
+            request.Configuration.RuleAliases);
         var pathCanonicalizer = new PathCanonicalizer(request.Configuration);
         var findings = new List<Finding>();
         for (var runIndex = 0; runIndex < log.Runs!.Count; runIndex++)
@@ -216,6 +217,7 @@ public sealed class SarifIngestor
                     run,
                     runIndex,
                     request,
+                    ruleAliasIndex,
                     pathCanonicalizer,
                     diagnostics,
                     cancellationToken)
@@ -238,6 +240,7 @@ public sealed class SarifIngestor
         SarifRunWire run,
         int runIndex,
         SarifIngestionRequest request,
+        RuleAliasResolutionIndex ruleAliasIndex,
         PathCanonicalizer pathCanonicalizer,
         ICollection<Diagnostic> documentDiagnostics,
         CancellationToken cancellationToken)
@@ -272,12 +275,13 @@ public sealed class SarifIngestor
             $"/runs/{runIndex}/automationDetails/id",
             request.Configuration.Limits,
             documentDiagnostics);
-        var producerFamily = NormalizeProducerFamily(toolName);
+        var producerResolution = ProducerIdentityResolver.Resolve(toolName);
         var producer = new ProducerIdentity(
             toolName,
             toolVersion,
-            producerFamily,
-            automationCategory);
+            producerResolution.Family,
+            automationCategory,
+            producerResolution.AutomaticIdentity);
         var runIdentity = new RunIdentity(
             runIndex,
             automationCategory,
@@ -344,8 +348,10 @@ public sealed class SarifIngestor
                     driver?.Rules,
                     runIdentity,
                     producer,
+                    producerResolution.LossinessIdentifier,
                     sourceReference,
                     request,
+                    ruleAliasIndex,
                     locationResolver,
                     documentDiagnostics,
                     cancellationToken)
@@ -364,8 +370,10 @@ public sealed class SarifIngestor
         IReadOnlyList<SarifRuleWire?>? rules,
         RunIdentity runIdentity,
         ProducerIdentity producer,
+        string? producerLossinessIdentifier,
         SourceReference sourceReference,
         SarifIngestionRequest request,
+        RuleAliasResolutionIndex ruleAliasIndex,
         LocationResolver locationResolver,
         ICollection<Diagnostic> documentDiagnostics,
         CancellationToken cancellationToken)
@@ -376,6 +384,7 @@ public sealed class SarifIngestor
             rules,
             producer,
             request,
+            ruleAliasIndex,
             sourceReference,
             findingDiagnostics);
         if (rule is null)
@@ -475,6 +484,11 @@ public sealed class SarifIngestor
         AddRange(findingDiagnostics, importedFingerprints.Diagnostics);
 
         var lossiness = new List<string>();
+        if (producerLossinessIdentifier is not null)
+        {
+            lossiness.Add(producerLossinessIdentifier);
+        }
+
         if (result.Message?.Text is null && result.Message?.Markdown is not null)
         {
             lossiness.Add("message-markdown-fallback");
@@ -521,6 +535,7 @@ public sealed class SarifIngestor
         IReadOnlyList<SarifRuleWire?>? rules,
         ProducerIdentity producer,
         SarifIngestionRequest request,
+        RuleAliasResolutionIndex ruleAliasIndex,
         SourceReference sourceReference,
         ICollection<Diagnostic> diagnostics)
     {
@@ -588,11 +603,9 @@ public sealed class SarifIngestor
             return null;
         }
 
-        var aliasedId = ResolveConfiguredRuleAlias(
-            request.Input,
-            producer.Family,
-            originalRuleId,
-            request.Configuration.RuleAliases);
+        var aliasedId = ruleAliasIndex.Resolve(
+            producer.AutomaticIdentity,
+            originalRuleId);
         if (aliasedId is not null)
         {
             return new RuleIdentity(originalRuleId, aliasedId, AliasApplied: true);
@@ -607,57 +620,6 @@ public sealed class SarifIngestor
             originalRuleId,
             canonicalRuleId,
             AliasApplied: false);
-    }
-
-    private static string? ResolveConfiguredRuleAlias(
-        InputKind input,
-        string producerFamily,
-        string ruleId,
-        IEnumerable<RuleAlias> aliases)
-    {
-        foreach (var alias in aliases)
-        {
-            var baselineProducer = NormalizeProducerFamily(
-                alias.BaselineProducer);
-            var candidateProducer = NormalizeProducerFamily(
-                alias.CandidateProducer);
-            var matches = input switch
-            {
-                InputKind.Baseline =>
-                    string.Equals(
-                        producerFamily,
-                        baselineProducer,
-                        StringComparison.Ordinal) &&
-                    string.Equals(
-                        ruleId,
-                        alias.BaselineRule,
-                        StringComparison.Ordinal),
-                InputKind.Candidate =>
-                    string.Equals(
-                        producerFamily,
-                        candidateProducer,
-                        StringComparison.Ordinal) &&
-                    string.Equals(
-                        ruleId,
-                        alias.CandidateRule,
-                        StringComparison.Ordinal),
-                _ => false,
-            };
-            if (!matches)
-            {
-                continue;
-            }
-
-            var aliasHash = VersionedHash.Compute(
-                RuleAliasAlgorithmVersion,
-                baselineProducer,
-                alias.BaselineRule,
-                candidateProducer,
-                alias.CandidateRule);
-            return $"alias/{aliasHash}";
-        }
-
-        return null;
     }
 
     private static string? ResolveMessage(
@@ -1644,47 +1606,6 @@ public sealed class SarifIngestor
         return validated;
     }
 
-    private static string NormalizeProducerFamily(string toolName)
-    {
-        if (toolName.StartsWith("CodeQL", StringComparison.OrdinalIgnoreCase))
-        {
-            return "codeql";
-        }
-
-        if (toolName.StartsWith("Semgrep", StringComparison.OrdinalIgnoreCase))
-        {
-            return "semgrep";
-        }
-
-        var builder = new StringBuilder(toolName.Length);
-        var previousWasSeparator = false;
-        foreach (var character in toolName)
-        {
-            var normalized = character switch
-            {
-                >= 'A' and <= 'Z' => (char)(character + ('a' - 'A')),
-                >= 'a' and <= 'z' or >= '0' and <= '9' => character,
-                _ => '-',
-            };
-            if (normalized == '-')
-            {
-                if (builder.Length > 0 && !previousWasSeparator)
-                {
-                    builder.Append(normalized);
-                }
-
-                previousWasSeparator = true;
-                continue;
-            }
-
-            builder.Append(normalized);
-            previousWasSeparator = false;
-        }
-
-        var family = builder.ToString().TrimEnd('-');
-        return family.Length == 0 ? "unknown-producer" : family;
-    }
-
     private static JsonSerializerOptions CreateJsonOptions(
         ResourceLimits limits,
         CancellationToken cancellationToken)
@@ -1743,6 +1664,11 @@ public sealed class SarifIngestor
         if (elementType == typeof(SarifCodeFlowWire))
         {
             return limits.MaximumCodeFlowsPerResult;
+        }
+
+        if (elementType == typeof(SarifThreadFlowWire))
+        {
+            return limits.MaximumThreadFlowLocationsPerResult;
         }
 
         if (elementType == typeof(SarifThreadFlowLocationWire))

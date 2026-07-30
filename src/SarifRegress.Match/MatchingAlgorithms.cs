@@ -5,9 +5,9 @@ namespace SarifRegress.Match;
 
 internal static class MatchingAlgorithms
 {
-    public const string MatcherVersion = "sarifregress/matcher/v1";
-    public const string RuleIdentityVersion = "sarifregress/rule-identity/v1";
-    public const string RuleAliasVersion = "sarifregress/rule-alias/v1";
+    public const string MatcherVersion = "sarifregress/matcher/v2";
+    public const string RuleIdentityVersion = "sarifregress/rule-identity/v2";
+    public const string RuleAliasVersion = "sarifregress/rule-alias/v2";
     public const string ProducerFingerprintVersion =
         "sarifregress/producer-fingerprint-common-version/v1";
     public const string DerivedFingerprintVersion =

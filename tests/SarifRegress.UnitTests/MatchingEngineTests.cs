@@ -30,6 +30,15 @@ public sealed class MatchingEngineTests
 
         var decision = Assert.Single(result.Decisions);
         Assert.Equal(FindingClassification.Unchanged, decision.Classification);
+        Assert.Equal(
+            "sarifregress/matcher/v2",
+            decision.Decision.MatcherAlgorithmVersion);
+        Assert.Contains(
+            decision.Decision.Evidence,
+            evidence =>
+                evidence.Kind == "rule-identity" &&
+                evidence.AlgorithmVersion ==
+                    "sarifregress/rule-identity/v2");
         Assert.Equal(PrecedenceTier.ExactProducer, decision.Decision.PrecedenceTier);
         Assert.Equal("candidate:one", decision.Candidate?.FindingKey);
     }
@@ -248,6 +257,42 @@ public sealed class MatchingEngineTests
         Assert.DoesNotContain(
             Assert.Single(partial.Decisions).Decision.Evidence,
             evidence => evidence.Kind == "path-alias");
+    }
+
+    [Fact]
+    public void Canonical_uri_path_alias_preserves_configured_evidence_values()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            path: "src-old/security/check.cs",
+            contextHash: "stable-context");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            path: "src/security/check.cs",
+            contextHash: "stable-context");
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            MatchingTestData.Configuration(
+                pathAliases:
+                [
+                    new PathAlias(
+                        "repo://src-old/",
+                        "repo://src/"),
+                ]));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(
+            FindingClassification.Moved,
+            decision.Classification);
+        var evidence = Assert.Single(
+            decision.Decision.Evidence,
+            item => item.Kind == "path-alias");
+        Assert.Equal("repo://src-old/", evidence.BaselineValue);
+        Assert.Equal("repo://src/", evidence.CandidateValue);
     }
 
     [Fact]
@@ -518,6 +563,121 @@ public sealed class MatchingEngineTests
             evidence => evidence.Kind == "rule-alias");
     }
 
+    [Theory]
+    [InlineData("Scanner.A", "Scanner A")]
+    [InlineData("Scanner", "scanner")]
+    [InlineData("掃描器甲", "掃描器乙")]
+    [InlineData("CodeQL-Evil", "CodeQL")]
+    [InlineData("CodeQL Scanner", "CodeQL")]
+    [InlineData("CodeQLicious", "CodeQL")]
+    public void Distinct_producer_names_do_not_enter_automatic_match_buckets(
+        string baselineToolName,
+        string candidateToolName)
+    {
+        var baselineResolution = ProducerIdentityResolver.Resolve(
+            baselineToolName);
+        var candidateResolution = ProducerIdentityResolver.Resolve(
+            candidateToolName);
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            producerFamily: baselineResolution.Family,
+            toolName: baselineToolName,
+            ruleId: "shared/rule",
+            contextHash: "stable-context");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            producerFamily: candidateResolution.Family,
+            toolName: candidateToolName,
+            ruleId: "shared/rule",
+            contextHash: "stable-context");
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        Assert.Equal(0, result.CandidateEdgeCount);
+        Assert.Collection(
+            result.Decisions,
+            decision => Assert.Equal(
+                FindingClassification.Resolved,
+                decision.Classification),
+            decision => Assert.Equal(
+                FindingClassification.New,
+                decision.Classification));
+    }
+
+    [Fact]
+    public void Allowlisted_family_matches_across_tool_name_and_version_changes()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            producerFamily: "codeql",
+            toolName: "CodeQL command-line toolchain",
+            toolVersion: "1.0.0",
+            ruleId: "codeql/shared-rule",
+            contextHash: "stable-context");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            producerFamily: "codeql",
+            toolName: "CodeQL",
+            toolVersion: "2.0.0",
+            ruleId: "codeql/shared-rule",
+            contextHash: "stable-context");
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Unchanged, decision.Classification);
+    }
+
+    [Fact]
+    public void Explicit_alias_bridges_distinct_hashed_producer_identities()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            producerFamily: "scanner-a",
+            toolName: "Scanner.A",
+            ruleId: "old-rule",
+            contextHash: "stable-context");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            producerFamily: "scanner-a",
+            toolName: "Scanner A",
+            ruleId: "new-rule",
+            contextHash: "stable-context");
+        var configuration = MatchingTestData.Configuration(
+            ruleAliases:
+            [
+                new RuleAlias(
+                    "Scanner.A",
+                    "old-rule",
+                    "Scanner A",
+                    "new-rule"),
+            ]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            configuration);
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(PrecedenceTier.Override, decision.Decision.PrecedenceTier);
+        var aliasEvidence = Assert.Single(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind == "rule-alias");
+        Assert.Equal(
+            "sarifregress/rule-alias/v2",
+            aliasEvidence.AlgorithmVersion);
+    }
+
     [Fact]
     public void Rule_alias_alone_does_not_guarantee_a_result_match()
     {
@@ -526,12 +686,14 @@ public sealed class MatchingEngineTests
             "baseline:one",
             message: "Baseline message.",
             producerFamily: "first",
+            toolName: "first",
             ruleId: "old-rule");
         var candidate = MatchingTestData.Finding(
             InputKind.Candidate,
             "candidate:one",
             message: "Candidate message.",
             producerFamily: "second",
+            toolName: "second",
             ruleId: "new-rule");
         var configuration = MatchingTestData.Configuration(
             ruleAliases:
@@ -557,12 +719,14 @@ public sealed class MatchingEngineTests
             InputKind.Baseline,
             "baseline:one",
             producerFamily: "first",
+            toolName: "first",
             ruleId: "old-rule",
             producerFingerprints: [sharedFingerprint]);
         var candidate = MatchingTestData.Finding(
             InputKind.Candidate,
             "candidate:one",
             producerFamily: "second",
+            toolName: "second",
             ruleId: "new-rule",
             producerFingerprints: [sharedFingerprint]);
 
@@ -577,6 +741,7 @@ public sealed class MatchingEngineTests
                     InputKind.Baseline,
                     "baseline:no-fingerprint",
                     producerFamily: "first",
+                    toolName: "first",
                     ruleId: "old-rule")),
             MatchingTestData.Input(
                 InputKind.Candidate,
@@ -584,6 +749,7 @@ public sealed class MatchingEngineTests
                     InputKind.Candidate,
                     "candidate:no-fingerprint",
                     producerFamily: "second",
+                    toolName: "second",
                     ruleId: "new-rule")),
             MatchingTestData.Configuration(ruleAliases: [alias]));
 

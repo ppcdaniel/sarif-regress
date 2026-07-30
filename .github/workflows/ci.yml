@@ -138,12 +138,25 @@ jobs:
           package_name="$(basename -- "${package_files[0]}")"
           package_version="${package_name#SarifRegress.Tool.}"
           package_version="${package_version%.nupkg}"
-          dotnet tool install \
+          mkdir -p release
+          cp -- "${package_files[0]}" release/
+          NUGET_PACKAGES="${RUNNER_TEMP}/package-smoke-nuget-packages" \
+            dotnet tool install \
             --tool-path artifacts/tool \
-            --add-source artifacts/release \
-            --ignore-failed-sources \
+            --configfile NuGet.ReleaseSmoke.config \
+            --no-cache \
             SarifRegress.Tool \
             --version "${package_version}"
+          mapfile -d '' installed_package_files < <(
+            find artifacts/tool/.store \
+              -type f \
+              -iname 'sarifregress.tool.*.nupkg' \
+              -print0
+          )
+          test "${#installed_package_files[@]}" -eq 1
+          cmp --silent -- \
+            "${package_files[0]}" \
+            "${installed_package_files[0]}"
           artifacts/tool/sarif-regress --help >/dev/null
 
       - name: Package and smoke-test on Windows
@@ -182,14 +195,48 @@ jobs:
             throw 'Expected exactly one versioned .NET tool package.'
           }
           $packageVersion = $packageMatch.Groups[1].Value
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Copy-Item `
+            -LiteralPath $packageFiles[0].FullName `
+            -Destination release
+          $env:NUGET_PACKAGES = Join-Path `
+            $env:RUNNER_TEMP `
+            'package-smoke-nuget-packages'
           & dotnet tool install `
             --tool-path artifacts/tool `
-            --add-source artifacts/release `
-            --ignore-failed-sources `
+            --configfile NuGet.ReleaseSmoke.config `
+            --no-cache `
             SarifRegress.Tool `
             --version $packageVersion
           if ($LASTEXITCODE -ne 0) {
             throw "The .NET tool package could not be installed."
+          }
+          $installedPackageFiles = @(
+            Get-ChildItem `
+              -LiteralPath (Join-Path artifacts/tool '.store') `
+              -Filter 'sarifregress.tool.*.nupkg' `
+              -File `
+              -Recurse
+          )
+          if ($installedPackageFiles.Count -ne 1) {
+            throw "Expected one installed .NET tool package."
+          }
+          $sourcePackageHash = (
+            Get-FileHash `
+              -LiteralPath $packageFiles[0].FullName `
+              -Algorithm SHA256
+          ).Hash
+          $installedPackageHash = (
+            Get-FileHash `
+              -LiteralPath $installedPackageFiles[0].FullName `
+              -Algorithm SHA256
+          ).Hash
+          $installedPackageDiffers = (
+            $installedPackageFiles[0].Length -ne $packageFiles[0].Length -or
+            $installedPackageHash -ne $sourcePackageHash
+          )
+          if ($installedPackageDiffers) {
+            throw "The installed tool package bytes differ from the build."
           }
           & .\artifacts\tool\sarif-regress.exe --help | Out-Null
           if ($LASTEXITCODE -ne 0) {

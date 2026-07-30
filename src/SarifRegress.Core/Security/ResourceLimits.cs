@@ -36,7 +36,8 @@ public sealed record ResourceLimits
     public const int DefaultMaximumCodeFlowsPerResult = 100;
 
     /// <summary>
-    /// Gets the default maximum number of thread-flow locations on one result.
+    /// Gets the default independent maximum number of thread-flow objects and
+    /// thread-flow locations on one result.
     /// </summary>
     public const int DefaultMaximumThreadFlowLocationsPerResult = 10_000;
 
@@ -86,7 +87,7 @@ public sealed record ResourceLimits
     public const int DefaultMaximumRejectedAlternatives = 100;
 
     /// <summary>
-    /// Gets the matcher-v1 hard maximum number of findings on either side of an exact assignment.
+    /// Gets the hard maximum number of findings on either side of an exact assignment.
     /// </summary>
     public const int HardMaximumAssignmentSideSize = 12;
 
@@ -131,7 +132,8 @@ public sealed record ResourceLimits
     public int MaximumCodeFlowsPerResult { get; init; } = DefaultMaximumCodeFlowsPerResult;
 
     /// <summary>
-    /// Gets the maximum number of thread-flow locations per result.
+    /// Gets the independent maximum number of thread-flow objects and thread-flow
+    /// locations per result.
     /// </summary>
     public int MaximumThreadFlowLocationsPerResult { get; init; } =
         DefaultMaximumThreadFlowLocationsPerResult;
@@ -231,7 +233,7 @@ public sealed record ResourceLimits
                 nameof(MaximumAssignmentSideSize),
                 MaximumAssignmentSideSize,
                 $"The exact-assignment side limit cannot exceed "
-                + $"{HardMaximumAssignmentSideSize} in matcher v1.");
+                + $"{HardMaximumAssignmentSideSize} in matcher v2.");
         }
 
         if (MaximumCandidateEdgesPerFinding > MaximumCandidatePairEvaluationsPerFinding)

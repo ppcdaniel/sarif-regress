@@ -38,9 +38,27 @@ public sealed record DeterminismDescriptor(
 /// <summary>
 /// Provides comparison-relevant finding values without exposing adapter internals.
 /// </summary>
+/// <param name="FindingKey">The stable input-side finding key.</param>
+/// <param name="ProducerFamily">The human-readable producer-family label.</param>
+/// <param name="ProducerToolName">The exact source producer tool name.</param>
+/// <param name="ProducerToolVersion">The optional source producer tool version.</param>
+/// <param name="AutomaticProducerIdentity">
+/// The collision-resistant identity used for automatic same-producer decisions.
+/// </param>
+/// <param name="CanonicalRule">The canonical rule identity.</param>
+/// <param name="CanonicalUri">The optional canonical primary-location URI.</param>
+/// <param name="Region">The optional primary-location region.</param>
+/// <param name="CanonicalMessage">The canonical message text.</param>
+/// <param name="SourceMetadata">Audit-only metadata preserved from SARIF.</param>
+/// <param name="MessageNormalisationFlags">Applied message-normalisation identifiers.</param>
+/// <param name="Lossiness">Accumulated lossiness identifiers.</param>
+/// <param name="DerivedFingerprints">Project-owned derived fingerprints.</param>
 public sealed record FindingSnapshot(
     string FindingKey,
     string ProducerFamily,
+    string ProducerToolName,
+    string? ProducerToolVersion,
+    string AutomaticProducerIdentity,
     string CanonicalRule,
     string? CanonicalUri,
     Region? Region,
@@ -92,6 +110,9 @@ public static class FindingSnapshotFactory
         return new FindingSnapshot(
             finding.FindingKey,
             finding.Producer.Family,
+            finding.Producer.ToolName,
+            finding.Producer.ToolVersion,
+            finding.Producer.AutomaticIdentity,
             finding.Rule.CanonicalId,
             finding.PrimaryLocation?.Path.CanonicalUri,
             finding.PrimaryLocation?.Region,

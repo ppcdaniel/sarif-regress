@@ -128,9 +128,11 @@ workflow refuses to overwrite an existing release.
 The release bundle is built once on Linux and uploaded as one immutable workflow artifact. Separate
 Windows and Linux smoke jobs download that exact bundle, verify its complete checksum manifest,
 execute the matching self-contained binary, and install and execute the tool package. Each job
-also compares NuGet's installed-package SHA-512 metadata with the downloaded `.nupkg` bytes so a
-same-version package from another source cannot satisfy the smoke test. Draft creation cannot start
-until both native smoke jobs and the reusable Windows/Linux determinism workflow pass.
+isolates NuGet to the downloaded bundle, disables caches, and verifies that the retained installed
+`.nupkg` has the same bytes as the downloaded package (`cmp` on Linux, length plus SHA-256 on
+Windows). A same-version package from another source therefore cannot satisfy the smoke test. Draft
+creation cannot start until both native smoke jobs and the reusable Windows/Linux determinism
+workflow pass.
 
 The tag workflow deliberately leaves the GitHub release as a draft. Before publishing it, a
 maintainer must replace or extend the generated change index with the prepared behavioral release

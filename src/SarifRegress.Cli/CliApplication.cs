@@ -41,7 +41,8 @@ public static class CliApplication
         ArgumentNullException.ThrowIfNull(error);
         ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
 
-        if (WriteMissingRequiredCompareOptions(args, error))
+        if (!RequestsCompareHelp(args) &&
+            WriteMissingRequiredCompareOptions(args, error))
         {
             return ExitCodes.InvalidUsage;
         }
@@ -69,6 +70,32 @@ public static class CliApplication
             .InvokeAsync(invocationConfiguration)
             .GetAwaiter()
             .GetResult();
+    }
+
+    private static bool RequestsCompareHelp(IReadOnlyList<string> args)
+    {
+        if (args.Count == 0 ||
+            !string.Equals(args[0], "compare", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        for (var index = 1; index < args.Count; index++)
+        {
+            if (string.Equals(args[index], "--", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (string.Equals(args[index], "--help", StringComparison.Ordinal) ||
+                string.Equals(args[index], "-h", StringComparison.Ordinal) ||
+                string.Equals(args[index], "-?", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool WriteMissingRequiredCompareOptions(

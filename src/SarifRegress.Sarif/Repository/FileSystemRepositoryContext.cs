@@ -44,7 +44,8 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         this.limits = limits ?? ResourceLimits.Default;
         this.limits.Validate();
-        this.repositoryRoot = Path.GetFullPath(repositoryRoot);
+        this.repositoryRoot = Path.TrimEndingDirectorySeparator(
+            Path.GetFullPath(repositoryRoot));
         pathComparison = OperatingSystem.IsWindows()
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
@@ -73,54 +74,33 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
                 repositoryRelativePath,
                 sourceReference,
                 diagnostics,
-                out var sourcePath))
+                out var safeRelativePath))
         {
             return CreateResult(exists: false, null, null, diagnostics);
         }
 
-        if (!File.Exists(sourcePath))
+        cancellationToken.ThrowIfCancellationRequested();
+        var openResult = RepositoryFileHandleOpener.Open(
+            repositoryRoot,
+            safeRelativePath);
+        if (openResult.Stream is not FileStream sourceStream)
         {
-            diagnostics.Add(
-                new Diagnostic(
-                    "IO0001",
-                    DiagnosticSeverity.Note,
-                    DiagnosticStage.Repository,
-                    "The canonical repository path does not exist.",
-                    sourceReference));
-            return CreateResult(exists: false, null, null, diagnostics);
-        }
-
-        if (!TryContainsReparsePoint(sourcePath, out var containsReparsePoint))
-        {
-            diagnostics.Add(
-                new Diagnostic(
-                    "SECURITY0004",
-                    DiagnosticSeverity.Error,
-                    DiagnosticStage.Security,
-                    "Repository context could not verify symbolic-link containment.",
-                    sourceReference,
-                    help: "Ensure every path component is readable and contained within the approved repository root."));
-            return CreateResult(exists: true, null, null, diagnostics);
-        }
-
-        if (containsReparsePoint)
-        {
-            diagnostics.Add(
-                new Diagnostic(
-                    "SECURITY0002",
-                    DiagnosticSeverity.Error,
-                    DiagnosticStage.Security,
-                    "Repository context rejected a symbolic link or reparse point.",
-                    sourceReference,
-                    help: "Use a regular file contained directly within the approved repository root."));
-            return CreateResult(exists: true, null, null, diagnostics);
+            return CreateOpenFailureResult(
+                openResult.Failure,
+                sourceReference,
+                diagnostics);
         }
 
         byte[] sourceBytes;
         try
         {
-            sourceBytes = await ReadBoundedAsync(sourcePath, cancellationToken)
-                .ConfigureAwait(false);
+            await using (sourceStream.ConfigureAwait(false))
+            {
+                sourceBytes = await ReadBoundedAsync(
+                        sourceStream,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
         catch (RepositoryFileLimitExceededException)
         {
@@ -130,17 +110,6 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
                     DiagnosticSeverity.Error,
                     DiagnosticStage.Security,
                     $"The source file exceeds the configured {limits.MaximumRepositoryFileBytes}-byte limit.",
-                    sourceReference));
-            return CreateResult(exists: true, null, null, diagnostics);
-        }
-        catch (RepositoryPathSafetyException)
-        {
-            diagnostics.Add(
-                new Diagnostic(
-                    "SECURITY0004",
-                    DiagnosticSeverity.Error,
-                    DiagnosticStage.Security,
-                    "Repository context could not preserve symbolic-link containment while reading.",
                     sourceReference));
             return CreateResult(exists: true, null, null, diagnostics);
         }
@@ -164,6 +133,11 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
                     DiagnosticStage.Repository,
                     "Access to the source file was denied.",
                     sourceReference));
+            return CreateResult(exists: true, null, null, diagnostics);
+        }
+        catch (NotSupportedException)
+        {
+            diagnostics.Add(CreateUnsupportedFileTypeDiagnostic(sourceReference));
             return CreateResult(exists: true, null, null, diagnostics);
         }
 
@@ -268,9 +242,9 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         string repositoryRelativePath,
         SourceReference? sourceReference,
         ICollection<Diagnostic> diagnostics,
-        out string sourcePath)
+        out string safeRelativePath)
     {
-        sourcePath = string.Empty;
+        safeRelativePath = string.Empty;
         var normalizedRelativePath = repositoryRelativePath
             .Replace('\\', Path.DirectorySeparatorChar)
             .Replace('/', Path.DirectorySeparatorChar);
@@ -280,6 +254,7 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
             return false;
         }
 
+        string sourcePath;
         try
         {
             sourcePath = Path.GetFullPath(
@@ -302,68 +277,17 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
             Path.IsPathRooted(relativeToRoot))
         {
             diagnostics.Add(CreateContainmentDiagnostic(sourceReference));
-            sourcePath = string.Empty;
             return false;
         }
 
-        return true;
-    }
-
-    private bool TryContainsReparsePoint(
-        string sourcePath,
-        out bool containsReparsePoint)
-    {
-        containsReparsePoint = false;
-        if (!TryHasReparsePoint(repositoryRoot, out var rootIsReparsePoint))
-        {
-            return false;
-        }
-
-        if (rootIsReparsePoint)
-        {
-            containsReparsePoint = true;
-            return true;
-        }
-
-        var relativePath = Path.GetRelativePath(repositoryRoot, sourcePath);
-        var currentPath = repositoryRoot;
-        foreach (var segment in relativePath.Split(
-                     Path.DirectorySeparatorChar,
-                     StringSplitOptions.RemoveEmptyEntries))
-        {
-            currentPath = Path.Combine(currentPath, segment);
-            if (!TryHasReparsePoint(currentPath, out var isReparsePoint))
-            {
-                return false;
-            }
-
-            if (isReparsePoint)
-            {
-                containsReparsePoint = true;
-                return true;
-            }
-        }
-
+        safeRelativePath = relativeToRoot;
         return true;
     }
 
     private async Task<byte[]> ReadBoundedAsync(
-        string sourcePath,
+        FileStream stream,
         CancellationToken cancellationToken)
     {
-        await using var stream = new FileStream(
-            sourcePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            ReadBufferBytes,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        if (!TryContainsReparsePoint(sourcePath, out var containsReparsePoint) ||
-            containsReparsePoint)
-        {
-            throw new RepositoryPathSafetyException();
-        }
-
         if (stream.Length > limits.MaximumRepositoryFileBytes)
         {
             throw new RepositoryFileLimitExceededException();
@@ -380,14 +304,6 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
                 .ConfigureAwait(false);
             if (bytesRead == 0)
             {
-                if (!TryContainsReparsePoint(
-                        sourcePath,
-                        out containsReparsePoint) ||
-                    containsReparsePoint)
-                {
-                    throw new RepositoryPathSafetyException();
-                }
-
                 return content.ToArray();
             }
 
@@ -400,28 +316,6 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
             await content
                 .WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken)
                 .ConfigureAwait(false);
-        }
-    }
-
-    private static bool TryHasReparsePoint(
-        string path,
-        out bool isReparsePoint)
-    {
-        try
-        {
-            isReparsePoint =
-                (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
-            return true;
-        }
-        catch (IOException)
-        {
-            isReparsePoint = false;
-            return false;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            isReparsePoint = false;
-            return false;
         }
     }
 
@@ -440,6 +334,66 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
             sourceReference,
             help: "Supply a canonical repository-relative path without parent traversal.");
 
+    private static RepositoryContextResult CreateOpenFailureResult(
+        RepositoryFileOpenFailure failure,
+        SourceReference? sourceReference,
+        ICollection<Diagnostic> diagnostics)
+    {
+        var diagnostic = failure switch
+        {
+            RepositoryFileOpenFailure.NotFound => new Diagnostic(
+                "IO0001",
+                DiagnosticSeverity.Note,
+                DiagnosticStage.Repository,
+                "The canonical repository path does not exist.",
+                sourceReference),
+            RepositoryFileOpenFailure.UnsafePath => new Diagnostic(
+                "SECURITY0002",
+                DiagnosticSeverity.Error,
+                DiagnosticStage.Security,
+                "Repository context rejected a symbolic link or reparse point.",
+                sourceReference,
+                help: "Use a regular file contained directly within the approved repository root."),
+            RepositoryFileOpenFailure.UnsupportedFileType =>
+                CreateUnsupportedFileTypeDiagnostic(sourceReference),
+            RepositoryFileOpenFailure.AccessDenied => new Diagnostic(
+                "IO0003",
+                DiagnosticSeverity.Error,
+                DiagnosticStage.Repository,
+                "Access to the source file was denied.",
+                sourceReference),
+            RepositoryFileOpenFailure.SafetyUnavailable => new Diagnostic(
+                "SECURITY0004",
+                DiagnosticSeverity.Error,
+                DiagnosticStage.Security,
+                "Repository context could not preserve handle-anchored symbolic-link containment.",
+                sourceReference,
+                help: "Use Windows or x64/Arm64 Linux with openat2 and statx containment."),
+            _ => new Diagnostic(
+                "IO0002",
+                DiagnosticSeverity.Error,
+                DiagnosticStage.Repository,
+                "The source file could not be read.",
+                sourceReference),
+        };
+        diagnostics.Add(diagnostic);
+        return CreateResult(
+            exists: failure is not RepositoryFileOpenFailure.NotFound,
+            null,
+            null,
+            diagnostics);
+    }
+
+    private static Diagnostic CreateUnsupportedFileTypeDiagnostic(
+        SourceReference? sourceReference) =>
+        new(
+            "SECURITY0005",
+            DiagnosticSeverity.Error,
+            DiagnosticStage.Security,
+            "Repository context rejected a non-regular source file.",
+            sourceReference,
+            help: "Use a regular file rather than a directory, device, socket, or named pipe.");
+
     private static RepositoryContextResult CreateResult(
         bool exists,
         string? snippet,
@@ -448,10 +402,6 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         new(exists, snippet, evidence, Diagnostic.Sort(diagnostics));
 
     private sealed class RepositoryFileLimitExceededException : IOException
-    {
-    }
-
-    private sealed class RepositoryPathSafetyException : IOException
     {
     }
 }

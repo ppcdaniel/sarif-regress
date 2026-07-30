@@ -297,10 +297,12 @@ public sealed class SarifValidationTests
                   "ruleId": "R1",
                   "message": { "text": "message" },
                   "codeFlows": [{
-                    "threadFlows": [
-                      { "locations": [{ "location": {} }] },
-                      { "locations": [{ "location": {} }] }
-                    ]
+                    "threadFlows": [{
+                      "locations": [
+                        { "location": {} },
+                        { "location": {} }
+                      ]
+                    }]
                   }]
                 }]
               }]
@@ -310,9 +312,34 @@ public sealed class SarifValidationTests
 
         Assert.False(result.IsValid);
         Assert.Empty(result.ComparisonInput.Findings);
-        Assert.Contains(
+        var diagnostic = Assert.Single(
             result.ComparisonInput.Diagnostics,
             item => item.Code == "SECURITY0102");
+        Assert.Equal(
+            "A SARIF thread-flow location collection exceeds the configured "
+            + "1-item limit.",
+            diagnostic.Message);
+    }
+
+    [Fact]
+    public async Task Per_result_thread_flow_object_budget_spans_all_code_flows()
+    {
+        const int codeFlowCount = 100;
+        const int threadFlowsPerCodeFlow = 101;
+        var result = await IngestAsync(
+            CreateResultWithThreadFlows(
+                codeFlowCount,
+                threadFlowsPerCodeFlow));
+
+        Assert.False(result.IsValid);
+        Assert.Empty(result.ComparisonInput.Findings);
+        var diagnostic = Assert.Single(
+            result.ComparisonInput.Diagnostics,
+            item => item.Code == "SECURITY0102");
+        Assert.Equal(
+            "A SARIF thread-flow collection exceeds the configured "
+            + $"{ResourceLimits.DefaultMaximumThreadFlowLocationsPerResult}-item limit.",
+            diagnostic.Message);
     }
 
     [Fact]
@@ -536,6 +563,34 @@ public sealed class SarifValidationTests
             }]
           }
           """;
+
+    private static string CreateResultWithThreadFlows(
+        int codeFlowCount,
+        int threadFlowsPerCodeFlow)
+    {
+        var threadFlows = string.Join(
+            ",",
+            Enumerable.Repeat("{}", threadFlowsPerCodeFlow));
+        var codeFlows = string.Join(
+            ",",
+            Enumerable.Repeat(
+                $$"""{"threadFlows":[{{threadFlows}}]}""",
+                codeFlowCount));
+        return
+            $$"""
+              {
+                "version": "2.1.0",
+                "runs": [{
+                  "tool": { "driver": { "name": "Tool" } },
+                  "results": [{
+                    "ruleId": "R1",
+                    "message": { "text": "message" },
+                    "codeFlows": [{{codeFlows}}]
+                  }]
+                }]
+              }
+              """;
+    }
 
     private static SarifRegressConfiguration CreateConfiguration(
         ResourceLimits limits)

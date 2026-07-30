@@ -258,6 +258,9 @@
       "required": [
         "findingKey",
         "producerFamily",
+        "producerToolName",
+        "producerToolVersion",
+        "automaticProducerIdentity",
         "canonicalRule",
         "canonicalUri",
         "region",
@@ -265,13 +268,36 @@
       ],
       "properties": {
         "findingKey": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "producerFamily": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable producer family; never the automatic same-producer key."
+        },
+        "producerToolName": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact source SARIF producer tool name."
+        },
+        "producerToolVersion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Optional source SARIF producer tool version."
+        },
+        "automaticProducerIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Collision-resistant identity used for automatic same-producer decisions."
         },
         "canonicalRule": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "canonicalUri": {
           "type": [
@@ -285,11 +311,60 @@
         "canonicalMessage": {
           "type": "string"
         },
+        "sourceMetadata": {
+          "$ref": "#/$defs/sourceMetadata"
+        },
+        "messageNormalisationFlags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lossiness": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
         "derivedFingerprints": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/derivedFingerprint"
           }
+        }
+      }
+    },
+    "sourceMetadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "kind",
+        "baselineState"
+      ],
+      "properties": {
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baselineState": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

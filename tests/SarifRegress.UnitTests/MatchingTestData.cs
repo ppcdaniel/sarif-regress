@@ -25,6 +25,8 @@ internal static class MatchingTestData
         string message = "Example finding.",
         string producerFamily = "scanner",
         string toolName = "Scanner",
+        string toolVersion = "1.0.0",
+        string? automaticProducerIdentity = null,
         string ruleId = "scanner/rule",
         int? startLine = 10,
         IEnumerable<ProducerFingerprint>? producerFingerprints = null,
@@ -78,9 +80,12 @@ internal static class MatchingTestData
             new RunIdentity(0, AutomationCategory: null, StableRunKey: "run"),
             new ProducerIdentity(
                 toolName,
-                ToolVersion: "1.0.0",
+                ToolVersion: toolVersion,
                 Family: producerFamily,
-                AutomationCategory: null),
+                AutomationCategory: null,
+                AutomaticIdentity:
+                    automaticProducerIdentity ??
+                    ProducerIdentityResolver.Resolve(toolName).AutomaticIdentity),
             new RuleIdentity(ruleId, ruleId, AliasApplied: false),
             primaryPath is null
                 ? null
@@ -114,8 +119,8 @@ internal static class MatchingTestData
 
     public static DerivedFingerprint DerivedFingerprint(
         string value,
-        string name = "sarifregress/rule-path-context/v1") =>
-        new(name, value, "sarifregress/rule-path-context/v1");
+        string name = "sarifregress/rule-path-context/v2") =>
+        new(name, value, "sarifregress/rule-path-context/v2");
 
     public static SarifRegressConfiguration Configuration(
         bool allowWeakMessageSimilarity = false,

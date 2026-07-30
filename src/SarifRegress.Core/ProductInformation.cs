@@ -18,5 +18,5 @@ public static class ProductInformation
     /// <summary>
     /// Gets the matching algorithm version recorded in stable reports.
     /// </summary>
-    public const string MatcherAlgorithmVersion = "sarifregress/matcher/v1";
+    public const string MatcherAlgorithmVersion = "sarifregress/matcher/v2";
 }
