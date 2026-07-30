@@ -232,6 +232,88 @@ public sealed class PathCanonicalizerTests
             item => item.Code == "CANON0004");
     }
 
+    [Fact]
+    public void Already_canonical_repository_path_reuses_its_original_text()
+    {
+        var original = new string("src/folder/file.cs".ToCharArray());
+
+        var path = new PathCanonicalizer().Canonicalize(original);
+
+        Assert.Same(original, path.RepositoryRelativePath);
+        Assert.Equal("repo://src/folder/file.cs", path.CanonicalUri);
+        Assert.Empty(path.Transformations);
+        Assert.Empty(path.Diagnostics);
+    }
+
+    [Theory]
+    [InlineData(
+        @"C:\repo\.\src\\nested\..\file.cs",
+        PathKind.DriveAbsolute,
+        "win-drive://C:/repo/src/file.cs",
+        "canonical-separators,collapsed-absolute-segments")]
+    [InlineData(
+        @"\repo\.\src\\nested\..\file.cs",
+        PathKind.RootRelative,
+        "win-root:///repo/src/file.cs",
+        "canonical-separators,collapsed-absolute-segments")]
+    [InlineData(
+        @"\\server\share\.\src\\nested\..\file.cs",
+        PathKind.Unc,
+        "unc://server/share/src/file.cs",
+        "canonical-separators,collapsed-absolute-segments")]
+    [InlineData(
+        @"\\?\C:\repo\.\src\\nested\..\file.cs",
+        PathKind.Device,
+        "win-device://C:/repo/src/file.cs",
+        "canonical-separators,collapsed-absolute-segments")]
+    [InlineData(
+        @"\\?\UNC\server\share\.\src\\nested\..\file.cs",
+        PathKind.DeviceUnc,
+        "win-device-unc://server/share/src/file.cs",
+        "canonical-separators,collapsed-absolute-segments")]
+    [InlineData(
+        "/repo/./src//nested/../file.cs",
+        PathKind.PosixAbsolute,
+        "file:///repo/src/file.cs",
+        "collapsed-absolute-segments")]
+    [InlineData(
+        "file:///C:/repo/./src//nested/../file.cs",
+        PathKind.FileUri,
+        "file:///C:/repo/src/file.cs",
+        "collapsed-absolute-segments,canonical-file-uri")]
+    [InlineData(
+        "src//./nested/../file.cs/",
+        PathKind.RepositoryRelative,
+        "repo://src/file.cs",
+        "collapsed-rooted-segments")]
+    [InlineData(
+        @"C:folder\.\nested\..\file.cs",
+        PathKind.DriveRelative,
+        "win-drive-relative://C:folder/./nested/../file.cs",
+        "canonical-separators")]
+    [InlineData(
+        "https://example.test/a/./b/../file.cs",
+        PathKind.ExternalUri,
+        "https://example.test/a/./b/../file.cs",
+        "")]
+    public void Segment_normalization_preserves_each_path_kinds_semantics(
+        string original,
+        PathKind expectedKind,
+        string expectedCanonicalUri,
+        string expectedTransformationKinds)
+    {
+        var path = new PathCanonicalizer().Canonicalize(original);
+
+        Assert.Equal(expectedKind, path.Kind);
+        Assert.Equal(expectedCanonicalUri, path.CanonicalUri);
+        Assert.Equal(
+            expectedTransformationKinds,
+            string.Join(
+                ',',
+                path.Transformations.Select(item => item.Kind)));
+        Assert.Empty(path.Diagnostics);
+    }
+
     private static SarifRegressConfiguration CreateConfiguration(
         string? repositoryRoot,
         IEnumerable<PathRebase>? pathRebases = null,

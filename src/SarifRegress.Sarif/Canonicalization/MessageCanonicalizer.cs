@@ -73,10 +73,36 @@ public static class MessageCanonicalizer
             return value;
         }
 
-        var builder = new StringBuilder(value.Length);
-        var previousWasWhitespace = false;
-        foreach (var character in value)
+        var firstChangeIndex = -1;
+        for (var index = 0; index < value.Length; index++)
         {
+            var character = value[index];
+            if (!char.IsWhiteSpace(character))
+            {
+                continue;
+            }
+
+            if (character != ' ' ||
+                index > 0 && char.IsWhiteSpace(value[index - 1]))
+            {
+                firstChangeIndex = index;
+                break;
+            }
+        }
+
+        if (firstChangeIndex < 0)
+        {
+            return value;
+        }
+
+        var builder = new StringBuilder(value.Length);
+        builder.Append(value, 0, firstChangeIndex);
+        var previousWasWhitespace =
+            firstChangeIndex > 0 &&
+            char.IsWhiteSpace(value[firstChangeIndex - 1]);
+        for (var index = firstChangeIndex; index < value.Length; index++)
+        {
+            var character = value[index];
             if (char.IsWhiteSpace(character))
             {
                 if (!previousWasWhitespace)

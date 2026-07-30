@@ -507,6 +507,12 @@ public sealed class PathCanonicalizer
         string value,
         out string collapsed)
     {
+        if (!RequiresSegmentCollapse(value))
+        {
+            collapsed = value;
+            return true;
+        }
+
         var segments = NormalizeSeparators(value)
             .Split('/', StringSplitOptions.RemoveEmptyEntries);
         var retained = new List<string>(segments.Length);
@@ -536,6 +542,44 @@ public sealed class PathCanonicalizer
         collapsed = string.Join('/', retained);
         return true;
     }
+
+    private static bool RequiresSegmentCollapse(string value)
+    {
+        if (value.Length == 0)
+        {
+            return false;
+        }
+
+        var segmentStart = 0;
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+            if (!IsSeparator(character))
+            {
+                continue;
+            }
+
+            var segmentLength = index - segmentStart;
+            if (character == '\\' ||
+                segmentLength == 0 ||
+                IsDotSegment(value.AsSpan(segmentStart, segmentLength)))
+            {
+                return true;
+            }
+
+            segmentStart = index + 1;
+        }
+
+        var trailingSegment = value.AsSpan(segmentStart);
+        return trailingSegment.Length == 0 ||
+            IsDotSegment(trailingSegment);
+    }
+
+    private static bool IsDotSegment(ReadOnlySpan<char> segment) =>
+        segment.Length == 1 && segment[0] == '.' ||
+        segment.Length == 2 &&
+        segment[0] == '.' &&
+        segment[1] == '.';
 
     private static string NormalizeAbsoluteSegments(string value)
     {

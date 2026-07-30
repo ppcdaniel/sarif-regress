@@ -51,4 +51,15 @@ public sealed class MessageCanonicalizerTests
         Assert.Equal(string.Empty, message.ComparisonText);
         Assert.Empty(message.NormalisationFlags);
     }
+
+    [Fact]
+    public void Already_canonical_message_reuses_its_original_text()
+    {
+        var original = new string("already canonical".ToCharArray());
+
+        var message = MessageCanonicalizer.Canonicalize(original);
+
+        Assert.Same(original, message.CanonicalText);
+        Assert.Empty(message.NormalisationFlags);
+    }
 }
