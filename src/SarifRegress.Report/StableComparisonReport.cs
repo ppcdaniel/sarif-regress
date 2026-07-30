@@ -549,7 +549,7 @@ internal static class StableComparisonReport
             return decision;
         }
 
-        var evidence = decision.Evidence.Length <= 1
+        var normalizedEvidence = decision.Evidence.Length <= 1
             || IsOrdered(decision.Evidence, CompareEvidence)
                 ? decision.Evidence
                 : decision.Evidence
@@ -596,7 +596,7 @@ internal static class StableComparisonReport
         var diagnostics = decision.Diagnostics.Length <= 1
             ? decision.Diagnostics
             : Diagnostic.Sort(decision.Diagnostics);
-        if (evidence.Equals(decision.Evidence)
+        if (normalizedEvidence.Equals(decision.Evidence)
             && rejectedAlternatives.Equals(decision.RejectedAlternatives)
             && transformations.Equals(decision.Transformations)
             && diagnostics.Equals(decision.Diagnostics))
@@ -606,7 +606,7 @@ internal static class StableComparisonReport
 
         return decision with
         {
-            Evidence = evidence,
+            Evidence = normalizedEvidence,
             RejectedAlternatives = rejectedAlternatives,
             Transformations = transformations,
             Diagnostics = diagnostics,
