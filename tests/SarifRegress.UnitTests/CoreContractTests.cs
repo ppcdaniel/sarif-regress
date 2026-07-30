@@ -136,7 +136,7 @@ public sealed class CoreContractTests
         var first = VersionedHash.Compute("algorithm/v1", "ab", "c");
         var repeated = VersionedHash.Compute("algorithm/v1", "ab", "c");
         var differentlyPartitioned = VersionedHash.Compute("algorithm/v1", "a", "bc");
-        var nullField = VersionedHash.Compute("algorithm/v1", null);
+        var nullField = VersionedHash.Compute("algorithm/v1", (string?)null);
         var emptyField = VersionedHash.Compute("algorithm/v1", string.Empty);
 
         Assert.Equal(first, repeated);
