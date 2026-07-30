@@ -635,7 +635,7 @@ public sealed class FindingMatcher
             decisions,
             graph.CandidateEdgeCount,
             graph.ComponentCount,
-            AmbiguousComponentCount: 1,
+            graph.ComponentCount,
             Diagnostic.Sort(
                 fingerprintDiagnostics
                     .Concat(graph.Diagnostics)

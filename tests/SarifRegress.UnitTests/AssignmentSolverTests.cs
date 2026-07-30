@@ -219,10 +219,7 @@ public sealed class AssignmentSolverTests
                 Assert.Equal(PrecedenceTier.Refuse, decision.Decision.PrecedenceTier);
                 Assert.Empty(decision.Decision.Diagnostics);
             });
-        var diagnostic = Assert.Single(
-            result.Diagnostics,
-            diagnostic => diagnostic.Code == "MATCH0007");
-        Assert.Null(diagnostic.SourceReference);
+        AssertGlobalPreflightRefusal(result, "MATCH0007");
     }
 
     [Fact]
@@ -252,7 +249,7 @@ public sealed class AssignmentSolverTests
             decision => Assert.Equal(
                 FindingClassification.Ambiguous,
                 decision.Classification));
-        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MATCH0008");
+        AssertGlobalPreflightRefusal(result, "MATCH0008");
     }
 
     [Fact]
@@ -281,7 +278,7 @@ public sealed class AssignmentSolverTests
             decision => Assert.Equal(
                 FindingClassification.Ambiguous,
                 decision.Classification));
-        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MATCH0009");
+        AssertGlobalPreflightRefusal(result, "MATCH0009");
     }
 
     [Fact]
@@ -491,5 +488,18 @@ public sealed class AssignmentSolverTests
             decision => Assert.Equal(
                 FindingClassification.Ambiguous,
                 decision.Classification));
+    }
+
+    private static void AssertGlobalPreflightRefusal(
+        MatchResult result,
+        string diagnosticCode)
+    {
+        Assert.All(
+            result.Decisions,
+            decision => Assert.Empty(decision.Decision.Diagnostics));
+        var diagnostic = Assert.Single(
+            result.Diagnostics,
+            item => item.Code == diagnosticCode);
+        Assert.Null(diagnostic.SourceReference);
     }
 }
