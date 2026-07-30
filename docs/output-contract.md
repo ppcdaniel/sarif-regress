@@ -32,6 +32,9 @@ Each finding record contains:
 - one project classification;
 - optional baseline and candidate source references;
 - comparison-relevant snapshots, not the full SARIF wire object;
+- audit-only source `level`, `kind`, and `baselineState` metadata kept distinct from the project
+  classification;
+- explicit message-normalisation flags and accumulated lossiness identifiers;
 - the selected precedence tier and display confidence;
 - exact evidence values or hashes and their origin;
 - rejected alternatives;
@@ -46,3 +49,18 @@ match.
 HTML is rendered by deserialising this JSON contract and cannot call the matching engine. Optional
 canonical SARIF is a separate projection from canonical findings. Neither projection changes the
 JSON classifications or evidence.
+
+## Other command contracts
+
+`validate`, `corpus run`, and `bench` have separately versioned JSON summaries. They do not reuse or
+silently extend comparison output schema version `1`.
+
+- validation output contains the logical input name, bounded input/run/finding counts, validity,
+  policy state, and sorted diagnostics;
+- corpus output contains fixed thresholds, aggregate and case metrics, stable failure reasons, and
+  each case's exact stable comparison or invalid-diagnostic artifact plus SHA-256;
+- benchmark output separates deterministic operation/hash fields from explicitly advisory runtime
+  observations and records the applicable published budget evaluation.
+
+`canonicalise` emits deterministic SARIF rather than comparison JSON. See [cli.md](cli.md) for
+stream and file behavior.
