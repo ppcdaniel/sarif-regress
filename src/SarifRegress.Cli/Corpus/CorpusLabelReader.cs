@@ -69,7 +69,7 @@ public static class CorpusLabelReader
         EnsureUniquePairs(pairs);
 
         return new CorpusLabels(
-            document.SchemaVersion,
+            SupportedSchemaVersion,
             pairs.ToImmutableArray(),
             ToSet(document.ExpectedAmbiguous),
             ToSet(document.ExpectedResolved),
