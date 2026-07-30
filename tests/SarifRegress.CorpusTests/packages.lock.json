@@ -157,7 +157,7 @@
           "xunit.v3.runner.common": "[3.2.2]"
         }
       },
-      "sarif-regress": {
+      "sarifregress.tool": {
         "type": "Project",
         "dependencies": {
           "SarifRegress.Core": "[1.0.0, )",
