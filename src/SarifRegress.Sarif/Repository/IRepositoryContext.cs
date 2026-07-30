@@ -26,11 +26,15 @@ public interface IRepositoryContext
     /// <param name="lineRadius">The number of surrounding lines to include.</param>
     /// <param name="sourceReference">The source pointer used by diagnostics.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="includeTokenWindow">
+    /// Whether to derive a bounded, whitespace-insensitive token window.
+    /// </param>
     /// <returns>Stable source evidence or deterministic diagnostics.</returns>
     ValueTask<RepositoryContextResult> ReadAsync(
         string repositoryRelativePath,
         Region? region,
         int lineRadius,
         SourceReference? sourceReference = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        bool includeTokenWindow = false);
 }

@@ -415,10 +415,18 @@ public sealed class SarifIngestor
                     repositoryPath,
                     primaryLocation.Region,
                     request.Configuration.Matching.SnippetLinesRadius,
-                    sourceReference,
-                    cancellationToken)
+                    includeTokenWindow:
+                        request.Configuration.Matching.EnableTokenWindows,
+                    sourceReference: sourceReference,
+                    cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             context = repositoryResult.Evidence;
+            if (!request.Configuration.Matching.EnableTokenWindows &&
+                context is not null)
+            {
+                context = context with { TokenWindowHash = null };
+            }
+
             AddRange(findingDiagnostics, repositoryResult.Diagnostics);
         }
 

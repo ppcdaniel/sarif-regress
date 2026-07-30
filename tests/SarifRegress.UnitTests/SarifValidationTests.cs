@@ -401,6 +401,7 @@ public sealed class SarifValidationTests
 
         Assert.Equal("src/a.cs", repository.RequestedPath);
         Assert.Equal(3, repository.RequestedRadius);
+        Assert.False(repository.RequestedTokenWindow);
         Assert.Equal(
             "repository-hash",
             Assert.Single(result.ComparisonInput.Findings).Context?.SnippetHash);
@@ -465,15 +466,19 @@ public sealed class SarifValidationTests
 
         public int? RequestedRadius { get; private set; }
 
+        public bool RequestedTokenWindow { get; private set; }
+
         public ValueTask<RepositoryContextResult> ReadAsync(
             string repositoryRelativePath,
             SarifRegress.Core.Findings.Region? region,
             int lineRadius,
             SourceReference? sourceReference = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            bool includeTokenWindow = false)
         {
             RequestedPath = repositoryRelativePath;
             RequestedRadius = lineRadius;
+            RequestedTokenWindow = includeTokenWindow;
             return ValueTask.FromResult(
                 new RepositoryContextResult(
                     Exists: true,

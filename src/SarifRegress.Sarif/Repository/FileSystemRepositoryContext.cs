@@ -17,6 +17,11 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
     /// </summary>
     public const string ContextAlgorithmVersion = "source-context/v1";
 
+    /// <summary>
+    /// Gets the token-window hashing algorithm identifier.
+    /// </summary>
+    public const string TokenWindowAlgorithmVersion = "token-window/v1";
+
     private const int ReadBufferBytes = 16 * 1024;
     private static readonly byte[] Utf8ByteOrderMark = [0xEF, 0xBB, 0xBF];
     private static readonly UTF8Encoding StrictUtf8 = new(
@@ -51,7 +56,8 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         Region? region,
         int lineRadius,
         SourceReference? sourceReference = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool includeTokenWindow = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRelativePath);
         if (lineRadius < 0 || lineRadius > limits.MaximumSnippetRadius)
@@ -216,9 +222,41 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         var snippetHash = VersionedHash.Compute(
             ContextAlgorithmVersion,
             snippet);
+        string? tokenWindowHash = null;
+        if (includeTokenWindow)
+        {
+            var tokenWindow = TokenWindowCanonicalizer.Create(
+                normalizedText,
+                startLine,
+                (int)Math.Min((long)lines.Length, endLine),
+                limits,
+                cancellationToken);
+            tokenWindowHash = tokenWindow.Hash;
+            if (tokenWindow.Refusal is TokenWindowRefusal.TooManyRegionTerms)
+            {
+                diagnostics.Add(
+                    new Diagnostic(
+                        "CANON0011",
+                        DiagnosticSeverity.Warning,
+                        DiagnosticStage.Canonicalisation,
+                        $"The source region exceeds the configured {limits.MaximumTokenWindowTerms}-term token-window limit; token evidence was omitted.",
+                        sourceReference));
+            }
+            else if (tokenWindow.Refusal is TokenWindowRefusal.TermTooLong)
+            {
+                diagnostics.Add(
+                    new Diagnostic(
+                        "CANON0012",
+                        DiagnosticSeverity.Warning,
+                        DiagnosticStage.Canonicalisation,
+                        $"A source token exceeds the configured {limits.MaximumStringCharacters}-character limit; token evidence was omitted.",
+                        sourceReference));
+            }
+        }
+
         var evidence = new ContextEvidence(
             snippetHash,
-            TokenWindowHash: null,
+            tokenWindowHash,
             EnclosingSymbol: null,
             firstIncludedLine,
             lastIncludedLine);
