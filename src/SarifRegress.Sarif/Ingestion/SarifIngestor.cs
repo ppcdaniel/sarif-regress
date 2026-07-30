@@ -468,7 +468,7 @@ public sealed class SarifIngestor
             sourceReference.JsonPointer + "/partialFingerprints",
             request.Configuration.Limits,
             findingDiagnostics);
-        var importedFingerprints = FingerprintProcessor.Import(
+        var importedFingerprints = FingerprintProcessor.ImportForIngestion(
             validatedFingerprints,
             validatedPartialFingerprints,
             sourceReference);
@@ -1597,6 +1597,23 @@ public sealed class SarifIngestor
         if (values is null)
         {
             return null;
+        }
+
+        var allValuesAreValid = true;
+        foreach (var entry in values)
+        {
+            if (entry.Key.Length > limits.MaximumStringCharacters ||
+                entry.Value is null ||
+                entry.Value.Length > limits.MaximumStringCharacters)
+            {
+                allValuesAreValid = false;
+                break;
+            }
+        }
+
+        if (allValuesAreValid)
+        {
+            return values;
         }
 
         var validated = new Dictionary<string, string?>(StringComparer.Ordinal);

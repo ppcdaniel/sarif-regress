@@ -41,7 +41,44 @@ public sealed class FingerprintProcessorTests
             item =>
                 item.Source == ProducerFingerprintSource.PartialFingerprint &&
                 item.Value == "partial");
+        Assert.All(
+            result.Fingerprints,
+            item => Assert.Equal(
+                FingerprintReliability.Unknown,
+                item.Reliability));
         Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Single_import_remains_unassessed_until_collision_analysis()
+    {
+        var result = FingerprintProcessor.Import(
+            fingerprints: null,
+            partialFingerprints: new Dictionary<string, string?>(
+                StringComparer.Ordinal)
+            {
+                ["primaryLocationLineHash/v2"] = "partial",
+            });
+
+        var fingerprint = Assert.Single(result.Fingerprints);
+        Assert.Equal(FingerprintReliability.Unknown, fingerprint.Reliability);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Fact]
+    public void Invalid_single_import_emits_the_stable_diagnostic()
+    {
+        var result = FingerprintProcessor.Import(
+            fingerprints: new Dictionary<string, string?>(
+                StringComparer.Ordinal)
+            {
+                ["primaryLocationLineHash/v2"] = null,
+            },
+            partialFingerprints: null);
+
+        Assert.Empty(result.Fingerprints);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("CANON0020", diagnostic.Code);
     }
 
     [Fact]

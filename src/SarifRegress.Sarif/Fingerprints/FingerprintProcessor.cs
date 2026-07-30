@@ -12,6 +12,10 @@ public sealed record FingerprintImportResult(
     ImmutableArray<ProducerFingerprint> Fingerprints,
     ImmutableArray<Diagnostic> Diagnostics);
 
+internal readonly record struct FingerprintIngestionResult(
+    ImmutableArray<ProducerFingerprint> Fingerprints,
+    ImmutableArray<Diagnostic> Diagnostics);
+
 /// <summary>
 /// Imports producer fingerprints, assesses collisions, and derives project-owned identity hashes.
 /// </summary>
@@ -44,22 +48,67 @@ public static class FingerprintProcessor
         IReadOnlyDictionary<string, string?>? partialFingerprints,
         SourceReference? sourceReference = null)
     {
+        var imported = ImportCore(
+            fingerprints,
+            partialFingerprints,
+            sourceReference,
+            FingerprintReliability.Unknown);
+        return new FingerprintImportResult(
+            imported.Fingerprints,
+            imported.Diagnostics);
+    }
+
+    internal static FingerprintIngestionResult ImportForIngestion(
+        IReadOnlyDictionary<string, string?>? fingerprints,
+        IReadOnlyDictionary<string, string?>? partialFingerprints,
+        SourceReference sourceReference) =>
+        ImportCore(
+            fingerprints,
+            partialFingerprints,
+            sourceReference,
+            FingerprintReliability.High);
+
+    private static FingerprintIngestionResult ImportCore(
+        IReadOnlyDictionary<string, string?>? fingerprints,
+        IReadOnlyDictionary<string, string?>? partialFingerprints,
+        SourceReference? sourceReference,
+        FingerprintReliability initialReliability)
+    {
+        var fingerprintCount = fingerprints?.Count ?? 0;
+        var partialFingerprintCount = partialFingerprints?.Count ?? 0;
+        if (fingerprintCount + partialFingerprintCount == 1)
+        {
+            return fingerprintCount == 1
+                ? ImportSingle(
+                    fingerprints!,
+                    ProducerFingerprintSource.Fingerprint,
+                    sourceReference,
+                    initialReliability)
+                : ImportSingle(
+                    partialFingerprints!,
+                    ProducerFingerprintSource.PartialFingerprint,
+                    sourceReference,
+                    initialReliability);
+        }
+
         var imported = new List<ProducerFingerprint>();
         var diagnostics = new List<Diagnostic>();
         ImportMap(
             fingerprints,
             ProducerFingerprintSource.Fingerprint,
             sourceReference,
+            initialReliability,
             imported,
             diagnostics);
         ImportMap(
             partialFingerprints,
             ProducerFingerprintSource.PartialFingerprint,
             sourceReference,
+            initialReliability,
             imported,
             diagnostics);
 
-        return new FingerprintImportResult(
+        return new FingerprintIngestionResult(
             imported
                 .OrderBy(item => item.Family, StringComparer.Ordinal)
                 .ThenByDescending(item => item.Version)
@@ -116,28 +165,75 @@ public static class FingerprintProcessor
             }
         }
 
-        var assessed = ImmutableArray.CreateBuilder<Finding>(findingArray.Length);
-        foreach (var finding in findingArray)
+        ImmutableArray<Finding>.Builder? assessed = null;
+        for (var findingIndex = 0;
+             findingIndex < findingArray.Length;
+             findingIndex++)
         {
-            var assessedFingerprints = finding.ProducerFingerprints.Select(
-                fingerprint =>
+            var finding = findingArray[findingIndex];
+            var requiresClone = false;
+            foreach (var fingerprint in finding.ProducerFingerprints)
+            {
+                if (fingerprint.Reliability != GetReliability(
+                        finding,
+                        fingerprint,
+                        occurrencesByFingerprint))
                 {
-                    var key = new FingerprintBucketKey(
-                        finding.Run.StableRunKey,
-                        finding.Rule.CanonicalId,
-                        fingerprint.Name,
-                        fingerprint.Value);
-                    var reliability =
-                        occurrencesByFingerprint[key].Collided
-                            ? FingerprintReliability.Degraded
-                            : FingerprintReliability.High;
-                    return fingerprint with { Reliability = reliability };
-                });
+                    requiresClone = true;
+                    break;
+                }
+            }
 
-            assessed.Add(CloneWithFingerprints(finding, assessedFingerprints));
+            if (!requiresClone)
+            {
+                assessed?.Add(finding);
+                continue;
+            }
+
+            if (assessed is null)
+            {
+                assessed = ImmutableArray.CreateBuilder<Finding>(
+                    findingArray.Length);
+                for (var earlierIndex = 0;
+                     earlierIndex < findingIndex;
+                     earlierIndex++)
+                {
+                    assessed.Add(findingArray[earlierIndex]);
+                }
+            }
+
+            assessed.Add(
+                CloneWithFingerprints(
+                    finding,
+                    finding.ProducerFingerprints.Select(
+                        fingerprint => fingerprint with
+                        {
+                            Reliability = GetReliability(
+                                finding,
+                                fingerprint,
+                                occurrencesByFingerprint),
+                        })));
         }
 
-        return assessed.MoveToImmutable();
+        return assessed is null
+            ? findingArray
+            : assessed.MoveToImmutable();
+    }
+
+    private static FingerprintReliability GetReliability(
+        Finding finding,
+        ProducerFingerprint fingerprint,
+        IReadOnlyDictionary<FingerprintBucketKey, FingerprintOccurrence>
+            occurrencesByFingerprint)
+    {
+        var key = new FingerprintBucketKey(
+            finding.Run.StableRunKey,
+            finding.Rule.CanonicalId,
+            fingerprint.Name,
+            fingerprint.Value);
+        return occurrencesByFingerprint[key].Collided
+            ? FingerprintReliability.Degraded
+            : FingerprintReliability.High;
     }
 
     /// <summary>
@@ -185,6 +281,7 @@ public static class FingerprintProcessor
         IReadOnlyDictionary<string, string?>? map,
         ProducerFingerprintSource source,
         SourceReference? sourceReference,
+        FingerprintReliability initialReliability,
         ICollection<ProducerFingerprint> destination,
         ICollection<Diagnostic> diagnostics)
     {
@@ -220,9 +317,82 @@ public static class FingerprintProcessor
                     family,
                     version,
                     entry.Value,
-                    FingerprintReliability.Unknown,
+                    initialReliability,
                     source));
         }
+    }
+
+    private static FingerprintIngestionResult ImportSingle(
+        IReadOnlyDictionary<string, string?> map,
+        ProducerFingerprintSource source,
+        SourceReference? sourceReference,
+        FingerprintReliability initialReliability)
+    {
+        if (!TryGetSingleEntry(map, out var entry))
+        {
+            return new FingerprintIngestionResult(
+                ImmutableArray<ProducerFingerprint>.Empty,
+                ImmutableArray<Diagnostic>.Empty);
+        }
+
+        if (string.IsNullOrWhiteSpace(entry.Key) ||
+            string.IsNullOrWhiteSpace(entry.Value))
+        {
+            return new FingerprintIngestionResult(
+                ImmutableArray<ProducerFingerprint>.Empty,
+                [
+                    new Diagnostic(
+                        "CANON0020",
+                        DiagnosticSeverity.Warning,
+                        DiagnosticStage.Fingerprint,
+                        "A producer fingerprint with an empty name or value was ignored.",
+                        sourceReference),
+                ]);
+        }
+
+        ParseHierarchicalName(
+            entry.Key,
+            out var family,
+            out var version);
+        return new FingerprintIngestionResult(
+            [
+                new ProducerFingerprint(
+                    entry.Key,
+                    family,
+                    version,
+                    entry.Value,
+                    initialReliability,
+                    source),
+            ],
+            ImmutableArray<Diagnostic>.Empty);
+    }
+
+    private static bool TryGetSingleEntry(
+        IReadOnlyDictionary<string, string?> map,
+        out KeyValuePair<string, string?> entry)
+    {
+        if (map is Dictionary<string, string?> dictionary)
+        {
+            var enumerator = dictionary.GetEnumerator();
+            if (enumerator.MoveNext())
+            {
+                entry = enumerator.Current;
+                return true;
+            }
+
+            entry = default;
+            return false;
+        }
+
+        using var fallbackEnumerator = map.GetEnumerator();
+        if (fallbackEnumerator.MoveNext())
+        {
+            entry = fallbackEnumerator.Current;
+            return true;
+        }
+
+        entry = default;
+        return false;
     }
 
     private static void ParseHierarchicalName(
