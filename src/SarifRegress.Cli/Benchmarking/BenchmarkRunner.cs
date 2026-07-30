@@ -33,15 +33,18 @@ public sealed class BenchmarkRunner
     {
         cancellationToken.ThrowIfCancellationRequested();
         var dataset = BenchmarkDatasetGenerator.Generate(findingCount, kind);
-        var baselineBytes = dataset.BaselineSarif.Length;
-        var candidateBytes = dataset.CandidateSarif.Length;
+        var baselineSarif = dataset.BaselineSarif;
+        var candidateSarif = dataset.CandidateSarif;
+        var baselineBytes = baselineSarif.Length;
+        var candidateBytes = candidateSarif.Length;
+        dataset = null!;
         var allocatedBefore = GC.GetTotalAllocatedBytes(precise: false);
 
         var stopwatch = Stopwatch.StartNew();
         cancellationToken.ThrowIfCancellationRequested();
-        Parse(dataset.BaselineSarif);
+        Parse(baselineSarif);
         cancellationToken.ThrowIfCancellationRequested();
-        Parse(dataset.CandidateSarif);
+        Parse(candidateSarif);
         cancellationToken.ThrowIfCancellationRequested();
         stopwatch.Stop();
         var parseElapsed = stopwatch.Elapsed;
@@ -49,18 +52,19 @@ public sealed class BenchmarkRunner
 
         stopwatch.Restart();
         var baseline = await IngestAsync(
-                dataset.BaselineSarif,
+                baselineSarif,
                 InputKind.Baseline,
                 "benchmark-baseline.sarif",
                 cancellationToken)
             .ConfigureAwait(false);
+        baselineSarif = null!;
         var candidate = await IngestAsync(
-                dataset.CandidateSarif,
+                candidateSarif,
                 InputKind.Candidate,
                 "benchmark-candidate.sarif",
                 cancellationToken)
             .ConfigureAwait(false);
-        dataset = null!;
+        candidateSarif = null!;
         stopwatch.Stop();
         var canonicaliseElapsed = stopwatch.Elapsed;
         var allocatedAfterCanonicalise =
@@ -93,6 +97,8 @@ public sealed class BenchmarkRunner
 
         using var process = Process.GetCurrentProcess();
         process.Refresh();
+        var workingSetBytes = process.WorkingSet64;
+        var peakWorkingSetBytes = process.PeakWorkingSet64;
         var candidateBucketSizes = MeasureCandidateBucketSizes(
             candidate.ComparisonInput.Findings);
         var componentSizes = MeasureComponentSizes(
@@ -145,8 +151,8 @@ public sealed class BenchmarkRunner
                 allocatedAfterCompare,
                 allocatedAfterSerialize),
             AllocationDelta(allocatedBefore, allocatedAfterSerialize),
-            process.WorkingSet64,
-            process.PeakWorkingSet64);
+            workingSetBytes,
+            peakWorkingSetBytes);
         var budget = EvaluateBudget(
             kind,
             findingCount,
