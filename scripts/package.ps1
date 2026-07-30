@@ -33,6 +33,7 @@ foreach ($path in @($packageDirectory, $publishDirectory, $releaseDirectory)) {
     New-Item -ItemType Directory -Path $path | Out-Null
 }
 
+# The .NET tool is portable; the project RID graph exists for the standalone binaries.
 Invoke-DotNet -Arguments @(
     'pack',
     $cliProject,
@@ -41,7 +42,8 @@ Invoke-DotNet -Arguments @(
     '--no-build',
     '--no-restore',
     '--output',
-    $packageDirectory
+    $packageDirectory,
+    '-p:RuntimeIdentifiers='
 )
 
 foreach ($runtimeIdentifier in @('linux-x64', 'win-x64')) {

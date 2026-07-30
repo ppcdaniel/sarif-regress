@@ -14,12 +14,14 @@ release_directory="${artifact_directory}/release"
 rm -rf -- "${package_directory}" "${publish_directory}" "${release_directory}"
 mkdir -p -- "${package_directory}" "${publish_directory}" "${release_directory}"
 
+# The .NET tool is portable; the project RID graph exists for the standalone binaries.
 dotnet pack \
     "${cli_project}" \
     --configuration Release \
     --no-build \
     --no-restore \
-    --output "${package_directory}"
+    --output "${package_directory}" \
+    -p:RuntimeIdentifiers=
 
 for runtime_identifier in linux-x64 win-x64; do
     runtime_output="${publish_directory}/${runtime_identifier}"
