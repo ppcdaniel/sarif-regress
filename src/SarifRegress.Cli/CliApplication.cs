@@ -41,6 +41,11 @@ public static class CliApplication
         ArgumentNullException.ThrowIfNull(error);
         ArgumentException.ThrowIfNullOrWhiteSpace(currentDirectory);
 
+        if (WriteMissingRequiredCompareOptions(args, error))
+        {
+            return ExitCodes.InvalidUsage;
+        }
+
         RootCommand rootCommand = CliCommandFactory.Create(currentDirectory);
         InvocationConfiguration invocationConfiguration = new()
         {
@@ -51,8 +56,6 @@ public static class CliApplication
         var parseResult = rootCommand.Parse(args);
         if (parseResult.Errors.Count > 0)
         {
-            WriteMissingRequiredCompareOptions(args, error);
-
             foreach (var parseError in parseResult.Errors)
             {
                 error.Write(parseError.Message);
@@ -68,19 +71,20 @@ public static class CliApplication
             .GetResult();
     }
 
-    private static void WriteMissingRequiredCompareOptions(
+    private static bool WriteMissingRequiredCompareOptions(
         IReadOnlyList<string> args,
         TextWriter error)
     {
         if (args.Count == 0 ||
             !string.Equals(args[0], "compare", StringComparison.Ordinal))
         {
-            return;
+            return false;
         }
 
+        bool isMissingOption = false;
         WriteMissingOption("--baseline");
         WriteMissingOption("--candidate");
-        return;
+        return isMissingOption;
 
         void WriteMissingOption(string optionName)
         {
@@ -91,6 +95,7 @@ public static class CliApplication
                     argument.StartsWith(assignmentPrefix, StringComparison.Ordinal));
             if (!isPresent)
             {
+                isMissingOption = true;
                 error.Write($"Required option '{optionName}' is missing.\n");
             }
         }

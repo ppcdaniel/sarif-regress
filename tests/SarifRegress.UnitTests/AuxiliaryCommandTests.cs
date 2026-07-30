@@ -155,7 +155,7 @@ public sealed class AuxiliaryCommandTests
             .GetProperty("runs")[0]
             .GetProperty("results")[0];
         Assert.Equal(
-            "EXAMPLE001",
+            "example-analyzer/EXAMPLE001",
             result.GetProperty("ruleId").GetString());
         Assert.Equal(
             "Stable message",
