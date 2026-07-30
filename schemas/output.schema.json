@@ -287,6 +287,35 @@
         },
         "canonicalMessage": {
           "type": "string"
+        },
+        "derivedFingerprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/derivedFingerprint"
+          }
+        }
+      }
+    },
+    "derivedFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value",
+        "algorithmVersion"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -299,7 +328,11 @@
         "candidateRef",
         "baseline",
         "candidate",
-        "decision"
+        "decision",
+        "evidence",
+        "rejectedAlternatives",
+        "transforms",
+        "diagnostics"
       ],
       "properties": {
         "classification": {
@@ -318,12 +351,237 @@
           "$ref": "#/$defs/snapshot"
         },
         "decision": {
-          "type": "object"
+          "$ref": "#/$defs/decision"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "rejectedAlternatives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rejectedAlternative"
+          }
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transformation"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic"
+          }
+        }
+      }
+    },
+    "precedenceTier": {
+      "enum": [
+        "refuse",
+        "weak-contextual",
+        "path-problem",
+        "strong-moved",
+        "exact-canonical",
+        "exact-producer",
+        "override"
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "precedenceTier",
+        "displayConfidence",
+        "ambiguous",
+        "matcherAlgorithmVersion"
+      ],
+      "properties": {
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "displayConfidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "ambiguous": {
+          "type": "boolean"
+        },
+        "matcherAlgorithmVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "baselineValue",
+        "candidateValue",
+        "origin",
+        "precedenceTier",
+        "lossy",
+        "algorithmVersion"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baselineValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "candidateValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "producer",
+            "configuration",
+            "repository",
+            "system"
+          ]
+        },
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "lossy": {
+          "type": "boolean"
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "rejectedAlternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findingKey",
+        "reason",
+        "precedenceTier",
+        "decisionVector"
+      ],
+      "properties": {
+        "findingKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "decisionVector": {
+          "$ref": "#/$defs/decisionVector"
+        }
+      }
+    },
+    "decisionVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "precedenceTier",
+        "producerFingerprintStrength",
+        "pathMatchKind",
+        "contextAgreement",
+        "codeFlowAgreement",
+        "messageAgreement",
+        "regionDriftBand"
+      ],
+      "properties": {
+        "precedenceTier": {
+          "$ref": "#/$defs/precedenceTier"
+        },
+        "producerFingerprintStrength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pathMatchKind": {
+          "enum": [
+            "none",
+            "aliased",
+            "exact"
+          ]
+        },
+        "contextAgreement": {
+          "$ref": "#/$defs/agreementBand"
+        },
+        "codeFlowAgreement": {
+          "$ref": "#/$defs/agreementBand"
+        },
+        "messageAgreement": {
+          "$ref": "#/$defs/agreementBand"
+        },
+        "regionDriftBand": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "agreementBand": {
+      "enum": [
+        "none",
+        "compatible",
+        "exact"
+      ]
+    },
+    "transformation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "originalValue",
+        "transformedValue",
+        "lossy",
+        "algorithmVersion"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "originalValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transformedValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lossy": {
+          "type": "boolean"
+        },
+        "algorithmVersion": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
     "diagnostic": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "code",
         "severity",
@@ -332,7 +590,55 @@
         "sourceRef",
         "standardBasis",
         "help"
-      ]
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z]+[0-9]{4}$"
+        },
+        "severity": {
+          "enum": [
+            "note",
+            "warning",
+            "error"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "io",
+            "parse",
+            "schema",
+            "unsupported",
+            "canonicalisation",
+            "repository",
+            "fingerprint",
+            "match",
+            "github-compat",
+            "security",
+            "report",
+            "internal"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceRef": {
+          "$ref": "#/$defs/sourceReference"
+        },
+        "standardBasis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "help": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   }
 }

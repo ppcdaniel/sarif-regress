@@ -285,10 +285,16 @@ public sealed record Diagnostic
         return diagnostics
             .OrderBy(item => item.Stage)
             .ThenBy(item => item.Code, StringComparer.Ordinal)
+            .ThenBy(item => item.SourceReference?.Input)
+            .ThenBy(item => item.SourceReference?.RunIndex)
+            .ThenBy(item => item.SourceReference?.ResultIndex)
             .ThenBy(
                 item => item.SourceReference?.JsonPointer ?? string.Empty,
                 StringComparer.Ordinal)
             .ThenBy(item => item.Message, StringComparer.Ordinal)
+            .ThenBy(item => item.Severity)
+            .ThenBy(item => item.StandardBasis ?? string.Empty, StringComparer.Ordinal)
+            .ThenBy(item => item.Help ?? string.Empty, StringComparer.Ordinal)
             .ToImmutableArray();
     }
 

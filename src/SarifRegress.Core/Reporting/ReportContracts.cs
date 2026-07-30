@@ -44,7 +44,8 @@ public sealed record FindingSnapshot(
     string CanonicalRule,
     string? CanonicalUri,
     Region? Region,
-    string CanonicalMessage);
+    string CanonicalMessage,
+    ImmutableArray<DerivedFingerprint> DerivedFingerprints);
 
 /// <summary>
 /// Represents one stable output decision.
@@ -91,6 +92,7 @@ public static class FindingSnapshotFactory
             finding.Rule.CanonicalId,
             finding.PrimaryLocation?.Path.CanonicalUri,
             finding.PrimaryLocation?.Region,
-            finding.Message.CanonicalText);
+            finding.Message.CanonicalText,
+            finding.DerivedFingerprints);
     }
 }
