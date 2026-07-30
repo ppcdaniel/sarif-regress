@@ -37,7 +37,12 @@
           "passed",
           "artifactKind",
           "artifactSha256",
+          "diagnosticExpectationsAsserted",
+          "expectedDiagnosticCount",
+          "explanationExpectationsAsserted",
+          "expectedExplanationCount",
           "artifact",
+          "expectationFailures",
           "metrics"
         ],
         "properties": {
@@ -64,8 +69,27 @@
             "type": "string",
             "pattern": "^[0-9a-f]{64}$"
           },
+          "diagnosticExpectationsAsserted": {
+            "type": "boolean"
+          },
+          "expectedDiagnosticCount": {
+            "$ref": "#/$defs/count"
+          },
+          "explanationExpectationsAsserted": {
+            "type": "boolean"
+          },
+          "expectedExplanationCount": {
+            "$ref": "#/$defs/count"
+          },
           "artifact": {
             "type": "object"
+          },
+          "expectationFailures": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
           },
           "metrics": {
             "$ref": "#/$defs/metrics"

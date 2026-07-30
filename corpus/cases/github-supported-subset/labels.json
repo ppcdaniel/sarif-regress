@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1",
+  "pairs": [
+    {
+      "baselineKey": "baseline:0:0",
+      "candidateKey": "candidate:0:0",
+      "classification": "unchanged"
+    }
+  ],
+  "expectedAmbiguous": [],
+  "expectedResolved": [],
+  "expectedNew": [],
+  "expectedInvalidInputs": [],
+  "expectedDiagnostics": [],
+  "expectedExplanations": [
+    {
+      "baselineKey": "baseline:0:0",
+      "candidateKey": "candidate:0:0",
+      "classification": "unchanged",
+      "precedenceTier": "exact-producer",
+      "ambiguous": false,
+      "evidenceKinds": [
+        "canonical-path",
+        "message",
+        "producer-fingerprint",
+        "region",
+        "rule-identity"
+      ]
+    }
+  ]
+}

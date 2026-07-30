@@ -1,8 +1,10 @@
 using System.Collections.Immutable;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
+using SarifRegress.Core.Matching;
 using SarifRegress.Core.Security;
 using SarifRegress.Match;
+using SarifRegress.Sarif.Compatibility;
 using SarifRegress.Sarif.Configuration;
 using SarifRegress.Sarif.Ingestion;
 using SarifRegress.Sarif.Repository;
@@ -160,11 +162,13 @@ public sealed class CorpusRunner
             "candidate.sarif",
             caseName);
         CorpusLabels labels = CorpusLabelReader.Read(labelsPath, limits);
-        var configuration = await ReadConfigurationAsync(
+        var configurationResult = await ReadConfigurationAsync(
                 caseDirectory,
                 limits,
                 cancellationToken)
             .ConfigureAwait(false);
+        var configuration = configurationResult.Configuration;
+        var configurationDiagnostics = configurationResult.Diagnostics;
         var repositoryContext = CreateRepositoryContext(configuration);
         var ingestor = new SarifIngestor(repositoryContext);
         var baseline = await IngestAsync(
@@ -200,6 +204,8 @@ public sealed class CorpusRunner
 
         CorpusCaseEvaluation evaluation;
         CorpusCaseArtifact artifact;
+        ImmutableArray<Diagnostic> observedDiagnostics;
+        ImmutableArray<FindingDecision> observedDecisions;
         if (observedInvalid.Length > 0)
         {
             EnsureInvalidCaseHasNoFindingLabels(caseName, labels);
@@ -211,7 +217,13 @@ public sealed class CorpusRunner
                 CorpusCaseArtifactSerializer.CreateInvalidInputDiagnostics(
                     caseName,
                     baseline,
-                    candidate);
+                    candidate,
+                    configurationDiagnostics);
+            observedDiagnostics = Diagnostic.Sort(
+                configurationDiagnostics
+                    .Concat(baseline.ComparisonInput.Diagnostics)
+                    .Concat(candidate.ComparisonInput.Diagnostics));
+            observedDecisions = [];
         }
         else
         {
@@ -224,6 +236,19 @@ public sealed class CorpusRunner
                 baseline.ComparisonInput,
                 candidate.ComparisonInput,
                 configuration);
+            var compatibilityChecker = new GithubCompatibilityChecker();
+            observedDiagnostics = Diagnostic.Sort(
+                configurationDiagnostics
+                    .Concat(baseline.ComparisonInput.Diagnostics)
+                    .Concat(candidate.ComparisonInput.Diagnostics)
+                    .Concat(compatibilityChecker.Check(baseline.Summary))
+                    .Concat(compatibilityChecker.Check(candidate.Summary))
+                    .Concat(matchResult.Diagnostics));
+            matchResult = matchResult with
+            {
+                Diagnostics = observedDiagnostics,
+            };
+            observedDecisions = matchResult.Decisions;
             evaluation = CorpusEvaluator.Evaluate(
                 caseName,
                 labels,
@@ -234,10 +259,15 @@ public sealed class CorpusRunner
         }
 
         var metrics = evaluation.Metrics;
+        var expectationFailures = CorpusExpectationEvaluator.Evaluate(
+            labels,
+            observedDiagnostics,
+            observedDecisions);
         var passed = inputExpectationsMatch
             && metrics.FalsePositives == 0
             && metrics.FalseNegatives == 0
-            && metrics.ExpectationsSatisfied;
+            && metrics.ExpectationsSatisfied
+            && expectationFailures.IsEmpty;
         return new CaseExecution(
             new CorpusCaseRun(
                 caseName,
@@ -245,10 +275,23 @@ public sealed class CorpusRunner
                 observedInvalid,
                 artifact,
                 metrics,
-                passed));
+                passed)
+            {
+                DiagnosticExpectationsAsserted =
+                    !labels.ExpectedDiagnostics.IsDefault,
+                ExpectedDiagnosticCount = labels.ExpectedDiagnostics.IsDefault
+                    ? 0
+                    : labels.ExpectedDiagnostics.Length,
+                ExplanationExpectationsAsserted =
+                    !labels.ExpectedExplanations.IsDefault,
+                ExpectedExplanationCount = labels.ExpectedExplanations.IsDefault
+                    ? 0
+                    : labels.ExpectedExplanations.Length,
+                ExpectationFailures = expectationFailures,
+            });
     }
 
-    private static async ValueTask<SarifRegressConfiguration>
+    private static async ValueTask<CorpusConfigurationReadResult>
         ReadConfigurationAsync(
             string caseDirectory,
             ResourceLimits limits,
@@ -256,9 +299,11 @@ public sealed class CorpusRunner
     {
         string path = Path.Combine(caseDirectory, "config.json");
         SarifRegressConfiguration configuration;
+        ImmutableArray<Diagnostic> diagnostics;
         if (!File.Exists(path))
         {
             configuration = SarifRegressConfiguration.Default;
+            diagnostics = [];
         }
         else
         {
@@ -276,6 +321,7 @@ public sealed class CorpusRunner
             }
 
             configuration = result.Configuration!;
+            diagnostics = result.Diagnostics;
         }
 
         string? repositoryRoot = configuration.RepositoryRoot;
@@ -289,16 +335,18 @@ public sealed class CorpusRunner
             }
         }
 
-        return new SarifRegressConfiguration(
-            configuration.SchemaVersion,
-            repositoryRoot,
-            configuration.PathRebases,
-            configuration.PathAliases,
-            configuration.RuleAliases,
-            configuration.Matching,
-            configuration.Policy,
-            configuration.Reporting,
-            configuration.Limits);
+        return new CorpusConfigurationReadResult(
+            new SarifRegressConfiguration(
+                configuration.SchemaVersion,
+                repositoryRoot,
+                configuration.PathRebases,
+                configuration.PathAliases,
+                configuration.RuleAliases,
+                configuration.Matching,
+                configuration.Policy,
+                configuration.Reporting,
+                configuration.Limits),
+            diagnostics);
     }
 
     private static IRepositoryContext? CreateRepositoryContext(
@@ -385,8 +433,46 @@ public sealed class CorpusRunner
             }
         }
 
+        ValidateExplanationKeys(
+            caseName,
+            labels.ExpectedExplanations,
+            baselineKeys,
+            candidateKeys);
         EnsureCompleteCoverage(caseName, "baseline", baselineKeys, coveredBaseline);
         EnsureCompleteCoverage(caseName, "candidate", candidateKeys, coveredCandidate);
+    }
+
+    private static void ValidateExplanationKeys(
+        string caseName,
+        ImmutableArray<CorpusExplanationExpectation> expectations,
+        IReadOnlySet<string> baselineKeys,
+        IReadOnlySet<string> candidateKeys)
+    {
+        if (expectations.IsDefault)
+        {
+            return;
+        }
+
+        foreach (var expectation in expectations)
+        {
+            if (expectation.BaselineKey is not null)
+            {
+                RequireKnownKey(
+                    caseName,
+                    "baseline explanation",
+                    expectation.BaselineKey,
+                    baselineKeys);
+            }
+
+            if (expectation.CandidateKey is not null)
+            {
+                RequireKnownKey(
+                    caseName,
+                    "candidate explanation",
+                    expectation.CandidateKey,
+                    candidateKeys);
+            }
+        }
     }
 
     private static void RequireKnownKey(
@@ -438,7 +524,9 @@ public sealed class CorpusRunner
         if (!labels.Pairs.IsEmpty
             || labels.ExpectedAmbiguous.Count > 0
             || labels.ExpectedResolved.Count > 0
-            || labels.ExpectedNew.Count > 0)
+            || labels.ExpectedNew.Count > 0
+            || (!labels.ExpectedExplanations.IsDefault
+                && labels.ExpectedExplanations.Length > 0))
         {
             throw new InvalidDataException(
                 $"Malformed corpus case '{caseName}' cannot label findings.");
@@ -481,4 +569,8 @@ public sealed class CorpusRunner
     }
 
     private sealed record CaseExecution(CorpusCaseRun CaseRun);
+
+    private sealed record CorpusConfigurationReadResult(
+        SarifRegressConfiguration Configuration,
+        ImmutableArray<Diagnostic> Diagnostics);
 }

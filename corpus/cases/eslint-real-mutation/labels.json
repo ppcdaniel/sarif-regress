@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1",
+  "pairs": [
+    {
+      "baselineKey": "baseline:0:0",
+      "candidateKey": "candidate:0:0",
+      "classification": "moved"
+    },
+    {
+      "baselineKey": "baseline:0:1",
+      "candidateKey": "candidate:0:1",
+      "classification": "moved"
+    }
+  ],
+  "expectedAmbiguous": [],
+  "expectedResolved": [],
+  "expectedNew": [],
+  "expectedInvalidInputs": [],
+  "expectedDiagnostics": [
+    {
+      "input": "baseline",
+      "code": "GHCS0013",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "Some results do not provide the recommended primaryLocationLineHash partial fingerprint.",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30"
+    },
+    {
+      "input": "baseline",
+      "code": "GHCS0023",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "GitHub's documented supported-property subset does not use region.snippet (2 occurrences).",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30",
+      "help": "The property remains available to SarifRegress where its supported subset uses it; this advisory describes only GitHub's documented subset."
+    },
+    {
+      "input": "candidate",
+      "code": "GHCS0013",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "Some results do not provide the recommended primaryLocationLineHash partial fingerprint.",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30"
+    },
+    {
+      "input": "candidate",
+      "code": "GHCS0023",
+      "severity": "note",
+      "stage": "github-compat",
+      "message": "GitHub's documented supported-property subset does not use region.snippet (2 occurrences).",
+      "runIndex": 0,
+      "jsonPointer": "/runs/0",
+      "standardBasis": "github-supported-subset-2026-07-30",
+      "help": "The property remains available to SarifRegress where its supported subset uses it; this advisory describes only GitHub's documented subset."
+    }
+  ],
+  "expectedExplanations": [
+    {
+      "baselineKey": "baseline:0:0",
+      "candidateKey": "candidate:0:0",
+      "classification": "moved",
+      "precedenceTier": "exact-canonical",
+      "ambiguous": false,
+      "evidenceKinds": [
+        "canonical-path",
+        "context-snippet",
+        "derived-fingerprint",
+        "message",
+        "region",
+        "rule-identity"
+      ]
+    },
+    {
+      "baselineKey": "baseline:0:1",
+      "candidateKey": "candidate:0:1",
+      "classification": "moved",
+      "precedenceTier": "exact-canonical",
+      "ambiguous": false,
+      "evidenceKinds": [
+        "canonical-path",
+        "context-snippet",
+        "derived-fingerprint",
+        "message",
+        "region",
+        "rule-identity"
+      ]
+    }
+  ]
+}

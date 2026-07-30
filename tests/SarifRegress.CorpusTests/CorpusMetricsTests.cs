@@ -125,6 +125,190 @@ public sealed class CorpusMetricsTests
             StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void Explicit_diagnostic_and_explanation_expectations_are_enforced()
+    {
+        Finding baseline = CreateFinding(
+            "baseline:0:0",
+            InputKind.Baseline,
+            0);
+        Finding candidate = CreateFinding(
+            "candidate:0:0",
+            InputKind.Candidate,
+            0);
+        var source = new SourceReference(
+            InputKind.Baseline,
+            0,
+            0,
+            "/runs/0/results/0");
+        var expectedDiagnostic = new CorpusDiagnosticExpectation(
+            "PARSE0100",
+            DiagnosticSeverity.Error,
+            DiagnosticStage.Parse,
+            "Expected message.",
+            Input: InputKind.Baseline,
+            RunIndex: 0,
+            ResultIndex: 0,
+            JsonPointer: "/runs/0/results/0");
+        CorpusLabels labels = new(
+            "1",
+            [],
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty)
+        {
+            ExpectedDiagnostics = [expectedDiagnostic],
+            ExpectedExplanations =
+            [
+                new CorpusExplanationExpectation(
+                    baseline.FindingKey,
+                    candidate.FindingKey,
+                    FindingClassification.Unchanged,
+                    PrecedenceTier.ExactProducer,
+                    Ambiguous: false,
+                    EvidenceKinds: ["producer-fingerprint"]),
+            ],
+        };
+        var actualDiagnostic = new Diagnostic(
+            "PARSE0100",
+            DiagnosticSeverity.Error,
+            DiagnosticStage.Parse,
+            "Changed message.",
+            source);
+        var actualDecision = CreateDecision(
+            FindingClassification.Unchanged,
+            baseline,
+            candidate,
+            ambiguous: false);
+
+        var failures = CorpusExpectationEvaluator.Evaluate(
+            labels,
+            [actualDiagnostic],
+            [actualDecision]);
+
+        Assert.Contains(
+            failures,
+            item => item.StartsWith(
+                "Missing expected diagnostic:",
+                StringComparison.Ordinal));
+        Assert.Contains(
+            failures,
+            item => item.StartsWith(
+                "Unexpected diagnostic:",
+                StringComparison.Ordinal));
+        Assert.Contains(
+            failures,
+            item => item.Contains(
+                "expected precedence 'exact-producer'",
+                StringComparison.Ordinal));
+        Assert.Contains(
+            failures,
+            item => item.Contains(
+                "expected evidence kinds [producer-fingerprint]",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Exact_diagnostics_include_source_absence_standard_basis_and_help()
+    {
+        var expected = new CorpusDiagnosticExpectation(
+            "MATCH0001",
+            DiagnosticSeverity.Warning,
+            DiagnosticStage.Match,
+            "Ambiguous assignment.",
+            StandardBasis: "matcher-policy-v1",
+            Help: "Add stronger evidence.");
+        CorpusLabels labels = new(
+            "1",
+            [],
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty)
+        {
+            ExpectedDiagnostics = [expected],
+        };
+        var exact = new Diagnostic(
+            "MATCH0001",
+            DiagnosticSeverity.Warning,
+            DiagnosticStage.Match,
+            "Ambiguous assignment.",
+            standardBasis: "matcher-policy-v1",
+            help: "Add stronger evidence.");
+        var changedHelp = new Diagnostic(
+            "MATCH0001",
+            DiagnosticSeverity.Warning,
+            DiagnosticStage.Match,
+            "Ambiguous assignment.",
+            standardBasis: "matcher-policy-v1",
+            help: "Different guidance.");
+
+        Assert.Empty(
+            CorpusExpectationEvaluator.Evaluate(labels, [exact], []));
+        var failures = CorpusExpectationEvaluator.Evaluate(
+            labels,
+            [changedHelp],
+            []);
+
+        Assert.Equal(2, failures.Length);
+        Assert.Contains(
+            failures,
+            item => item.StartsWith(
+                "Missing expected diagnostic:",
+                StringComparison.Ordinal));
+        Assert.Contains(
+            failures,
+            item => item.StartsWith(
+                "Unexpected diagnostic:",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Explanation_lookup_retains_duplicate_decision_multiplicity()
+    {
+        Finding baseline = CreateFinding(
+            "baseline:0:0",
+            InputKind.Baseline,
+            0);
+        Finding candidate = CreateFinding(
+            "candidate:0:0",
+            InputKind.Candidate,
+            0);
+        CorpusLabels labels = new(
+            "1",
+            [],
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty)
+        {
+            ExpectedExplanations =
+            [
+                new CorpusExplanationExpectation(
+                    baseline.FindingKey,
+                    candidate.FindingKey,
+                    FindingClassification.Unchanged,
+                    PrecedenceTier.ExactCanonical,
+                    Ambiguous: false,
+                    EvidenceKinds: []),
+            ],
+        };
+        var decision = CreateDecision(
+            FindingClassification.Unchanged,
+            baseline,
+            candidate,
+            ambiguous: false);
+
+        var failures = CorpusExpectationEvaluator.Evaluate(
+            labels,
+            [],
+            [decision, decision]);
+
+        var failure = Assert.Single(failures);
+        Assert.Equal(
+            "Expected explanation is not unique: unchanged "
+            + "baseline:0:0 -> candidate:0:0.",
+            failure);
+    }
+
     private static FindingDecision CreateDecision(
         FindingClassification classification,
         Finding? baseline,

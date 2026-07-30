@@ -1,0 +1,54 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "SubsetAnalyzer",
+          "version": "1.2.3",
+          "semanticVersion": "1.2.3",
+          "rules": [
+            {
+              "id": "SEC001",
+              "properties": {
+                "tags": [
+                  "security",
+                  "correctness"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "SEC001",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Untrusted input reaches a command sink."
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash/v1": "github-subset-sec001"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/command.cs"
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 9,
+                  "endLine": 12,
+                  "endColumn": 28
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

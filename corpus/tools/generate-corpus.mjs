@@ -82,14 +82,27 @@ const labels = ({
   expectedResolved = [],
   expectedNew = [],
   expectedInvalidInputs = [],
-}) => ({
-  schemaVersion: "1",
-  pairs,
-  expectedAmbiguous,
-  expectedResolved,
-  expectedNew,
-  expectedInvalidInputs,
-});
+  expectedDiagnostics,
+  expectedExplanations,
+}) => {
+  const value = {
+    schemaVersion: "1",
+    pairs,
+    expectedAmbiguous,
+    expectedResolved,
+    expectedNew,
+    expectedInvalidInputs,
+  };
+  if (expectedDiagnostics !== undefined) {
+    value.expectedDiagnostics = expectedDiagnostics;
+  }
+
+  if (expectedExplanations !== undefined) {
+    value.expectedExplanations = expectedExplanations;
+  }
+
+  return value;
+};
 
 const write = (filePath, content) => {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -486,6 +499,17 @@ writeCase({
   rawBaseline: "{ this is not valid JSON }\n",
   caseLabels: labels({
     expectedInvalidInputs: ["baseline"],
+    expectedDiagnostics: [
+      {
+        input: "baseline",
+        code: "PARSE0100",
+        severity: "error",
+        stage: "parse",
+        message: "The SARIF input is not valid JSON.",
+        jsonPointer: "",
+      },
+    ],
+    expectedExplanations: [],
   }),
   notes: `
 # Malformed SARIF

@@ -14,6 +14,33 @@ public sealed record LabelledPair(
     FindingClassification Classification);
 
 /// <summary>
+/// Defines one exact diagnostic expected from a corpus case. Source fields are
+/// either all absent or include both <c>Input</c> and <c>JsonPointer</c>.
+/// </summary>
+public sealed record CorpusDiagnosticExpectation(
+    string Code,
+    DiagnosticSeverity Severity,
+    DiagnosticStage Stage,
+    string Message,
+    InputKind? Input = null,
+    int? RunIndex = null,
+    int? ResultIndex = null,
+    string? JsonPointer = null,
+    string? StandardBasis = null,
+    string? Help = null);
+
+/// <summary>
+/// Defines selected structured explanation fields that must remain stable.
+/// </summary>
+public sealed record CorpusExplanationExpectation(
+    string? BaselineKey,
+    string? CandidateKey,
+    FindingClassification Classification,
+    PrecedenceTier PrecedenceTier,
+    bool Ambiguous,
+    ImmutableArray<string> EvidenceKinds);
+
+/// <summary>
 /// Defines the complete pairing graph and expected refusals for one corpus case.
 /// </summary>
 public sealed record CorpusLabels(
@@ -28,6 +55,27 @@ public sealed record CorpusLabels(
     /// </summary>
     public ImmutableHashSet<InputKind> ExpectedInvalidInputs { get; init; } =
         ImmutableHashSet<InputKind>.Empty;
+
+    /// <summary>
+    /// Gets the exact expected diagnostic set. A default array means that this
+    /// older label does not assert diagnostics; an initialized empty array
+    /// explicitly asserts that no diagnostics are expected.
+    /// </summary>
+    public ImmutableArray<CorpusDiagnosticExpectation> ExpectedDiagnostics
+    {
+        get;
+        init;
+    }
+
+    /// <summary>
+    /// Gets selected explanation/evidence goldens. A default array means that
+    /// this older label does not assert explanation fields.
+    /// </summary>
+    public ImmutableArray<CorpusExplanationExpectation> ExpectedExplanations
+    {
+        get;
+        init;
+    }
 }
 
 /// <summary>
@@ -228,7 +276,33 @@ public sealed record CorpusCaseRun(
     ImmutableArray<InputKind> ObservedInvalidInputs,
     CorpusCaseArtifact Artifact,
     CorpusMetrics Metrics,
-    bool Passed);
+    bool Passed)
+{
+    /// <summary>
+    /// Gets whether the label asserted an exact diagnostic set.
+    /// </summary>
+    public bool DiagnosticExpectationsAsserted { get; init; }
+
+    /// <summary>
+    /// Gets the number of exact expected diagnostics when asserted.
+    /// </summary>
+    public int ExpectedDiagnosticCount { get; init; }
+
+    /// <summary>
+    /// Gets whether the label asserted selected explanation goldens.
+    /// </summary>
+    public bool ExplanationExpectationsAsserted { get; init; }
+
+    /// <summary>
+    /// Gets the number of selected explanation goldens when asserted.
+    /// </summary>
+    public int ExpectedExplanationCount { get; init; }
+
+    /// <summary>
+    /// Gets exact diagnostic or selected explanation mismatches in stable order.
+    /// </summary>
+    public ImmutableArray<string> ExpectationFailures { get; init; } = [];
+}
 
 /// <summary>
 /// Reports one deterministic corpus execution and its quality-gate outcome.

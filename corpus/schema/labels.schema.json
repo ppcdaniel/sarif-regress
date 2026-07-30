@@ -40,7 +40,8 @@
             ]
           }
         }
-      }
+      },
+      "uniqueItems": true
     },
     "expectedAmbiguous": {
       "type": "array",
@@ -78,6 +79,195 @@
       },
       "uniqueItems": true,
       "default": []
+    },
+    "expectedDiagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      },
+      "uniqueItems": true
+    },
+    "expectedExplanations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/explanation"
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "findingKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "stage",
+        "message"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "input",
+            "jsonPointer"
+          ]
+        },
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "input"
+                ]
+              },
+              {
+                "required": [
+                  "runIndex"
+                ]
+              },
+              {
+                "required": [
+                  "resultIndex"
+                ]
+              },
+              {
+                "required": [
+                  "jsonPointer"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "input": {
+          "enum": [
+            "baseline",
+            "candidate",
+            "configuration",
+            "corpus"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z]+[0-9]{4}$"
+        },
+        "severity": {
+          "enum": [
+            "note",
+            "warning",
+            "error"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "io",
+            "parse",
+            "schema",
+            "unsupported",
+            "canonicalisation",
+            "repository",
+            "fingerprint",
+            "match",
+            "github-compat",
+            "security",
+            "report",
+            "internal"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "resultIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "jsonPointer": {
+          "type": "string",
+          "pattern": "^(|/.*)$"
+        },
+        "standardBasis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "help": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "explanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "precedenceTier",
+        "ambiguous",
+        "evidenceKinds"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "baselineKey"
+          ]
+        },
+        {
+          "required": [
+            "candidateKey"
+          ]
+        }
+      ],
+      "properties": {
+        "baselineKey": {
+          "$ref": "#/$defs/findingKey"
+        },
+        "candidateKey": {
+          "$ref": "#/$defs/findingKey"
+        },
+        "classification": {
+          "enum": [
+            "new",
+            "unchanged",
+            "moved",
+            "modified",
+            "resolved",
+            "ambiguous"
+          ]
+        },
+        "precedenceTier": {
+          "enum": [
+            "refuse",
+            "weak-contextual",
+            "path-problem",
+            "strong-moved",
+            "exact-canonical",
+            "exact-producer",
+            "override"
+          ]
+        },
+        "ambiguous": {
+          "type": "boolean"
+        },
+        "evidenceKinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
     }
   }
 }

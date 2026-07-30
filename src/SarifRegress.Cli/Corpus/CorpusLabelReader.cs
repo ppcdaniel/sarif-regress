@@ -90,6 +90,12 @@ public static class CorpusLabelReader
         {
             ExpectedInvalidInputs = ToInputSet(
                 document.ExpectedInvalidInputs),
+            ExpectedDiagnostics = document.ExpectedDiagnostics is null
+                ? default
+                : document.ExpectedDiagnostics.ToImmutableArray(),
+            ExpectedExplanations = document.ExpectedExplanations is null
+                ? default
+                : document.ExpectedExplanations.ToImmutableArray(),
         };
     }
 
@@ -164,6 +170,8 @@ public static class CorpusLabelReader
         string[]? expectedResolved = null;
         string[]? expectedNew = null;
         string[]? expectedInvalidInputs = null;
+        CorpusDiagnosticExpectation[]? expectedDiagnostics = null;
+        CorpusExplanationExpectation[]? expectedExplanations = null;
         var seenProperties = new HashSet<string>(StringComparer.Ordinal);
         var propertyCount = 0;
         while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
@@ -216,6 +224,18 @@ public static class CorpusLabelReader
                         propertyName);
                     break;
 
+                case "expectedDiagnostics":
+                    expectedDiagnostics = ReadDiagnostics(
+                        ref reader,
+                        limits);
+                    break;
+
+                case "expectedExplanations":
+                    expectedExplanations = ReadExplanations(
+                        ref reader,
+                        limits);
+                    break;
+
                 default:
                     throw new JsonException(
                         $"The corpus label property \"{propertyName}\" is not supported.");
@@ -248,7 +268,9 @@ public static class CorpusLabelReader
             expectedAmbiguous,
             expectedResolved ?? [],
             expectedNew ?? [],
-            expectedInvalidInputs ?? []);
+            expectedInvalidInputs ?? [],
+            expectedDiagnostics,
+            expectedExplanations);
     }
 
     private static LabelPairDocument[] ReadPairs(
@@ -378,6 +400,502 @@ public static class CorpusLabelReader
         }
 
         return values.ToArray();
+    }
+
+    private static CorpusDiagnosticExpectation[] ReadDiagnostics(
+        ref Utf8JsonReader reader,
+        ResourceLimits limits)
+    {
+        if (reader.TokenType != JsonTokenType.StartArray)
+        {
+            throw new JsonException(
+                "The corpus label property \"expectedDiagnostics\" must be an array.");
+        }
+
+        var values = new List<CorpusDiagnosticExpectation>();
+        var unique = new HashSet<CorpusDiagnosticExpectation>();
+        while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+        {
+            EnsureCanAdd(
+                values.Count,
+                "expectedDiagnostics",
+                limits);
+            var value = ReadDiagnostic(ref reader, limits);
+            if (!unique.Add(value))
+            {
+                throw new JsonException(
+                    "The corpus diagnostic expectation array contains a duplicate.");
+            }
+
+            values.Add(value);
+        }
+
+        if (reader.TokenType != JsonTokenType.EndArray)
+        {
+            throw new JsonException(
+                "The corpus diagnostic expectation array was not terminated.");
+        }
+
+        return values.ToArray();
+    }
+
+    private static CorpusDiagnosticExpectation ReadDiagnostic(
+        ref Utf8JsonReader reader,
+        ResourceLimits limits)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException(
+                "A corpus diagnostic expectation must be an object.");
+        }
+
+        InputKind? input = null;
+        string? code = null;
+        DiagnosticSeverity? severity = null;
+        DiagnosticStage? stage = null;
+        string? message = null;
+        int? runIndex = null;
+        int? resultIndex = null;
+        string? jsonPointer = null;
+        string? standardBasis = null;
+        string? help = null;
+        var seenProperties = new HashSet<string>(StringComparer.Ordinal);
+        var propertyCount = 0;
+        while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+        {
+            var propertyName = ReadPropertyName(
+                ref reader,
+                limits,
+                ref propertyCount,
+                seenProperties,
+                "diagnostic expectation object");
+            ReadNextValue(ref reader);
+            switch (propertyName)
+            {
+                case "input":
+                    input = ParseInput(
+                        ReadNonEmptyString(
+                            ref reader,
+                            limits,
+                            propertyName));
+                    break;
+
+                case "code":
+                    code = ReadNonEmptyString(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    ValidateDiagnosticCode(code);
+                    break;
+
+                case "severity":
+                    severity = ParseSeverity(
+                        ReadNonEmptyString(
+                            ref reader,
+                            limits,
+                            propertyName));
+                    break;
+
+                case "stage":
+                    stage = ParseStage(
+                        ReadNonEmptyString(
+                            ref reader,
+                            limits,
+                            propertyName));
+                    break;
+
+                case "message":
+                    message = ReadNonEmptyString(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    break;
+
+                case "runIndex":
+                    runIndex = ReadNonNegativeInteger(
+                        ref reader,
+                        propertyName);
+                    break;
+
+                case "resultIndex":
+                    resultIndex = ReadNonNegativeInteger(
+                        ref reader,
+                        propertyName);
+                    break;
+
+                case "jsonPointer":
+                    jsonPointer = ReadRequiredString(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    ValidateJsonPointer(jsonPointer);
+                    break;
+
+                case "standardBasis":
+                    standardBasis = ReadNonEmptyString(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    break;
+
+                case "help":
+                    help = ReadNonEmptyString(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    break;
+
+                default:
+                    throw new JsonException(
+                        $"The corpus diagnostic property \"{propertyName}\" is not supported.");
+            }
+        }
+
+        if (reader.TokenType != JsonTokenType.EndObject)
+        {
+            throw new JsonException(
+                "A corpus diagnostic expectation object was not terminated.");
+        }
+
+        if (code is null ||
+            severity is null ||
+            stage is null ||
+            message is null)
+        {
+            throw new JsonException(
+                "A diagnostic expectation requires code, severity, stage, and message.");
+        }
+
+        var hasSourceFields =
+            input.HasValue ||
+            runIndex.HasValue ||
+            resultIndex.HasValue ||
+            jsonPointer is not null;
+        if (hasSourceFields && (input is null || jsonPointer is null))
+        {
+            throw new JsonException(
+                "A diagnostic expectation source requires input and jsonPointer; source fields must otherwise all be omitted.");
+        }
+
+        return new CorpusDiagnosticExpectation(
+            code,
+            severity.Value,
+            stage.Value,
+            message,
+            input,
+            runIndex,
+            resultIndex,
+            jsonPointer,
+            standardBasis,
+            help);
+    }
+
+    private static CorpusExplanationExpectation[] ReadExplanations(
+        ref Utf8JsonReader reader,
+        ResourceLimits limits)
+    {
+        if (reader.TokenType != JsonTokenType.StartArray)
+        {
+            throw new JsonException(
+                "The corpus label property \"expectedExplanations\" must be an array.");
+        }
+
+        var values = new List<CorpusExplanationExpectation>();
+        var identities = new HashSet<ExplanationExpectationIdentity>();
+        while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+        {
+            EnsureCanAdd(
+                values.Count,
+                "expectedExplanations",
+                limits);
+            var value = ReadExplanation(ref reader, limits);
+            var identity = new ExplanationExpectationIdentity(
+                value.BaselineKey,
+                value.CandidateKey,
+                value.Classification);
+            if (!identities.Add(identity))
+            {
+                throw new JsonException(
+                    "The corpus explanation expectation array contains a duplicate decision identity.");
+            }
+
+            values.Add(value);
+        }
+
+        if (reader.TokenType != JsonTokenType.EndArray)
+        {
+            throw new JsonException(
+                "The corpus explanation expectation array was not terminated.");
+        }
+
+        return values.ToArray();
+    }
+
+    private static CorpusExplanationExpectation ReadExplanation(
+        ref Utf8JsonReader reader,
+        ResourceLimits limits)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException(
+                "A corpus explanation expectation must be an object.");
+        }
+
+        string? baselineKey = null;
+        string? candidateKey = null;
+        FindingClassification? classification = null;
+        PrecedenceTier? precedenceTier = null;
+        bool? ambiguous = null;
+        string[]? evidenceKinds = null;
+        var seenProperties = new HashSet<string>(StringComparer.Ordinal);
+        var propertyCount = 0;
+        while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+        {
+            var propertyName = ReadPropertyName(
+                ref reader,
+                limits,
+                ref propertyCount,
+                seenProperties,
+                "explanation expectation object");
+            ReadNextValue(ref reader);
+            switch (propertyName)
+            {
+                case "baselineKey":
+                    baselineKey = ReadNonEmptyString(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    break;
+
+                case "candidateKey":
+                    candidateKey = ReadNonEmptyString(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    break;
+
+                case "classification":
+                    classification = ParseClassification(
+                        ReadNonEmptyString(
+                            ref reader,
+                            limits,
+                            propertyName));
+                    break;
+
+                case "precedenceTier":
+                    precedenceTier = ParsePrecedenceTier(
+                        ReadNonEmptyString(
+                            ref reader,
+                            limits,
+                            propertyName));
+                    break;
+
+                case "ambiguous":
+                    ambiguous = ReadBoolean(
+                        ref reader,
+                        propertyName);
+                    break;
+
+                case "evidenceKinds":
+                    evidenceKinds = ReadUniqueNonEmptyStringArray(
+                        ref reader,
+                        limits,
+                        propertyName);
+                    break;
+
+                default:
+                    throw new JsonException(
+                        $"The corpus explanation property \"{propertyName}\" is not supported.");
+            }
+        }
+
+        if (reader.TokenType != JsonTokenType.EndObject)
+        {
+            throw new JsonException(
+                "A corpus explanation expectation object was not terminated.");
+        }
+
+        if (classification is null ||
+            precedenceTier is null ||
+            ambiguous is null ||
+            evidenceKinds is null)
+        {
+            throw new JsonException(
+                "An explanation expectation requires classification, precedenceTier, ambiguous, and evidenceKinds.");
+        }
+
+        if (baselineKey is null && candidateKey is null)
+        {
+            throw new JsonException(
+                "An explanation expectation requires baselineKey or candidateKey.");
+        }
+
+        return new CorpusExplanationExpectation(
+            baselineKey,
+            candidateKey,
+            classification.Value,
+            precedenceTier.Value,
+            ambiguous.Value,
+            evidenceKinds.ToImmutableArray());
+    }
+
+    private static string[] ReadUniqueNonEmptyStringArray(
+        ref Utf8JsonReader reader,
+        ResourceLimits limits,
+        string propertyName)
+    {
+        var values = ReadStringArray(ref reader, limits, propertyName);
+        var unique = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var value in values)
+        {
+            if (value.Length == 0)
+            {
+                throw new JsonException(
+                    $"The corpus label value \"{propertyName}\" cannot contain an empty string.");
+            }
+
+            if (!unique.Add(value))
+            {
+                throw new JsonException(
+                    $"The corpus label array \"{propertyName}\" contains duplicate value \"{value}\".");
+            }
+        }
+
+        return values;
+    }
+
+    private static string ReadNonEmptyString(
+        ref Utf8JsonReader reader,
+        ResourceLimits limits,
+        string propertyName)
+    {
+        var value = ReadRequiredString(
+            ref reader,
+            limits,
+            propertyName);
+        if (value.Length == 0)
+        {
+            throw new JsonException(
+                $"The corpus label value \"{propertyName}\" cannot be empty.");
+        }
+
+        return value;
+    }
+
+    private static int ReadNonNegativeInteger(
+        ref Utf8JsonReader reader,
+        string propertyName)
+    {
+        if (reader.TokenType != JsonTokenType.Number ||
+            !reader.TryGetInt32(out var value) ||
+            value < 0)
+        {
+            throw new JsonException(
+                $"The corpus label value \"{propertyName}\" must be a non-negative 32-bit integer.");
+        }
+
+        return value;
+    }
+
+    private static bool ReadBoolean(
+        ref Utf8JsonReader reader,
+        string propertyName) =>
+        reader.TokenType switch
+        {
+            JsonTokenType.True => true,
+            JsonTokenType.False => false,
+            _ => throw new JsonException(
+                $"The corpus label value \"{propertyName}\" must be a boolean."),
+        };
+
+    private static InputKind ParseInput(string value) =>
+        value switch
+        {
+            "baseline" => InputKind.Baseline,
+            "candidate" => InputKind.Candidate,
+            "configuration" => InputKind.Configuration,
+            "corpus" => InputKind.Corpus,
+            _ => throw new JsonException(
+                $"Invalid diagnostic input '{value}'."),
+        };
+
+    private static DiagnosticSeverity ParseSeverity(string value) =>
+        value switch
+        {
+            "note" => DiagnosticSeverity.Note,
+            "warning" => DiagnosticSeverity.Warning,
+            "error" => DiagnosticSeverity.Error,
+            _ => throw new JsonException(
+                $"Invalid diagnostic severity '{value}'."),
+        };
+
+    private static DiagnosticStage ParseStage(string value) =>
+        value switch
+        {
+            "io" => DiagnosticStage.Io,
+            "parse" => DiagnosticStage.Parse,
+            "schema" => DiagnosticStage.Schema,
+            "unsupported" => DiagnosticStage.Unsupported,
+            "canonicalisation" => DiagnosticStage.Canonicalisation,
+            "repository" => DiagnosticStage.Repository,
+            "fingerprint" => DiagnosticStage.Fingerprint,
+            "match" => DiagnosticStage.Match,
+            "github-compat" => DiagnosticStage.GithubCompatibility,
+            "security" => DiagnosticStage.Security,
+            "report" => DiagnosticStage.Report,
+            "internal" => DiagnosticStage.Internal,
+            _ => throw new JsonException(
+                $"Invalid diagnostic stage '{value}'."),
+        };
+
+    private static FindingClassification ParseClassification(string value) =>
+        value switch
+        {
+            "new" => FindingClassification.New,
+            "unchanged" => FindingClassification.Unchanged,
+            "moved" => FindingClassification.Moved,
+            "modified" => FindingClassification.Modified,
+            "resolved" => FindingClassification.Resolved,
+            "ambiguous" => FindingClassification.Ambiguous,
+            _ => throw new JsonException(
+                $"Invalid explanation classification '{value}'."),
+        };
+
+    private static PrecedenceTier ParsePrecedenceTier(string value) =>
+        value switch
+        {
+            "refuse" => PrecedenceTier.Refuse,
+            "weak-contextual" => PrecedenceTier.WeakContextual,
+            "path-problem" => PrecedenceTier.PathProblem,
+            "strong-moved" => PrecedenceTier.StrongMoved,
+            "exact-canonical" => PrecedenceTier.ExactCanonical,
+            "exact-producer" => PrecedenceTier.ExactProducer,
+            "override" => PrecedenceTier.Override,
+            _ => throw new JsonException(
+                $"Invalid explanation precedence tier '{value}'."),
+        };
+
+    private static void ValidateDiagnosticCode(string value)
+    {
+        var prefixLength = value.Length - 4;
+        if (prefixLength <= 0 ||
+            value[..prefixLength].Any(character =>
+                character is < 'A' or > 'Z') ||
+            value[prefixLength..].Any(character =>
+                character is < '0' or > '9'))
+        {
+            throw new JsonException(
+                $"Invalid diagnostic code '{value}'.");
+        }
+    }
+
+    private static void ValidateJsonPointer(string value)
+    {
+        if (value.Length > 0 && value[0] != '/')
+        {
+            throw new JsonException(
+                "A diagnostic jsonPointer must be empty or begin with '/'.");
+        }
     }
 
     private static string ReadPropertyName(
@@ -611,11 +1129,54 @@ public static class CorpusLabelReader
             .Concat(document.ExpectedAmbiguous)
             .Concat(document.ExpectedResolved)
             .Concat(document.ExpectedNew)
-            .Concat(document.ExpectedInvalidInputs);
+            .Concat(document.ExpectedInvalidInputs)
+            .Concat(EnumerateExpectationStrings(document));
         if (values.Any(value =>
                 value.Length > limits.MaximumStringCharacters))
         {
             throw CreateStringLimitException();
+        }
+    }
+
+    private static IEnumerable<string> EnumerateExpectationStrings(
+        LabelDocument document)
+    {
+        foreach (var diagnostic in document.ExpectedDiagnostics ?? [])
+        {
+            yield return diagnostic.Code;
+            yield return diagnostic.Message;
+            if (diagnostic.JsonPointer is not null)
+            {
+                yield return diagnostic.JsonPointer;
+            }
+
+            if (diagnostic.StandardBasis is not null)
+            {
+                yield return diagnostic.StandardBasis;
+            }
+
+            if (diagnostic.Help is not null)
+            {
+                yield return diagnostic.Help;
+            }
+        }
+
+        foreach (var explanation in document.ExpectedExplanations ?? [])
+        {
+            if (explanation.BaselineKey is not null)
+            {
+                yield return explanation.BaselineKey;
+            }
+
+            if (explanation.CandidateKey is not null)
+            {
+                yield return explanation.CandidateKey;
+            }
+
+            foreach (var evidenceKind in explanation.EvidenceKinds)
+            {
+                yield return evidenceKind;
+            }
         }
     }
 
@@ -635,10 +1196,17 @@ public static class CorpusLabelReader
         string[] ExpectedAmbiguous,
         string[] ExpectedResolved,
         string[] ExpectedNew,
-        string[] ExpectedInvalidInputs);
+        string[] ExpectedInvalidInputs,
+        CorpusDiagnosticExpectation[]? ExpectedDiagnostics,
+        CorpusExplanationExpectation[]? ExpectedExplanations);
 
     private sealed record LabelPairDocument(
         string BaselineKey,
         string CandidateKey,
         string Classification);
+
+    private readonly record struct ExplanationExpectationIdentity(
+        string? BaselineKey,
+        string? CandidateKey,
+        FindingClassification Classification);
 }

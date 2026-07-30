@@ -33,6 +33,10 @@ public static class CorpusQualityGate
             {
                 failures.Add(
                     $"Case '{caseRun.CaseName}' did not satisfy its complete label graph.");
+                failures.AddRange(
+                    caseRun.ExpectationFailures.Select(
+                        failure =>
+                            $"Case '{caseRun.CaseName}': {failure}"));
             }
         }
 

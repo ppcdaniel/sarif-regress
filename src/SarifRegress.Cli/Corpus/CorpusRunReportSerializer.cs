@@ -14,7 +14,10 @@ public static class CorpusRunReportSerializer
     {
         Encoder = JavaScriptEncoder.Default,
         Indented = true,
+        IndentCharacter = ' ',
+        IndentSize = 2,
         MaxDepth = 16,
+        NewLine = "\n",
         SkipValidation = false,
     };
 
@@ -98,12 +101,32 @@ public static class CorpusRunReportSerializer
         writer.WriteBoolean("passed", caseRun.Passed);
         writer.WriteString("artifactKind", caseRun.Artifact.Kind);
         writer.WriteString("artifactSha256", caseRun.Artifact.Sha256);
+        writer.WriteBoolean(
+            "diagnosticExpectationsAsserted",
+            caseRun.DiagnosticExpectationsAsserted);
+        writer.WriteNumber(
+            "expectedDiagnosticCount",
+            caseRun.ExpectedDiagnosticCount);
+        writer.WriteBoolean(
+            "explanationExpectationsAsserted",
+            caseRun.ExplanationExpectationsAsserted);
+        writer.WriteNumber(
+            "expectedExplanationCount",
+            caseRun.ExpectedExplanationCount);
         writer.WritePropertyName("artifact");
         using (var artifact = JsonDocument.Parse(caseRun.Artifact.Json.ToArray()))
         {
             artifact.RootElement.WriteTo(writer);
         }
 
+        writer.WriteStartArray("expectationFailures");
+        foreach (var failure in caseRun.ExpectationFailures.Order(
+                     StringComparer.Ordinal))
+        {
+            writer.WriteStringValue(failure);
+        }
+
+        writer.WriteEndArray();
         WriteMetrics(writer, "metrics", caseRun.Metrics);
         writer.WriteEndObject();
     }

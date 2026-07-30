@@ -55,11 +55,13 @@ public static class CorpusCaseArtifactSerializer
     public static CorpusCaseArtifact CreateInvalidInputDiagnostics(
         string caseName,
         SarifIngestionResult baseline,
-        SarifIngestionResult candidate)
+        SarifIngestionResult candidate,
+        IEnumerable<Diagnostic> configurationDiagnostics)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(caseName);
         ArgumentNullException.ThrowIfNull(baseline);
         ArgumentNullException.ThrowIfNull(candidate);
+        ArgumentNullException.ThrowIfNull(configurationDiagnostics);
 
         using var stream = new MemoryStream();
         using (var writer = new Utf8JsonWriter(stream, WriterOptions))
@@ -68,6 +70,14 @@ public static class CorpusCaseArtifactSerializer
             writer.WriteString("artifactSchemaVersion", "1");
             writer.WriteString("kind", DiagnosticsKind);
             writer.WriteString("caseName", caseName);
+            writer.WriteStartArray("configurationDiagnostics");
+            foreach (var diagnostic in Diagnostic.Sort(
+                         configurationDiagnostics))
+            {
+                WriteDiagnostic(writer, diagnostic);
+            }
+
+            writer.WriteEndArray();
             writer.WriteStartArray("inputs");
             WriteInput(writer, InputKind.Baseline, baseline);
             WriteInput(writer, InputKind.Candidate, candidate);

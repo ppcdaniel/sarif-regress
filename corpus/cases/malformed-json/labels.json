@@ -6,5 +6,16 @@
   "expectedNew": [],
   "expectedInvalidInputs": [
     "baseline"
-  ]
+  ],
+  "expectedDiagnostics": [
+    {
+      "input": "baseline",
+      "code": "PARSE0100",
+      "severity": "error",
+      "stage": "parse",
+      "message": "The SARIF input is not valid JSON.",
+      "jsonPointer": ""
+    }
+  ],
+  "expectedExplanations": []
 }
