@@ -223,10 +223,7 @@
       ],
       "properties": {
         "startLine": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": "integer",
           "minimum": 1
         },
         "startColumn": {

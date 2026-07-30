@@ -1,0 +1,215 @@
+using System.Collections.Immutable;
+using SarifRegress.Core.Configuration;
+using SarifRegress.Core.Diagnostics;
+using SarifRegress.Core.Paths;
+using SarifRegress.Sarif.Canonicalization;
+
+namespace SarifRegress.UnitTests;
+
+public sealed class PathCanonicalizerTests
+{
+    [Theory]
+    [InlineData(@"C:\repo\file.cs", PathKind.DriveAbsolute)]
+    [InlineData(@"C:file.cs", PathKind.DriveRelative)]
+    [InlineData(@"\repo\file.cs", PathKind.RootRelative)]
+    [InlineData(@"\\server\share\file.cs", PathKind.Unc)]
+    [InlineData(@"\\?\C:\repo\file.cs", PathKind.Device)]
+    [InlineData(@"\\?\UNC\server\share\file.cs", PathKind.DeviceUnc)]
+    [InlineData("file:///C:/repo/file.cs", PathKind.FileUri)]
+    [InlineData("/repo/file.cs", PathKind.PosixAbsolute)]
+    [InlineData("src/file.cs", PathKind.RepositoryRelative)]
+    [InlineData("https://example.test/file.cs", PathKind.ExternalUri)]
+    public void Classify_is_independent_of_the_host_operating_system(
+        string value,
+        PathKind expected)
+    {
+        Assert.Equal(expected, PathCanonicalizer.Classify(value));
+    }
+
+    [Fact]
+    public void Drive_relative_and_drive_absolute_paths_remain_distinct()
+    {
+        var canonicalizer = new PathCanonicalizer();
+
+        var driveRelative = canonicalizer.Canonicalize(@"C:file.cs");
+        var driveAbsolute = canonicalizer.Canonicalize(@"C:\file.cs");
+
+        Assert.Equal(PathKind.DriveRelative, driveRelative.Kind);
+        Assert.Equal(PathKind.DriveAbsolute, driveAbsolute.Kind);
+        Assert.NotEqual(driveRelative.CanonicalUri, driveAbsolute.CanonicalUri);
+    }
+
+    [Fact]
+    public void Configured_rebase_produces_a_repository_uri()
+    {
+        var configuration = CreateConfiguration(
+            repositoryRoot: null,
+            pathRebases:
+            [
+                new PathRebase(
+                    "file:///C:/agent/_work/1/s/",
+                    "repo:/"),
+            ]);
+        var canonicalizer = new PathCanonicalizer(configuration);
+
+        var path = canonicalizer.Canonicalize(
+            "file:///C:/agent/_work/1/s/src/%41-File.cs");
+
+        Assert.Equal("repo://src/A-File.cs", path.CanonicalUri);
+        Assert.Equal("src/A-File.cs", path.RepositoryRelativePath);
+        Assert.Contains(
+            path.Transformations,
+            item => item.Kind == "configured-path-rebase");
+        Assert.Contains(
+            path.Transformations,
+            item => item.Kind == "safe-percent-decode");
+    }
+
+    [Fact]
+    public void Reserved_percent_escapes_are_not_decoded()
+    {
+        var path = new PathCanonicalizer()
+            .Canonicalize("src/A%20File%2FName.cs");
+
+        Assert.Equal("repo://src/A%20File%2FName.cs", path.CanonicalUri);
+        Assert.DoesNotContain(
+            path.Transformations,
+            item => item.Kind == "safe-percent-decode");
+    }
+
+    [Fact]
+    public void Rebase_prefix_must_end_on_a_complete_path_segment()
+    {
+        var canonicalizer = new PathCanonicalizer(
+            CreateConfiguration(
+                repositoryRoot: null,
+                pathRebases:
+                [
+                    new PathRebase("src", "repo:/"),
+                ]));
+
+        var path = canonicalizer.Canonicalize("src-old/file.cs");
+
+        Assert.Equal("repo://src-old/file.cs", path.CanonicalUri);
+        Assert.DoesNotContain(
+            path.Transformations,
+            item => item.Kind == "configured-path-rebase");
+    }
+
+    [Fact]
+    public void Longest_complete_rebase_prefix_wins()
+    {
+        var canonicalizer = new PathCanonicalizer(
+            CreateConfiguration(
+                repositoryRoot: null,
+                pathRebases:
+                [
+                    new PathRebase("file:///agent/", "external:/"),
+                    new PathRebase("file:///agent/work/", "repo:/"),
+                ]));
+
+        var path = canonicalizer.Canonicalize(
+            "file:///agent/work/src/a.cs");
+
+        Assert.Equal("repo://src/a.cs", path.CanonicalUri);
+    }
+
+    [Fact]
+    public void Resolved_logical_value_is_reclassified_before_namespacing()
+    {
+        var path = new PathCanonicalizer().Canonicalize(
+            "src/a.cs",
+            resolvedValue: "/outside/src/a.cs");
+
+        Assert.Equal(PathKind.RepositoryRelative, path.Kind);
+        Assert.Null(path.RepositoryRelativePath);
+        Assert.Equal("file:///outside/src/a.cs", path.CanonicalUri);
+    }
+
+    [Fact]
+    public void Repository_root_matching_is_lexical_and_cross_platform()
+    {
+        var canonicalizer = new PathCanonicalizer(
+            CreateConfiguration(repositoryRoot: @"C:\work\repo"));
+
+        var path = canonicalizer.Canonicalize(
+            "file:///C:/work/repo/src/a.cs");
+
+        Assert.Equal("repo://src/a.cs", path.CanonicalUri);
+        Assert.Equal(PathKind.FileUri, path.Kind);
+    }
+
+    [Fact]
+    public void Parent_traversal_above_repository_root_fails_closed()
+    {
+        var sourceReference = new SourceReference(
+            InputKind.Baseline,
+            0,
+            0,
+            "/runs/0/results/0/locations/0");
+
+        var path = new PathCanonicalizer().Canonicalize(
+            "../../secret.txt",
+            sourceReference: sourceReference);
+
+        var diagnostic = Assert.Single(path.Diagnostics);
+        Assert.Equal("CANON0001", diagnostic.Code);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Null(path.RepositoryRelativePath);
+        Assert.StartsWith(
+            "unresolved://repository/",
+            path.CanonicalUri,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Configured_ascii_case_semantics_are_explicit_and_recorded()
+    {
+        var configuration = CreateConfiguration(
+            repositoryRoot: null,
+            caseSensitivity: PathCaseSensitivity.AsciiInsensitive);
+
+        var path = new PathCanonicalizer(configuration)
+            .Canonicalize("SRC/File.CS");
+
+        Assert.Equal("repo://src/file.cs", path.CanonicalUri);
+        Assert.Contains(
+            path.Transformations,
+            item =>
+                item.Kind == "configured-ascii-case-fold" &&
+                item.IsLossy);
+    }
+
+    [Fact]
+    public void Reserved_windows_names_are_diagnosed_without_rewriting()
+    {
+        var path = new PathCanonicalizer()
+            .Canonicalize(@"C:\repo\CON.cs");
+
+        Assert.Equal("win-drive://C:/repo/CON.cs", path.CanonicalUri);
+        Assert.Contains(
+            path.Diagnostics,
+            item => item.Code == "CANON0004");
+    }
+
+    private static SarifRegressConfiguration CreateConfiguration(
+        string? repositoryRoot,
+        IEnumerable<PathRebase>? pathRebases = null,
+        PathCaseSensitivity caseSensitivity = PathCaseSensitivity.Sensitive)
+    {
+        var defaults = SarifRegressConfiguration.Default;
+        return new SarifRegressConfiguration(
+            defaults.SchemaVersion,
+            repositoryRoot,
+            pathRebases ?? [],
+            defaults.PathAliases,
+            defaults.RuleAliases,
+            defaults.Matching with
+            {
+                PathCaseSensitivity = caseSensitivity,
+            },
+            defaults.Policy,
+            defaults.Reporting,
+            defaults.Limits);
+    }
+}

@@ -112,15 +112,11 @@ public sealed class CanonicalSarifProjectionTests
     }
 
     [Fact]
-    public void Project_RegionWithoutStartLine_OmitsInvalidSarifRegion()
+    public void Project_FindingWithoutRegion_OmitsSarifRegion()
     {
         var report = ReportTestData.CreateSingleCandidateReport(
             "repo://src/plain.cs",
-            new Region(
-                startLine: null,
-                startColumn: 4,
-                endLine: null,
-                endColumn: null),
+            region: null,
             includeDerivedFingerprint: true);
         var stableJson = StableJsonReportSerializer.Serialize(report);
 

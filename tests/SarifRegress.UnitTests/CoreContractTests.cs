@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using SarifRegress.Core;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
+using SarifRegress.Core.Findings;
 using SarifRegress.Core.Matching;
 using SarifRegress.Core.Paths;
 using SarifRegress.Core.Security;
@@ -130,6 +131,21 @@ public sealed class CoreContractTests
         };
 
         Assert.Throws<ArgumentOutOfRangeException>(invalidLimits.Validate);
+    }
+
+    [Fact]
+    public void Line_regions_require_a_start_line()
+    {
+        Assert.Throws<ArgumentException>(
+            () => new Region(null, 1, null, 2));
+    }
+
+    [Fact]
+    public void Same_line_region_cannot_end_before_its_start_column()
+    {
+        Assert.Throws<ArgumentException>(
+            () => new Region(1, 5, 1, 4));
+        Assert.Equal(5, new Region(1, 5, 1, 5).EndColumn);
     }
 
     [Fact]

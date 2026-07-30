@@ -43,6 +43,13 @@ public sealed record Region
         int? endLine,
         int? endColumn)
     {
+        if (!startLine.HasValue)
+        {
+            throw new ArgumentException(
+                "A line-and-column SARIF region must specify a start line.",
+                nameof(startLine));
+        }
+
         ValidatePositive(startLine, nameof(startLine));
         ValidatePositive(startColumn, nameof(startColumn));
         ValidatePositive(endLine, nameof(endLine));
@@ -51,6 +58,16 @@ public sealed record Region
         if (startLine.HasValue && endLine.HasValue && endLine < startLine)
         {
             throw new ArgumentException("The end line cannot precede the start line.");
+        }
+
+        var effectiveEndLine = endLine ?? startLine.Value;
+        var effectiveStartColumn = startColumn ?? 1;
+        if (effectiveEndLine == startLine.Value &&
+            endColumn.HasValue &&
+            endColumn.Value < effectiveStartColumn)
+        {
+            throw new ArgumentException(
+                "The end column cannot precede the start column on the same line.");
         }
 
         StartLine = startLine;

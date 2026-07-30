@@ -158,7 +158,7 @@ internal static class ReportTestData
 
     public static ComparisonReport CreateSingleCandidateReport(
         string canonicalUri,
-        Region region,
+        Region? region,
         bool includeDerivedFingerprint)
     {
         var candidate = CreateFinding(
