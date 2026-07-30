@@ -91,3 +91,101 @@ jobs:
           path: artifacts/bench-smoke
           if-no-files-found: error
           retention-days: 30
+
+  package-smoke:
+    name: Package (${{ matrix.label }})
+    needs: build-test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux
+            os: ubuntu-latest
+          - label: windows
+            os: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Package and smoke-test on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/package.sh
+          (
+            cd artifacts/release
+            sha256sum --check checksums.sha256
+          )
+          artifacts/release/sarif-regress-linux-x64 --help >/dev/null
+          shopt -s nullglob
+          package_files=(artifacts/release/SarifRegress.Tool.*.nupkg)
+          test "${#package_files[@]}" -eq 1
+          package_name="$(basename -- "${package_files[0]}")"
+          package_version="${package_name#SarifRegress.Tool.}"
+          package_version="${package_version%.nupkg}"
+          dotnet tool install \
+            --tool-path artifacts/tool \
+            --add-source artifacts/release \
+            --ignore-failed-sources \
+            SarifRegress.Tool \
+            --version "${package_version}"
+          artifacts/tool/sarif-regress --help >/dev/null
+
+      - name: Package and smoke-test on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\scripts\package.ps1
+          foreach ($line in Get-Content artifacts/release/checksums.sha256) {
+            $parts = $line -split '  ', 2
+            $actual = (
+              Get-FileHash `
+                -LiteralPath (Join-Path artifacts/release $parts[1]) `
+                -Algorithm SHA256
+            ).Hash.ToLowerInvariant()
+            if ($actual -ne $parts[0]) {
+              throw "Checksum mismatch for $($parts[1])."
+            }
+          }
+          & .\artifacts\release\sarif-regress-win-x64.exe --help | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The Windows self-contained executable failed."
+          }
+          $packageFiles = @(
+            Get-ChildItem `
+              -LiteralPath artifacts/release `
+              -Filter 'SarifRegress.Tool.*.nupkg' `
+              -File
+          )
+          if ($packageFiles.Count -ne 1 -or
+              $packageFiles[0].Name -notmatch
+                '^SarifRegress\.Tool\.(.+)\.nupkg$') {
+            throw 'Expected exactly one versioned .NET tool package.'
+          }
+          $packageVersion = $Matches[1]
+          & dotnet tool install `
+            --tool-path artifacts/tool `
+            --add-source artifacts/release `
+            --ignore-failed-sources `
+            SarifRegress.Tool `
+            --version $packageVersion
+          if ($LASTEXITCODE -ne 0) {
+            throw "The .NET tool package could not be installed."
+          }
+          & .\artifacts\tool\sarif-regress.exe --help | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The installed .NET tool failed."
+          }

@@ -3,6 +3,17 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>sarif-regress</AssemblyName>
     <RootNamespace>SarifRegress.Cli</RootNamespace>
+    <Description>Explainable, deterministic SARIF canonicalisation and regression matching.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>sarif-regress</ToolCommandName>
+    <PackageId>SarifRegress.Tool</PackageId>
+    <Title>SarifRegress command-line tool</Title>
+    <PackageTags>sarif;static-analysis;code-scanning;security;developer-tools;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/ppcdaniel/sarif-regress</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,5 +25,22 @@
     <ProjectReference Include="../SarifRegress.Sarif/SarifRegress.Sarif.csproj" />
     <ProjectReference Include="../SarifRegress.Match/SarifRegress.Match.csproj" />
     <ProjectReference Include="../SarifRegress.Report/SarifRegress.Report.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+    <None
+      Include="../../docs/**/*.md"
+      Pack="true"
+      PackagePath="docs/%(RecursiveDir)%(Filename)%(Extension)" />
+    <None
+      Include="../../schemas/*.json"
+      Pack="true"
+      PackagePath="schemas/%(Filename)%(Extension)" />
+    <None
+      Include="../../corpus/schema/*.schema.json"
+      Pack="true"
+      PackagePath="corpus/schema/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
