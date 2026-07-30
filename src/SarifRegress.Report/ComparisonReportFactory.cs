@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Matching;
 using SarifRegress.Core.Reporting;
 using SarifRegress.Core.Security;
@@ -76,15 +75,6 @@ public static class ComparisonReportFactory
 
         var findings = matchResult.Decisions
             .Select(CreateFindingReport)
-            .OrderBy(
-                item => StableJsonNames.Classification(item.Classification),
-                StringComparer.Ordinal)
-            .ThenBy(
-                item => item.Baseline?.FindingKey ?? string.Empty,
-                StringComparer.Ordinal)
-            .ThenBy(
-                item => item.Candidate?.FindingKey ?? string.Empty,
-                StringComparer.Ordinal)
             .ToImmutableArray();
 
         var report = new ComparisonReport(
@@ -95,7 +85,7 @@ public static class ComparisonReportFactory
             metadata.CandidateInputName,
             CreateSummary(findings),
             findings,
-            Diagnostic.Sort(matchResult.Diagnostics),
+            matchResult.Diagnostics,
             new ComparisonMetrics(
                 matchResult.CandidateEdgeCount,
                 matchResult.ComponentCount,
@@ -124,58 +114,7 @@ public static class ComparisonReportFactory
             decision.Candidate is null
                 ? null
                 : FindingSnapshotFactory.Create(decision.Candidate),
-            SortDecision(decision.Decision));
-    }
-
-    private static DecisionTrace SortDecision(DecisionTrace decision)
-    {
-        ArgumentNullException.ThrowIfNull(decision);
-        if (decision.Evidence.IsEmpty
-            && decision.RejectedAlternatives.IsEmpty
-            && decision.Transformations.IsEmpty
-            && decision.Diagnostics.IsEmpty)
-        {
-            return decision;
-        }
-
-        var evidence = decision.Evidence
-            .OrderBy(item => item.Kind, StringComparer.Ordinal)
-            .ThenBy(item => item.BaselineValue ?? string.Empty, StringComparer.Ordinal)
-            .ThenBy(item => item.CandidateValue ?? string.Empty, StringComparer.Ordinal)
-            .ThenBy(item => item.Origin)
-            .ThenBy(item => item.PrecedenceTier)
-            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-            .ThenBy(item => item.Lossy)
-            .ToImmutableArray();
-
-        var rejectedAlternatives = decision.RejectedAlternatives
-            .OrderBy(item => item.FindingKey, StringComparer.Ordinal)
-            .ThenBy(item => item.Reason, StringComparer.Ordinal)
-            .ThenBy(item => item.PrecedenceTier)
-            .ThenBy(item => item.DecisionVector.PrecedenceTier)
-            .ThenBy(item => item.DecisionVector.ProducerFingerprintStrength)
-            .ThenBy(item => item.DecisionVector.PathMatchKind)
-            .ThenBy(item => item.DecisionVector.ContextAgreement)
-            .ThenBy(item => item.DecisionVector.CodeFlowAgreement)
-            .ThenBy(item => item.DecisionVector.MessageAgreement)
-            .ThenBy(item => item.DecisionVector.RegionDriftBand)
-            .ToImmutableArray();
-
-        var transformations = decision.Transformations
-            .OrderBy(item => item.Kind, StringComparer.Ordinal)
-            .ThenBy(item => item.OriginalValue ?? string.Empty, StringComparer.Ordinal)
-            .ThenBy(item => item.TransformedValue ?? string.Empty, StringComparer.Ordinal)
-            .ThenBy(item => item.IsLossy)
-            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-            .ToImmutableArray();
-
-        return decision with
-        {
-            Evidence = evidence,
-            RejectedAlternatives = rejectedAlternatives,
-            Transformations = transformations,
-            Diagnostics = Diagnostic.Sort(decision.Diagnostics),
-        };
+            decision.Decision);
     }
 
     private static ComparisonSummary CreateSummary(

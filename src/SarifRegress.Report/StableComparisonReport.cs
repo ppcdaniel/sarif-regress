@@ -67,18 +67,25 @@ internal static class StableComparisonReport
             ValidateDiagnostic(diagnostic, "diagnostics[]", limits);
         }
 
-        var findings = normalizedFindings
-            .OrderBy(
-                item => StableJsonNames.Classification(item.Classification),
-                StringComparer.Ordinal)
-            .ThenBy(
-                item => item.Baseline?.FindingKey ?? string.Empty,
-                StringComparer.Ordinal)
-            .ThenBy(
-                item => item.Candidate?.FindingKey ?? string.Empty,
-                StringComparer.Ordinal)
-            .ToImmutableArray();
-        var diagnostics = Diagnostic.Sort(report.Diagnostics);
+        var normalizedFindingArray = normalizedFindings.MoveToImmutable();
+        var findings = IsOrdered(
+                normalizedFindingArray,
+                CompareFindingReports)
+            ? normalizedFindingArray
+            : normalizedFindingArray
+                .OrderBy(
+                    item => StableJsonNames.Classification(item.Classification),
+                    StringComparer.Ordinal)
+                .ThenBy(
+                    item => item.Baseline?.FindingKey ?? string.Empty,
+                    StringComparer.Ordinal)
+                .ThenBy(
+                    item => item.Candidate?.FindingKey ?? string.Empty,
+                    StringComparer.Ordinal)
+                .ToImmutableArray();
+        var diagnostics = report.Diagnostics.Length <= 1
+            ? report.Diagnostics
+            : Diagnostic.Sort(report.Diagnostics);
         var expectedSummary = CreateSummary(findings);
         if (report.Summary != expectedSummary)
         {
@@ -215,6 +222,13 @@ internal static class StableComparisonReport
             matcherAlgorithm,
             limits);
 
+        if (ReferenceEquals(baseline, finding.Baseline)
+            && ReferenceEquals(candidate, finding.Candidate)
+            && ReferenceEquals(decision, finding.Decision))
+        {
+            return finding;
+        }
+
         return finding with
         {
             Baseline = baseline,
@@ -304,7 +318,10 @@ internal static class StableComparisonReport
             snapshot.DerivedFingerprints,
             $"{propertyName}.derivedFingerprints",
             limits.MaximumRunCollectionItems);
-        var fingerprintNames = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<string>? fingerprintNames =
+            snapshot.DerivedFingerprints.Length > 1
+                ? new HashSet<string>(StringComparer.Ordinal)
+                : null;
         foreach (var fingerprint in snapshot.DerivedFingerprints)
         {
             if (fingerprint is null)
@@ -338,18 +355,29 @@ internal static class StableComparisonReport
                     $"Derived fingerprint '{fingerprint.Name}' has an unsupported algorithm version.");
             }
 
-            if (!fingerprintNames.Add(fingerprint.Name))
+            if (fingerprintNames is not null
+                && !fingerprintNames.Add(fingerprint.Name))
             {
                 throw Invalid(
                     $"Derived fingerprint name '{fingerprint.Name}' occurs more than once.");
             }
         }
 
-        var fingerprints = snapshot.DerivedFingerprints
-            .OrderBy(item => item.Name, StringComparer.Ordinal)
-            .ThenBy(item => item.Value, StringComparer.Ordinal)
-            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-            .ToImmutableArray();
+        var fingerprints = snapshot.DerivedFingerprints.Length <= 1
+            || IsOrdered(snapshot.DerivedFingerprints, CompareDerivedFingerprints)
+                ? snapshot.DerivedFingerprints
+                : snapshot.DerivedFingerprints
+                    .OrderBy(item => item.Name, StringComparer.Ordinal)
+                    .ThenBy(item => item.Value, StringComparer.Ordinal)
+                    .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+                    .ToImmutableArray();
+        if (messageNormalisationFlags.Equals(snapshot.MessageNormalisationFlags)
+            && lossiness.Equals(snapshot.Lossiness)
+            && fingerprints.Equals(snapshot.DerivedFingerprints))
+        {
+            return snapshot;
+        }
+
         return snapshot with
         {
             MessageNormalisationFlags = messageNormalisationFlags,
@@ -370,6 +398,12 @@ internal static class StableComparisonReport
         foreach (var value in values)
         {
             RequireText(value, $"{propertyName}[]", limits);
+        }
+
+        if (values.Length <= 1
+            || IsStrictlyOrdered(values, StringComparer.Ordinal.Compare))
+        {
+            return values;
         }
 
         return values
@@ -515,41 +549,67 @@ internal static class StableComparisonReport
             return decision;
         }
 
+        var evidence = decision.Evidence.Length <= 1
+            || IsOrdered(decision.Evidence, CompareEvidence)
+                ? decision.Evidence
+                : decision.Evidence
+                    .OrderBy(item => item.Kind, StringComparer.Ordinal)
+                    .ThenBy(item => item.BaselineValue is null ? 0 : 1)
+                    .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.CandidateValue is null ? 0 : 1)
+                    .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.Origin)
+                    .ThenBy(item => item.PrecedenceTier)
+                    .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+                    .ThenBy(item => item.Lossy)
+                    .ToImmutableArray();
+        var rejectedAlternatives = decision.RejectedAlternatives.Length <= 1
+            || IsOrdered(
+                decision.RejectedAlternatives,
+                CompareRejectedAlternatives)
+                ? decision.RejectedAlternatives
+                : decision.RejectedAlternatives
+                    .OrderBy(item => item.FindingKey, StringComparer.Ordinal)
+                    .ThenBy(item => item.Reason, StringComparer.Ordinal)
+                    .ThenBy(item => item.PrecedenceTier)
+                    .ThenBy(item => item.DecisionVector.PrecedenceTier)
+                    .ThenBy(item =>
+                        item.DecisionVector.ProducerFingerprintStrength)
+                    .ThenBy(item => item.DecisionVector.PathMatchKind)
+                    .ThenBy(item => item.DecisionVector.ContextAgreement)
+                    .ThenBy(item => item.DecisionVector.CodeFlowAgreement)
+                    .ThenBy(item => item.DecisionVector.MessageAgreement)
+                    .ThenBy(item => item.DecisionVector.RegionDriftBand)
+                    .ToImmutableArray();
+        var transformations = decision.Transformations.Length <= 1
+            || IsOrdered(decision.Transformations, CompareTransformations)
+                ? decision.Transformations
+                : decision.Transformations
+                    .OrderBy(item => item.Kind, StringComparer.Ordinal)
+                    .ThenBy(item => item.OriginalValue is null ? 0 : 1)
+                    .ThenBy(item => item.OriginalValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.TransformedValue is null ? 0 : 1)
+                    .ThenBy(item => item.TransformedValue, StringComparer.Ordinal)
+                    .ThenBy(item => item.IsLossy)
+                    .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+                    .ToImmutableArray();
+        var diagnostics = decision.Diagnostics.Length <= 1
+            ? decision.Diagnostics
+            : Diagnostic.Sort(decision.Diagnostics);
+        if (evidence.Equals(decision.Evidence)
+            && rejectedAlternatives.Equals(decision.RejectedAlternatives)
+            && transformations.Equals(decision.Transformations)
+            && diagnostics.Equals(decision.Diagnostics))
+        {
+            return decision;
+        }
+
         return decision with
         {
-            Evidence = decision.Evidence
-                .OrderBy(item => item.Kind, StringComparer.Ordinal)
-                .ThenBy(item => item.BaselineValue is null ? 0 : 1)
-                .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
-                .ThenBy(item => item.CandidateValue is null ? 0 : 1)
-                .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
-                .ThenBy(item => item.Origin)
-                .ThenBy(item => item.PrecedenceTier)
-                .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-                .ThenBy(item => item.Lossy)
-                .ToImmutableArray(),
-            RejectedAlternatives = decision.RejectedAlternatives
-                .OrderBy(item => item.FindingKey, StringComparer.Ordinal)
-                .ThenBy(item => item.Reason, StringComparer.Ordinal)
-                .ThenBy(item => item.PrecedenceTier)
-                .ThenBy(item => item.DecisionVector.PrecedenceTier)
-                .ThenBy(item => item.DecisionVector.ProducerFingerprintStrength)
-                .ThenBy(item => item.DecisionVector.PathMatchKind)
-                .ThenBy(item => item.DecisionVector.ContextAgreement)
-                .ThenBy(item => item.DecisionVector.CodeFlowAgreement)
-                .ThenBy(item => item.DecisionVector.MessageAgreement)
-                .ThenBy(item => item.DecisionVector.RegionDriftBand)
-                .ToImmutableArray(),
-            Transformations = decision.Transformations
-                .OrderBy(item => item.Kind, StringComparer.Ordinal)
-                .ThenBy(item => item.OriginalValue is null ? 0 : 1)
-                .ThenBy(item => item.OriginalValue, StringComparer.Ordinal)
-                .ThenBy(item => item.TransformedValue is null ? 0 : 1)
-                .ThenBy(item => item.TransformedValue, StringComparer.Ordinal)
-                .ThenBy(item => item.IsLossy)
-                .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-                .ToImmutableArray(),
-            Diagnostics = Diagnostic.Sort(decision.Diagnostics),
+            Evidence = evidence,
+            RejectedAlternatives = rejectedAlternatives,
+            Transformations = transformations,
+            Diagnostics = diagnostics,
         };
     }
 
@@ -624,6 +684,235 @@ internal static class StableComparisonReport
             sourceReference.JsonPointer,
             $"{propertyName}.jsonPointer",
             limits);
+    }
+
+    private static int CompareFindingReports(
+        FindingReport left,
+        FindingReport right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(
+            StableJsonNames.Classification(left.Classification),
+            StableJsonNames.Classification(right.Classification));
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(
+            left.Baseline?.FindingKey ?? string.Empty,
+            right.Baseline?.FindingKey ?? string.Empty);
+        return comparison != 0
+            ? comparison
+            : StringComparer.Ordinal.Compare(
+                left.Candidate?.FindingKey ?? string.Empty,
+                right.Candidate?.FindingKey ?? string.Empty);
+    }
+
+    private static int CompareDerivedFingerprints(
+        DerivedFingerprint left,
+        DerivedFingerprint right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(left.Name, right.Name);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(left.Value, right.Value);
+        return comparison != 0
+            ? comparison
+            : StringComparer.Ordinal.Compare(
+                left.AlgorithmVersion,
+                right.AlgorithmVersion);
+    }
+
+    private static int CompareEvidence(
+        EvidenceRecord left,
+        EvidenceRecord right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(left.Kind, right.Kind);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.BaselineValue,
+            right.BaselineValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.CandidateValue,
+            right.CandidateValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.Origin.CompareTo(right.Origin);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.PrecedenceTier.CompareTo(right.PrecedenceTier);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(
+            left.AlgorithmVersion,
+            right.AlgorithmVersion);
+        return comparison != 0
+            ? comparison
+            : left.Lossy.CompareTo(right.Lossy);
+    }
+
+    private static int CompareRejectedAlternatives(
+        RejectedAlternative left,
+        RejectedAlternative right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(
+            left.FindingKey,
+            right.FindingKey);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.Ordinal.Compare(left.Reason, right.Reason);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.PrecedenceTier.CompareTo(right.PrecedenceTier);
+        return comparison != 0
+            ? comparison
+            : CompareDecisionVectors(
+                left.DecisionVector,
+                right.DecisionVector);
+    }
+
+    private static int CompareDecisionVectors(
+        DecisionVector left,
+        DecisionVector right)
+    {
+        var comparison = left.PrecedenceTier.CompareTo(right.PrecedenceTier);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.ProducerFingerprintStrength.CompareTo(
+            right.ProducerFingerprintStrength);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.PathMatchKind.CompareTo(right.PathMatchKind);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.ContextAgreement.CompareTo(right.ContextAgreement);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.CodeFlowAgreement.CompareTo(right.CodeFlowAgreement);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.MessageAgreement.CompareTo(right.MessageAgreement);
+        return comparison != 0
+            ? comparison
+            : left.RegionDriftBand.CompareTo(right.RegionDriftBand);
+    }
+
+    private static int CompareTransformations(
+        TransformationRecord left,
+        TransformationRecord right)
+    {
+        var comparison = StringComparer.Ordinal.Compare(left.Kind, right.Kind);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.OriginalValue,
+            right.OriginalValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = CompareNullableText(
+            left.TransformedValue,
+            right.TransformedValue);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = left.IsLossy.CompareTo(right.IsLossy);
+        return comparison != 0
+            ? comparison
+            : StringComparer.Ordinal.Compare(
+                left.AlgorithmVersion,
+                right.AlgorithmVersion);
+    }
+
+    private static int CompareNullableText(string? left, string? right)
+    {
+        if (left is null)
+        {
+            return right is null ? 0 : -1;
+        }
+
+        return right is null
+            ? 1
+            : StringComparer.Ordinal.Compare(left, right);
+    }
+
+    private static bool IsOrdered<T>(
+        ImmutableArray<T> values,
+        Comparison<T> comparison)
+    {
+        for (var index = 1; index < values.Length; index++)
+        {
+            if (comparison(values[index - 1], values[index]) > 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsStrictlyOrdered<T>(
+        ImmutableArray<T> values,
+        Comparison<T> comparison)
+    {
+        for (var index = 1; index < values.Length; index++)
+        {
+            if (comparison(values[index - 1], values[index]) >= 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void ValidateSummaryRanges(ComparisonSummary summary)

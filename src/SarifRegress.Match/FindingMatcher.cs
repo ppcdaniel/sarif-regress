@@ -989,9 +989,13 @@ public sealed class FindingMatcher
         ImmutableArray<MatchEdge> incidentEdges,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
     {
-        var alternatives = incidentEdges
-            .Where(edge => !ReferenceEquals(edge, selectedEdge))
-            .ToImmutableArray();
+        var alternatives =
+            incidentEdges.Length == 1
+            && ReferenceEquals(incidentEdges[0], selectedEdge)
+                ? ImmutableArray<MatchEdge>.Empty
+                : incidentEdges
+                    .Where(edge => !ReferenceEquals(edge, selectedEdge))
+                    .ToImmutableArray();
         var trace = CreateTrace(
             selectedEdge.DecisionVector.PrecedenceTier,
             GetDisplayConfidence(selectedEdge.DecisionVector.PrecedenceTier),
@@ -1140,18 +1144,22 @@ public sealed class FindingMatcher
         ImmutableArray<MatchEdge> alternatives,
         Finding? decisionBaseline,
         Finding? decisionCandidate,
-        string reason) =>
-        alternatives
-            .Select(edge => new RejectedAlternative(
-                GetAlternativeKey(edge, decisionBaseline, decisionCandidate),
-                reason,
-                edge.DecisionVector.PrecedenceTier,
-                edge.DecisionVector))
-            .OrderByDescending(
-                item => item.DecisionVector,
-                DecisionVectorComparer.Instance)
-            .ThenBy(item => item.FindingKey, StringComparer.Ordinal)
-            .ToImmutableArray();
+        string reason)
+    {
+        return alternatives.IsEmpty
+            ? ImmutableArray<RejectedAlternative>.Empty
+            : alternatives
+                .Select(edge => new RejectedAlternative(
+                    GetAlternativeKey(edge, decisionBaseline, decisionCandidate),
+                    reason,
+                    edge.DecisionVector.PrecedenceTier,
+                    edge.DecisionVector))
+                .OrderByDescending(
+                    item => item.DecisionVector,
+                    DecisionVectorComparer.Instance)
+                .ThenBy(item => item.FindingKey, StringComparer.Ordinal)
+                .ToImmutableArray();
+    }
 
     private static string GetAlternativeKey(
         MatchEdge edge,
@@ -1210,11 +1218,18 @@ public sealed class FindingMatcher
             displayConfidence,
             ambiguous,
             MatchingAlgorithms.MatcherVersion,
-            evidence.Take(maximumItems).ToImmutableArray(),
-            rejectedAlternatives.Take(maximumItems).ToImmutableArray(),
-            transformations.Take(maximumItems).ToImmutableArray(),
+            TakeAtMost(evidence, maximumItems),
+            TakeAtMost(rejectedAlternatives, maximumItems),
+            TakeAtMost(transformations, maximumItems),
             diagnostics);
     }
+
+    private static ImmutableArray<T> TakeAtMost<T>(
+        ImmutableArray<T> values,
+        int maximumItems) =>
+        values.Length <= maximumItems
+            ? values
+            : values.Take(maximumItems).ToImmutableArray();
 
     private static ImmutableArray<Diagnostic> GetNodeDiagnostics(
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
@@ -1431,11 +1446,19 @@ public sealed class FindingMatcher
             var result = new ImmutableArray<MatchEdge>[builders.Length];
             for (var index = 0; index < builders.Length; index++)
             {
-                result[index] = builders[index] is null
-                    ? ImmutableArray<MatchEdge>.Empty
-                    : builders[index]!
-                        .Order(MatchEdgePreferenceComparer.Instance)
-                        .ToImmutableArray();
+                var builder = builders[index];
+                if (builder is null)
+                {
+                    result[index] = ImmutableArray<MatchEdge>.Empty;
+                    continue;
+                }
+
+                if (builder.Count > 1)
+                {
+                    builder.Sort(MatchEdgePreferenceComparer.Instance);
+                }
+
+                result[index] = builder.ToImmutableArray();
             }
 
             return result;
