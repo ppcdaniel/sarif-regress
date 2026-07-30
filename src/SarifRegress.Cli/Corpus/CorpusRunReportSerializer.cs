@@ -96,6 +96,14 @@ public static class CorpusRunReportSerializer
         WriteInputs(writer, "expectedInvalidInputs", caseRun.ExpectedInvalidInputs);
         WriteInputs(writer, "observedInvalidInputs", caseRun.ObservedInvalidInputs);
         writer.WriteBoolean("passed", caseRun.Passed);
+        writer.WriteString("artifactKind", caseRun.Artifact.Kind);
+        writer.WriteString("artifactSha256", caseRun.Artifact.Sha256);
+        writer.WritePropertyName("artifact");
+        using (var artifact = JsonDocument.Parse(caseRun.Artifact.Json.ToArray()))
+        {
+            artifact.RootElement.WriteTo(writer);
+        }
+
         WriteMetrics(writer, "metrics", caseRun.Metrics);
         writer.WriteEndObject();
     }

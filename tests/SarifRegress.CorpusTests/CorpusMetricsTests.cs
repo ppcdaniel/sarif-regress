@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Text;
 using SarifRegress.Cli.Corpus;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Findings;
@@ -102,6 +103,9 @@ public sealed class CorpusMetricsTests
             "below-threshold",
             [],
             [],
+            new CorpusCaseArtifact(
+                "test",
+                Encoding.UTF8.GetBytes("{}\n")),
             metrics,
             Passed: true);
 

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Security.Cryptography;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Matching;
 
@@ -125,6 +126,46 @@ public sealed record CorpusCaseEvaluation(
     CorpusMetrics Metrics);
 
 /// <summary>
+/// Carries the exact stable comparison or diagnostic artifact for one corpus case.
+/// </summary>
+public sealed record CorpusCaseArtifact
+{
+    /// <summary>
+    /// Initializes an immutable case artifact and its exact-byte SHA-256 identity.
+    /// </summary>
+    public CorpusCaseArtifact(string kind, byte[] json)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(kind);
+        ArgumentNullException.ThrowIfNull(json);
+        if (json.Length == 0 || json[^1] != (byte)'\n')
+        {
+            throw new ArgumentException(
+                "A corpus case artifact must be non-empty stable JSON ending in LF.",
+                nameof(json));
+        }
+
+        Kind = kind;
+        Json = json.ToImmutableArray();
+        Sha256 = Convert.ToHexString(SHA256.HashData(json)).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Gets the stable artifact kind.
+    /// </summary>
+    public string Kind { get; }
+
+    /// <summary>
+    /// Gets the exact UTF-8/LF artifact bytes.
+    /// </summary>
+    public ImmutableArray<byte> Json { get; }
+
+    /// <summary>
+    /// Gets the lowercase SHA-256 digest over <see cref="Json"/>.
+    /// </summary>
+    public string Sha256 { get; }
+}
+
+/// <summary>
 /// Reports an aggregate corpus evaluation in stable case-name order.
 /// </summary>
 public sealed record CorpusEvaluation(
@@ -185,6 +226,7 @@ public sealed record CorpusCaseRun(
     string CaseName,
     ImmutableArray<InputKind> ExpectedInvalidInputs,
     ImmutableArray<InputKind> ObservedInvalidInputs,
+    CorpusCaseArtifact Artifact,
     CorpusMetrics Metrics,
     bool Passed);
 

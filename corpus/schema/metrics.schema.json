@@ -35,6 +35,9 @@
           "expectedInvalidInputs",
           "observedInvalidInputs",
           "passed",
+          "artifactKind",
+          "artifactSha256",
+          "artifact",
           "metrics"
         ],
         "properties": {
@@ -50,6 +53,19 @@
           },
           "passed": {
             "type": "boolean"
+          },
+          "artifactKind": {
+            "enum": [
+              "comparison",
+              "invalid-input-diagnostics"
+            ]
+          },
+          "artifactSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "artifact": {
+            "type": "object"
           },
           "metrics": {
             "$ref": "#/$defs/metrics"

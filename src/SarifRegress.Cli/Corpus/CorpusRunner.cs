@@ -199,6 +199,7 @@ public sealed class CorpusRunner
         var inputExpectationsMatch = observedInvalid.SequenceEqual(expectedInvalid);
 
         CorpusCaseEvaluation evaluation;
+        CorpusCaseArtifact artifact;
         if (observedInvalid.Length > 0)
         {
             EnsureInvalidCaseHasNoFindingLabels(caseName, labels);
@@ -206,6 +207,11 @@ public sealed class CorpusRunner
                 caseName,
                 labels,
                 []);
+            artifact =
+                CorpusCaseArtifactSerializer.CreateInvalidInputDiagnostics(
+                    caseName,
+                    baseline,
+                    candidate);
         }
         else
         {
@@ -222,6 +228,9 @@ public sealed class CorpusRunner
                 caseName,
                 labels,
                 matchResult.Decisions);
+            artifact = CorpusCaseArtifactSerializer.CreateComparison(
+                caseName,
+                matchResult);
         }
 
         var metrics = evaluation.Metrics;
@@ -234,6 +243,7 @@ public sealed class CorpusRunner
                 caseName,
                 expectedInvalid,
                 observedInvalid,
+                artifact,
                 metrics,
                 passed));
     }

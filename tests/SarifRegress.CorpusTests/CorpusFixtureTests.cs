@@ -1,3 +1,4 @@
+using System.Text.Json;
 using SarifRegress.Cli.Corpus;
 using SarifRegress.Core.Security;
 
@@ -63,6 +64,22 @@ public sealed class CorpusFixtureTests
         Assert.Equal(1m, result.Aggregate.Precision);
         Assert.Equal(1m, result.Aggregate.Recall);
         Assert.All(result.Cases, item => Assert.True(item.Passed));
+        Assert.All(
+            result.Cases,
+            item =>
+            {
+                Assert.Equal(64, item.Artifact.Sha256.Length);
+                Assert.Equal((byte)'\n', item.Artifact.Json[^1]);
+                using var artifact = JsonDocument.Parse(
+                    item.Artifact.Json.ToArray());
+                Assert.Equal(JsonValueKind.Object, artifact.RootElement.ValueKind);
+            });
+        Assert.Contains(
+            result.Cases,
+            item => item.Artifact.Kind == "comparison");
+        Assert.Contains(
+            result.Cases,
+            item => item.Artifact.Kind == "invalid-input-diagnostics");
     }
 
     [Fact]
