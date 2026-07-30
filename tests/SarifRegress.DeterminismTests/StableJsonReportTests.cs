@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -78,6 +79,35 @@ public sealed class StableJsonReportTests
             && first[0] == 0xEF
             && first[1] == 0xBB
             && first[2] == 0xBF);
+    }
+
+    [Fact]
+    public void Measure_MatchesCanonicalBytesAndExplanationValues()
+    {
+        var report = ReportTestData.CreateRepresentativeReport();
+        var bytes = StableJsonReportSerializer.Serialize(report);
+        var measurement = StableJsonReportSerializer.Measure(report);
+        using var document = JsonDocument.Parse(bytes);
+        var explanationBytes = document.RootElement
+            .GetProperty("findings")
+            .EnumerateArray()
+            .SelectMany(
+                finding => new[]
+                {
+                    finding.GetProperty("decision"),
+                    finding.GetProperty("evidence"),
+                    finding.GetProperty("rejectedAlternatives"),
+                    finding.GetProperty("transforms"),
+                    finding.GetProperty("diagnostics"),
+                })
+            .Sum(
+                value => Encoding.UTF8.GetByteCount(value.GetRawText()));
+
+        Assert.Equal(bytes.Length, measurement.OutputBytes);
+        Assert.Equal(explanationBytes, measurement.ExplanationBytes);
+        Assert.Equal(
+            Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
+            measurement.OutputSha256);
     }
 
     [Fact]

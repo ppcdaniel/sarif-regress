@@ -1,7 +1,5 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using SarifRegress.Core;
 using SarifRegress.Core.Configuration;
@@ -78,8 +76,8 @@ public sealed class BenchmarkRunner
                 baseline.ComparisonInput.LogicalName,
                 candidate.ComparisonInput.LogicalName,
                 ProductInformation.MatcherAlgorithmVersion));
-        var comparisonOutput =
-            StableJsonReportSerializer.Serialize(comparisonReport);
+        var serialization =
+            StableJsonReportSerializer.Measure(comparisonReport);
         stopwatch.Stop();
         var serializeElapsed = stopwatch.Elapsed;
 
@@ -106,12 +104,9 @@ public sealed class BenchmarkRunner
             AmbiguousComponentCount: matchResult.AmbiguousComponentCount,
             Classifications: CountClassifications(matchResult),
             DiagnosticCount: matchResult.Diagnostics.Length,
-            ExplanationOutputBytes:
-                MeasureExplanationOutputBytes(comparisonOutput),
-            ComparisonOutputBytes: comparisonOutput.Length,
-            ComparisonOutputSha256:
-                Convert.ToHexString(SHA256.HashData(comparisonOutput))
-                .ToLowerInvariant(),
+            ExplanationOutputBytes: serialization.ExplanationBytes,
+            ComparisonOutputBytes: serialization.OutputBytes,
+            ComparisonOutputSha256: serialization.OutputSha256,
             DiagnosticCodes: matchResult.Diagnostics
                 .Select(item => item.Code)
                 .Distinct(StringComparer.Ordinal)
@@ -297,31 +292,6 @@ public sealed class BenchmarkRunner
             result.Decisions.Count(
                 decision => decision.Classification == classification);
     }
-
-    private static int MeasureExplanationOutputBytes(byte[] comparisonOutput)
-    {
-        using var document = JsonDocument.Parse(comparisonOutput);
-        long byteCount = 0;
-        foreach (var finding in document.RootElement.GetProperty("findings")
-                     .EnumerateArray())
-        {
-            byteCount += MeasureProperty(finding, "decision");
-            byteCount += MeasureProperty(finding, "evidence");
-            byteCount += MeasureProperty(finding, "rejectedAlternatives");
-            byteCount += MeasureProperty(finding, "transforms");
-            byteCount += MeasureProperty(finding, "diagnostics");
-        }
-
-        return byteCount > int.MaxValue
-            ? int.MaxValue
-            : (int)byteCount;
-    }
-
-    private static int MeasureProperty(
-        JsonElement finding,
-        string propertyName) =>
-        Encoding.UTF8.GetByteCount(
-            finding.GetProperty(propertyName).GetRawText());
 
     private static BenchmarkBudgetEvaluation EvaluateBudget(
         BenchmarkDatasetKind kind,
