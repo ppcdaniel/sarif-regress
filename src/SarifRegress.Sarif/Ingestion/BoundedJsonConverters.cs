@@ -305,6 +305,25 @@ internal sealed class BoundedStringConverter : JsonConverter<string>
             return null;
         }
 
+        ValidateBounded(
+            ref reader,
+            maximumCharacters,
+            cancellationToken);
+        var value = reader.GetString();
+        if (value?.Length > maximumCharacters)
+        {
+            throw new JsonStringLimitExceededException(maximumCharacters);
+        }
+
+        return value;
+    }
+
+    internal static void ValidateBounded(
+        ref Utf8JsonReader reader,
+        int maximumCharacters,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         if (reader.TokenType is not JsonTokenType.String and
             not JsonTokenType.PropertyName)
         {
@@ -351,14 +370,6 @@ internal sealed class BoundedStringConverter : JsonConverter<string>
         {
             throw new JsonStringLimitExceededException(maximumCharacters);
         }
-
-        var value = reader.GetString();
-        if (value?.Length > maximumCharacters)
-        {
-            throw new JsonStringLimitExceededException(maximumCharacters);
-        }
-
-        return value;
     }
 
     public override void Write(
@@ -705,7 +716,7 @@ internal sealed class BoundedJsonObjectConverterFactory : JsonConverterFactory
         where T : class
     {
         private readonly BoundedJsonReadConstraints constraints;
-        private readonly IReadOnlyDictionary<string, PropertyInfo> properties;
+        private readonly KnownProperty[] properties;
         private readonly PropertyInfo? extensionDataProperty;
 
         public BoundedJsonObjectConverter(
@@ -717,7 +728,7 @@ internal sealed class BoundedJsonObjectConverterFactory : JsonConverterFactory
             extensionDataProperty = objectProperties.SingleOrDefault(
                 property => property.GetCustomAttribute<
                     JsonExtensionDataAttribute>() is not null);
-            properties = objectProperties
+            var propertyEntries = objectProperties
                 .Where(property =>
                     property != extensionDataProperty &&
                     property.SetMethod is not null)
@@ -727,10 +738,21 @@ internal sealed class BoundedJsonObjectConverterFactory : JsonConverterFactory
                         JsonPropertyNameAttribute>()?.Name ?? property.Name,
                     Property = property,
                 })
-                .ToDictionary(
-                    item => item.Name,
-                    item => item.Property,
-                    StringComparer.Ordinal);
+                .ToArray();
+            if (propertyEntries.Length > sizeof(ulong) * 8)
+            {
+                throw new InvalidOperationException(
+                    $"The bounded JSON object type {typeof(T).Name} has too many properties.");
+            }
+
+            properties = propertyEntries
+                .Select(
+                    (item, index) => new KnownProperty(
+                        item.Name,
+                        Encoding.UTF8.GetBytes(item.Name),
+                        item.Property,
+                        1UL << index))
+                .ToArray();
         }
 
         public override T? Read(
@@ -756,7 +778,8 @@ internal sealed class BoundedJsonObjectConverterFactory : JsonConverterFactory
                 ?? throw new JsonException(
                     $"The JSON object type {typeof(T).Name} cannot be created.");
             Dictionary<string, object?>? extensionData = null;
-            var seenProperties = new HashSet<string>(StringComparer.Ordinal);
+            HashSet<string>? seenUnknownProperties = null;
+            ulong seenKnownProperties = 0;
             var propertyCount = 0;
             while (reader.Read() &&
                 reader.TokenType != JsonTokenType.EndObject)
@@ -776,32 +799,46 @@ internal sealed class BoundedJsonObjectConverterFactory : JsonConverterFactory
                 }
 
                 propertyCount++;
-                var propertyName = BoundedStringConverter.ReadBounded(
+                BoundedStringConverter.ValidateBounded(
                     ref reader,
                     constraints.MaximumStringCharacters,
-                    constraints.CancellationToken)
+                    constraints.CancellationToken);
+                if (TryGetKnownProperty(ref reader, out var property))
+                {
+                    if ((seenKnownProperties & property.SeenMask) != 0)
+                    {
+                        throw DuplicateProperty(property.JsonName);
+                    }
+
+                    seenKnownProperties |= property.SeenMask;
+                    if (!reader.Read())
+                    {
+                        throw new JsonException(
+                            "A JSON object value is missing.");
+                    }
+
+                    var propertyValue = JsonSerializer.Deserialize(
+                        ref reader,
+                        property.Property.PropertyType,
+                        options);
+                    property.Property.SetValue(value, propertyValue);
+                    continue;
+                }
+
+                var propertyName = reader.GetString()
                     ?? throw new JsonException(
                         "A JSON property name cannot be null.");
-                if (!seenProperties.Add(propertyName))
+                seenUnknownProperties ??= new HashSet<string>(
+                    StringComparer.Ordinal);
+                if (!seenUnknownProperties.Add(propertyName))
                 {
-                    throw new JsonException(
-                        $"The JSON object contains duplicate property \"{propertyName}\".");
+                    throw DuplicateProperty(propertyName);
                 }
 
                 if (!reader.Read())
                 {
                     throw new JsonException(
                         "A JSON object value is missing.");
-                }
-
-                if (properties.TryGetValue(propertyName, out var property))
-                {
-                    var propertyValue = JsonSerializer.Deserialize(
-                        ref reader,
-                        property.PropertyType,
-                        options);
-                    property.SetValue(value, propertyValue);
-                    continue;
                 }
 
                 BoundedJsonTraversal.Skip(ref reader, constraints);
@@ -825,11 +862,38 @@ internal sealed class BoundedJsonObjectConverterFactory : JsonConverterFactory
             return value;
         }
 
+        private bool TryGetKnownProperty(
+            ref Utf8JsonReader reader,
+            out KnownProperty property)
+        {
+            foreach (var candidate in properties)
+            {
+                if (reader.ValueTextEquals(candidate.Utf8Name))
+                {
+                    property = candidate;
+                    return true;
+                }
+            }
+
+            property = default;
+            return false;
+        }
+
+        private static JsonException DuplicateProperty(string propertyName) =>
+            new(
+                $"The JSON object contains duplicate property \"{propertyName}\".");
+
         public override void Write(
             Utf8JsonWriter writer,
             T value,
             JsonSerializerOptions options) =>
             throw new NotSupportedException(
                 "Bounded input objects are never serialized.");
+
+        private readonly record struct KnownProperty(
+            string JsonName,
+            byte[] Utf8Name,
+            PropertyInfo Property,
+            ulong SeenMask);
     }
 }

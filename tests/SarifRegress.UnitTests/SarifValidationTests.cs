@@ -24,6 +24,21 @@ public sealed class SarifValidationTests
         Assert.Empty(result.ComparisonInput.Findings);
     }
 
+    [Theory]
+    [InlineData("""{ "version": "2.1.0", "vers\u0069on": "2.1.0", "runs": [] }""")]
+    [InlineData("""{ "version": "2.1.0", "future": 1, "future": 2, "runs": [] }""")]
+    public async Task Duplicate_known_and_unknown_properties_fail_closed(
+        string sarif)
+    {
+        var result = await IngestAsync(sarif);
+
+        Assert.False(result.IsValid);
+        Assert.Empty(result.ComparisonInput.Findings);
+        Assert.Contains(
+            result.ComparisonInput.Diagnostics,
+            item => item.Code == "PARSE0100");
+    }
+
     [Fact]
     public async Task Unsupported_version_fails_before_result_mapping()
     {
