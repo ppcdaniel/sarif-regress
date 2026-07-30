@@ -50,6 +50,54 @@ public sealed class ProjectReferenceBoundaryTests
             string.Join(Environment.NewLine, violations));
     }
 
+    [Fact]
+    public void Compiled_assembly_references_preserve_architectural_boundaries()
+    {
+        IReadOnlyDictionary<string, string> assemblyFiles =
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["SarifRegress.Core"] = "SarifRegress.Core.dll",
+                ["SarifRegress.Sarif"] = "SarifRegress.Sarif.dll",
+                ["SarifRegress.Match"] = "SarifRegress.Match.dll",
+                ["SarifRegress.Report"] = "SarifRegress.Report.dll",
+                ["SarifRegress.Cli"] = "sarif-regress.dll",
+            };
+        var violations = new List<string>();
+
+        foreach (var project in AllowedReferences.OrderBy(item => item.Key, StringComparer.Ordinal))
+        {
+            var assemblyPath = Path.Combine(
+                AppContext.BaseDirectory,
+                assemblyFiles[project.Key]);
+            var assembly = System.Reflection.Assembly.LoadFrom(assemblyPath);
+            var applicationReferences = assembly
+                .GetReferencedAssemblies()
+                .Select(reference => reference.Name)
+                .Where(name =>
+                    name is not null &&
+                    (name.StartsWith("SarifRegress.", StringComparison.Ordinal) ||
+                        string.Equals(name, "sarif-regress", StringComparison.Ordinal)))
+                .Select(name => string.Equals(name, "sarif-regress", StringComparison.Ordinal)
+                    ? "SarifRegress.Cli"
+                    : name!)
+                .ToHashSet(StringComparer.Ordinal);
+
+            foreach (var referencedProject in applicationReferences)
+            {
+                if (!project.Value.Contains(referencedProject))
+                {
+                    violations.Add(
+                        $"Forbidden compiled reference: {project.Key} -> {referencedProject}.");
+                }
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            "Compiled-reference boundary violations:" + Environment.NewLine +
+            string.Join(Environment.NewLine, violations.Order(StringComparer.Ordinal)));
+    }
+
     private static void ValidateProjectReferences(
         string sourceRoot,
         string projectFile,

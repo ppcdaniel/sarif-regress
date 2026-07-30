@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Xml.Linq;
+using SarifRegress.Core;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Matching;
@@ -144,5 +146,20 @@ public sealed class CoreContractTests
         Assert.NotEqual(nullField, emptyField);
         Assert.Equal(64, first.Length);
         Assert.Equal(first, first.ToLowerInvariant());
+    }
+
+    [Fact]
+    public void Runtime_product_version_matches_the_build_version()
+    {
+        var buildPropertiesPath = Path.Combine(
+            RepositoryLayout.Root,
+            "Directory.Build.props");
+        var buildProperties = XDocument.Load(buildPropertiesPath);
+        var versionPrefix = buildProperties
+            .Descendants("VersionPrefix")
+            .Select(element => element.Value)
+            .Single();
+
+        Assert.Equal(ProductInformation.Version, versionPrefix);
     }
 }

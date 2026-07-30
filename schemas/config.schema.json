@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/config.schema.json",
+  "title": "SarifRegress configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "repoRoot": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "pathRebases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pathRebase"
+      }
+    },
+    "pathAliases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pathAlias"
+      }
+    },
+    "ruleAliases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ruleAlias"
+      }
+    },
+    "matching": {
+      "$ref": "#/$defs/matching"
+    },
+    "policy": {
+      "$ref": "#/$defs/policy"
+    },
+    "reporting": {
+      "$ref": "#/$defs/reporting"
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4194304
+    },
+    "pathRebase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "to": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "pathAlias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline",
+        "candidate"
+      ],
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "candidate": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "ruleAlias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineProducer",
+        "baselineRule",
+        "candidateProducer",
+        "candidateRule"
+      ],
+      "properties": {
+        "baselineProducer": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "baselineRule": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "candidateProducer": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "candidateRule": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "matching": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enableRepoContext": {
+          "type": "boolean",
+          "default": true
+        },
+        "snippetLinesRadius": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 3
+        },
+        "enableTokenWindows": {
+          "type": "boolean",
+          "default": false
+        },
+        "allowWeakMessageSimilarity": {
+          "type": "boolean",
+          "default": false
+        },
+        "pathCaseSensitivity": {
+          "enum": [
+            "sensitive",
+            "ascii-insensitive"
+          ],
+          "default": "sensitive"
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "failOn": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "new",
+              "unchanged",
+              "moved",
+              "modified",
+              "resolved",
+              "ambiguous"
+            ]
+          },
+          "default": [
+            "new",
+            "modified",
+            "ambiguous"
+          ]
+        },
+        "treatGithubIncompatibilityAsError": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "emitCanonicalSarif": {
+          "type": "boolean",
+          "default": false
+        },
+        "emitHtml": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  }
+}

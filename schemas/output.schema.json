@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/output.schema.json",
+  "title": "SarifRegress comparison report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "outputSchemaVersion",
+    "tool",
+    "inputs",
+    "summary",
+    "findings",
+    "diagnostics",
+    "metrics",
+    "determinism"
+  ],
+  "properties": {
+    "outputSchemaVersion": {
+      "const": "1"
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "const": "sarif-regress"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline",
+        "candidate"
+      ],
+      "properties": {
+        "baseline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidateEdges",
+        "assignmentComponents",
+        "ambiguousComponents",
+        "diagnostics"
+      ],
+      "properties": {
+        "candidateEdges": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "assignmentComponents": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "ambiguousComponents": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        }
+      }
+    },
+    "determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonCanonicalisation",
+        "crossPlatformNormalisation",
+        "matcherAlgorithm"
+      ],
+      "properties": {
+        "jsonCanonicalisation": {
+          "const": "schema-order-v1"
+        },
+        "crossPlatformNormalisation": {
+          "const": "approved-path-normalisation-v1"
+        },
+        "matcherAlgorithm": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "classification": {
+      "enum": [
+        "new",
+        "unchanged",
+        "moved",
+        "modified",
+        "resolved",
+        "ambiguous"
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineCount",
+        "candidateCount",
+        "new",
+        "unchanged",
+        "moved",
+        "modified",
+        "resolved",
+        "ambiguous"
+      ],
+      "properties": {
+        "baselineCount": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "candidateCount": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "new": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "unchanged": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "moved": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "modified": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "resolved": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "ambiguous": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        }
+      }
+    },
+    "sourceReference": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "runIndex",
+        "resultIndex",
+        "jsonPointer"
+      ],
+      "properties": {
+        "input": {
+          "enum": [
+            "baseline",
+            "candidate",
+            "configuration",
+            "corpus"
+          ]
+        },
+        "runIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "resultIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "jsonPointer": {
+          "type": "string"
+        }
+      }
+    },
+    "region": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "startLine",
+        "startColumn",
+        "endLine",
+        "endColumn"
+      ],
+      "properties": {
+        "startLine": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "startColumn": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "endLine": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "endColumn": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    },
+    "snapshot": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "findingKey",
+        "producerFamily",
+        "canonicalRule",
+        "canonicalUri",
+        "region",
+        "canonicalMessage"
+      ],
+      "properties": {
+        "findingKey": {
+          "type": "string"
+        },
+        "producerFamily": {
+          "type": "string"
+        },
+        "canonicalRule": {
+          "type": "string"
+        },
+        "canonicalUri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region": {
+          "$ref": "#/$defs/region"
+        },
+        "canonicalMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "baselineRef",
+        "candidateRef",
+        "baseline",
+        "candidate",
+        "decision"
+      ],
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/classification"
+        },
+        "baselineRef": {
+          "$ref": "#/$defs/sourceReference"
+        },
+        "candidateRef": {
+          "$ref": "#/$defs/sourceReference"
+        },
+        "baseline": {
+          "$ref": "#/$defs/snapshot"
+        },
+        "candidate": {
+          "$ref": "#/$defs/snapshot"
+        },
+        "decision": {
+          "type": "object"
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "code",
+        "severity",
+        "stage",
+        "message",
+        "sourceRef",
+        "standardBasis",
+        "help"
+      ]
+    }
+  }
+}
