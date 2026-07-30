@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:
@@ -28,24 +30,8 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-
-      - name: Generate dependency locks
-        shell: bash
-        run: dotnet restore SarifRegress.slnx
-
-      - name: Emit dependency locks
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          while IFS= read -r lock_file; do
-            relative_path="${lock_file#./}"
-            echo "LOCK_FILE_BEGIN:${relative_path}"
-            base64 --wrap=0 "${lock_file}"
-            echo
-            echo "LOCK_FILE_END:${relative_path}"
-          done < <(
-            find . -name packages.lock.json -not -path './.nuget/*' -print | sort
-          )
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
 
       - name: Verify on Linux
         if: runner.os == 'Linux'
