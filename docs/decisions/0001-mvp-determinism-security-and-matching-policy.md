@@ -32,6 +32,8 @@ The default untrusted-input limits are:
 | Configurable snippet radius | 0–20 lines |
 | Token-window terms | 256 |
 | Candidate edges retained per finding | 64 |
+| Coarse candidate pairs evaluated per finding | 256 |
+| Coarse candidate pairs evaluated per comparison | 1,000,000 |
 | Rejected alternatives emitted per decision | 100 |
 | Exactly solved component | at most 12 findings per side |
 
@@ -69,6 +71,10 @@ Cross-producer bucket entry requires an explicit rule alias. Producer fingerprin
 terminal `/vN` version when present; the greatest common numeric version within the same family is
 compared. Duplicate name/value pairs inside a run-and-rule bucket are degraded and cannot produce
 an indisputable exact match.
+
+Candidate-pair limits are checked before semantic edge scoring. Per-finding limits apply to both
+outgoing baseline pairs and incoming candidate pairs. Exceeding a per-finding or comparison-wide
+limit refuses the unresolved comparison as ambiguous; it never scores a truncated prefix.
 
 ### Assignment and ambiguity
 

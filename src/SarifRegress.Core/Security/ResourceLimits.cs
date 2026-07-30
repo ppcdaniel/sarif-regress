@@ -71,14 +71,29 @@ public sealed record ResourceLimits
     public const int DefaultMaximumCandidateEdgesPerFinding = 64;
 
     /// <summary>
+    /// Gets the default maximum number of candidate-selection items inspected for either finding.
+    /// </summary>
+    public const int DefaultMaximumCandidatePairEvaluationsPerFinding = 256;
+
+    /// <summary>
+    /// Gets the default maximum number of coarse candidate pairs evaluated by one comparison.
+    /// </summary>
+    public const long DefaultMaximumCandidatePairEvaluations = 1_000_000;
+
+    /// <summary>
     /// Gets the default maximum number of rejected alternatives emitted per decision.
     /// </summary>
     public const int DefaultMaximumRejectedAlternatives = 100;
 
     /// <summary>
+    /// Gets the matcher-v1 hard maximum number of findings on either side of an exact assignment.
+    /// </summary>
+    public const int HardMaximumAssignmentSideSize = 12;
+
+    /// <summary>
     /// Gets the default maximum number of findings on either side of an exactly solved component.
     /// </summary>
-    public const int DefaultMaximumAssignmentSideSize = 12;
+    public const int DefaultMaximumAssignmentSideSize = HardMaximumAssignmentSideSize;
 
     /// <summary>
     /// Gets the standard MVP limits.
@@ -153,6 +168,18 @@ public sealed record ResourceLimits
         DefaultMaximumCandidateEdgesPerFinding;
 
     /// <summary>
+    /// Gets the maximum number of candidate-selection items inspected for either finding.
+    /// </summary>
+    public int MaximumCandidatePairEvaluationsPerFinding { get; init; } =
+        DefaultMaximumCandidatePairEvaluationsPerFinding;
+
+    /// <summary>
+    /// Gets the maximum number of coarse candidate pairs evaluated by one comparison.
+    /// </summary>
+    public long MaximumCandidatePairEvaluations { get; init; } =
+        DefaultMaximumCandidatePairEvaluations;
+
+    /// <summary>
     /// Gets the maximum emitted rejected alternatives per decision.
     /// </summary>
     public int MaximumRejectedAlternatives { get; init; } =
@@ -189,8 +216,32 @@ public sealed record ResourceLimits
         ValidatePositive(
             MaximumCandidateEdgesPerFinding,
             nameof(MaximumCandidateEdgesPerFinding));
+        ValidatePositive(
+            MaximumCandidatePairEvaluationsPerFinding,
+            nameof(MaximumCandidatePairEvaluationsPerFinding));
+        ValidatePositive(
+            MaximumCandidatePairEvaluations,
+            nameof(MaximumCandidatePairEvaluations));
         ValidatePositive(MaximumRejectedAlternatives, nameof(MaximumRejectedAlternatives));
         ValidatePositive(MaximumAssignmentSideSize, nameof(MaximumAssignmentSideSize));
+
+        if (MaximumAssignmentSideSize > HardMaximumAssignmentSideSize)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(MaximumAssignmentSideSize),
+                MaximumAssignmentSideSize,
+                $"The exact-assignment side limit cannot exceed "
+                + $"{HardMaximumAssignmentSideSize} in matcher v1.");
+        }
+
+        if (MaximumCandidateEdgesPerFinding > MaximumCandidatePairEvaluationsPerFinding)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(MaximumCandidateEdgesPerFinding),
+                MaximumCandidateEdgesPerFinding,
+                "The retained-edge limit cannot exceed the per-finding "
+                + "candidate-selection evaluation limit.");
+        }
     }
 
     private static void ValidatePositive(long value, string parameterName)

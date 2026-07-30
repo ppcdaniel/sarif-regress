@@ -20,6 +20,8 @@ budgets, not guaranteed performance on every machine.
 
 - Candidate generation uses producer-family and canonical-rule buckets rather than a global
   Cartesian product.
+- Coarse pairs are preflighted before scoring, with limits of 256 pairs on either side of a finding
+  and 1,000,000 pairs for one comparison.
 - Retained candidate edges are capped per finding.
 - The assignment graph is split into connected components.
 - Components within the exact bound use a maximum-cardinality lexicographic solver.

@@ -19,7 +19,8 @@ SarifRegress does not:
 The exact limits are versioned in
 [ADR 0001](decisions/0001-mvp-determinism-security-and-matching-policy.md). Important defaults
 include a 256-MiB input limit, JSON depth 128, 250,000 results per run, a 4-MiB repository-file
-read limit, URI-base depth 32, and exact assignment components of at most 12 findings per side.
+read limit, URI-base depth 32, 256 coarse candidate pairs per finding, 1,000,000 coarse pairs per
+comparison, and exact assignment components of at most 12 findings per side.
 
 Limit violations are deterministic. A violation that prevents safe identity resolution invalidates
 the affected finding or command. A component too large for exact assignment is refused as

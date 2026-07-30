@@ -1,0 +1,581 @@
+using SarifRegress.Core.Configuration;
+using SarifRegress.Core.Diagnostics;
+using SarifRegress.Core.Findings;
+using SarifRegress.Core.Matching;
+using SarifRegress.Core.Paths;
+using SarifRegress.Match;
+
+namespace SarifRegress.UnitTests;
+
+public sealed class MatchingEngineTests
+{
+    private readonly FindingMatcher matcher = new();
+
+    [Fact]
+    public void Reliable_common_version_producer_fingerprint_is_unchanged()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("producer-hash", version: 2);
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            producerFingerprints: [fingerprint]);
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            producerFingerprints: [fingerprint]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Unchanged, decision.Classification);
+        Assert.Equal(PrecedenceTier.ExactProducer, decision.Decision.PrecedenceTier);
+        Assert.Equal("candidate:one", decision.Candidate?.FindingKey);
+    }
+
+    [Fact]
+    public void Producer_fingerprint_comparison_does_not_fall_back_below_greatest_common_version()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            path: "src/baseline.cs",
+            producerFingerprints:
+            [
+                MatchingTestData.ProducerFingerprint("shared-old", version: 1),
+                MatchingTestData.ProducerFingerprint("baseline-new", version: 2),
+            ]);
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            path: "src/candidate.cs",
+            producerFingerprints:
+            [
+                MatchingTestData.ProducerFingerprint("shared-old", version: 1),
+                MatchingTestData.ProducerFingerprint("candidate-new", version: 2),
+            ]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        Assert.Equal(2, result.Decisions.Length);
+        Assert.Contains(
+            result.Decisions,
+            decision => decision.Classification == FindingClassification.Resolved);
+        Assert.Contains(
+            result.Decisions,
+            decision => decision.Classification == FindingClassification.New);
+        Assert.Equal(0, result.CandidateEdgeCount);
+    }
+
+    [Fact]
+    public void Derived_fingerprint_and_canonical_path_use_exact_canonical_tier()
+    {
+        var derived = MatchingTestData.DerivedFingerprint("derived-hash");
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            derivedFingerprints: [derived]);
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            derivedFingerprints: [derived]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Unchanged, decision.Classification);
+        Assert.Equal(PrecedenceTier.ExactCanonical, decision.Decision.PrecedenceTier);
+    }
+
+    [Fact]
+    public void Stable_context_across_a_path_and_region_change_is_moved()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            path: "src/old.cs",
+            startLine: 10,
+            contextHash: "stable-context");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            path: "src/new.cs",
+            startLine: 40,
+            contextHash: "stable-context");
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Moved, decision.Classification);
+        Assert.Equal(PrecedenceTier.StrongMoved, decision.Decision.PrecedenceTier);
+    }
+
+    [Fact]
+    public void Explicit_path_alias_preserves_suffix_and_classifies_the_match_as_moved()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            path: "src-old/security/check.cs",
+            contextHash: "stable-context");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            path: "src/security/check.cs",
+            contextHash: "stable-context");
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            MatchingTestData.Configuration(
+                pathAliases:
+                [
+                    new PathAlias("src-old/", "src/"),
+                ]));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Moved, decision.Classification);
+        Assert.Equal(PrecedenceTier.StrongMoved, decision.Decision.PrecedenceTier);
+        Assert.Contains(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind == "path-alias");
+    }
+
+    [Fact]
+    public void Path_alias_without_trailing_separator_matches_only_a_complete_segment()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("stable");
+        var configuration = MatchingTestData.Configuration(
+            pathAliases: [new PathAlias("src", "dst")]);
+        var valid = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:valid",
+                    path: "src/security/check.cs",
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:valid",
+                    path: "dst/security/check.cs",
+                    producerFingerprints: [fingerprint])),
+            configuration);
+        var partial = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:partial",
+                    path: "src-old/security/check.cs",
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:partial",
+                    path: "dst-old/security/check.cs",
+                    producerFingerprints: [fingerprint])),
+            configuration);
+
+        Assert.Contains(
+            Assert.Single(valid.Decisions).Decision.Evidence,
+            evidence => evidence.Kind == "path-alias");
+        Assert.DoesNotContain(
+            Assert.Single(partial.Decisions).Decision.Evidence,
+            evidence => evidence.Kind == "path-alias");
+    }
+
+    [Fact]
+    public void Reliable_continuity_with_a_changed_message_is_modified()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("stable");
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            message: "Original message.",
+            producerFingerprints: [fingerprint]);
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            message: "Changed message.",
+            producerFingerprints: [fingerprint]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Modified, decision.Classification);
+        Assert.Equal(PrecedenceTier.ExactProducer, decision.Decision.PrecedenceTier);
+    }
+
+    [Fact]
+    public void Two_sided_conflicting_source_context_is_modified()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("stable");
+        var result = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:one",
+                    contextHash: "baseline-context",
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:one",
+                    contextHash: "candidate-context",
+                    producerFingerprints: [fingerprint])));
+
+        Assert.Equal(
+            FindingClassification.Modified,
+            Assert.Single(result.Decisions).Classification);
+    }
+
+    [Fact]
+    public void One_sided_context_and_code_flow_are_unavailable_not_contradictory()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("stable");
+        var result = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:one",
+                    contextHash: "baseline-context",
+                    codeFlowPaths: ["src/helper.cs"],
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:one",
+                    producerFingerprints: [fingerprint])));
+
+        Assert.Equal(
+            FindingClassification.Unchanged,
+            Assert.Single(result.Decisions).Classification);
+    }
+
+    [Fact]
+    public void Code_flow_classification_honours_ascii_case_insensitive_paths()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("stable");
+        var result = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:one",
+                    codeFlowPaths: ["SRC/Helper.cs"],
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:one",
+                    codeFlowPaths: ["src/helper.cs"],
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Configuration(
+                pathCaseSensitivity: PathCaseSensitivity.AsciiInsensitive));
+
+        Assert.Equal(
+            FindingClassification.Unchanged,
+            Assert.Single(result.Decisions).Classification);
+    }
+
+    [Fact]
+    public void Enclosing_symbol_is_deferred_and_does_not_affect_matching()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("stable");
+        var result = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:one",
+                    enclosingSymbol: "Baseline.Symbol",
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:one",
+                    enclosingSymbol: "Candidate.Symbol",
+                    producerFingerprints: [fingerprint])));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Unchanged, decision.Classification);
+        Assert.DoesNotContain(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind == "context-enclosing-symbol");
+    }
+
+    [Fact]
+    public void Two_absent_locations_are_stable_but_one_sided_location_is_moved()
+    {
+        var fingerprint = MatchingTestData.ProducerFingerprint("stable");
+        var bothAbsent = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:absent",
+                    path: null,
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:absent",
+                    path: null,
+                    producerFingerprints: [fingerprint])));
+        var oneAbsent = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:missing",
+                    path: null,
+                    producerFingerprints: [fingerprint])),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:present",
+                    producerFingerprints: [fingerprint])));
+
+        Assert.Equal(
+            FindingClassification.Unchanged,
+            Assert.Single(bothAbsent.Decisions).Classification);
+        Assert.Equal(
+            FindingClassification.Moved,
+            Assert.Single(oneAbsent.Decisions).Classification);
+    }
+
+    [Fact]
+    public void Code_flow_anchor_is_supporting_evidence_and_not_a_primary_identity()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            path: "src/old.cs",
+            codeFlowPaths: ["src/shared-helper.cs"]);
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            path: "src/new.cs",
+            codeFlowPaths: ["src/shared-helper.cs"]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Moved, decision.Classification);
+        Assert.Equal(PrecedenceTier.PathProblem, decision.Decision.PrecedenceTier);
+        Assert.Contains(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind == "code-flow");
+    }
+
+    [Fact]
+    public void Related_location_path_can_supply_bounded_supporting_evidence()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            path: "src/old.cs",
+            relatedLocationPaths: ["src/shared-helper.cs"]);
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            path: "src/new.cs",
+            relatedLocationPaths: ["src/shared-helper.cs"]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(PrecedenceTier.PathProblem, decision.Decision.PrecedenceTier);
+        Assert.Contains(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind == "related-location-paths");
+    }
+
+    [Fact]
+    public void Explicit_rule_alias_enables_corroborated_cross_producer_match()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            producerFamily: "semgrep",
+            toolName: "Semgrep",
+            ruleId: "python/eval",
+            contextHash: "stable-context");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            producerFamily: "internal",
+            toolName: "InternalScanner",
+            ruleId: "PY-EVAL-001",
+            contextHash: "stable-context");
+
+        var withoutAlias = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+        var withAlias = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            MatchingTestData.Configuration(
+                ruleAliases:
+                [
+                    new RuleAlias(
+                        "Semgrep",
+                        "python/eval",
+                        "InternalScanner",
+                        "PY-EVAL-001"),
+                ]));
+
+        Assert.Equal(2, withoutAlias.Decisions.Length);
+        var aliasedDecision = Assert.Single(withAlias.Decisions);
+        Assert.Equal(PrecedenceTier.Override, aliasedDecision.Decision.PrecedenceTier);
+        Assert.Equal(FindingClassification.Unchanged, aliasedDecision.Classification);
+        Assert.Contains(
+            aliasedDecision.Decision.Evidence,
+            evidence => evidence.Kind == "rule-alias");
+    }
+
+    [Fact]
+    public void Rule_alias_alone_does_not_guarantee_a_result_match()
+    {
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            message: "Baseline message.",
+            producerFamily: "first",
+            ruleId: "old-rule");
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            message: "Candidate message.",
+            producerFamily: "second",
+            ruleId: "new-rule");
+        var configuration = MatchingTestData.Configuration(
+            ruleAliases:
+            [
+                new RuleAlias("first", "old-rule", "second", "new-rule"),
+            ]);
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            configuration);
+
+        Assert.Equal(2, result.Decisions.Length);
+        Assert.Equal(0, result.CandidateEdgeCount);
+    }
+
+    [Fact]
+    public void Cross_producer_alias_requires_real_path_and_context_corroboration()
+    {
+        var sharedFingerprint = MatchingTestData.ProducerFingerprint("shared");
+        var alias = new RuleAlias("first", "old-rule", "second", "new-rule");
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            producerFamily: "first",
+            ruleId: "old-rule",
+            producerFingerprints: [sharedFingerprint]);
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            producerFamily: "second",
+            ruleId: "new-rule",
+            producerFingerprints: [sharedFingerprint]);
+
+        var withFingerprint = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            MatchingTestData.Configuration(ruleAliases: [alias]));
+        var withoutFingerprint = matcher.Match(
+            MatchingTestData.Input(
+                InputKind.Baseline,
+                MatchingTestData.Finding(
+                    InputKind.Baseline,
+                    "baseline:no-fingerprint",
+                    producerFamily: "first",
+                    ruleId: "old-rule")),
+            MatchingTestData.Input(
+                InputKind.Candidate,
+                MatchingTestData.Finding(
+                    InputKind.Candidate,
+                    "candidate:no-fingerprint",
+                    producerFamily: "second",
+                    ruleId: "new-rule")),
+            MatchingTestData.Configuration(ruleAliases: [alias]));
+
+        Assert.Equal(2, withFingerprint.Decisions.Length);
+        Assert.Equal(0, withFingerprint.CandidateEdgeCount);
+        Assert.Contains(
+            withFingerprint.Decisions,
+            decision => decision.Classification == FindingClassification.Resolved);
+        Assert.Contains(
+            withFingerprint.Decisions,
+            decision => decision.Classification == FindingClassification.New);
+        Assert.Equal(2, withoutFingerprint.Decisions.Length);
+        Assert.Equal(0, withoutFingerprint.CandidateEdgeCount);
+    }
+
+    [Fact]
+    public void Duplicate_producer_fingerprints_are_degraded_and_refused_as_ambiguous()
+    {
+        var duplicate = MatchingTestData.ProducerFingerprint("duplicate");
+        var baselineOne = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            producerFingerprints: [duplicate],
+            contextHash: "same");
+        var baselineTwo = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:two",
+            producerFingerprints: [duplicate],
+            contextHash: "same");
+        var candidateOne = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            producerFingerprints: [duplicate],
+            contextHash: "same");
+        var candidateTwo = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:two",
+            producerFingerprints: [duplicate],
+            contextHash: "same");
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baselineOne, baselineTwo),
+            MatchingTestData.Input(InputKind.Candidate, candidateOne, candidateTwo));
+
+        Assert.Equal(4, result.Decisions.Length);
+        Assert.All(
+            result.Decisions,
+            decision => Assert.Equal(
+                FindingClassification.Ambiguous,
+                decision.Classification));
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MATCH0005");
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MATCH0001");
+    }
+}
