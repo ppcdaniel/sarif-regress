@@ -177,6 +177,7 @@ public sealed class SarifIngestor
         for (var runIndex = 0; runIndex < log.Runs!.Count; runIndex++)
         {
             var run = log.Runs[runIndex];
+            log.Runs[runIndex] = null;
             if (run is null)
             {
                 diagnostics.Add(
@@ -295,6 +296,9 @@ public sealed class SarifIngestor
         {
             cancellationToken.ThrowIfCancellationRequested();
             var result = run.Results![resultIndex];
+            // Document-wide facts have already been captured. Release each
+            // wire result before expanding it into the canonical model.
+            run.Results[resultIndex] = null;
             var resultPointer = $"/runs/{runIndex}/results/{resultIndex}";
             if (result is null)
             {

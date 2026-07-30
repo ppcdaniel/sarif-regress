@@ -80,8 +80,8 @@ public static class FingerprintProcessor
     {
         ArgumentNullException.ThrowIfNull(findings);
         var findingArray = findings.ToImmutableArray();
-        var findingKeysByFingerprint =
-            new Dictionary<FingerprintBucketKey, HashSet<string>>();
+        var occurrencesByFingerprint =
+            new Dictionary<FingerprintBucketKey, FingerprintOccurrence>();
 
         foreach (var finding in findingArray)
         {
@@ -92,15 +92,27 @@ public static class FingerprintProcessor
                     finding.Rule.CanonicalId,
                     fingerprint.Name,
                     fingerprint.Value);
-                if (!findingKeysByFingerprint.TryGetValue(
+                if (!occurrencesByFingerprint.TryGetValue(
                         key,
-                        out var findingKeys))
+                        out var occurrence))
                 {
-                    findingKeys = new HashSet<string>(StringComparer.Ordinal);
-                    findingKeysByFingerprint.Add(key, findingKeys);
+                    occurrencesByFingerprint.Add(
+                        key,
+                        new FingerprintOccurrence(
+                            finding.FindingKey,
+                            Collided: false));
+                    continue;
                 }
 
-                findingKeys.Add(finding.FindingKey);
+                if (!occurrence.Collided &&
+                    !string.Equals(
+                        occurrence.FirstFindingKey,
+                        finding.FindingKey,
+                        StringComparison.Ordinal))
+                {
+                    occurrencesByFingerprint[key] =
+                        occurrence with { Collided = true };
+                }
             }
         }
 
@@ -116,9 +128,9 @@ public static class FingerprintProcessor
                         fingerprint.Name,
                         fingerprint.Value);
                     var reliability =
-                        findingKeysByFingerprint[key].Count == 1
-                        ? FingerprintReliability.High
-                        : FingerprintReliability.Degraded;
+                        occurrencesByFingerprint[key].Collided
+                            ? FingerprintReliability.Degraded
+                            : FingerprintReliability.High;
                     return fingerprint with { Reliability = reliability };
                 });
 
@@ -266,4 +278,8 @@ public static class FingerprintProcessor
         string Rule,
         string Name,
         string Value);
+
+    private readonly record struct FingerprintOccurrence(
+        string FirstFindingKey,
+        bool Collided);
 }
