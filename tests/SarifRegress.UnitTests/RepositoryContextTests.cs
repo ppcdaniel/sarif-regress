@@ -19,13 +19,15 @@ public sealed class RepositoryContextTests
             await File.WriteAllTextAsync(
                 Path.Combine(sourceDirectory.FullName, "a.cs"),
                 "line one\r\nline two\r\nline three",
-                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                TestContext.Current.CancellationToken);
             var context = new FileSystemRepositoryContext(root.FullName);
 
             var result = await context.ReadAsync(
                 "src/a.cs",
                 new Region(2, 1, 2, 4),
-                lineRadius: 1);
+                lineRadius: 1,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.True(result.Exists);
             Assert.Equal(
@@ -53,7 +55,8 @@ public sealed class RepositoryContextTests
             var result = await context.ReadAsync(
                 "../outside.txt",
                 new Region(1, null, null, null),
-                lineRadius: 0);
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.False(result.Exists);
             var diagnostic = Assert.Single(result.Diagnostics);
@@ -75,7 +78,8 @@ public sealed class RepositoryContextTests
             await File.WriteAllTextAsync(
                 Path.Combine(root.FullName, "large.txt"),
                 "12345",
-                Encoding.UTF8);
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
             var limits = ResourceLimits.Default with
             {
                 MaximumRepositoryFileBytes = 4,
@@ -87,7 +91,8 @@ public sealed class RepositoryContextTests
             var result = await context.ReadAsync(
                 "large.txt",
                 new Region(1, null, null, null),
-                lineRadius: 0);
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.True(result.Exists);
             Assert.Null(result.Evidence);
@@ -111,13 +116,15 @@ public sealed class RepositoryContextTests
         {
             await File.WriteAllBytesAsync(
                 Path.Combine(root.FullName, "invalid.txt"),
-                [0xC3, 0x28]);
+                [0xC3, 0x28],
+                TestContext.Current.CancellationToken);
             var context = new FileSystemRepositoryContext(root.FullName);
 
             var result = await context.ReadAsync(
                 "invalid.txt",
                 new Region(1, null, null, null),
-                lineRadius: 0);
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Null(result.Snippet);
             Assert.Contains(
@@ -139,18 +146,21 @@ public sealed class RepositoryContextTests
             await File.WriteAllTextAsync(
                 Path.Combine(root.FullName, "stable.txt"),
                 "alpha\nbeta\ngamma",
-                Encoding.UTF8);
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
             var context = new FileSystemRepositoryContext(root.FullName);
             var region = new Region(2, null, null, null);
 
             var first = await context.ReadAsync(
                 "stable.txt",
                 region,
-                lineRadius: 1);
+                lineRadius: 1,
+                cancellationToken: TestContext.Current.CancellationToken);
             var second = await context.ReadAsync(
                 "stable.txt",
                 region,
-                lineRadius: 1);
+                lineRadius: 1,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Equal(first.Snippet, second.Snippet);
             Assert.Equal(
@@ -172,13 +182,15 @@ public sealed class RepositoryContextTests
             await File.WriteAllTextAsync(
                 Path.Combine(root.FullName, "small.txt"),
                 "only line",
-                Encoding.UTF8);
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
             var context = new FileSystemRepositoryContext(root.FullName);
 
             var result = await context.ReadAsync(
                 "small.txt",
                 new Region(1, 1, int.MaxValue, 1),
-                lineRadius: ResourceLimits.Default.MaximumSnippetRadius);
+                lineRadius: ResourceLimits.Default.MaximumSnippetRadius,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Equal("only line", result.Snippet);
             Assert.Equal(1, result.Evidence?.EndLine);
@@ -206,7 +218,8 @@ public sealed class RepositoryContextTests
             await File.WriteAllTextAsync(
                 outsideFile,
                 "secret",
-                Encoding.UTF8);
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
 
             var fileLink = Path.Combine(root.FullName, "file-link.txt");
             var directoryLink = Path.Combine(root.FullName, "directory-link");
@@ -229,16 +242,19 @@ public sealed class RepositoryContextTests
             var fileResult = await context.ReadAsync(
                 "file-link.txt",
                 new Region(1, null, null, null),
-                lineRadius: 0);
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
             var directoryResult = await context.ReadAsync(
                 "directory-link/secret.txt",
                 new Region(1, null, null, null),
-                lineRadius: 0);
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
             var rootResult = await new FileSystemRepositoryContext(rootLink)
                 .ReadAsync(
                     "file-link.txt",
                     new Region(1, null, null, null),
-                    lineRadius: 0);
+                    lineRadius: 0,
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Contains(
                 fileResult.Diagnostics,

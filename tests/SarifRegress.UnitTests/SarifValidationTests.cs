@@ -396,7 +396,8 @@ public sealed class SarifValidationTests
 
         var result = await new SarifIngestor(repository).IngestAsync(
             stream,
-            new SarifIngestionRequest(InputKind.Candidate, "candidate"));
+            new SarifIngestionRequest(InputKind.Candidate, "candidate"),
+            TestContext.Current.CancellationToken);
 
         Assert.Equal("src/a.cs", repository.RequestedPath);
         Assert.Equal(3, repository.RequestedRadius);
@@ -415,7 +416,8 @@ public sealed class SarifValidationTests
             new SarifIngestionRequest(
                 InputKind.Baseline,
                 "baseline",
-                configuration));
+                configuration),
+            TestContext.Current.CancellationToken);
     }
 
     private static MemoryStream CreateStream(string value) =>

@@ -135,7 +135,9 @@ public sealed class ConfigurationReaderTests
         await using var input = CreateStream(
             """{ "schemaVersion": "1", "repoRoot": "." }""");
 
-        var result = await reader.ReadAsync(input);
+        var result = await reader.ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
 
         Assert.False(result.IsValid);
         Assert.Contains(
@@ -256,7 +258,9 @@ public sealed class ConfigurationReaderTests
         await using var input = CreateStream(
             """{ "schemaVersion": "12345" }""");
 
-        var result = await reader.ReadAsync(input);
+        var result = await reader.ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
 
         Assert.False(result.IsValid);
         Assert.Contains(
@@ -283,7 +287,9 @@ public sealed class ConfigurationReaderTests
             }
             """);
 
-        var result = await reader.ReadAsync(input);
+        var result = await reader.ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
 
         Assert.False(result.IsValid);
         Assert.Contains(
@@ -297,9 +303,13 @@ public sealed class ConfigurationReaderTests
         await using var input = new ThrowingReadStream();
         await using var secondInput = new ThrowingReadStream();
 
-        var first = await new SarifConfigurationReader().ReadAsync(input);
+        var first = await new SarifConfigurationReader().ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
         var second = await new SarifConfigurationReader()
-            .ReadAsync(secondInput);
+            .ReadAsync(
+                secondInput,
+                TestContext.Current.CancellationToken);
 
         Assert.False(first.IsValid);
         var diagnostic = Assert.Single(first.Diagnostics);
@@ -360,7 +370,9 @@ public sealed class ConfigurationReaderTests
     private static async Task<ConfigurationReadResult> ReadAsync(string json)
     {
         await using var input = CreateStream(json);
-        return await new SarifConfigurationReader().ReadAsync(input);
+        return await new SarifConfigurationReader().ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
     }
 
     private static MemoryStream CreateStream(string value) =>

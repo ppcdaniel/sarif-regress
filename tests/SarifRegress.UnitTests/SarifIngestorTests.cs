@@ -317,7 +317,10 @@ public sealed class SarifIngestorTests
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(sarif),
             writable: false);
-        return await new SarifIngestor().IngestAsync(stream, request);
+        return await new SarifIngestor().IngestAsync(
+            stream,
+            request,
+            TestContext.Current.CancellationToken);
     }
 
     private static SarifRegressConfiguration CreateConfiguration(
