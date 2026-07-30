@@ -44,22 +44,44 @@ internal static class StableComparisonReport
 
         var baselineKeys = new HashSet<string>(StringComparer.Ordinal);
         var candidateKeys = new HashSet<string>(StringComparer.Ordinal);
-        var normalizedFindings = ImmutableArray.CreateBuilder<FindingReport>(
-            report.Findings.Length);
-        foreach (var finding in report.Findings)
+        ImmutableArray<FindingReport>.Builder? normalizedFindings = null;
+        for (var findingIndex = 0;
+             findingIndex < report.Findings.Length;
+             findingIndex++)
         {
+            var finding = report.Findings[findingIndex];
             if (finding is null)
             {
                 throw Invalid("The 'findings' array cannot contain null values.");
             }
 
-            normalizedFindings.Add(
-                NormalizeFinding(
-                    finding,
-                    report.Determinism.MatcherAlgorithm,
-                    baselineKeys,
-                    candidateKeys,
-                    limits));
+            var normalizedFinding = NormalizeFinding(
+                finding,
+                report.Determinism.MatcherAlgorithm,
+                baselineKeys,
+                candidateKeys,
+                limits);
+            if (ReferenceEquals(normalizedFinding, finding)
+                && normalizedFindings is null)
+            {
+                continue;
+            }
+
+            if (normalizedFindings is null)
+            {
+                normalizedFindings =
+                    ImmutableArray.CreateBuilder<FindingReport>(
+                        report.Findings.Length);
+                for (var earlierIndex = 0;
+                     earlierIndex < findingIndex;
+                     earlierIndex++)
+                {
+                    normalizedFindings.Add(
+                        report.Findings[earlierIndex]);
+                }
+            }
+
+            normalizedFindings.Add(normalizedFinding);
         }
 
         foreach (var diagnostic in report.Diagnostics)
@@ -67,7 +89,9 @@ internal static class StableComparisonReport
             ValidateDiagnostic(diagnostic, "diagnostics[]", limits);
         }
 
-        var normalizedFindingArray = normalizedFindings.MoveToImmutable();
+        var normalizedFindingArray = normalizedFindings is null
+            ? report.Findings
+            : normalizedFindings.MoveToImmutable();
         var findings = IsOrdered(
                 normalizedFindingArray,
                 CompareFindingReports)
@@ -266,38 +290,43 @@ internal static class StableComparisonReport
         string propertyName,
         ResourceLimits limits)
     {
-        RequireText(snapshot.FindingKey, $"{propertyName}.findingKey", limits);
+        RequireText(
+            snapshot.FindingKey,
+            new PropertyPath(propertyName, ".findingKey"),
+            limits);
         RequireText(
             snapshot.ProducerFamily,
-            $"{propertyName}.producerFamily",
+            new PropertyPath(propertyName, ".producerFamily"),
             limits);
         RequireText(
             snapshot.CanonicalRule,
-            $"{propertyName}.canonicalRule",
+            new PropertyPath(propertyName, ".canonicalRule"),
             limits);
         ValidateText(
             snapshot.CanonicalMessage,
-            $"{propertyName}.canonicalMessage",
+            new PropertyPath(propertyName, ".canonicalMessage"),
             limits);
         ValidateOptionalText(
             snapshot.CanonicalUri,
-            $"{propertyName}.canonicalUri",
+            new PropertyPath(propertyName, ".canonicalUri"),
             limits,
             allowEmpty: false);
         ArgumentNullException.ThrowIfNull(snapshot.SourceMetadata);
         ValidateOptionalText(
             snapshot.SourceMetadata.Level,
-            $"{propertyName}.sourceMetadata.level",
+            new PropertyPath(propertyName, ".sourceMetadata.level"),
             limits,
             allowEmpty: true);
         ValidateOptionalText(
             snapshot.SourceMetadata.Kind,
-            $"{propertyName}.sourceMetadata.kind",
+            new PropertyPath(propertyName, ".sourceMetadata.kind"),
             limits,
             allowEmpty: true);
         ValidateOptionalText(
             snapshot.SourceMetadata.BaselineState,
-            $"{propertyName}.sourceMetadata.baselineState",
+            new PropertyPath(
+                propertyName,
+                ".sourceMetadata.baselineState"),
             limits,
             allowEmpty: true);
         if (!observedKeys.Add(snapshot.FindingKey))
@@ -308,15 +337,17 @@ internal static class StableComparisonReport
 
         var messageNormalisationFlags = NormalizeStringArray(
             snapshot.MessageNormalisationFlags,
-            $"{propertyName}.messageNormalisationFlags",
+            new PropertyPath(
+                propertyName,
+                ".messageNormalisationFlags"),
             limits);
         var lossiness = NormalizeStringArray(
             snapshot.Lossiness,
-            $"{propertyName}.lossiness",
+            new PropertyPath(propertyName, ".lossiness"),
             limits);
         ValidateCollection(
             snapshot.DerivedFingerprints,
-            $"{propertyName}.derivedFingerprints",
+            new PropertyPath(propertyName, ".derivedFingerprints"),
             limits.MaximumRunCollectionItems);
         HashSet<string>? fingerprintNames =
             snapshot.DerivedFingerprints.Length > 1
@@ -332,15 +363,21 @@ internal static class StableComparisonReport
 
             RequireText(
                 fingerprint.Name,
-                $"{propertyName}.derivedFingerprints[].name",
+                new PropertyPath(
+                    propertyName,
+                    ".derivedFingerprints[].name"),
                 limits);
             RequireText(
                 fingerprint.Value,
-                $"{propertyName}.derivedFingerprints[].value",
+                new PropertyPath(
+                    propertyName,
+                    ".derivedFingerprints[].value"),
                 limits);
             RequireText(
                 fingerprint.AlgorithmVersion,
-                $"{propertyName}.derivedFingerprints[].algorithmVersion",
+                new PropertyPath(
+                    propertyName,
+                    ".derivedFingerprints[].algorithmVersion"),
                 limits);
             if (string.Equals(
                     fingerprint.Name,
@@ -388,7 +425,7 @@ internal static class StableComparisonReport
 
     private static ImmutableArray<string> NormalizeStringArray(
         ImmutableArray<string> values,
-        string propertyName,
+        PropertyPath propertyName,
         ResourceLimits limits)
     {
         ValidateCollection(
@@ -397,7 +434,7 @@ internal static class StableComparisonReport
             limits.MaximumRunCollectionItems);
         foreach (var value in values)
         {
-            RequireText(value, $"{propertyName}[]", limits);
+            RequireText(value, propertyName.Append("[]"), limits);
         }
 
         if (values.Length <= 1
@@ -635,7 +672,7 @@ internal static class StableComparisonReport
 
     private static void ValidateDiagnostic(
         Diagnostic diagnostic,
-        string propertyName,
+        PropertyPath propertyName,
         ResourceLimits limits)
     {
         if (diagnostic is null)
@@ -643,18 +680,24 @@ internal static class StableComparisonReport
             throw Invalid($"The '{propertyName}' value cannot be null.");
         }
 
-        RequireText(diagnostic.Code, $"{propertyName}.code", limits);
+        RequireText(
+            diagnostic.Code,
+            propertyName.Append(".code"),
+            limits);
         _ = StableJsonNames.Severity(diagnostic.Severity);
         _ = StableJsonNames.Stage(diagnostic.Stage);
-        RequireText(diagnostic.Message, $"{propertyName}.message", limits);
+        RequireText(
+            diagnostic.Message,
+            propertyName.Append(".message"),
+            limits);
         ValidateOptionalText(
             diagnostic.StandardBasis,
-            $"{propertyName}.standardBasis",
+            propertyName.Append(".standardBasis"),
             limits,
             allowEmpty: false);
         ValidateOptionalText(
             diagnostic.Help,
-            $"{propertyName}.help",
+            propertyName.Append(".help"),
             limits,
             allowEmpty: false);
         if (diagnostic.SourceReference is not null)
@@ -662,7 +705,7 @@ internal static class StableComparisonReport
             ValidateSourceReference(
                 diagnostic.SourceReference,
                 expectedInput: null,
-                $"{propertyName}.sourceRef",
+                propertyName.Append(".sourceRef"),
                 limits);
         }
     }
@@ -670,7 +713,7 @@ internal static class StableComparisonReport
     private static void ValidateSourceReference(
         SourceReference sourceReference,
         InputKind? expectedInput,
-        string propertyName,
+        PropertyPath propertyName,
         ResourceLimits limits)
     {
         _ = StableJsonNames.Input(sourceReference.Input);
@@ -682,7 +725,7 @@ internal static class StableComparisonReport
 
         ValidateText(
             sourceReference.JsonPointer,
-            $"{propertyName}.jsonPointer",
+            propertyName.Append(".jsonPointer"),
             limits);
     }
 
@@ -966,7 +1009,7 @@ internal static class StableComparisonReport
 
     private static void ValidateCollection<T>(
         ImmutableArray<T> values,
-        string propertyName,
+        PropertyPath propertyName,
         int maximumItems)
     {
         if (values.IsDefault)
@@ -983,7 +1026,7 @@ internal static class StableComparisonReport
 
     private static void RequireText(
         string value,
-        string propertyName,
+        PropertyPath propertyName,
         ResourceLimits limits)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -996,7 +1039,7 @@ internal static class StableComparisonReport
 
     private static void ValidateText(
         string value,
-        string propertyName,
+        PropertyPath propertyName,
         ResourceLimits limits)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -1010,7 +1053,7 @@ internal static class StableComparisonReport
 
     private static void ValidateOptionalText(
         string? value,
-        string propertyName,
+        PropertyPath propertyName,
         ResourceLimits limits,
         bool allowEmpty)
     {
@@ -1025,6 +1068,25 @@ internal static class StableComparisonReport
         }
 
         ValidateText(value, propertyName, limits);
+    }
+
+    private readonly record struct PropertyPath(
+        string Prefix,
+        string? Suffix = null,
+        string? Tail = null)
+    {
+        public static implicit operator PropertyPath(string value) =>
+            new(value);
+
+        public PropertyPath Append(string suffix) =>
+            Suffix is null
+                ? new PropertyPath(Prefix, suffix)
+                : Tail is null
+                    ? new PropertyPath(Prefix, Suffix, suffix)
+                    : new PropertyPath(ToString(), suffix);
+
+        public override string ToString() =>
+            string.Concat(Prefix, Suffix, Tail);
     }
 
     private static ArgumentException Invalid(string message) =>

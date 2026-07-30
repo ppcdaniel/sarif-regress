@@ -120,16 +120,13 @@ public static class ComparisonReportFactory
     private static ComparisonSummary CreateSummary(
         ImmutableArray<FindingReport> findings)
     {
-        var baselineCount = findings
-            .Where(item => item.Baseline is not null)
-            .Select(item => item.Baseline!.FindingKey)
-            .Distinct(StringComparer.Ordinal)
-            .Count();
-        var candidateCount = findings
-            .Where(item => item.Candidate is not null)
-            .Select(item => item.Candidate!.FindingKey)
-            .Distinct(StringComparer.Ordinal)
-            .Count();
+        var baselineCount = 0;
+        var candidateCount = 0;
+        foreach (var finding in findings)
+        {
+            baselineCount += finding.Baseline is null ? 0 : 1;
+            candidateCount += finding.Candidate is null ? 0 : 1;
+        }
 
         return new ComparisonSummary(
             baselineCount,
