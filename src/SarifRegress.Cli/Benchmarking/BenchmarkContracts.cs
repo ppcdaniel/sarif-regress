@@ -75,6 +75,10 @@ public sealed record BenchmarkObservations(
     long CanonicaliseThroughputFindingsPerSecond,
     double CompareLatencyMilliseconds,
     double SerializeLatencyMilliseconds,
+    long ParseAllocatedBytesProxy,
+    long CanonicaliseAllocatedBytesProxy,
+    long CompareAllocatedBytesProxy,
+    long SerializeAllocatedBytesProxy,
     long AllocatedBytesProxy,
     long WorkingSetBytes,
     long PeakWorkingSetBytes);

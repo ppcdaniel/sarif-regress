@@ -128,9 +128,13 @@ public sealed class AuxiliaryOutputDeterminismTests
                 CanonicaliseThroughputFindingsPerSecond: 4,
                 CompareLatencyMilliseconds: 5,
                 SerializeLatencyMilliseconds: 6,
-                AllocatedBytesProxy: 7,
-                WorkingSetBytes: 8,
-                PeakWorkingSetBytes: 9),
+                ParseAllocatedBytesProxy: 7,
+                CanonicaliseAllocatedBytesProxy: 8,
+                CompareAllocatedBytesProxy: 9,
+                SerializeAllocatedBytesProxy: 10,
+                AllocatedBytesProxy: 34,
+                WorkingSetBytes: 35,
+                PeakWorkingSetBytes: 36),
             new BenchmarkBudgetEvaluation(
                 MaximumPipelineLatencyMilliseconds: 10_000,
                 MaximumPeakWorkingSetBytes: 512L * 1024 * 1024,
@@ -145,9 +149,13 @@ public sealed class AuxiliaryOutputDeterminismTests
                 CanonicaliseThroughputFindingsPerSecond: 14,
                 CompareLatencyMilliseconds: 15,
                 SerializeLatencyMilliseconds: 16,
-                AllocatedBytesProxy: 17,
-                WorkingSetBytes: 18,
-                PeakWorkingSetBytes: 19),
+                ParseAllocatedBytesProxy: 17,
+                CanonicaliseAllocatedBytesProxy: 18,
+                CompareAllocatedBytesProxy: 19,
+                SerializeAllocatedBytesProxy: 20,
+                AllocatedBytesProxy: 74,
+                WorkingSetBytes: 75,
+                PeakWorkingSetBytes: 76),
             Budget = new BenchmarkBudgetEvaluation(
                 MaximumPipelineLatencyMilliseconds: 10_000,
                 MaximumPeakWorkingSetBytes: 512L * 1024 * 1024,
@@ -163,6 +171,33 @@ public sealed class AuxiliaryOutputDeterminismTests
             BenchmarkReportSerializer.SerializeDeterministicProjection(second);
         using var firstDocument = JsonDocument.Parse(firstJson);
         using var secondDocument = JsonDocument.Parse(secondJson);
+        var firstObservations = firstDocument.RootElement
+            .GetProperty("observations");
+        Assert.Equal(
+            7,
+            firstObservations
+                .GetProperty("parseAllocatedBytesProxy")
+                .GetInt64());
+        Assert.Equal(
+            8,
+            firstObservations
+                .GetProperty("canonicaliseAllocatedBytesProxy")
+                .GetInt64());
+        Assert.Equal(
+            9,
+            firstObservations
+                .GetProperty("compareAllocatedBytesProxy")
+                .GetInt64());
+        Assert.Equal(
+            10,
+            firstObservations
+                .GetProperty("serializeAllocatedBytesProxy")
+                .GetInt64());
+        Assert.Equal(
+            34,
+            firstObservations
+                .GetProperty("allocatedBytesProxy")
+                .GetInt64());
         AssertStablePropertyEqual(firstDocument, secondDocument, "tool");
         AssertStablePropertyEqual(firstDocument, secondDocument, "dataset");
         AssertStablePropertyEqual(firstDocument, secondDocument, "limits");

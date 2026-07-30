@@ -33,6 +33,8 @@ public sealed class BenchmarkRunner
     {
         cancellationToken.ThrowIfCancellationRequested();
         var dataset = BenchmarkDatasetGenerator.Generate(findingCount, kind);
+        var baselineBytes = dataset.BaselineSarif.Length;
+        var candidateBytes = dataset.CandidateSarif.Length;
         var allocatedBefore = GC.GetTotalAllocatedBytes(precise: false);
 
         var stopwatch = Stopwatch.StartNew();
@@ -43,6 +45,7 @@ public sealed class BenchmarkRunner
         cancellationToken.ThrowIfCancellationRequested();
         stopwatch.Stop();
         var parseElapsed = stopwatch.Elapsed;
+        var allocatedAfterParse = GC.GetTotalAllocatedBytes(precise: false);
 
         stopwatch.Restart();
         var baseline = await IngestAsync(
@@ -57,8 +60,11 @@ public sealed class BenchmarkRunner
                 "benchmark-candidate.sarif",
                 cancellationToken)
             .ConfigureAwait(false);
+        dataset = null!;
         stopwatch.Stop();
         var canonicaliseElapsed = stopwatch.Elapsed;
+        var allocatedAfterCanonicalise =
+            GC.GetTotalAllocatedBytes(precise: false);
         EnsureValid(baseline, candidate, findingCount);
 
         stopwatch.Restart();
@@ -67,6 +73,8 @@ public sealed class BenchmarkRunner
             candidate.ComparisonInput);
         stopwatch.Stop();
         var compareElapsed = stopwatch.Elapsed;
+        var allocatedAfterCompare =
+            GC.GetTotalAllocatedBytes(precise: false);
 
         stopwatch.Restart();
         var comparisonReport = ComparisonReportFactory.Create(
@@ -80,10 +88,11 @@ public sealed class BenchmarkRunner
             StableJsonReportSerializer.MeasureCanonical(comparisonReport);
         stopwatch.Stop();
         var serializeElapsed = stopwatch.Elapsed;
+        var allocatedAfterSerialize =
+            GC.GetTotalAllocatedBytes(precise: false);
 
         using var process = Process.GetCurrentProcess();
         process.Refresh();
-        var allocatedAfter = GC.GetTotalAllocatedBytes(precise: false);
         var candidateBucketSizes = MeasureCandidateBucketSizes(
             candidate.ComparisonInput.Findings);
         var componentSizes = MeasureComponentSizes(
@@ -119,14 +128,23 @@ public sealed class BenchmarkRunner
         var observations = new BenchmarkObservations(
             parseElapsed.TotalMilliseconds,
             Rate(
-                (long)dataset.BaselineSarif.Length +
-                dataset.CandidateSarif.Length,
+                (long)baselineBytes + candidateBytes,
                 parseElapsed),
             canonicaliseElapsed.TotalMilliseconds,
             Rate(checked(2L * findingCount), canonicaliseElapsed),
             compareElapsed.TotalMilliseconds,
             serializeElapsed.TotalMilliseconds,
-            Math.Max(0, allocatedAfter - allocatedBefore),
+            AllocationDelta(allocatedBefore, allocatedAfterParse),
+            AllocationDelta(
+                allocatedAfterParse,
+                allocatedAfterCanonicalise),
+            AllocationDelta(
+                allocatedAfterCanonicalise,
+                allocatedAfterCompare),
+            AllocationDelta(
+                allocatedAfterCompare,
+                allocatedAfterSerialize),
+            AllocationDelta(allocatedBefore, allocatedAfterSerialize),
             process.WorkingSet64,
             process.PeakWorkingSet64);
         var budget = EvaluateBudget(
@@ -137,8 +155,8 @@ public sealed class BenchmarkRunner
         return new BenchmarkReport(
             kind,
             findingCount,
-            dataset.BaselineSarif.Length,
-            dataset.CandidateSarif.Length,
+            baselineBytes,
+            candidateBytes,
             limits.MaximumCandidatePairEvaluationsPerFinding,
             limits.MaximumCandidatePairEvaluations,
             operations,
@@ -205,6 +223,11 @@ public sealed class BenchmarkRunner
                 rate,
                 MidpointRounding.AwayFromZero);
     }
+
+    private static long AllocationDelta(long before, long after) =>
+        after >= before
+            ? after - before
+            : 0;
 
     private static ImmutableArray<int> MeasureCandidateBucketSizes(
         ImmutableArray<Finding> findings) =>

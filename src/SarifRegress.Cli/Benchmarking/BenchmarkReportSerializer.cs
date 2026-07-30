@@ -224,6 +224,18 @@ public static class BenchmarkReportSerializer
             "serializeLatencyMilliseconds",
             observations.SerializeLatencyMilliseconds);
         writer.WriteNumber(
+            "parseAllocatedBytesProxy",
+            observations.ParseAllocatedBytesProxy);
+        writer.WriteNumber(
+            "canonicaliseAllocatedBytesProxy",
+            observations.CanonicaliseAllocatedBytesProxy);
+        writer.WriteNumber(
+            "compareAllocatedBytesProxy",
+            observations.CompareAllocatedBytesProxy);
+        writer.WriteNumber(
+            "serializeAllocatedBytesProxy",
+            observations.SerializeAllocatedBytesProxy);
+        writer.WriteNumber(
             "allocatedBytesProxy",
             observations.AllocatedBytesProxy);
         writer.WriteNumber("workingSetBytes", observations.WorkingSetBytes);
