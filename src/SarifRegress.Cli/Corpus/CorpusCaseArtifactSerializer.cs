@@ -124,10 +124,12 @@ public static class CorpusCaseArtifactSerializer
             writer.WriteString(
                 "input",
                 diagnostic.SourceReference.Input.ToString().ToLowerInvariant());
-            writer.WriteNumber(
+            WriteOptionalNumber(
+                writer,
                 "runIndex",
                 diagnostic.SourceReference.RunIndex);
-            writer.WriteNumber(
+            WriteOptionalNumber(
+                writer,
                 "resultIndex",
                 diagnostic.SourceReference.ResultIndex);
             writer.WriteString(
@@ -147,6 +149,17 @@ public static class CorpusCaseArtifactSerializer
         if (value is not null)
         {
             writer.WriteString(propertyName, value);
+        }
+    }
+
+    private static void WriteOptionalNumber(
+        Utf8JsonWriter writer,
+        string propertyName,
+        int? value)
+    {
+        if (value.HasValue)
+        {
+            writer.WriteNumber(propertyName, value.Value);
         }
     }
 }
