@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# The supplied architecture baseline uses Markdown hard-break whitespace.
+docs/architecture.md whitespace=-trailing-space,-blank-at-eof

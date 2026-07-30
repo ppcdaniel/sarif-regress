@@ -1,0 +1,62 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+out/
+
+# Test, coverage, and benchmark outputs
+[Tt]est[Rr]esults/
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+*.trx
+BenchmarkDotNet.Artifacts/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio Code
+.vscode/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+_ReSharper*/
+*.DotSettings.user
+
+# Generated files and local configuration
+Generated/
+*.generated.*
+*.cache
+*.tmp
+*.log
+.env
+.env.*
+secrets.json
+appsettings.*.local.json
+*.pfx
+*.p12
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Root-level source attachments; the canonical architecture is tracked in docs/.
+/architecture.md
+/architecture(*).md
