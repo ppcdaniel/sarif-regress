@@ -4,6 +4,10 @@
 
 Implement only the active GitHub issue. Do not pull work forward from later issues in `docs/architecture.md`, even when adjacent scaffolding would be convenient.
 
+Issue #3 is the repository-owner-authorised exception that tracks the complete MVP architecture.
+Work under that issue must remain dependency ordered, use focused commits, and update its phase
+checklist only after the corresponding acceptance criteria have been directly verified.
+
 ## Commands
 
 Windows:
