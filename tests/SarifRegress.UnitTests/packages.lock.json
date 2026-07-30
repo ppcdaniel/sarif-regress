@@ -157,35 +157,35 @@
           "xunit.v3.runner.common": "[3.2.2]"
         }
       },
-      "sarifregress.tool": {
-        "type": "Project",
-        "dependencies": {
-          "SarifRegress.Core": "[1.0.0, )",
-          "SarifRegress.Match": "[1.0.0, )",
-          "SarifRegress.Report": "[1.0.0, )",
-          "SarifRegress.Sarif": "[1.0.0, )",
-          "System.CommandLine": "[2.0.10, )"
-        }
-      },
       "sarifregress.core": {
         "type": "Project"
       },
       "sarifregress.match": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[1.0.0, )"
+          "SarifRegress.Core": "[0.1.0, )"
         }
       },
       "sarifregress.report": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[1.0.0, )"
+          "SarifRegress.Core": "[0.1.0, )"
         }
       },
       "sarifregress.sarif": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[1.0.0, )"
+          "SarifRegress.Core": "[0.1.0, )"
+        }
+      },
+      "SarifRegress.Tool": {
+        "type": "Project",
+        "dependencies": {
+          "SarifRegress.Core": "[0.1.0, )",
+          "SarifRegress.Match": "[0.1.0, )",
+          "SarifRegress.Report": "[0.1.0, )",
+          "SarifRegress.Sarif": "[0.1.0, )",
+          "System.CommandLine": "[2.0.10, )"
         }
       },
       "System.CommandLine": {

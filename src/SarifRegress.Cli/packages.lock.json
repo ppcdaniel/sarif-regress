@@ -14,21 +14,23 @@
       "sarifregress.match": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[1.0.0, )"
+          "SarifRegress.Core": "[0.1.0, )"
         }
       },
       "sarifregress.report": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[1.0.0, )"
+          "SarifRegress.Core": "[0.1.0, )"
         }
       },
       "sarifregress.sarif": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[1.0.0, )"
+          "SarifRegress.Core": "[0.1.0, )"
         }
       }
-    }
+    },
+    "net10.0/linux-x64": {},
+    "net10.0/win-x64": {}
   }
 }
