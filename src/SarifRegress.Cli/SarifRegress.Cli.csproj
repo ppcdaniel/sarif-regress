@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>sarif-regress</AssemblyName>
+    <RootNamespace>SarifRegress.Cli</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SarifRegress.Core/SarifRegress.Core.csproj" />
+    <ProjectReference Include="../SarifRegress.Sarif/SarifRegress.Sarif.csproj" />
+    <ProjectReference Include="../SarifRegress.Match/SarifRegress.Match.csproj" />
+    <ProjectReference Include="../SarifRegress.Report/SarifRegress.Report.csproj" />
+  </ItemGroup>
+</Project>

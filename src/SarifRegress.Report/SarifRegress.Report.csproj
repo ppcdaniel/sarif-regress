@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../SarifRegress.Core/SarifRegress.Core.csproj" />
+  </ItemGroup>
+</Project>

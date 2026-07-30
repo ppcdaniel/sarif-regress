@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SarifRegress.Cli/SarifRegress.Cli.csproj" />
+    <Project Path="src/SarifRegress.Core/SarifRegress.Core.csproj" />
+    <Project Path="src/SarifRegress.Match/SarifRegress.Match.csproj" />
+    <Project Path="src/SarifRegress.Report/SarifRegress.Report.csproj" />
+    <Project Path="src/SarifRegress.Sarif/SarifRegress.Sarif.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SarifRegress.DeterminismTests/SarifRegress.DeterminismTests.csproj" />
+    <Project Path="tests/SarifRegress.IntegrationTests/SarifRegress.IntegrationTests.csproj" />
+    <Project Path="tests/SarifRegress.UnitTests/SarifRegress.UnitTests.csproj" />
+  </Folder>
+</Solution>

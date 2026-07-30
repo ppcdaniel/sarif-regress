@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Generate dependency locks
+        shell: bash
+        run: dotnet restore SarifRegress.slnx
+
+      - name: Emit dependency locks
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          while IFS= read -r lock_file; do
+            relative_path="${lock_file#./}"
+            echo "LOCK_FILE_BEGIN:${relative_path}"
+            base64 --wrap=0 "${lock_file}"
+            echo
+            echo "LOCK_FILE_END:${relative_path}"
+          done < <(
+            find . -name packages.lock.json -not -path './.nuget/*' -print | sort
+          )
+
+      - name: Verify on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: ./scripts/verify.sh
+
+      - name: Verify on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\scripts\verify.ps1
