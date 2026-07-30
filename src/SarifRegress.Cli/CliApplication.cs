@@ -27,7 +27,7 @@ public static class CliApplication
     /// <param name="output">The destination for standard output.</param>
     /// <param name="error">The destination for standard error.</param>
     /// <param name="currentDirectory">
-    /// The directory against which explicit relative command-line paths are resolved.
+    /// The directory against which explicit relative command-line paths ar resolved.
     /// </param>
     /// <returns>The exit code produced by parsing or invoking the selected command.</returns>
     public static int Run(
@@ -51,6 +51,8 @@ public static class CliApplication
         var parseResult = rootCommand.Parse(args);
         if (parseResult.Errors.Count > 0)
         {
+            WriteMissingRequiredCompareOptions(args, error);
+
             foreach (var parseError in parseResult.Errors)
             {
                 error.Write(parseError.Message);
@@ -64,5 +66,33 @@ public static class CliApplication
             .InvokeAsync(invocationConfiguration)
             .GetAwaiter()
             .GetResult();
+    }
+
+    private static void WriteMissingRequiredCompareOptions(
+        IReadOnlyList<string> args,
+        TextWriter error)
+    {
+        if (args.Count == 0 ||
+            !string.Equals(args[0], "compare", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        WriteMissingOption("--baseline");
+        WriteMissingOption("--candidate");
+        return;
+
+        void WriteMissingOption(string optionName)
+        {
+            var assignmentPrefix = string.Concat(optionName, "=");
+            bool isPresent = args.Any(
+                argument =>
+                    string.Equals(argument, optionName, StringComparison.Ordinal) ||
+                    argument.StartsWith(assignmentPrefix, StringComparison.Ordinal));
+            if (!isPresent)
+            {
+                error.Write($_"Required option '{optionName}' is missing.\n");
+            }
+        }
     }
 }
