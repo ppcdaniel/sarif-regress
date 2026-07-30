@@ -907,15 +907,38 @@ internal sealed class ProducerFingerprintOccurrenceIndex
     {
         foreach (var finding in findings)
         {
+            if (finding.ProducerFingerprints.IsEmpty)
+            {
+                continue;
+            }
+
+            if (finding.ProducerFingerprints.Length == 1)
+            {
+                Increment(
+                    CreateKey(
+                        input,
+                        finding,
+                        finding.ProducerFingerprints[0]),
+                    occurrenceCounts);
+                continue;
+            }
+
             var keysForFinding = finding.ProducerFingerprints
                 .Select(fingerprint => CreateKey(input, finding, fingerprint))
                 .ToHashSet();
             foreach (var key in keysForFinding)
             {
-                occurrenceCounts.TryGetValue(key, out var existingCount);
-                occurrenceCounts[key] = existingCount + 1;
+                Increment(key, occurrenceCounts);
             }
         }
+    }
+
+    private static void Increment(
+        OccurrenceKey key,
+        IDictionary<OccurrenceKey, int> occurrenceCounts)
+    {
+        occurrenceCounts.TryGetValue(key, out var existingCount);
+        occurrenceCounts[key] = existingCount + 1;
     }
 
     private static OccurrenceKey CreateKey(

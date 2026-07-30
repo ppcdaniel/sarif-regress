@@ -98,15 +98,17 @@ public sealed class FindingMatcher
         ImmutableArray<Finding> findings,
         string parameterName)
     {
-        var duplicateKey = findings
-            .GroupBy(item => item.FindingKey, StringComparer.Ordinal)
-            .FirstOrDefault(group => group.Skip(1).Any())
-            ?.Key;
-        if (duplicateKey is not null)
+        for (var index = 1; index < findings.Length; index++)
         {
-            throw new ArgumentException(
-                $"Finding key '{duplicateKey}' occurs more than once.",
-                parameterName);
+            if (string.Equals(
+                    findings[index - 1].FindingKey,
+                    findings[index].FindingKey,
+                    StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    $"Finding key '{findings[index].FindingKey}' occurs more than once.",
+                    parameterName);
+            }
         }
     }
 
@@ -1550,6 +1552,7 @@ internal sealed class CandidateBucketIndex
     {
         var defaultBuilders = new Dictionary<DefaultRuleBucket, List<int>>();
         var aliasBuilders = new Dictionary<AliasLookupBucket, List<int>>();
+        var hasAliases = !aliases.IsEmpty;
         for (var candidateIndex = 0; candidateIndex < candidates.Length; candidateIndex++)
         {
             var candidate = candidates[candidateIndex];
@@ -1559,6 +1562,11 @@ internal sealed class CandidateBucketIndex
                     candidate.Producer.Family,
                     candidate.Rule.CanonicalId),
                 candidateIndex);
+
+            if (!hasAliases)
+            {
+                continue;
+            }
 
             var producerTokens = new[]
             {
@@ -1613,6 +1621,24 @@ internal sealed class CandidateBucketIndex
         Finding baseline,
         int maximumCandidateCount)
     {
+        if (aliasTargetsByBaseline.Count == 0)
+        {
+            if (!defaultBuckets.TryGetValue(
+                    new DefaultRuleBucket(
+                        baseline.Producer.Family,
+                        baseline.Rule.CanonicalId),
+                    out var directCandidates))
+            {
+                return BoundedCandidateSelection.Empty;
+            }
+
+            return directCandidates.Length > maximumCandidateCount
+                ? BoundedCandidateSelection.Overflow
+                : new BoundedCandidateSelection(
+                    directCandidates,
+                    ExceededLimit: false);
+        }
+
         var candidateIndexes = new HashSet<int>();
         var selectionWorkCount = 0;
         if (defaultBuckets.TryGetValue(
@@ -1741,6 +1767,9 @@ internal sealed class CandidateBucketIndex
         ImmutableArray<int> CandidateIndexes,
         bool ExceededLimit)
     {
+        public static BoundedCandidateSelection Empty { get; } =
+            new(ImmutableArray<int>.Empty, ExceededLimit: false);
+
         public static BoundedCandidateSelection Overflow { get; } =
             new(ImmutableArray<int>.Empty, ExceededLimit: true);
     }
