@@ -23,7 +23,11 @@ public sealed class HtmlReportDeterminismTests
         Assert.Equal(first, cultureSpecific);
         Assert.Equal((byte)'\n', first[^1]);
         Assert.DoesNotContain((byte)'\r', first);
-        Assert.False(first.AsSpan().StartsWith([0xEF, 0xBB, 0xBF]));
+        Assert.False(
+            first.Length >= 3
+            && first[0] == 0xEF
+            && first[1] == 0xBB
+            && first[2] == 0xBF);
     }
 
     [Fact]
