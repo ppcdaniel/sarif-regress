@@ -46,7 +46,7 @@ public sealed class AuxiliaryCommandTests
             ["--config", "--input", "--repo", "--sarif-out"],
             OptionNames(canonicalise));
         Assert.Equal(
-            ["--dataset", "--json-out", "--size"],
+            ["--dataset", "--enforce-budgets", "--json-out", "--size"],
             OptionNames(bench));
         Assert.True(
             Assert.Single(
@@ -266,6 +266,23 @@ public sealed class AuxiliaryCommandTests
             0,
             operations.GetProperty("ambiguousComponentCount").GetInt32());
         Assert.Equal(
+            1_000,
+            operations.GetProperty("classifications")
+                .GetProperty("unchanged")
+                .GetInt32());
+        Assert.True(
+            operations.GetProperty("explanationOutputBytes").GetInt32() > 0);
+        Assert.Equal(
+            1_000,
+            operations.GetProperty("candidateBucketSizeDistribution")[0]
+                .GetProperty("count")
+                .GetInt32());
+        Assert.Equal(
+            1_000,
+            operations.GetProperty("componentSizeDistribution")[0]
+                .GetProperty("count")
+                .GetInt32());
+        Assert.Equal(
             64,
             operations.GetProperty("comparisonOutputSha256")
                 .GetString()!
@@ -276,6 +293,10 @@ public sealed class AuxiliaryCommandTests
             report.RootElement
                 .GetProperty("observations")
                 .TryGetProperty("parseLatencyMilliseconds", out _));
+        Assert.True(
+            report.RootElement
+                .GetProperty("budget")
+                .TryGetProperty("passed", out _));
     }
 
     [Fact]
@@ -295,6 +316,15 @@ public sealed class AuxiliaryCommandTests
             2_000,
             report.Operations.MaximumComponentFindingCount);
         Assert.Equal(1, report.Operations.AmbiguousComponentCount);
+        Assert.Equal(
+            2_000,
+            report.Operations.Classifications.Ambiguous);
+        Assert.Equal(
+            [new BenchmarkSizeDistributionEntry(1_000, 1)],
+            report.Operations.CandidateBucketSizeDistribution);
+        Assert.Equal(
+            [new BenchmarkSizeDistributionEntry(2_000, 1)],
+            report.Operations.ComponentSizeDistribution);
         Assert.Contains("MATCH0007", report.Operations.DiagnosticCodes);
         Assert.Equal(
             ResourceLimits.DefaultMaximumCandidatePairEvaluationsPerFinding,

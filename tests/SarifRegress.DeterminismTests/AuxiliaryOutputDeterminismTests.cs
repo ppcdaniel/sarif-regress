@@ -93,11 +93,23 @@ public sealed class AuxiliaryOutputDeterminismTests
             ParsedDocumentCount: 2,
             CanonicalFindingCount: 2_000,
             MaximumCandidateBucketSize: 1,
+            CandidateBucketSizeDistribution:
+                [new BenchmarkSizeDistributionEntry(1, 1_000)],
             CandidateEdgeCount: 1_000,
             ComponentCount: 1_000,
             MaximumComponentFindingCount: 2,
+            ComponentSizeDistribution:
+                [new BenchmarkSizeDistributionEntry(2, 1_000)],
             AmbiguousComponentCount: 0,
+            Classifications: new BenchmarkClassificationCounts(
+                New: 0,
+                Unchanged: 1_000,
+                Moved: 0,
+                Modified: 0,
+                Resolved: 0,
+                Ambiguous: 0),
             DiagnosticCount: 0,
+            ExplanationOutputBytes: 100,
             ComparisonOutputBytes: 123,
             ComparisonOutputSha256: new string('a', 64),
             DiagnosticCodes: ImmutableArray<string>.Empty);
@@ -118,7 +130,12 @@ public sealed class AuxiliaryOutputDeterminismTests
                 SerializeLatencyMilliseconds: 6,
                 AllocatedBytesProxy: 7,
                 WorkingSetBytes: 8,
-                PeakWorkingSetBytes: 9));
+                PeakWorkingSetBytes: 9),
+            new BenchmarkBudgetEvaluation(
+                MaximumPipelineLatencyMilliseconds: 10_000,
+                MaximumPeakWorkingSetBytes: 512L * 1024 * 1024,
+                Passed: true,
+                FailureCodes: ImmutableArray<string>.Empty));
         var second = first with
         {
             Observations = new BenchmarkObservations(
@@ -141,6 +158,7 @@ public sealed class AuxiliaryOutputDeterminismTests
         AssertStablePropertyEqual(firstDocument, secondDocument, "dataset");
         AssertStablePropertyEqual(firstDocument, secondDocument, "limits");
         AssertStablePropertyEqual(firstDocument, secondDocument, "operations");
+        AssertStablePropertyEqual(firstDocument, secondDocument, "budget");
         AssertStablePropertyEqual(firstDocument, secondDocument, "determinism");
         Assert.NotEqual(
             firstDocument.RootElement

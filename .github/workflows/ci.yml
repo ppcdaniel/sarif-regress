@@ -42,3 +42,52 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: .\scripts\verify.ps1
+
+  bench-smoke:
+    name: Enforce MVP resource budgets
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Build release binaries
+        shell: bash
+        run: ./scripts/build.sh
+
+      - name: Run bounded benchmark smoke suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/bench-smoke
+          for dataset in unique pathological; do
+            dotnet run \
+              --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              bench \
+              --size 1000 \
+              --dataset "${dataset}" \
+              --enforce-budgets \
+              --json-out "artifacts/bench-smoke/${dataset}.json"
+          done
+
+      - name: Upload benchmark reports
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bench-smoke
+          path: artifacts/bench-smoke
+          if-no-files-found: error
+          retention-days: 30

@@ -40,6 +40,11 @@ public static class BenchCommandFactory
         {
             Description = "Optional path for the benchmark JSON report.",
         };
+        Option<bool> enforceBudgetsOption = new("--enforce-budgets")
+        {
+            Description =
+                "Return exit code 3 when the published dataset budget is exceeded.",
+        };
 
         Command command = new(
             "bench",
@@ -47,6 +52,7 @@ public static class BenchCommandFactory
         command.Options.Add(sizeOption);
         command.Options.Add(datasetOption);
         command.Options.Add(jsonOutputOption);
+        command.Options.Add(enforceBudgetsOption);
         var handler = new BenchCommandHandler(currentDirectory);
         command.SetAction(
             async (parseResult, cancellationToken) =>
@@ -54,7 +60,8 @@ public static class BenchCommandFactory
                 var request = new BenchCommandRequest(
                     parseResult.GetValue(sizeOption),
                     parseResult.GetValue(datasetOption),
-                    parseResult.GetValue(jsonOutputOption));
+                    parseResult.GetValue(jsonOutputOption),
+                    parseResult.GetValue(enforceBudgetsOption));
                 return await handler.ExecuteAsync(
                         request,
                         parseResult.InvocationConfiguration.Output,

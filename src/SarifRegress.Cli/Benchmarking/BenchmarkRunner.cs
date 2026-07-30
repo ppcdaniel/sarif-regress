@@ -1,10 +1,13 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using SarifRegress.Core;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
+using SarifRegress.Core.Findings;
+using SarifRegress.Core.Matching;
 using SarifRegress.Core.Reporting;
 using SarifRegress.Core.Security;
 using SarifRegress.Match;
@@ -83,23 +86,28 @@ public sealed class BenchmarkRunner
         using var process = Process.GetCurrentProcess();
         process.Refresh();
         var allocatedAfter = GC.GetTotalAllocatedBytes(precise: false);
+        var candidateBucketSizes = MeasureCandidateBucketSizes(
+            candidate.ComparisonInput.Findings);
+        var componentSizes = MeasureComponentSizes(
+            matchResult,
+            baseline.ComparisonInput.Findings.Length,
+            candidate.ComparisonInput.Findings.Length);
         var operations = new BenchmarkOperations(
             ParsedDocumentCount: 2,
             CanonicalFindingCount:
                 baseline.ComparisonInput.Findings.Length +
                 candidate.ComparisonInput.Findings.Length,
-            MaximumCandidateBucketSize:
-                kind == BenchmarkDatasetKind.UniqueFingerprints
-                    ? 1
-                    : findingCount,
+            MaximumCandidateBucketSize: MaximumOrZero(candidateBucketSizes),
+            CandidateBucketSizeDistribution: Distribution(candidateBucketSizes),
             CandidateEdgeCount: matchResult.CandidateEdgeCount,
             ComponentCount: matchResult.ComponentCount,
-            MaximumComponentFindingCount:
-                kind == BenchmarkDatasetKind.UniqueFingerprints
-                    ? 2
-                    : checked(2 * findingCount),
+            MaximumComponentFindingCount: MaximumOrZero(componentSizes),
+            ComponentSizeDistribution: Distribution(componentSizes),
             AmbiguousComponentCount: matchResult.AmbiguousComponentCount,
+            Classifications: CountClassifications(matchResult),
             DiagnosticCount: matchResult.Diagnostics.Length,
+            ExplanationOutputBytes:
+                MeasureExplanationOutputBytes(comparisonOutput),
             ComparisonOutputBytes: comparisonOutput.Length,
             ComparisonOutputSha256:
                 Convert.ToHexString(SHA256.HashData(comparisonOutput))
@@ -126,6 +134,11 @@ public sealed class BenchmarkRunner
             Math.Max(0, allocatedAfter - allocatedBefore),
             process.WorkingSet64,
             process.PeakWorkingSet64);
+        var budget = EvaluateBudget(
+            kind,
+            findingCount,
+            operations,
+            observations);
         return new BenchmarkReport(
             kind,
             findingCount,
@@ -134,7 +147,8 @@ public sealed class BenchmarkRunner
             limits.MaximumCandidatePairEvaluationsPerFinding,
             limits.MaximumCandidatePairEvaluations,
             operations,
-            observations);
+            observations,
+            budget);
     }
 
     private static void Parse(byte[] bytes)
@@ -195,5 +209,170 @@ public sealed class BenchmarkRunner
             : (long)Math.Round(
                 rate,
                 MidpointRounding.AwayFromZero);
+    }
+
+    private static ImmutableArray<int> MeasureCandidateBucketSizes(
+        ImmutableArray<Finding> findings) =>
+        findings
+            .GroupBy(
+                finding => (
+                    finding.Producer.Family,
+                    finding.Rule.CanonicalId))
+            .Select(group => group.Count())
+            .Order()
+            .ToImmutableArray();
+
+    private static ImmutableArray<int> MeasureComponentSizes(
+        MatchResult result,
+        int baselineFindingCount,
+        int candidateFindingCount)
+    {
+        if (result.ComponentCount == 0)
+        {
+            return ImmutableArray<int>.Empty;
+        }
+
+        if (HasCandidatePairRefusal(result))
+        {
+            return [checked(baselineFindingCount + candidateFindingCount)];
+        }
+
+        var sizes = result.Decisions
+            .Where(decision =>
+                decision.Baseline is not null &&
+                decision.Candidate is not null)
+            .Select(_ => 2)
+            .ToList();
+        var ambiguousFindingCount = result.Decisions.Count(
+            decision => decision.Classification == FindingClassification.Ambiguous);
+        if (ambiguousFindingCount > 0)
+        {
+            if (result.AmbiguousComponentCount != 1)
+            {
+                throw new InvalidOperationException(
+                    "The benchmark cannot derive multiple ambiguous component sizes.");
+            }
+
+            sizes.Add(ambiguousFindingCount);
+        }
+
+        if (sizes.Count != result.ComponentCount)
+        {
+            throw new InvalidOperationException(
+                "The benchmark component measurements are inconsistent.");
+        }
+
+        return sizes.Order().ToImmutableArray();
+    }
+
+    private static bool HasCandidatePairRefusal(MatchResult result) =>
+        result.Diagnostics.Any(
+            diagnostic => diagnostic.Code is "MATCH0007" or "MATCH0008" or "MATCH0009");
+
+    private static ImmutableArray<BenchmarkSizeDistributionEntry> Distribution(
+        ImmutableArray<int> sizes) =>
+        sizes
+            .GroupBy(size => size)
+            .OrderBy(group => group.Key)
+            .Select(group => new BenchmarkSizeDistributionEntry(
+                group.Key,
+                group.Count()))
+            .ToImmutableArray();
+
+    private static int MaximumOrZero(ImmutableArray<int> values) =>
+        values.IsEmpty ? 0 : values.Max();
+
+    private static BenchmarkClassificationCounts CountClassifications(
+        MatchResult result)
+    {
+        return new BenchmarkClassificationCounts(
+            New: Count(FindingClassification.New),
+            Unchanged: Count(FindingClassification.Unchanged),
+            Moved: Count(FindingClassification.Moved),
+            Modified: Count(FindingClassification.Modified),
+            Resolved: Count(FindingClassification.Resolved),
+            Ambiguous: Count(FindingClassification.Ambiguous));
+
+        int Count(FindingClassification classification) =>
+            result.Decisions.Count(
+                decision => decision.Classification == classification);
+    }
+
+    private static int MeasureExplanationOutputBytes(byte[] comparisonOutput)
+    {
+        using var document = JsonDocument.Parse(comparisonOutput);
+        long byteCount = 0;
+        foreach (var finding in document.RootElement.GetProperty("findings")
+                     .EnumerateArray())
+        {
+            byteCount += MeasureProperty(finding, "decision");
+            byteCount += MeasureProperty(finding, "evidence");
+            byteCount += MeasureProperty(finding, "rejectedAlternatives");
+            byteCount += MeasureProperty(finding, "transforms");
+            byteCount += MeasureProperty(finding, "diagnostics");
+        }
+
+        return byteCount > int.MaxValue
+            ? int.MaxValue
+            : (int)byteCount;
+    }
+
+    private static int MeasureProperty(
+        JsonElement finding,
+        string propertyName) =>
+        Encoding.UTF8.GetByteCount(
+            finding.GetProperty(propertyName).GetRawText());
+
+    private static BenchmarkBudgetEvaluation EvaluateBudget(
+        BenchmarkDatasetKind kind,
+        int findingCount,
+        BenchmarkOperations operations,
+        BenchmarkObservations observations)
+    {
+        var (maximumLatencyMilliseconds, maximumPeakWorkingSetBytes) =
+            findingCount switch
+            {
+                1_000 => (10_000d, 512L * 1024 * 1024),
+                10_000 => (20_000d, 768L * 1024 * 1024),
+                100_000 => (60_000d, 1024L * 1024 * 1024),
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(findingCount),
+                    findingCount,
+                    "Unknown benchmark size."),
+            };
+        var failures = ImmutableArray.CreateBuilder<string>();
+        var pipelineLatency =
+            observations.ParseLatencyMilliseconds +
+            observations.CanonicaliseLatencyMilliseconds +
+            observations.CompareLatencyMilliseconds +
+            observations.SerializeLatencyMilliseconds;
+        if (pipelineLatency > maximumLatencyMilliseconds)
+        {
+            failures.Add("latency-budget-exceeded");
+        }
+
+        if (observations.PeakWorkingSetBytes > maximumPeakWorkingSetBytes)
+        {
+            failures.Add("working-set-budget-exceeded");
+        }
+
+        if (kind == BenchmarkDatasetKind.PathologicalBucket &&
+            (operations.CandidateEdgeCount != 0 ||
+             operations.AmbiguousComponentCount == 0 ||
+             !operations.DiagnosticCodes.Any(
+                 code => code is "MATCH0007" or "MATCH0008" or "MATCH0009")))
+        {
+            failures.Add("pathological-bucket-not-bounded");
+        }
+
+        var orderedFailures = failures
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToImmutableArray();
+        return new BenchmarkBudgetEvaluation(
+            maximumLatencyMilliseconds,
+            maximumPeakWorkingSetBytes,
+            orderedFailures.IsEmpty,
+            orderedFailures);
     }
 }

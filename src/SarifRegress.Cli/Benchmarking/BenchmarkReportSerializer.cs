@@ -42,6 +42,7 @@ public static class BenchmarkReportSerializer
             WriteLimits(writer, report);
             WriteOperations(writer, report.Operations);
             WriteObservations(writer, report.Observations);
+            WriteBudget(writer, report.Budget);
             writer.WriteStartObject("determinism");
             writer.WriteString(
                 "datasetGenerator",
@@ -98,6 +99,10 @@ public static class BenchmarkReportSerializer
         writer.WriteNumber(
             "maximumCandidateBucketSize",
             operations.MaximumCandidateBucketSize);
+        WriteDistribution(
+            writer,
+            "candidateBucketSizeDistribution",
+            operations.CandidateBucketSizeDistribution);
         writer.WriteNumber(
             "candidateEdgeCount",
             operations.CandidateEdgeCount);
@@ -105,10 +110,18 @@ public static class BenchmarkReportSerializer
         writer.WriteNumber(
             "maximumComponentFindingCount",
             operations.MaximumComponentFindingCount);
+        WriteDistribution(
+            writer,
+            "componentSizeDistribution",
+            operations.ComponentSizeDistribution);
         writer.WriteNumber(
             "ambiguousComponentCount",
             operations.AmbiguousComponentCount);
+        WriteClassifications(writer, operations.Classifications);
         writer.WriteNumber("diagnosticCount", operations.DiagnosticCount);
+        writer.WriteNumber(
+            "explanationOutputBytes",
+            operations.ExplanationOutputBytes);
         writer.WriteNumber(
             "comparisonOutputBytes",
             operations.ComparisonOutputBytes);
@@ -124,6 +137,39 @@ public static class BenchmarkReportSerializer
         }
 
         writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteDistribution(
+        Utf8JsonWriter writer,
+        string propertyName,
+        IEnumerable<BenchmarkSizeDistributionEntry> distribution)
+    {
+        writer.WriteStartArray(propertyName);
+        foreach (var entry in distribution
+                     .OrderBy(item => item.Size)
+                     .ThenBy(item => item.Count))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("size", entry.Size);
+            writer.WriteNumber("count", entry.Count);
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
+    }
+
+    private static void WriteClassifications(
+        Utf8JsonWriter writer,
+        BenchmarkClassificationCounts counts)
+    {
+        writer.WriteStartObject("classifications");
+        writer.WriteNumber("new", counts.New);
+        writer.WriteNumber("unchanged", counts.Unchanged);
+        writer.WriteNumber("moved", counts.Moved);
+        writer.WriteNumber("modified", counts.Modified);
+        writer.WriteNumber("resolved", counts.Resolved);
+        writer.WriteNumber("ambiguous", counts.Ambiguous);
         writer.WriteEndObject();
     }
 
@@ -157,6 +203,30 @@ public static class BenchmarkReportSerializer
         writer.WriteNumber(
             "peakWorkingSetBytes",
             observations.PeakWorkingSetBytes);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteBudget(
+        Utf8JsonWriter writer,
+        BenchmarkBudgetEvaluation budget)
+    {
+        writer.WriteStartObject("budget");
+        writer.WriteNumber(
+            "maximumPipelineLatencyMilliseconds",
+            budget.MaximumPipelineLatencyMilliseconds);
+        writer.WriteNumber(
+            "maximumPeakWorkingSetBytes",
+            budget.MaximumPeakWorkingSetBytes);
+        writer.WriteBoolean("passed", budget.Passed);
+        writer.WriteStartArray("failureCodes");
+        foreach (var failure in budget.FailureCodes
+                     .Distinct(StringComparer.Ordinal)
+                     .Order(StringComparer.Ordinal))
+        {
+            writer.WriteStringValue(failure);
+        }
+
+        writer.WriteEndArray();
         writer.WriteEndObject();
     }
 

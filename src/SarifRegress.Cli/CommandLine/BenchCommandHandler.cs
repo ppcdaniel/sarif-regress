@@ -76,7 +76,9 @@ internal sealed class BenchCommandHandler
                     .ConfigureAwait(false);
             }
 
-            return ExitCodes.Success;
+            return request.EnforceBudgets && !report.Budget.Passed
+                ? ExitCodes.PolicyFailure
+                : ExitCodes.Success;
         }
         catch (OperationCanceledException)
         {

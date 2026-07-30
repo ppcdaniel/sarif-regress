@@ -28,17 +28,39 @@ public sealed record BenchmarkDataset(
     byte[] CandidateSarif);
 
 /// <summary>
+/// Counts benchmark structures of one measured size.
+/// </summary>
+public sealed record BenchmarkSizeDistributionEntry(
+    int Size,
+    int Count);
+
+/// <summary>
+/// Counts each project-level classification in one benchmark result.
+/// </summary>
+public sealed record BenchmarkClassificationCounts(
+    int New,
+    int Unchanged,
+    int Moved,
+    int Modified,
+    int Resolved,
+    int Ambiguous);
+
+/// <summary>
 /// Captures deterministic operation counts and comparison-output identity.
 /// </summary>
 public sealed record BenchmarkOperations(
     int ParsedDocumentCount,
     int CanonicalFindingCount,
     int MaximumCandidateBucketSize,
+    ImmutableArray<BenchmarkSizeDistributionEntry> CandidateBucketSizeDistribution,
     int CandidateEdgeCount,
     int ComponentCount,
     int MaximumComponentFindingCount,
+    ImmutableArray<BenchmarkSizeDistributionEntry> ComponentSizeDistribution,
     int AmbiguousComponentCount,
+    BenchmarkClassificationCounts Classifications,
     int DiagnosticCount,
+    int ExplanationOutputBytes,
     int ComparisonOutputBytes,
     string ComparisonOutputSha256,
     ImmutableArray<string> DiagnosticCodes);
@@ -58,6 +80,15 @@ public sealed record BenchmarkObservations(
     long PeakWorkingSetBytes);
 
 /// <summary>
+/// Publishes the selected dataset resource ceiling and a stable pass/fail result.
+/// </summary>
+public sealed record BenchmarkBudgetEvaluation(
+    double MaximumPipelineLatencyMilliseconds,
+    long MaximumPeakWorkingSetBytes,
+    bool Passed,
+    ImmutableArray<string> FailureCodes);
+
+/// <summary>
 /// Represents one versioned benchmark result.
 /// </summary>
 public sealed record BenchmarkReport(
@@ -68,4 +99,5 @@ public sealed record BenchmarkReport(
     int MaximumCandidatePairsPerFinding,
     long MaximumCandidatePairs,
     BenchmarkOperations Operations,
-    BenchmarkObservations Observations);
+    BenchmarkObservations Observations,
+    BenchmarkBudgetEvaluation Budget);

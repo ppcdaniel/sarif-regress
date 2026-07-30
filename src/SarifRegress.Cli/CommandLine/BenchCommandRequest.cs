@@ -6,4 +6,5 @@ namespace SarifRegress.Cli.CommandLine;
 internal sealed record BenchCommandRequest(
     int? FindingCount,
     string? Dataset,
-    string? JsonOutputPath);
+    string? JsonOutputPath,
+    bool EnforceBudgets);
