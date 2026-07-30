@@ -41,7 +41,7 @@ internal sealed class CandidateEdgeFactory
             return null;
         }
 
-        var evidence = new List<EvidenceDraft>();
+        var evidence = new List<EvidenceDraft>(capacity: 8);
         AddRuleEvidence(evidence, baseline, candidate, applicableAliases);
 
         var producerFingerprint = CompareProducerFingerprints(baseline, candidate, evidence);
@@ -82,17 +82,29 @@ internal sealed class CandidateEdgeFactory
             candidate,
             decisionVector,
             CreateStableIdentityKey(baseline.FindingKey, candidate.FindingKey),
-            evidence
-                .Select(item => item.ToEvidenceRecord(precedenceTier))
-                .OrderBy(item => item.Kind, StringComparer.Ordinal)
-                .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
-                .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
-                .ThenBy(item => item.Origin)
-                .ThenBy(item => item.PrecedenceTier)
-                .ThenBy(item => item.Lossy)
-                .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-                .ToImmutableArray(),
+            CreateEvidence(evidence, precedenceTier),
             GetTransformations(baseline, candidate));
+    }
+
+    private static ImmutableArray<EvidenceRecord> CreateEvidence(
+        IReadOnlyList<EvidenceDraft> evidence,
+        PrecedenceTier precedenceTier)
+    {
+        if (evidence.Count == 0)
+        {
+            return ImmutableArray<EvidenceRecord>.Empty;
+        }
+
+        var records = ImmutableArray.CreateBuilder<EvidenceRecord>(
+            evidence.Count);
+        for (var index = 0; index < evidence.Count; index++)
+        {
+            records.Add(
+                evidence[index].ToEvidenceRecord(precedenceTier));
+        }
+
+        records.Sort(EvidenceRecordComparer.Instance);
+        return records.MoveToImmutable();
     }
 
     private static bool IsSameDefaultRule(Finding baseline, Finding candidate) =>
@@ -145,6 +157,46 @@ internal sealed class CandidateEdgeFactory
         Finding candidate,
         ICollection<EvidenceDraft> evidence)
     {
+        if (baseline.ProducerFingerprints.Length == 1
+            && candidate.ProducerFingerprints.Length == 1)
+        {
+            var baselineFingerprint = baseline.ProducerFingerprints[0];
+            var candidateFingerprint = candidate.ProducerFingerprints[0];
+            if (!string.Equals(
+                    baselineFingerprint.Family,
+                    candidateFingerprint.Family,
+                    StringComparison.Ordinal)
+                || baselineFingerprint.Version != candidateFingerprint.Version
+                || !string.Equals(
+                    baselineFingerprint.Value,
+                    candidateFingerprint.Value,
+                    StringComparison.Ordinal))
+            {
+                return ProducerFingerprintComparison.None;
+            }
+
+            var isReliablyUnique =
+                baselineFingerprint.Reliability == FingerprintReliability.High
+                && candidateFingerprint.Reliability == FingerprintReliability.High
+                && fingerprintOccurrences.IsUnique(
+                    InputKind.Baseline,
+                    baseline,
+                    baselineFingerprint)
+                && fingerprintOccurrences.IsUnique(
+                    InputKind.Candidate,
+                    candidate,
+                    candidateFingerprint);
+            var comparison = new ProducerFingerprintComparison(
+                isReliablyUnique
+                    ? HighProducerFingerprintStrength
+                    : DegradedProducerFingerprintStrength,
+                baselineFingerprint.Family,
+                baselineFingerprint.Version,
+                baselineFingerprint.Value);
+            AddProducerFingerprintEvidence(evidence, comparison);
+            return comparison;
+        }
+
         var bestComparison = ProducerFingerprintComparison.None;
         var commonFamilies = baseline.ProducerFingerprints
             .Select(item => item.Family)
@@ -209,21 +261,30 @@ internal sealed class CandidateEdgeFactory
             }
         }
 
-        if (bestComparison.Strength > 0)
+        AddProducerFingerprintEvidence(evidence, bestComparison);
+        return bestComparison;
+    }
+
+    private static void AddProducerFingerprintEvidence(
+        ICollection<EvidenceDraft> evidence,
+        ProducerFingerprintComparison comparison)
+    {
+        if (comparison.Strength <= 0)
         {
-            var fingerprintLabel = bestComparison.Version is null
-                ? bestComparison.Family
-                : $"{bestComparison.Family}/v{bestComparison.Version.Value}";
-            evidence.Add(new EvidenceDraft(
-                "producer-fingerprint",
-                $"{fingerprintLabel}:{bestComparison.Value}",
-                $"{fingerprintLabel}:{bestComparison.Value}",
-                EvidenceOrigin.Producer,
-                Lossy: false,
-                MatchingAlgorithms.ProducerFingerprintVersion));
+            return;
         }
 
-        return bestComparison;
+        var fingerprintLabel = comparison.Version is null
+            ? comparison.Family
+            : $"{comparison.Family}/v{comparison.Version.Value}";
+        var evidenceValue = $"{fingerprintLabel}:{comparison.Value}";
+        evidence.Add(new EvidenceDraft(
+            "producer-fingerprint",
+            evidenceValue,
+            evidenceValue,
+            EvidenceOrigin.Producer,
+            Lossy: false,
+            MatchingAlgorithms.ProducerFingerprintVersion));
     }
 
     private static CommonVersion FindGreatestCommonVersion(
@@ -254,6 +315,37 @@ internal sealed class CandidateEdgeFactory
         Finding candidate,
         ICollection<EvidenceDraft> evidence)
     {
+        if (baseline.DerivedFingerprints.Length == 1
+            && candidate.DerivedFingerprints.Length == 1)
+        {
+            var baselineFingerprint = baseline.DerivedFingerprints[0];
+            var candidateFingerprint = candidate.DerivedFingerprints[0];
+            if (!string.Equals(
+                    baselineFingerprint.Name,
+                    candidateFingerprint.Name,
+                    StringComparison.Ordinal)
+                || !string.Equals(
+                    baselineFingerprint.AlgorithmVersion,
+                    candidateFingerprint.AlgorithmVersion,
+                    StringComparison.Ordinal)
+                || !string.Equals(
+                    baselineFingerprint.Value,
+                    candidateFingerprint.Value,
+                    StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            evidence.Add(new EvidenceDraft(
+                "derived-fingerprint",
+                $"{baselineFingerprint.Name}:{baselineFingerprint.Value}",
+                $"{candidateFingerprint.Name}:{candidateFingerprint.Value}",
+                EvidenceOrigin.System,
+                Lossy: false,
+                MatchingAlgorithms.DerivedFingerprintVersion));
+            return true;
+        }
+
         var candidateByIdentity = candidate.DerivedFingerprints
             .ToLookup(
                 item => new DerivedFingerprintIdentity(item.Name, item.AlgorithmVersion));
@@ -609,10 +701,14 @@ internal sealed class CandidateEdgeFactory
             return 0;
         }
 
+        var baselineValue = FormatRegion(baseline);
+        var candidateValue = baseline == candidate
+            ? baselineValue
+            : FormatRegion(candidate);
         evidence.Add(new EvidenceDraft(
             "region",
-            FormatRegion(baseline),
-            FormatRegion(candidate),
+            baselineValue,
+            candidateValue,
             EvidenceOrigin.System,
             Lossy: false,
             MatchingAlgorithms.RegionVersion));
@@ -692,9 +788,18 @@ internal sealed class CandidateEdgeFactory
 
     private ImmutableArray<TransformationRecord> GetTransformations(
         Finding baseline,
-        Finding candidate) =>
-        GetPathTransformations(baseline)
-            .Concat(GetPathTransformations(candidate))
+        Finding candidate)
+    {
+        var baselineTransformations = GetPathTransformations(baseline);
+        var candidateTransformations = GetPathTransformations(candidate);
+        if (baselineTransformations.IsEmpty
+            && candidateTransformations.IsEmpty)
+        {
+            return ImmutableArray<TransformationRecord>.Empty;
+        }
+
+        return baselineTransformations
+            .Concat(candidateTransformations)
             .Distinct()
             .OrderBy(item => item.Kind, StringComparer.Ordinal)
             .ThenBy(item => item.OriginalValue, StringComparer.Ordinal)
@@ -702,6 +807,7 @@ internal sealed class CandidateEdgeFactory
             .ThenBy(item => item.IsLossy)
             .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
             .ToImmutableArray();
+    }
 
     private static ImmutableArray<TransformationRecord> GetPathTransformations(Finding finding) =>
         finding.PrimaryLocation?.Path.Transformations
@@ -776,7 +882,74 @@ internal sealed class CandidateEdgeFactory
     private static string CreateStableIdentityKey(string baselineKey, string candidateKey) =>
         $"{baselineKey.Length}:{baselineKey}{candidateKey.Length}:{candidateKey}";
 
-    private sealed record EvidenceDraft(
+    private sealed class EvidenceRecordComparer : IComparer<EvidenceRecord>
+    {
+        public static EvidenceRecordComparer Instance { get; } = new();
+
+        public int Compare(EvidenceRecord? left, EvidenceRecord? right)
+        {
+            if (ReferenceEquals(left, right))
+            {
+                return 0;
+            }
+
+            if (left is null)
+            {
+                return -1;
+            }
+
+            if (right is null)
+            {
+                return 1;
+            }
+
+            var comparison = StringComparer.Ordinal.Compare(
+                left.Kind,
+                right.Kind);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+
+            comparison = StringComparer.Ordinal.Compare(
+                left.BaselineValue,
+                right.BaselineValue);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+
+            comparison = StringComparer.Ordinal.Compare(
+                left.CandidateValue,
+                right.CandidateValue);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+
+            comparison = left.Origin.CompareTo(right.Origin);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+
+            comparison = left.PrecedenceTier.CompareTo(
+                right.PrecedenceTier);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+
+            comparison = left.Lossy.CompareTo(right.Lossy);
+            return comparison != 0
+                ? comparison
+                : StringComparer.Ordinal.Compare(
+                    left.AlgorithmVersion,
+                    right.AlgorithmVersion);
+        }
+    }
+
+    private readonly record struct EvidenceDraft(
         string Kind,
         string? BaselineValue,
         string? CandidateValue,
@@ -829,9 +1002,9 @@ internal sealed class CandidateEdgeFactory
         }
     }
 
-    private sealed record BoundedValue(string? Value, bool Lossy);
+    private readonly record struct BoundedValue(string? Value, bool Lossy);
 
-    private sealed record ProducerFingerprintComparison(
+    private readonly record struct ProducerFingerprintComparison(
         int Strength,
         string? Family,
         int? Version,
