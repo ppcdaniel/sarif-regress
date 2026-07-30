@@ -15,6 +15,7 @@ BenchmarkDotNet.Artifacts/
 
 # NuGet
 packages/
+/.nuget/
 *.nupkg
 *.snupkg
 *.nuget.props
