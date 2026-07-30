@@ -253,7 +253,8 @@ public static class FingerprintProcessor
             finding.RelatedLocations,
             finding.CodeFlow,
             finding.Lossiness,
-            finding.Diagnostics);
+            finding.Diagnostics,
+            finding.Metadata);
 
     private static string NormalizeLineEndings(string value) =>
         value

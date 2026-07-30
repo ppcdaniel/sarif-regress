@@ -182,9 +182,36 @@ internal sealed class FindingSnapshotDto
     [JsonPropertyOrder(5)]
     public required string CanonicalMessage { get; init; }
 
-    [JsonPropertyName("derivedFingerprints")]
+    [JsonPropertyName("sourceMetadata")]
     [JsonPropertyOrder(6)]
+    public SourceMetadataDto? SourceMetadata { get; init; }
+
+    [JsonPropertyName("messageNormalisationFlags")]
+    [JsonPropertyOrder(7)]
+    public string[] MessageNormalisationFlags { get; init; } = [];
+
+    [JsonPropertyName("lossiness")]
+    [JsonPropertyOrder(8)]
+    public string[] Lossiness { get; init; } = [];
+
+    [JsonPropertyName("derivedFingerprints")]
+    [JsonPropertyOrder(9)]
     public DerivedFingerprintDto[] DerivedFingerprints { get; init; } = [];
+}
+
+internal sealed class SourceMetadataDto
+{
+    [JsonPropertyName("level")]
+    [JsonPropertyOrder(0)]
+    public string? Level { get; init; }
+
+    [JsonPropertyName("kind")]
+    [JsonPropertyOrder(1)]
+    public string? Kind { get; init; }
+
+    [JsonPropertyName("baselineState")]
+    [JsonPropertyOrder(2)]
+    public string? BaselineState { get; init; }
 }
 
 internal sealed class DerivedFingerprintDto

@@ -165,6 +165,16 @@ public sealed class PathCanonicalizer
         ICollection<TransformationRecord> transformations,
         ICollection<Diagnostic> diagnostics)
     {
+        var normalizedSeparators = NormalizeSeparators(repositoryRelativePath)
+            .TrimStart('/');
+        RecordChange(
+            transformations,
+            "canonical-separators",
+            repositoryRelativePath,
+            normalizedSeparators,
+            isLossy: true);
+        repositoryRelativePath = normalizedSeparators;
+
         var beforeSegments = repositoryRelativePath;
         if (!TryCollapseRootedSegments(
                 repositoryRelativePath,
@@ -196,17 +206,7 @@ public sealed class PathCanonicalizer
             "collapsed-rooted-segments",
             beforeSegments,
             repositoryRelativePath,
-            isLossy: false);
-
-        var normalizedSeparators = NormalizeSeparators(repositoryRelativePath)
-            .TrimStart('/');
-        RecordChange(
-            transformations,
-            "canonical-separators",
-            repositoryRelativePath,
-            normalizedSeparators,
-            isLossy: false);
-        repositoryRelativePath = normalizedSeparators;
+            isLossy: true);
 
         if (caseSensitivity == PathCaseSensitivity.AsciiInsensitive)
         {
@@ -266,25 +266,39 @@ public sealed class PathCanonicalizer
             "canonical-separators",
             logicalValue,
             normalized,
-            isLossy: false);
+            isLossy: true);
 
         return originalKind switch
         {
             PathKind.DriveAbsolute =>
-                $"win-drive://{NormalizeAbsoluteSegments(normalized)}",
+                "win-drive://" + NormalizeAbsoluteSegments(
+                    normalized,
+                    transformations),
             PathKind.DriveRelative =>
                 $"win-drive-relative://{normalized}",
             PathKind.RootRelative =>
-                $"win-root://{NormalizeAbsoluteSegments(normalized)}",
+                "win-root://" + NormalizeAbsoluteSegments(
+                    normalized,
+                    transformations),
             PathKind.Unc =>
-                $"unc://{NormalizeAbsoluteSegments(normalized.TrimStart('/'))}",
+                "unc://" + NormalizeAbsoluteSegments(
+                    normalized.TrimStart('/'),
+                    transformations),
             PathKind.DeviceUnc =>
-                $"win-device-unc://{NormalizeAbsoluteSegments(RemoveDeviceUncPrefix(normalized))}",
+                "win-device-unc://" + NormalizeAbsoluteSegments(
+                    RemoveDeviceUncPrefix(normalized),
+                    transformations),
             PathKind.Device =>
-                $"win-device://{NormalizeAbsoluteSegments(RemoveDevicePrefix(normalized))}",
+                "win-device://" + NormalizeAbsoluteSegments(
+                    RemoveDevicePrefix(normalized),
+                    transformations),
             PathKind.PosixAbsolute =>
-                $"file://{NormalizeAbsoluteSegments(normalized)}",
-            PathKind.FileUri => CanonicalizeFileUri(normalized),
+                "file://" + NormalizeAbsoluteSegments(
+                    normalized,
+                    transformations),
+            PathKind.FileUri => CanonicalizeFileUri(
+                normalized,
+                transformations),
             PathKind.ExternalUri => normalized,
             PathKind.RepositoryRelative =>
                 $"relative://{normalized}",
@@ -408,28 +422,45 @@ public sealed class PathCanonicalizer
             "safe-percent-decode",
             value,
             canonical,
-            isLossy: false);
+            isLossy: true);
         return canonical;
     }
 
-    private static string CanonicalizeFileUri(string normalized)
+    private static string CanonicalizeFileUri(
+        string normalized,
+        ICollection<TransformationRecord> transformations)
     {
         var fileLocation = NormalizeFileLocation(normalized);
+        string canonical;
         if (IsDrivePrefix(fileLocation))
         {
-            return "file:///" + NormalizeAbsoluteSegments(fileLocation);
+            canonical = "file:///" +
+                NormalizeAbsoluteSegments(fileLocation, transformations);
         }
-
-        if (fileLocation.StartsWith("//", StringComparison.Ordinal))
+        else if (fileLocation.StartsWith("//", StringComparison.Ordinal))
         {
-            return "file://" +
-                NormalizeAbsoluteSegments(fileLocation.TrimStart('/'));
+            canonical = "file://" +
+                NormalizeAbsoluteSegments(
+                    fileLocation.TrimStart('/'),
+                    transformations);
+        }
+        else
+        {
+            var absolutePath =
+                fileLocation.StartsWith("/", StringComparison.Ordinal)
+                    ? fileLocation
+                    : "/" + fileLocation;
+            canonical = "file://" +
+                NormalizeAbsoluteSegments(absolutePath, transformations);
         }
 
-        var absolutePath = fileLocation.StartsWith("/", StringComparison.Ordinal)
-            ? fileLocation
-            : "/" + fileLocation;
-        return "file://" + NormalizeAbsoluteSegments(absolutePath);
+        RecordChange(
+            transformations,
+            "canonical-file-uri",
+            normalized,
+            canonical,
+            isLossy: true);
+        return canonical;
     }
 
     private static string? NormalizeRepositoryRoot(string? repositoryRoot)
@@ -515,6 +546,20 @@ public sealed class PathCanonicalizer
         }
 
         return hasLeadingSlash ? "/" + collapsed : collapsed;
+    }
+
+    private static string NormalizeAbsoluteSegments(
+        string value,
+        ICollection<TransformationRecord> transformations)
+    {
+        var normalized = NormalizeAbsoluteSegments(value);
+        RecordChange(
+            transformations,
+            "collapsed-absolute-segments",
+            value,
+            normalized,
+            isLossy: true);
+        return normalized;
     }
 
     private static string NormalizeSeparators(string value) =>

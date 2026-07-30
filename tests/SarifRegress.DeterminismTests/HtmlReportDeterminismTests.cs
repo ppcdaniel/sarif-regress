@@ -51,6 +51,26 @@ public sealed class HtmlReportDeterminismTests
             "candidate &amp; &quot;two&quot;.sarif",
             html,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>SARIF level</dt><dd>error</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>SARIF kind</dt><dd>review</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>Input baseline state</dt><dd>updated</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>Message normalisation</dt><dd>collapsed-whitespace, invariant-case-fold</dd>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "<dt>Lossiness</dt><dd>collapsed-whitespace, message-markdown-fallback</dd>",
+            html,
+            StringComparison.Ordinal);
         Assert.DoesNotContain(
             "<script>alert",
             html,

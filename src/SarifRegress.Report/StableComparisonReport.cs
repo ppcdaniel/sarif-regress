@@ -270,12 +270,36 @@ internal static class StableComparisonReport
             $"{propertyName}.canonicalUri",
             limits,
             allowEmpty: false);
+        ArgumentNullException.ThrowIfNull(snapshot.SourceMetadata);
+        ValidateOptionalText(
+            snapshot.SourceMetadata.Level,
+            $"{propertyName}.sourceMetadata.level",
+            limits,
+            allowEmpty: true);
+        ValidateOptionalText(
+            snapshot.SourceMetadata.Kind,
+            $"{propertyName}.sourceMetadata.kind",
+            limits,
+            allowEmpty: true);
+        ValidateOptionalText(
+            snapshot.SourceMetadata.BaselineState,
+            $"{propertyName}.sourceMetadata.baselineState",
+            limits,
+            allowEmpty: true);
         if (!observedKeys.Add(snapshot.FindingKey))
         {
             throw Invalid(
                 $"Finding key '{snapshot.FindingKey}' occurs more than once on the same input side.");
         }
 
+        var messageNormalisationFlags = NormalizeStringArray(
+            snapshot.MessageNormalisationFlags,
+            $"{propertyName}.messageNormalisationFlags",
+            limits);
+        var lossiness = NormalizeStringArray(
+            snapshot.Lossiness,
+            $"{propertyName}.lossiness",
+            limits);
         ValidateCollection(
             snapshot.DerivedFingerprints,
             $"{propertyName}.derivedFingerprints",
@@ -326,7 +350,32 @@ internal static class StableComparisonReport
             .ThenBy(item => item.Value, StringComparer.Ordinal)
             .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
             .ToImmutableArray();
-        return snapshot with { DerivedFingerprints = fingerprints };
+        return snapshot with
+        {
+            MessageNormalisationFlags = messageNormalisationFlags,
+            Lossiness = lossiness,
+            DerivedFingerprints = fingerprints,
+        };
+    }
+
+    private static ImmutableArray<string> NormalizeStringArray(
+        ImmutableArray<string> values,
+        string propertyName,
+        ResourceLimits limits)
+    {
+        ValidateCollection(
+            values,
+            propertyName,
+            limits.MaximumRunCollectionItems);
+        foreach (var value in values)
+        {
+            RequireText(value, $"{propertyName}[]", limits);
+        }
+
+        return values
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToImmutableArray();
     }
 
     private static DecisionTrace NormalizeDecision(

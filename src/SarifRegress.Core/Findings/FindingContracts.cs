@@ -126,6 +126,18 @@ public sealed record MessageIdentity(
     ImmutableArray<string> NormalisationFlags);
 
 /// <summary>
+/// Preserves selected comparison-relevant metadata from the source SARIF result.
+/// </summary>
+/// <remarks>
+/// These values are retained for auditability only. They do not determine project-level
+/// classification or matching eligibility.
+/// </remarks>
+public sealed record FindingMetadata(
+    string? Level,
+    string? Kind,
+    string? BaselineState);
+
+/// <summary>
 /// Identifies whether a producer fingerprint came from a full or partial fingerprint map.
 /// </summary>
 public enum ProducerFingerprintSource
@@ -234,7 +246,8 @@ public sealed record Finding
         IEnumerable<RelatedLocation>? relatedLocations = null,
         CodeFlowEvidence? codeFlow = null,
         IEnumerable<string>? lossiness = null,
-        IEnumerable<Diagnostic>? diagnostics = null)
+        IEnumerable<Diagnostic>? diagnostics = null,
+        FindingMetadata? metadata = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(findingKey);
         ArgumentNullException.ThrowIfNull(sourceReference);
@@ -265,6 +278,10 @@ public sealed record Finding
             .OrderBy(item => item.StableKey, StringComparer.Ordinal)
             .ToImmutableArray();
         CodeFlow = codeFlow;
+        Metadata = metadata ?? new FindingMetadata(
+            Level: null,
+            Kind: null,
+            BaselineState: null);
         Lossiness = (lossiness ?? [])
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
@@ -331,6 +348,11 @@ public sealed record Finding
     /// Gets bounded code-flow evidence.
     /// </summary>
     public CodeFlowEvidence? CodeFlow { get; }
+
+    /// <summary>
+    /// Gets selected source SARIF metadata retained for auditability.
+    /// </summary>
+    public FindingMetadata Metadata { get; }
 
     /// <summary>
     /// Gets stable lossiness identifiers.

@@ -298,6 +298,117 @@ public sealed class ConfigurationReaderTests
     }
 
     [Fact]
+    public async Task Unknown_configuration_subtrees_cannot_bypass_collection_limit()
+    {
+        var limits = ResourceLimits.Default with
+        {
+            MaximumRunCollectionItems = 3,
+        };
+        var reader = new SarifConfigurationReader(limits);
+        await using var input = CreateStream(
+            """
+            {
+              "schemaVersion": "1",
+              "matching": {
+                "enableRepoContext": false,
+                "future": [1, 2, 3, 4]
+              }
+            }
+            """);
+
+        var result = await reader.ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Diagnostics,
+            item => item.Code == "SECURITY0012");
+    }
+
+    [Fact]
+    public async Task Unknown_configuration_subtrees_cannot_bypass_string_limit()
+    {
+        var limits = ResourceLimits.Default with
+        {
+            MaximumStringCharacters = 16,
+        };
+        var reader = new SarifConfigurationReader(limits);
+        await using var input = CreateStream(
+            """
+            {
+              "schemaVersion": "1",
+              "future": { "value": "12345678901234567" }
+            }
+            """);
+
+        var result = await reader.ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Diagnostics,
+            item => item.Code == "SECURITY0011");
+    }
+
+    [Fact]
+    public async Task Configuration_extension_dictionary_is_bounded_before_materialisation()
+    {
+        var limits = ResourceLimits.Default with
+        {
+            MaximumRunCollectionItems = 3,
+        };
+        var reader = new SarifConfigurationReader(limits);
+        await using var input = CreateStream(
+            """
+            {
+              "schemaVersion": "1",
+              "futureA": true,
+              "futureB": true,
+              "futureC": true
+            }
+            """);
+
+        var result = await reader.ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Diagnostics,
+            item => item.Code == "SECURITY0012");
+    }
+
+    [Fact]
+    public async Task Unknown_configuration_subtrees_cannot_bypass_depth_limit()
+    {
+        var limits = ResourceLimits.Default with
+        {
+            MaximumJsonDepth = 3,
+        };
+        var reader = new SarifConfigurationReader(limits);
+        await using var input = CreateStream(
+            """
+            {
+              "schemaVersion": "1",
+              "matching": {
+                "future": { "one": { "two": true } }
+              }
+            }
+            """);
+
+        var result = await reader.ReadAsync(
+            input,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(
+            result.Diagnostics,
+            item => item.Code == "PARSE0001");
+    }
+
+    [Fact]
     public async Task Input_io_failure_returns_a_deterministic_diagnostic()
     {
         await using var input = new ThrowingReadStream();

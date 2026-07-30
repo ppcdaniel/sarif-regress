@@ -2,7 +2,9 @@ using System.Collections.Immutable;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using SarifRegress.Core.Findings;
 using SarifRegress.Core.Matching;
+using SarifRegress.Core.Reporting;
 using SarifRegress.Core.Security;
 using SarifRegress.Report;
 
@@ -96,15 +98,95 @@ public sealed class StableJsonReportTests
                 "canonicalUri",
                 "region",
                 "canonicalMessage",
+                "sourceMetadata",
+                "messageNormalisationFlags",
+                "lossiness",
                 "derivedFingerprints",
             ],
             snapshot.EnumerateObject().Select(item => item.Name));
+        Assert.Equal(
+            ["level", "kind", "baselineState"],
+            snapshot
+                .GetProperty("sourceMetadata")
+                .EnumerateObject()
+                .Select(item => item.Name));
+        Assert.Equal(
+            "error",
+            snapshot
+                .GetProperty("sourceMetadata")
+                .GetProperty("level")
+                .GetString());
+        Assert.Equal(
+            ["collapsed-whitespace", "invariant-case-fold"],
+            snapshot
+                .GetProperty("messageNormalisationFlags")
+                .EnumerateArray()
+                .Select(item => item.GetString()));
+        Assert.Equal(
+            ["collapsed-whitespace", "message-markdown-fallback"],
+            snapshot
+                .GetProperty("lossiness")
+                .EnumerateArray()
+                .Select(item => item.GetString()));
         Assert.Equal(
             ReportTestData.DerivedFingerprintValue,
             snapshot
                 .GetProperty("derivedFingerprints")[0]
                 .GetProperty("value")
                 .GetString());
+    }
+
+    [Fact]
+    public void Serialize_FidelitySnapshot_MatchesByteGolden()
+    {
+        var json = Encoding.UTF8.GetString(
+            StableJsonReportSerializer.Serialize(
+                ReportTestData.CreateRepresentativeReport()));
+        const string startMarker = "      \"baseline\": {\n";
+        const string endMarker = "\n      },\n      \"candidate\":";
+        var start = json.IndexOf(startMarker, StringComparison.Ordinal);
+        Assert.NotEqual(-1, start);
+        var end = json.IndexOf(endMarker, start, StringComparison.Ordinal);
+        Assert.NotEqual(-1, end);
+        var actual = json[start..(end + "\n      }".Length)];
+        var expected =
+            """
+                  "baseline": {
+                    "findingKey": "baseline:0:2",
+                    "producerFamily": "test-scanner",
+                    "canonicalRule": "test-scanner/RULE-001",
+                    "canonicalUri": "repo://src/old.cs",
+                    "region": {
+                      "startLine": 12,
+                      "startColumn": 4,
+                      "endLine": 12,
+                      "endColumn": 18
+                    },
+                    "canonicalMessage": "unsafe input",
+                    "sourceMetadata": {
+                      "level": "warning",
+                      "kind": "fail",
+                      "baselineState": "unchanged"
+                    },
+                    "messageNormalisationFlags": [
+                      "invariant-case-fold",
+                      "trimmed-whitespace"
+                    ],
+                    "lossiness": [
+                      "canonical-separators",
+                      "trimmed-whitespace"
+                    ],
+                    "derivedFingerprints": [
+                      {
+                        "name": "sarifregress/rule-path-context/v1",
+                        "value": "1111111111111111111111111111111111111111111111111111111111111111",
+                        "algorithmVersion": "rule-path-context/v1"
+                      }
+                    ]
+                  }
+            """;
+
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
@@ -138,6 +220,8 @@ public sealed class StableJsonReportTests
             .Select(
                 finding => finding with
                 {
+                    Baseline = ReverseSnapshotArrays(finding.Baseline),
+                    Candidate = ReverseSnapshotArrays(finding.Candidate),
                     Decision = finding.Decision with
                     {
                         Evidence = finding.Decision.Evidence
@@ -284,13 +368,13 @@ public sealed class StableJsonReportTests
     }
 
     [Fact]
-    public void Deserialize_LegacySnapshotWithoutDerivedFingerprints_DefaultsEmpty()
+    public void Deserialize_LegacySnapshotWithoutFidelityFields_DefaultsEmpty()
     {
         var document = ParseRepresentativeJson();
         foreach (var finding in document["findings"]!.AsArray())
         {
-            finding?["baseline"]?.AsObject().Remove("derivedFingerprints");
-            finding?["candidate"]?.AsObject().Remove("derivedFingerprints");
+            RemoveFidelityFields(finding?["baseline"]);
+            RemoveFidelityFields(finding?["candidate"]);
         }
 
         var report = StableJsonReportSerializer.Deserialize(ToBytes(document));
@@ -301,11 +385,27 @@ public sealed class StableJsonReportTests
             {
                 if (finding.Baseline is not null)
                 {
+                    Assert.Equal(
+                        new FindingMetadata(
+                            Level: null,
+                            Kind: null,
+                            BaselineState: null),
+                        finding.Baseline.SourceMetadata);
+                    Assert.Empty(finding.Baseline.MessageNormalisationFlags);
+                    Assert.Empty(finding.Baseline.Lossiness);
                     Assert.Empty(finding.Baseline.DerivedFingerprints);
                 }
 
                 if (finding.Candidate is not null)
                 {
+                    Assert.Equal(
+                        new FindingMetadata(
+                            Level: null,
+                            Kind: null,
+                            BaselineState: null),
+                        finding.Candidate.SourceMetadata);
+                    Assert.Empty(finding.Candidate.MessageNormalisationFlags);
+                    Assert.Empty(finding.Candidate.Lossiness);
                     Assert.Empty(finding.Candidate.DerivedFingerprints);
                 }
             });
@@ -365,4 +465,27 @@ public sealed class StableJsonReportTests
 
     private static byte[] ToBytes(JsonNode document) =>
         Encoding.UTF8.GetBytes(document.ToJsonString());
+
+    private static FindingSnapshot? ReverseSnapshotArrays(
+        FindingSnapshot? snapshot) =>
+        snapshot is null
+            ? null
+            : snapshot with
+            {
+                MessageNormalisationFlags = snapshot.MessageNormalisationFlags
+                    .Reverse()
+                    .ToImmutableArray(),
+                Lossiness = snapshot.Lossiness
+                    .Reverse()
+                    .ToImmutableArray(),
+            };
+
+    private static void RemoveFidelityFields(JsonNode? snapshot)
+    {
+        var snapshotObject = snapshot?.AsObject();
+        snapshotObject?.Remove("sourceMetadata");
+        snapshotObject?.Remove("messageNormalisationFlags");
+        snapshotObject?.Remove("lossiness");
+        snapshotObject?.Remove("derivedFingerprints");
+    }
 }

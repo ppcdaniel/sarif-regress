@@ -181,6 +181,10 @@ internal static class StableJsonWireMapper
             CanonicalUri = snapshot.CanonicalUri,
             Region = snapshot.Region is null ? null : ToDto(snapshot.Region),
             CanonicalMessage = snapshot.CanonicalMessage,
+            SourceMetadata = ToDto(snapshot.SourceMetadata),
+            MessageNormalisationFlags =
+                snapshot.MessageNormalisationFlags.ToArray(),
+            Lossiness = snapshot.Lossiness.ToArray(),
             DerivedFingerprints = snapshot.DerivedFingerprints.Select(ToDto).ToArray(),
         };
 
@@ -192,10 +196,38 @@ internal static class StableJsonWireMapper
             snapshot.CanonicalUri,
             snapshot.Region is null ? null : FromDto(snapshot.Region),
             snapshot.CanonicalMessage,
+            snapshot.SourceMetadata is null
+                ? new FindingMetadata(
+                    Level: null,
+                    Kind: null,
+                    BaselineState: null)
+                : FromDto(snapshot.SourceMetadata),
+            MapArray(
+                snapshot.MessageNormalisationFlags,
+                "findings[].messageNormalisationFlags",
+                item => item),
+            MapArray(
+                snapshot.Lossiness,
+                "findings[].lossiness",
+                item => item),
             MapArray(
                 snapshot.DerivedFingerprints,
                 "findings[].derivedFingerprints",
                 item => FromDto(item)));
+
+    private static SourceMetadataDto ToDto(FindingMetadata metadata) =>
+        new()
+        {
+            Level = metadata.Level,
+            Kind = metadata.Kind,
+            BaselineState = metadata.BaselineState,
+        };
+
+    private static FindingMetadata FromDto(SourceMetadataDto metadata) =>
+        new(
+            metadata.Level,
+            metadata.Kind,
+            metadata.BaselineState);
 
     private static DerivedFingerprintDto ToDto(
         DerivedFingerprint fingerprint) =>

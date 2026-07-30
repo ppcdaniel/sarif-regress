@@ -181,6 +181,46 @@ public sealed class PathCanonicalizerTests
     }
 
     [Fact]
+    public void Representation_changing_normalisations_are_marked_lossy()
+    {
+        var repositoryPath = new PathCanonicalizer()
+            .Canonicalize(@"src\.\A%2Ecs");
+        var absolutePath = new PathCanonicalizer()
+            .Canonicalize(@"/repo/./src/../A.cs");
+        var fileUri = new PathCanonicalizer()
+            .Canonicalize("file://localhost/repo/A.cs");
+
+        Assert.Equal("repo://src/A.cs", repositoryPath.CanonicalUri);
+        Assert.Contains(
+            repositoryPath.Transformations,
+            item =>
+                item.Kind == "safe-percent-decode" &&
+                item.IsLossy);
+        Assert.Contains(
+            repositoryPath.Transformations,
+            item =>
+                item.Kind == "canonical-separators" &&
+                item.IsLossy);
+        Assert.Contains(
+            repositoryPath.Transformations,
+            item =>
+                item.Kind == "collapsed-rooted-segments" &&
+                item.IsLossy);
+        Assert.Equal("file:///repo/A.cs", absolutePath.CanonicalUri);
+        Assert.Contains(
+            absolutePath.Transformations,
+            item =>
+                item.Kind == "collapsed-absolute-segments" &&
+                item.IsLossy);
+        Assert.Equal("file:///repo/A.cs", fileUri.CanonicalUri);
+        Assert.Contains(
+            fileUri.Transformations,
+            item =>
+                item.Kind == "canonical-file-uri" &&
+                item.IsLossy);
+    }
+
+    [Fact]
     public void Reserved_windows_names_are_diagnosed_without_rewriting()
     {
         var path = new PathCanonicalizer()

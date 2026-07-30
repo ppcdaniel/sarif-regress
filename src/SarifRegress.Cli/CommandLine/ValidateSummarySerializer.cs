@@ -45,6 +45,15 @@ internal static class ValidateSummarySerializer
             writer.WriteStartObject("input");
             writer.WriteString("name", logicalInputName);
             writer.WriteNumber("inputBytes", ingestion.Summary.InputBytes);
+            writer.WriteString(
+                "compressedUploadSizeEvaluation",
+                ingestion.Summary.CompressedUploadBytes.HasValue
+                    ? "provided-gzip-size"
+                    : "not-evaluated");
+            WriteNullableNumber(
+                writer,
+                "compressedUploadBytes",
+                ingestion.Summary.CompressedUploadBytes);
             WriteNullableString(
                 writer,
                 "sarifVersion",
@@ -144,6 +153,21 @@ internal static class ValidateSummarySerializer
         Utf8JsonWriter writer,
         string propertyName,
         int? value)
+    {
+        if (value.HasValue)
+        {
+            writer.WriteNumber(propertyName, value.Value);
+        }
+        else
+        {
+            writer.WriteNull(propertyName);
+        }
+    }
+
+    private static void WriteNullableNumber(
+        Utf8JsonWriter writer,
+        string propertyName,
+        long? value)
     {
         if (value.HasValue)
         {

@@ -66,7 +66,7 @@ public sealed class SarifConfigurationReader
         {
             wire = await JsonSerializer.DeserializeAsync<ConfigurationWire>(
                     boundedInput,
-                    CreateJsonOptions(readerLimits),
+                    CreateJsonOptions(readerLimits, cancellationToken),
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -726,19 +726,37 @@ public sealed class SarifConfigurationReader
         }
     }
 
-    private static JsonSerializerOptions CreateJsonOptions(ResourceLimits limits)
+    private static JsonSerializerOptions CreateJsonOptions(
+        ResourceLimits limits,
+        CancellationToken cancellationToken)
     {
+        var constraints = new BoundedJsonReadConstraints(
+            limits.MaximumJsonDepth,
+            limits.MaximumRunCollectionItems,
+            limits.MaximumStringCharacters,
+            cancellationToken);
         var options = new JsonSerializerOptions
         {
             MaxDepth = limits.MaximumJsonDepth,
             PropertyNameCaseInsensitive = false,
         };
         options.Converters.Add(
-            new BoundedStringConverter(limits.MaximumStringCharacters));
-        options.Converters.Add(new DiscardingObjectConverter());
+            new BoundedStringConverter(
+                limits.MaximumStringCharacters,
+                cancellationToken));
+        options.Converters.Add(new DiscardingObjectConverter(constraints));
+        options.Converters.Add(
+            new BoundedJsonObjectConverterFactory(
+                type => type.DeclaringType == typeof(SarifConfigurationReader),
+                constraints));
         options.Converters.Add(
             new BoundedListConverterFactory(
-                _ => limits.MaximumRunCollectionItems));
+                _ => limits.MaximumRunCollectionItems,
+                constraints));
+        options.Converters.Add(
+            new BoundedStringDictionaryConverterFactory(
+                limits.MaximumRunCollectionItems,
+                constraints));
         return options;
     }
 

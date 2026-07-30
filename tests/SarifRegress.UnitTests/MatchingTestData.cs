@@ -33,9 +33,15 @@ internal static class MatchingTestData
         string? tokenWindowHash = null,
         string? enclosingSymbol = null,
         IEnumerable<string>? codeFlowPaths = null,
-        IEnumerable<string>? relatedLocationPaths = null)
+        IEnumerable<string>? relatedLocationPaths = null,
+        IEnumerable<string>? messageNormalisationFlags = null,
+        IEnumerable<TransformationRecord>? pathTransformations = null,
+        IEnumerable<string>? lossiness = null,
+        FindingMetadata? metadata = null)
     {
-        var primaryPath = path is null ? null : CanonicalPath(path);
+        var primaryPath = path is null
+            ? null
+            : CanonicalPath(path, pathTransformations);
         var region = startLine.HasValue
             ? new Region(startLine, 1, startLine, 5)
             : null;
@@ -83,12 +89,14 @@ internal static class MatchingTestData
                 message,
                 message,
                 message.ToLowerInvariant(),
-                ImmutableArray<string>.Empty),
+                (messageNormalisationFlags ?? []).ToImmutableArray()),
             producerFingerprints,
             derivedFingerprints,
             context,
             relatedLocations,
-            codeFlow);
+            codeFlow,
+            lossiness: lossiness,
+            metadata: metadata);
     }
 
     public static ProducerFingerprint ProducerFingerprint(
@@ -134,13 +142,16 @@ internal static class MatchingTestData
             limits ?? defaults.Limits);
     }
 
-    private static CanonicalPath CanonicalPath(string repositoryRelativePath) =>
+    private static CanonicalPath CanonicalPath(
+        string repositoryRelativePath,
+        IEnumerable<TransformationRecord>? transformations = null) =>
         new(
             repositoryRelativePath,
             repositoryRelativePath,
             CanonicalUri(repositoryRelativePath),
             repositoryRelativePath,
-            PathKind.RepositoryRelative);
+            PathKind.RepositoryRelative,
+            transformations);
 
     private static string CanonicalUri(string repositoryRelativePath) =>
         $"repo://{repositoryRelativePath.Replace('\\', '/')}";

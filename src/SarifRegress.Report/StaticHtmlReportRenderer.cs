@@ -259,7 +259,33 @@ public static class StaticHtmlReportRenderer
         AppendDefinition(html, "URI", snapshot.CanonicalUri ?? "Not available");
         AppendDefinition(html, "Region", FormatRegion(snapshot));
         AppendDefinition(html, "Message", snapshot.CanonicalMessage);
+        AppendDefinition(
+            html,
+            "SARIF level",
+            snapshot.SourceMetadata.Level ?? "Not available");
+        AppendDefinition(
+            html,
+            "SARIF kind",
+            snapshot.SourceMetadata.Kind ?? "Not available");
+        AppendDefinition(
+            html,
+            "Input baseline state",
+            snapshot.SourceMetadata.BaselineState ?? "Not available");
+        AppendDefinition(
+            html,
+            "Message normalisation",
+            FormatIdentifiers(snapshot.MessageNormalisationFlags));
+        AppendDefinition(
+            html,
+            "Lossiness",
+            FormatIdentifiers(snapshot.Lossiness));
         html.Append("    </dl>\n");
+    }
+
+    private static string FormatIdentifiers(IEnumerable<string> values)
+    {
+        var formatted = string.Join(", ", values);
+        return formatted.Length == 0 ? "None" : formatted;
     }
 
     private static void AppendEvidence(

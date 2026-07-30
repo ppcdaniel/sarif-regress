@@ -44,6 +44,9 @@ public sealed class SarifIngestorTests
                     {
                       "ruleIndex": 0,
                       "message": { "text": "  Unsafe   value. " },
+                      "level": "warning",
+                      "kind": "fail",
+                      "baselineState": "unchanged",
                       "partialFingerprints": {
                         "primaryLocationLineHash/v1": "producer-value"
                       },
@@ -138,6 +141,23 @@ public sealed class SarifIngestorTests
             finding.PrimaryLocation?.Path.ResolvedValue);
         Assert.Equal("Unsafe value.", finding.Message.CanonicalText);
         Assert.Equal("unsafe value.", finding.Message.ComparisonText);
+        Assert.Equal("warning", finding.Metadata.Level);
+        Assert.Equal("fail", finding.Metadata.Kind);
+        Assert.Equal("unchanged", finding.Metadata.BaselineState);
+        Assert.Equal(
+            [
+                "trimmed-whitespace",
+                "collapsed-whitespace",
+                "invariant-case-fold",
+            ],
+            finding.Message.NormalisationFlags);
+        Assert.Equal(
+            [
+                "collapsed-whitespace",
+                "invariant-case-fold",
+                "trimmed-whitespace",
+            ],
+            finding.Lossiness);
         Assert.Equal(
             FingerprintReliability.High,
             Assert.Single(finding.ProducerFingerprints).Reliability);
@@ -159,6 +179,59 @@ public sealed class SarifIngestorTests
         Assert.Equal("2.1.0", result.Summary.Version);
         Assert.Equal(512L, result.Summary.CompressedUploadBytes);
         Assert.Empty(result.ComparisonInput.Diagnostics);
+    }
+
+    [Fact]
+    public async Task Representation_changes_are_retained_as_deterministic_lossiness()
+    {
+        const string sarif =
+            """
+            {
+              "version": "2.1.0",
+              "runs": [{
+                "tool": { "driver": { "name": "Tool" } },
+                "results": [{
+                  "ruleId": "R1",
+                  "message": { "text": "\r\n  Mixed   CASE \t" },
+                  "level": "error",
+                  "kind": "review",
+                  "baselineState": "updated",
+                  "locations": [{
+                    "physicalLocation": {
+                      "artifactLocation": { "uri": "src\\./A%2Ecs" },
+                      "region": { "startLine": 5 }
+                    }
+                  }]
+                }]
+              }]
+            }
+            """;
+        var request = new SarifIngestionRequest(
+            InputKind.Candidate,
+            "candidate.sarif");
+
+        var result = await IngestAsync(sarif, request);
+
+        Assert.True(result.IsValid);
+        var finding = Assert.Single(result.ComparisonInput.Findings);
+        Assert.Equal(
+            new FindingMetadata("error", "review", "updated"),
+            finding.Metadata);
+        Assert.Equal("repo://src/A.cs", finding.PrimaryLocation?.Path.CanonicalUri);
+        Assert.All(
+            finding.PrimaryLocation!.Path.Transformations,
+            transformation => Assert.True(transformation.IsLossy));
+        Assert.Equal(
+            [
+                "canonical-separators",
+                "collapsed-rooted-segments",
+                "collapsed-whitespace",
+                "invariant-case-fold",
+                "normalised-line-endings",
+                "safe-percent-decode",
+                "trimmed-whitespace",
+            ],
+            finding.Lossiness);
     }
 
     [Fact]
@@ -345,6 +418,11 @@ public sealed class SarifIngestorTests
         string Rule,
         string? Path,
         string Message,
+        string? Level,
+        string? Kind,
+        string? BaselineState,
+        string MessageFlags,
+        string Lossiness,
         string? DerivedFingerprint)
         ToStableFindingTuple(Finding finding) =>
         (
@@ -352,6 +430,11 @@ public sealed class SarifIngestorTests
             finding.Rule.CanonicalId,
             finding.PrimaryLocation?.Path.CanonicalUri,
             finding.Message.ComparisonText,
+            finding.Metadata.Level,
+            finding.Metadata.Kind,
+            finding.Metadata.BaselineState,
+            string.Join("|", finding.Message.NormalisationFlags),
+            string.Join("|", finding.Lossiness),
             finding.DerivedFingerprints.FirstOrDefault()?.Value
         );
 

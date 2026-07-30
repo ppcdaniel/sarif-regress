@@ -64,7 +64,7 @@ public sealed class SarifIngestor
         {
             log = await JsonSerializer.DeserializeAsync<SarifLogWire>(
                     boundedInput,
-                    CreateJsonOptions(limits),
+                    CreateJsonOptions(limits, cancellationToken),
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -202,14 +202,6 @@ public sealed class SarifIngestor
                 continue;
             }
 
-            ReportUnsupported(
-                run.UnsupportedInvocations,
-                "The optional run.invocations structure is not used for comparison.",
-                request.Input,
-                runIndex,
-                resultIndex: null,
-                $"/runs/{runIndex}/invocations",
-                diagnostics);
             ReportUnsupported(
                 run.UnsupportedGraphs,
                 "The optional run.graphs structure is not used for comparison.",
@@ -400,6 +392,25 @@ public sealed class SarifIngestor
         }
 
         var message = MessageCanonicalizer.Canonicalize(messageText);
+        var metadata = new FindingMetadata(
+            ValidateOptionalString(
+                result.Level,
+                sourceReference,
+                sourceReference.JsonPointer + "/level",
+                request.Configuration.Limits,
+                findingDiagnostics),
+            ValidateOptionalString(
+                result.Kind,
+                sourceReference,
+                sourceReference.JsonPointer + "/kind",
+                request.Configuration.Limits,
+                findingDiagnostics),
+            ValidateOptionalString(
+                result.BaselineState,
+                sourceReference,
+                sourceReference.JsonPointer + "/baselineState",
+                request.Configuration.Limits,
+                findingDiagnostics));
         var primaryLocationWire = result.Locations?.FirstOrDefault();
         var primaryLocation = locationResolver.ResolvePrimary(
             primaryLocationWire,
@@ -465,6 +476,7 @@ public sealed class SarifIngestor
             lossiness.Add("message-markdown-fallback");
         }
 
+        lossiness.AddRange(message.NormalisationFlags);
         if (primaryLocation is not null)
         {
             lossiness.AddRange(
@@ -487,7 +499,8 @@ public sealed class SarifIngestor
             relatedLocations,
             codeFlow,
             lossiness,
-            findingDiagnostics);
+            findingDiagnostics,
+            metadata);
         var derivedFingerprint =
             FingerprintProcessor.DeriveRulePathContext(finding);
         if (derivedFingerprint is not null)
@@ -806,7 +819,8 @@ public sealed class SarifIngestor
             finding.RelatedLocations,
             finding.CodeFlow,
             finding.Lossiness,
-            finding.Diagnostics);
+            finding.Diagnostics,
+            finding.Metadata);
 
     private static bool ValidateDocument(
         SarifLogWire log,
@@ -978,6 +992,15 @@ public sealed class SarifIngestor
             resultIndex: null,
             $"/runs/{runIndex}/originalUriBaseIds",
             diagnostics);
+        isValid &= ValidateCollectionCount(
+            run.Invocations?.Count ?? 0,
+            limits.MaximumRunCollectionItems,
+            "invocations",
+            input,
+            runIndex,
+            resultIndex: null,
+            $"/runs/{runIndex}/invocations",
+            diagnostics);
         return isValid;
     }
 
@@ -1108,23 +1131,49 @@ public sealed class SarifIngestor
             }
 
             var results = run.Results ?? [];
+            var driverRules = run.Tool?.Driver?.Rules ?? [];
+            var extensionRuleCount = 0;
+            var maximumTagsPerRule = driverRules.MaxOrDefault(
+                rule => rule?.Properties?.Tags?.Count ?? 0);
+            foreach (var extension in run.Tool?.Extensions ?? [])
+            {
+                var extensionRules = extension?.Rules ?? [];
+                extensionRuleCount = checked(
+                    extensionRuleCount + extensionRules.Count);
+                maximumTagsPerRule = Math.Max(
+                    maximumTagsPerRule,
+                    extensionRules.MaxOrDefault(
+                        rule => rule?.Properties?.Tags?.Count ?? 0));
+            }
+
             summaries.Add(
                 new SarifRunSummary(
                     runIndex,
                     results.Count,
-                    run.Tool?.Driver?.Rules?.Count ?? 0,
+                    checked(driverRules.Count + extensionRuleCount),
                     run.Tool?.Extensions?.Count ?? 0,
                     results.MaxOrDefault(
                         result => result?.Locations?.Count ?? 0),
                     results.MaxOrDefault(CountThreadFlowLocations),
-                    (run.Tool?.Driver?.Rules ?? []).MaxOrDefault(
-                        rule => rule?.Properties?.Tags?.Count ?? 0),
+                    maximumTagsPerRule,
                     results.Count(
                         result => (result?.Locations?.Count ?? 0) > 1),
                     results.Count(
                         result => !HasPrimaryLocationLineHash(result)),
                     results.Count(
-                        result => HasNonRepositoryPrimaryLocation(result, run))));
+                        HasNonRepositoryPrimaryLocation),
+                    DriverRuleCount: driverRules.Count,
+                    ExtensionRuleCount: extensionRuleCount,
+                    MaximumPartialFingerprintsPerResult:
+                        results.MaxOrDefault(
+                            result =>
+                                result?.PartialFingerprints?.Count ?? 0),
+                    ResultsWithoutDisplayLocation:
+                        results.Count(
+                            result => !HasPrimaryDisplayLocation(result)),
+                    SourceRootFacts: CreateSourceRootFacts(run, results),
+                    IgnoredProperties:
+                        CreateGithubIgnoredPropertyFacts(run, results)));
         }
 
         return summaries.MoveToImmutable();
@@ -1149,25 +1198,9 @@ public sealed class SarifIngestor
     }
 
     private static bool HasNonRepositoryPrimaryLocation(
-        SarifResultWire? result,
-        SarifRunWire run)
+        SarifResultWire? result)
     {
-        var location = result?.Locations?.FirstOrDefault()?.PhysicalLocation
-            ?.ArtifactLocation;
-        if (location is null)
-        {
-            return false;
-        }
-
-        SarifArtifactLocationWire? artifact = null;
-        if (location.Index is int artifactIndex &&
-            artifactIndex >= 0 &&
-            artifactIndex < (run.Artifacts?.Count ?? 0))
-        {
-            artifact = run.Artifacts![artifactIndex]?.Location;
-        }
-
-        var uri = location.Uri ?? artifact?.Uri;
+        var uri = ResolvePrimaryLocationUri(result);
         if (uri is null)
         {
             return false;
@@ -1175,6 +1208,257 @@ public sealed class SarifIngestor
 
         return PathCanonicalizer.Classify(uri) !=
             PathKind.RepositoryRelative;
+    }
+
+    private static bool HasPrimaryDisplayLocation(
+        SarifResultWire? result) =>
+        !string.IsNullOrWhiteSpace(
+            ResolvePrimaryLocationUri(result));
+
+    private static string? ResolvePrimaryLocationUri(
+        SarifResultWire? result) =>
+        result?.Locations?.FirstOrDefault()?.PhysicalLocation
+            ?.ArtifactLocation?.Uri;
+
+    private static GithubSourceRootFacts CreateSourceRootFacts(
+        SarifRunWire run,
+        IReadOnlyList<SarifResultWire?> results)
+    {
+        var invocations = run.Invocations ?? [];
+        var workingDirectoryUri =
+            invocations.FirstOrDefault()?.WorkingDirectory?.Uri;
+        var workingDirectoryKind =
+            ClassifyWorkingDirectoryUri(workingDirectoryUri);
+        Uri? sourceRoot = null;
+        if (workingDirectoryKind ==
+                GithubWorkingDirectoryUriKind.AbsoluteUri &&
+            Uri.TryCreate(
+                workingDirectoryUri,
+                UriKind.Absolute,
+                out var parsedSourceRoot))
+        {
+            sourceRoot = EnsureDirectoryUri(parsedSourceRoot);
+        }
+
+        var absoluteUriLocations = 0;
+        var absolutePathLocations = 0;
+        var convertibleLocations = 0;
+        var outsideSourceRootLocations = 0;
+        var schemeMismatches = 0;
+        foreach (var result in results)
+        {
+            var locationUri = ResolvePrimaryLocationUri(result);
+            var pathKind = PathCanonicalizer.Classify(locationUri);
+            if (pathKind is PathKind.FileUri or PathKind.ExternalUri)
+            {
+                absoluteUriLocations++;
+                if (sourceRoot is null ||
+                    !Uri.TryCreate(
+                        locationUri,
+                        UriKind.Absolute,
+                        out var parsedLocation))
+                {
+                    continue;
+                }
+
+                if (!string.Equals(
+                        sourceRoot.Scheme,
+                        parsedLocation.Scheme,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    schemeMismatches++;
+                }
+                else if (sourceRoot.IsBaseOf(parsedLocation))
+                {
+                    convertibleLocations++;
+                }
+                else
+                {
+                    outsideSourceRootLocations++;
+                }
+            }
+            else if (pathKind is
+                     PathKind.PosixAbsolute or
+                     PathKind.DriveAbsolute or
+                     PathKind.RootRelative or
+                     PathKind.Unc or
+                     PathKind.Device or
+                     PathKind.DeviceUnc)
+            {
+                absolutePathLocations++;
+            }
+        }
+
+        return new GithubSourceRootFacts(
+            invocations.Count,
+            workingDirectoryKind,
+            invocations
+                .Skip(1)
+                .Count(
+                    invocation =>
+                        !string.IsNullOrWhiteSpace(
+                            invocation?.WorkingDirectory?.Uri)),
+            absoluteUriLocations,
+            absolutePathLocations,
+            convertibleLocations,
+            outsideSourceRootLocations,
+            schemeMismatches);
+    }
+
+    private static GithubWorkingDirectoryUriKind
+        ClassifyWorkingDirectoryUri(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return GithubWorkingDirectoryUriKind.Missing;
+        }
+
+        var pathKind = PathCanonicalizer.Classify(value);
+        if (pathKind is PathKind.FileUri or PathKind.ExternalUri)
+        {
+            return Uri.TryCreate(value, UriKind.Absolute, out _)
+                ? GithubWorkingDirectoryUriKind.AbsoluteUri
+                : GithubWorkingDirectoryUriKind.Invalid;
+        }
+
+        if (pathKind == PathKind.RepositoryRelative &&
+            Uri.TryCreate(value, UriKind.Relative, out _))
+        {
+            return GithubWorkingDirectoryUriKind.RelativeReference;
+        }
+
+        if (pathKind is
+            PathKind.PosixAbsolute or
+            PathKind.DriveAbsolute or
+            PathKind.RootRelative or
+            PathKind.Unc or
+            PathKind.Device or
+            PathKind.DeviceUnc)
+        {
+            return GithubWorkingDirectoryUriKind.AbsolutePath;
+        }
+
+        return GithubWorkingDirectoryUriKind.Invalid;
+    }
+
+    private static Uri EnsureDirectoryUri(Uri uri)
+    {
+        var absolutePath = uri.GetLeftPart(UriPartial.Path);
+        if (absolutePath.EndsWith("/", StringComparison.Ordinal))
+        {
+            return uri;
+        }
+
+        return Uri.TryCreate(
+                absolutePath + "/",
+                UriKind.Absolute,
+                out var directoryUri)
+            ? directoryUri
+            : uri;
+    }
+
+    private static ImmutableArray<GithubIgnoredPropertyFact>
+        CreateGithubIgnoredPropertyFacts(
+            SarifRunWire run,
+            IReadOnlyList<SarifResultWire?> results)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        AddIfPresent("run.graphs", run.UnsupportedGraphs);
+        AddIfPresent("run.artifacts", run.Artifacts);
+        if (HasAutomationRunId(run.AutomationDetails?.Id))
+        {
+            Increment("automationDetails.id.runId");
+        }
+
+        foreach (var result in results)
+        {
+            if (result is null)
+            {
+                continue;
+            }
+
+            AddIfPresent("result.fingerprints", result.Fingerprints);
+            AddIfPresent("result.message.markdown", result.Message?.Markdown);
+            AddIfPresent("result.kind", result.Kind);
+            AddIfPresent("result.baselineState", result.BaselineState);
+            AddIfPresent(
+                "result.logicalLocations",
+                result.UnsupportedLogicalLocations);
+            AddIfPresent("result.stacks", result.UnsupportedStacks);
+            AddIfPresent(
+                "result.suppressions",
+                result.UnsupportedSuppressions);
+            AddIfPresent("result.attachments", result.UnsupportedAttachments);
+            AddLocationFacts(result.Locations);
+            AddLocationFacts(result.RelatedLocations);
+            foreach (var codeFlow in result.CodeFlows ?? [])
+            {
+                foreach (var threadFlow in codeFlow?.ThreadFlows ?? [])
+                {
+                    AddLocationFacts(
+                        (threadFlow?.Locations ?? [])
+                            .Select(item => item?.Location));
+                }
+            }
+        }
+
+        return counts
+            .OrderBy(item => item.Key, StringComparer.Ordinal)
+            .Select(
+                item =>
+                    new GithubIgnoredPropertyFact(item.Key, item.Value))
+            .ToImmutableArray();
+
+        void AddLocationFacts(IEnumerable<SarifLocationWire?>? locations)
+        {
+            foreach (var location in locations ?? [])
+            {
+                AddIfPresent(
+                    "location.message.markdown",
+                    location?.Message?.Markdown);
+                AddIfPresent(
+                    "location.logicalLocations",
+                    location?.UnsupportedLogicalLocations);
+                AddIfPresent(
+                    "artifactLocation.index",
+                    location?.PhysicalLocation?.ArtifactLocation?.Index);
+                var region = location?.PhysicalLocation?.Region;
+                AddIfPresent("region.snippet", region?.Snippet);
+                if (region is not null &&
+                    (region.CharOffset is not null ||
+                     region.CharLength is not null ||
+                     region.ByteOffset is not null ||
+                     region.ByteLength is not null))
+                {
+                    Increment("region.offsets");
+                }
+            }
+        }
+
+        void AddIfPresent(string propertyPath, object? value)
+        {
+            if (value is not null)
+            {
+                Increment(propertyPath);
+            }
+        }
+
+        void Increment(string propertyPath)
+        {
+            counts.TryGetValue(propertyPath, out var current);
+            counts[propertyPath] = checked(current + 1);
+        }
+    }
+
+    private static bool HasAutomationRunId(string? automationId)
+    {
+        if (string.IsNullOrEmpty(automationId))
+        {
+            return false;
+        }
+
+        var separator = automationId.LastIndexOf('/');
+        return separator >= 0 && separator < automationId.Length - 1;
     }
 
     private static int CountThreadFlowLocations(SarifResultWire? result)
@@ -1380,25 +1664,44 @@ public sealed class SarifIngestor
         return family.Length == 0 ? "unknown-producer" : family;
     }
 
-    private static JsonSerializerOptions CreateJsonOptions(ResourceLimits limits)
+    private static JsonSerializerOptions CreateJsonOptions(
+        ResourceLimits limits,
+        CancellationToken cancellationToken)
     {
+        var constraints = new BoundedJsonReadConstraints(
+            limits.MaximumJsonDepth,
+            limits.MaximumRunCollectionItems,
+            limits.MaximumStringCharacters,
+            cancellationToken);
         var options = new JsonSerializerOptions
         {
             MaxDepth = limits.MaximumJsonDepth,
             PropertyNameCaseInsensitive = false,
         };
         var budget = new JsonReadBudget(
-            limits.MaximumThreadFlowLocationsPerResult);
+            limits.MaximumThreadFlowLocationsPerResult,
+            cancellationToken);
         options.Converters.Add(
-            new BoundedStringConverter(limits.MaximumStringCharacters));
-        options.Converters.Add(new UnsupportedJsonValueConverter());
+            new BoundedStringConverter(
+                limits.MaximumStringCharacters,
+                cancellationToken));
+        options.Converters.Add(
+            new UnsupportedJsonValueConverter(constraints));
+        options.Converters.Add(
+            new BoundedJsonObjectConverterFactory(
+                type =>
+                    type.Namespace == typeof(SarifLogWire).Namespace &&
+                    type.Name.EndsWith("Wire", StringComparison.Ordinal),
+                constraints));
         options.Converters.Add(
             new BoundedListConverterFactory(
                 elementType => GetCollectionLimit(elementType, limits),
+                constraints,
                 budget));
         options.Converters.Add(
             new BoundedStringDictionaryConverterFactory(
-                limits.MaximumRunCollectionItems));
+                limits.MaximumRunCollectionItems,
+                constraints));
         return options;
     }
 

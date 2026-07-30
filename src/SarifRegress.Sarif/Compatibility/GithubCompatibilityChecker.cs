@@ -127,6 +127,8 @@ public sealed record GithubCompatibilityLimits
 
 /// <summary>
 /// Performs deterministic, advisory checks against documented GitHub code-scanning behaviour.
+/// The checker uses a finite retained projection and is not an ingestion, prioritization,
+/// deduplication, or repository-state emulator.
 /// </summary>
 public sealed class GithubCompatibilityChecker
 {
@@ -206,10 +208,10 @@ public sealed class GithubCompatibilityChecker
             diagnostics.Add(
                 CreateDiagnostic(
                     "GHCS0014",
-                    DiagnosticSeverity.Warning,
-                    $"The SARIF result count exceeds GitHub's documented {limits.MaximumRepositoryAlerts}-alert repository limit.",
+                    DiagnosticSeverity.Note,
+                    $"The file contains more results than GitHub's documented {limits.MaximumRepositoryAlerts}-alert repository limit.",
                     CreateReference(summary.Input, null, "/runs"),
-                    "Result count is an upper-bound compatibility signal; GitHub alert deduplication is not emulated."));
+                    "The limit applies to unique alerts across a repository. This file-level result count is only a review signal; SarifRegress does not emulate GitHub alert deduplication or repository state."));
         }
 
         return Diagnostic.Sort(diagnostics);
@@ -234,7 +236,7 @@ public sealed class GithubCompatibilityChecker
             run.ResultCount,
             limits.SoftResultsPerRun,
             "GHCS0005",
-            $"GitHub displays only the first {limits.SoftResultsPerRun} results per run.",
+            $"GitHub includes only the top {limits.SoftResultsPerRun} results per run after prioritizing by severity.",
             runReference,
             DiagnosticSeverity.Note);
         AddThresholdDiagnostic(
@@ -263,7 +265,7 @@ public sealed class GithubCompatibilityChecker
             run.MaximumThreadFlowLocationsPerResult,
             limits.SoftThreadFlowLocationsPerResult,
             "GHCS0009",
-            $"GitHub displays only the first {limits.SoftThreadFlowLocationsPerResult} thread-flow locations.",
+            $"GitHub includes only {limits.SoftThreadFlowLocationsPerResult} thread-flow locations using its documented prioritization.",
             runReference,
             DiagnosticSeverity.Note);
         AddThresholdDiagnostic(
@@ -278,7 +280,7 @@ public sealed class GithubCompatibilityChecker
             run.MaximumLocationsPerResult,
             limits.SoftLocationsPerResult,
             "GHCS0011",
-            $"GitHub displays only the first {limits.SoftLocationsPerResult} locations per result.",
+            $"GitHub includes only {limits.SoftLocationsPerResult} locations per result.",
             runReference,
             DiagnosticSeverity.Note);
         AddThresholdDiagnostic(
@@ -293,7 +295,7 @@ public sealed class GithubCompatibilityChecker
             run.MaximumTagsPerRule,
             limits.SoftTagsPerRule,
             "GHCS0016",
-            $"GitHub displays only the first {limits.SoftTagsPerRule} tags per rule.",
+            $"GitHub includes only {limits.SoftTagsPerRule} tags per rule.",
             runReference,
             DiagnosticSeverity.Note);
 
@@ -308,6 +310,17 @@ public sealed class GithubCompatibilityChecker
                     "Secondary locations remain available for local comparison."));
         }
 
+        if (run.ResultsWithoutDisplayLocation > 0)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0018",
+                    DiagnosticSeverity.Warning,
+                    "Some results have no usable first physical location for GitHub display.",
+                    runReference,
+                    "GitHub requires at least one result location to display an alert and uses only locations[0] as the primary location."));
+        }
+
         if (run.ResultsWithoutPrimaryLocationLineHash > 0)
         {
             diagnostics.Add(
@@ -318,15 +331,176 @@ public sealed class GithubCompatibilityChecker
                     runReference));
         }
 
-        if (run.NonRepositoryRelativePrimaryLocations > 0)
+        CheckSourceRoots(run, runReference, diagnostics);
+        foreach (var property in
+                 NormalizeIgnoredProperties(run.IgnoredProperties))
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0023",
+                    DiagnosticSeverity.Note,
+                    CreateIgnoredPropertyMessage(property),
+                    runReference,
+                    "The property remains available to SarifRegress where its supported subset uses it; this advisory describes only GitHub's documented subset."));
+        }
+    }
+
+    private static void CheckSourceRoots(
+        SarifRunSummary run,
+        SourceReference runReference,
+        ICollection<Diagnostic> diagnostics)
+    {
+        var facts = run.SourceRootFacts;
+        if (facts is null)
+        {
+            if (run.NonRepositoryRelativePrimaryLocations > 0)
+            {
+                diagnostics.Add(
+                    CreateDiagnostic(
+                        "GHCS0017",
+                        DiagnosticSeverity.Warning,
+                        "GitHub recommends repository-relative artifact locations for source files.",
+                        runReference));
+            }
+
+            return;
+        }
+
+        if (facts.LaterInvocationsWithWorkingDirectory > 0)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0022",
+                    DiagnosticSeverity.Note,
+                    "A workingDirectory URI appears after invocations[0], which is not the SARIF source-root position documented by GitHub.",
+                    runReference,
+                    "Place the SARIF-provided source root at invocations[0].workingDirectory.uri."));
+        }
+
+        var absoluteLocationCount =
+            facts.AbsoluteUriPrimaryLocations +
+            facts.AbsolutePathPrimaryLocations;
+        if (absoluteLocationCount == 0)
+        {
+            return;
+        }
+
+        if (facts.AbsolutePathPrimaryLocations > 0)
         {
             diagnostics.Add(
                 CreateDiagnostic(
                     "GHCS0017",
                     DiagnosticSeverity.Warning,
-                    "GitHub recommends repository-relative artifact locations for source files.",
-                    runReference));
+                    "Some primary artifactLocation.uri values are absolute filesystem paths rather than repository-relative references or absolute URIs.",
+                    runReference,
+                    "GitHub recommends repository-relative artifact URIs. Absolute locations require URI syntax and a compatible source root."));
         }
+
+        if (facts.AbsoluteUriPrimaryLocations > 0 &&
+            facts.WorkingDirectoryUriKind ==
+                GithubWorkingDirectoryUriKind.Missing)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0017",
+                    DiagnosticSeverity.Warning,
+                    "The SARIF contains absolute primary artifact URIs but does not provide invocations[0].workingDirectory.uri.",
+                    runReference,
+                    "An uploader can instead supply checkout_path or checkout_uri. Without a compatible source root, GitHub cannot convert absolute URIs to repository-relative URIs."));
+        }
+        else if (facts.AbsoluteUriPrimaryLocations > 0 &&
+                 facts.WorkingDirectoryUriKind is
+                     GithubWorkingDirectoryUriKind.RelativeReference or
+                     GithubWorkingDirectoryUriKind.AbsolutePath or
+                     GithubWorkingDirectoryUriKind.Invalid)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0019",
+                    DiagnosticSeverity.Warning,
+                    "invocations[0].workingDirectory.uri is not an absolute URI suitable for converting absolute artifact URIs.",
+                    runReference,
+                    "Use a repository-relative artifact URI or an absolute source-root URI such as file:///workspace/."));
+        }
+
+        if (facts.SourceRootSchemeMismatchPrimaryLocations > 0)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0020",
+                    DiagnosticSeverity.Warning,
+                    "Some absolute artifact URIs use a different URI scheme from invocations[0].workingDirectory.uri.",
+                    runReference,
+                    "When that SARIF working directory is the selected source root, GitHub documents that a scheme mismatch causes upload rejection. An explicit checkout_path or checkout_uri can take precedence."));
+        }
+
+        if (facts.OutsideSourceRootAbsoluteUriPrimaryLocations > 0)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0021",
+                    DiagnosticSeverity.Note,
+                    "Some absolute artifact URIs are outside the SARIF-provided working-directory source root.",
+                    runReference,
+                    "GitHub leaves same-scheme URIs outside the source root absolute. The upload is not rejected for that reason alone, but those locations may not map to committed repository files."));
+        }
+
+        var classifiedLocations =
+            facts.AbsoluteUriPrimaryLocations +
+            facts.AbsolutePathPrimaryLocations;
+        if (run.NonRepositoryRelativePrimaryLocations >
+            classifiedLocations)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "GHCS0017",
+                    DiagnosticSeverity.Warning,
+                    "Some primary artifact locations are not repository-relative source paths.",
+                    runReference,
+                    "GitHub recommends repository-relative artifact URIs for source files."));
+        }
+    }
+
+    private static ImmutableArray<GithubIgnoredPropertyFact>
+        NormalizeIgnoredProperties(
+            ImmutableArray<GithubIgnoredPropertyFact> properties) =>
+        properties.IsDefault
+            ? []
+            : properties
+                .Where(
+                    property =>
+                        property is not null &&
+                        !string.IsNullOrWhiteSpace(property.PropertyPath) &&
+                        property.Occurrences > 0)
+                .OrderBy(
+                    property => property.PropertyPath,
+                    StringComparer.Ordinal)
+                .ThenBy(property => property.Occurrences)
+                .ToImmutableArray();
+
+    private static string CreateIgnoredPropertyMessage(
+        GithubIgnoredPropertyFact property)
+    {
+        var occurrences = property.Occurrences == 1
+            ? "1 occurrence"
+            : $"{property.Occurrences} occurrences";
+        if (string.Equals(
+                property.PropertyPath,
+                "result.fingerprints",
+                StringComparison.Ordinal))
+        {
+            return $"GitHub's documented subset does not use result.fingerprints ({occurrences}); alert identity uses partialFingerprints and only primaryLocationLineHash is used.";
+        }
+
+        if (string.Equals(
+                property.PropertyPath,
+                "automationDetails.id.runId",
+                StringComparison.Ordinal))
+        {
+            return $"GitHub stores but does not use the run-id component of automationDetails.id ({occurrences}).";
+        }
+
+        return $"GitHub's documented supported-property subset does not use {property.PropertyPath} ({occurrences}).";
     }
 
     private static void AddThresholdDiagnostic(

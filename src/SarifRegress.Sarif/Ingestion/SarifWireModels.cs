@@ -2,8 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace SarifRegress.Sarif.Ingestion;
 
-// These private DTOs intentionally model only comparison-relevant SARIF fields. JsonSerializer
-// consumes ignored properties incrementally without retaining their object graphs.
+// These private DTOs intentionally model only comparison-relevant fields and bounded facts used
+// by the advisory GitHub profile. JsonSerializer consumes other properties incrementally without
+// retaining their object graphs.
 internal sealed class SarifLogWire
 {
     [JsonPropertyName("version")]
@@ -31,7 +32,7 @@ internal sealed class SarifRunWire
     public List<SarifResultWire?>? Results { get; init; }
 
     [JsonPropertyName("invocations")]
-    public UnsupportedJsonValue? UnsupportedInvocations { get; init; }
+    public List<SarifInvocationWire?>? Invocations { get; init; }
 
     [JsonPropertyName("graphs")]
     public UnsupportedJsonValue? UnsupportedGraphs { get; init; }
@@ -80,6 +81,12 @@ internal sealed class SarifAutomationDetailsWire
 {
     [JsonPropertyName("id")]
     public string? Id { get; init; }
+}
+
+internal sealed class SarifInvocationWire
+{
+    [JsonPropertyName("workingDirectory")]
+    public SarifArtifactLocationWire? WorkingDirectory { get; init; }
 }
 
 internal sealed class SarifArtifactWire

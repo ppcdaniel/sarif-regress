@@ -45,6 +45,9 @@ public sealed record FindingSnapshot(
     string? CanonicalUri,
     Region? Region,
     string CanonicalMessage,
+    FindingMetadata SourceMetadata,
+    ImmutableArray<string> MessageNormalisationFlags,
+    ImmutableArray<string> Lossiness,
     ImmutableArray<DerivedFingerprint> DerivedFingerprints);
 
 /// <summary>
@@ -93,6 +96,9 @@ public static class FindingSnapshotFactory
             finding.PrimaryLocation?.Path.CanonicalUri,
             finding.PrimaryLocation?.Region,
             finding.Message.CanonicalText,
+            finding.Metadata,
+            finding.Message.NormalisationFlags,
+            finding.Lossiness,
             finding.DerivedFingerprints);
     }
 }

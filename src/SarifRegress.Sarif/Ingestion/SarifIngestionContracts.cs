@@ -18,6 +18,8 @@ public sealed record SarifIngestionRequest
     /// <param name="configuration">The validated comparison configuration.</param>
     /// <param name="compressedUploadBytes">
     /// The compressed upload size, when a caller has already produced a gzip payload.
+    /// Null means that the upload representation was not evaluated; it must not be
+    /// inferred from the raw SARIF byte count.
     /// </param>
     public SarifIngestionRequest(
         InputKind input,
@@ -64,10 +66,61 @@ public sealed record SarifIngestionRequest
     public SarifRegressConfiguration Configuration { get; }
 
     /// <summary>
-    /// Gets the optional compressed upload size.
+    /// Gets the caller-measured gzip payload size, or null when it was not evaluated.
     /// </summary>
     public long? CompressedUploadBytes { get; }
 }
+
+/// <summary>
+/// Classifies the SARIF-provided source root used by GitHub when an upload does not supply one.
+/// </summary>
+public enum GithubWorkingDirectoryUriKind
+{
+    /// <summary>
+    /// <c>invocations[0].workingDirectory.uri</c> is absent.
+    /// </summary>
+    Missing,
+
+    /// <summary>
+    /// The value is an absolute URI with a scheme.
+    /// </summary>
+    AbsoluteUri,
+
+    /// <summary>
+    /// The value is a relative URI reference.
+    /// </summary>
+    RelativeReference,
+
+    /// <summary>
+    /// The value is an absolute filesystem path rather than an absolute URI.
+    /// </summary>
+    AbsolutePath,
+
+    /// <summary>
+    /// The value has URI syntax that cannot be parsed as an absolute or relative URI.
+    /// </summary>
+    Invalid,
+}
+
+/// <summary>
+/// Captures bounded source-root and absolute-location facts without retaining source paths.
+/// </summary>
+public sealed record GithubSourceRootFacts(
+    int InvocationCount,
+    GithubWorkingDirectoryUriKind WorkingDirectoryUriKind,
+    int LaterInvocationsWithWorkingDirectory,
+    int AbsoluteUriPrimaryLocations,
+    int AbsolutePathPrimaryLocations,
+    int ConvertibleAbsoluteUriPrimaryLocations,
+    int OutsideSourceRootAbsoluteUriPrimaryLocations,
+    int SourceRootSchemeMismatchPrimaryLocations);
+
+/// <summary>
+/// Counts one known property that is outside GitHub's documented supported subset.
+/// </summary>
+public sealed record GithubIgnoredPropertyFact(
+    string PropertyPath,
+    int Occurrences);
 
 /// <summary>
 /// Captures GitHub-relevant aggregate facts for one SARIF run without retaining its wire model.
@@ -82,7 +135,13 @@ public sealed record SarifRunSummary(
     int MaximumTagsPerRule,
     int ResultsWithMultipleLocations,
     int ResultsWithoutPrimaryLocationLineHash,
-    int NonRepositoryRelativePrimaryLocations);
+    int NonRepositoryRelativePrimaryLocations,
+    int DriverRuleCount = 0,
+    int ExtensionRuleCount = 0,
+    int MaximumPartialFingerprintsPerResult = 0,
+    int ResultsWithoutDisplayLocation = 0,
+    GithubSourceRootFacts? SourceRootFacts = null,
+    ImmutableArray<GithubIgnoredPropertyFact> IgnoredProperties = default);
 
 /// <summary>
 /// Captures bounded aggregate facts about one deserialised SARIF document.

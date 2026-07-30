@@ -73,6 +73,31 @@ public sealed class GithubCompatibilityCheckerTests
         Assert.Contains(diagnostics, item => item.Code == "GHCS0012");
         Assert.Contains(diagnostics, item => item.Code == "GHCS0013");
         Assert.Contains(diagnostics, item => item.Code == "GHCS0017");
+        Assert.Contains(
+            diagnostics,
+            item =>
+                item.Code == "GHCS0005" &&
+                item.Message.Contains(
+                    "top 1 results",
+                    StringComparison.Ordinal) &&
+                item.Message.Contains(
+                    "prioritizing by severity",
+                    StringComparison.Ordinal));
+        Assert.Contains(
+            diagnostics,
+            item =>
+                item.Code == "GHCS0009" &&
+                item.Message.Contains(
+                    "documented prioritization",
+                    StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            diagnostics,
+            item =>
+                (item.Code is "GHCS0005" or "GHCS0009" or
+                    "GHCS0011" or "GHCS0016") &&
+                item.Message.Contains(
+                    "first",
+                    StringComparison.OrdinalIgnoreCase));
         Assert.All(
             diagnostics,
             item => Assert.Equal(
@@ -94,7 +119,16 @@ public sealed class GithubCompatibilityCheckerTests
             [CreateViolatingRun(1), CreateViolatingRun(0)]);
         var secondSummary = firstSummary with
         {
-            Runs = firstSummary.Runs.Reverse().ToImmutableArray(),
+            Runs = firstSummary.Runs
+                .Reverse()
+                .Select(
+                    run => run with
+                    {
+                        IgnoredProperties = run.IgnoredProperties
+                            .Reverse()
+                            .ToImmutableArray(),
+                    })
+                .ToImmutableArray(),
         };
         var checker = new GithubCompatibilityChecker(
             new GithubCompatibilityLimits
@@ -131,7 +165,12 @@ public sealed class GithubCompatibilityCheckerTests
             MaximumTagsPerRule: 3,
             ResultsWithMultipleLocations: 1,
             ResultsWithoutPrimaryLocationLineHash: 1,
-            NonRepositoryRelativePrimaryLocations: 1);
+            NonRepositoryRelativePrimaryLocations: 1,
+            IgnoredProperties:
+            [
+                new GithubIgnoredPropertyFact("result.kind", 2),
+                new GithubIgnoredPropertyFact("result.fingerprints", 1),
+            ]);
 
     private static (string Code, string Pointer, string Message)
         ToStableDiagnosticTuple(Diagnostic diagnostic) =>

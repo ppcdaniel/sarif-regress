@@ -25,6 +25,17 @@ public sealed class ReportFactoryTests
         Assert.Equal(
             ReportTestData.DerivedFingerprintValue,
             report.Findings[0].Candidate!.DerivedFingerprints[0].Value);
+        Assert.Equal("error", report.Findings[0].Candidate!.SourceMetadata.Level);
+        Assert.Equal("review", report.Findings[0].Candidate!.SourceMetadata.Kind);
+        Assert.Equal(
+            "updated",
+            report.Findings[0].Candidate!.SourceMetadata.BaselineState);
+        Assert.Equal(
+            ["collapsed-whitespace", "invariant-case-fold"],
+            report.Findings[0].Candidate!.MessageNormalisationFlags);
+        Assert.Equal(
+            ["collapsed-whitespace", "message-markdown-fallback"],
+            report.Findings[0].Candidate!.Lossiness);
     }
 
     [Fact]

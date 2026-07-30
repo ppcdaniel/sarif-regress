@@ -44,7 +44,20 @@ internal static class ReportTestData
             resultIndex: 2,
             canonicalUri: "repo://src/old.cs",
             canonicalMessage: "unsafe input",
-            derivedFingerprintValue: DerivedFingerprintValue);
+            derivedFingerprintValue: DerivedFingerprintValue,
+            level: "warning",
+            kind: "fail",
+            baselineState: "unchanged",
+            messageNormalisationFlags:
+            [
+                "trimmed-whitespace",
+                "invariant-case-fold",
+            ],
+            lossiness:
+            [
+                "trimmed-whitespace",
+                "canonical-separators",
+            ]);
         var candidate = CreateFinding(
             InputKind.Candidate,
             "candidate:0:7",
@@ -52,7 +65,20 @@ internal static class ReportTestData
             canonicalUri: "repo://src/new.cs",
             canonicalMessage: candidateMessage
                 ?? "unsafe <script>alert(\"x\")</script> & 'quoted' input",
-            derivedFingerprintValue: DerivedFingerprintValue);
+            derivedFingerprintValue: DerivedFingerprintValue,
+            level: "error",
+            kind: "review",
+            baselineState: "updated",
+            messageNormalisationFlags:
+            [
+                "collapsed-whitespace",
+                "invariant-case-fold",
+            ],
+            lossiness:
+            [
+                "message-markdown-fallback",
+                "collapsed-whitespace",
+            ]);
         var newCandidate = CreateFinding(
             InputKind.Candidate,
             "candidate:0:3",
@@ -204,7 +230,12 @@ internal static class ReportTestData
         string canonicalMessage,
         string? derivedFingerprintValue,
         Region? region = null,
-        bool useDefaultRegion = true)
+        bool useDefaultRegion = true,
+        string? level = null,
+        string? kind = null,
+        string? baselineState = null,
+        IEnumerable<string>? messageNormalisationFlags = null,
+        IEnumerable<string>? lossiness = null)
     {
         var sourceReference = new SourceReference(
             input,
@@ -241,7 +272,7 @@ internal static class ReportTestData
                 canonicalMessage,
                 canonicalMessage,
                 canonicalMessage,
-                ImmutableArray<string>.Empty),
+                (messageNormalisationFlags ?? []).ToImmutableArray()),
             derivedFingerprints: derivedFingerprintValue is null
                 ? []
                 : [
@@ -249,7 +280,9 @@ internal static class ReportTestData
                         ReportContractVersions.SarifFingerprint,
                         derivedFingerprintValue,
                         ReportContractVersions.SarifFingerprintAlgorithm),
-                ]);
+                ],
+            lossiness: lossiness,
+            metadata: new FindingMetadata(level, kind, baselineState));
     }
 
     private static DecisionTrace CreateTrace(

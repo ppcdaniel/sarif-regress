@@ -100,6 +100,54 @@ public sealed class MatchingEngineTests
     }
 
     [Fact]
+    public void Canonical_evidence_marks_source_normalisation_as_lossy()
+    {
+        var derived = MatchingTestData.DerivedFingerprint("derived-hash");
+        var pathTransformation = new TransformationRecord(
+            "canonical-separators",
+            @"src\example.cs",
+            "src/example.cs",
+            isLossy: true,
+            "cross-platform-path/v1");
+        var baseline = MatchingTestData.Finding(
+            InputKind.Baseline,
+            "baseline:one",
+            derivedFingerprints: [derived],
+            messageNormalisationFlags: ["collapsed-whitespace"],
+            metadata: new FindingMetadata(
+                "warning",
+                "fail",
+                "unchanged"));
+        var candidate = MatchingTestData.Finding(
+            InputKind.Candidate,
+            "candidate:one",
+            derivedFingerprints: [derived],
+            pathTransformations: [pathTransformation],
+            metadata: new FindingMetadata(
+                "error",
+                "review",
+                "new"));
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate));
+
+        var decision = Assert.Single(result.Decisions);
+        Assert.Equal(FindingClassification.Unchanged, decision.Classification);
+        Assert.Contains(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind == "message" && evidence.Lossy);
+        Assert.Contains(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind == "canonical-path" && evidence.Lossy);
+        Assert.DoesNotContain(
+            decision.Decision.Evidence,
+            evidence => evidence.Kind.Contains(
+                "baseline-state",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Stable_context_across_a_path_and_region_change_is_moved()
     {
         var baseline = MatchingTestData.Finding(

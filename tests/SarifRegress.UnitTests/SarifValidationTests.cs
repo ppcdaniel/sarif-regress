@@ -326,11 +326,11 @@ public sealed class SarifValidationTests
     }
 
     [Fact]
-    public async Task Unsupported_subtrees_are_skipped_without_consuming_collection_budget()
+    public async Task Unsupported_subtrees_cannot_bypass_collection_budget()
     {
         var limits = ResourceLimits.Default with
         {
-            MaximumRunCollectionItems = 1,
+            MaximumRunCollectionItems = 4,
         };
         var result = await IngestAsync(
             """
@@ -338,7 +338,7 @@ public sealed class SarifValidationTests
               "version": "2.1.0",
               "runs": [{
                 "tool": { "driver": { "name": "Tool" } },
-                "invocations": [1, 2, 3, 4],
+                "graphs": [1, 2, 3, 4, 5],
                 "results": [{
                   "ruleId": "R1",
                   "message": { "text": "message" }
@@ -348,11 +348,89 @@ public sealed class SarifValidationTests
             """,
             CreateConfiguration(limits));
 
-        Assert.True(result.IsValid);
-        Assert.Single(result.ComparisonInput.Findings);
+        Assert.False(result.IsValid);
+        Assert.Empty(result.ComparisonInput.Findings);
         Assert.Contains(
             result.ComparisonInput.Diagnostics,
-            item => item.Code == "UNSUPPORTED0100");
+            item => item.Code == "SECURITY0102");
+    }
+
+    [Fact]
+    public async Task Unsupported_subtrees_cannot_bypass_string_budget()
+    {
+        var limits = ResourceLimits.Default with
+        {
+            MaximumStringCharacters = 12,
+        };
+        var result = await IngestAsync(
+            """
+            {
+              "version": "2.1.0",
+              "runs": [{
+                "tool": { "driver": { "name": "Tool" } },
+                "graphs": [{ "value": "1234567890123" }],
+                "results": []
+              }]
+            }
+            """,
+            CreateConfiguration(limits));
+
+        Assert.False(result.IsValid);
+        Assert.Empty(result.ComparisonInput.Findings);
+        Assert.Contains(
+            result.ComparisonInput.Diagnostics,
+            item => item.Code == "SECURITY0103");
+    }
+
+    [Fact]
+    public async Task Unknown_subtrees_cannot_bypass_object_budget()
+    {
+        var limits = ResourceLimits.Default with
+        {
+            MaximumRunCollectionItems = 2,
+        };
+        var result = await IngestAsync(
+            """
+            {
+              "version": "2.1.0",
+              "runs": [{
+                "tool": { "driver": { "name": "Tool" } },
+                "future": { "first": 1, "second": 2, "third": 3 }
+              }]
+            }
+            """,
+            CreateConfiguration(limits));
+
+        Assert.False(result.IsValid);
+        Assert.Empty(result.ComparisonInput.Findings);
+        Assert.Contains(
+            result.ComparisonInput.Diagnostics,
+            item => item.Code == "SECURITY0102");
+    }
+
+    [Fact]
+    public async Task Unknown_nested_subtrees_cannot_bypass_depth_budget()
+    {
+        var limits = ResourceLimits.Default with
+        {
+            MaximumJsonDepth = 4,
+        };
+        var result = await IngestAsync(
+            """
+            {
+              "version": "2.1.0",
+              "runs": [{
+                "future": { "one": { "two": { "three": true } } }
+              }]
+            }
+            """,
+            CreateConfiguration(limits));
+
+        Assert.False(result.IsValid);
+        Assert.Empty(result.ComparisonInput.Findings);
+        Assert.Contains(
+            result.ComparisonInput.Diagnostics,
+            item => item.Code == "PARSE0100");
     }
 
     [Fact]

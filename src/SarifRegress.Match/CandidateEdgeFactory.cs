@@ -309,7 +309,8 @@ internal sealed class CandidateEdgeFactory
                 baselinePath.CanonicalUri,
                 candidatePath.CanonicalUri,
                 EvidenceOrigin.System,
-                Lossy: false,
+                Lossy: HasLossyTransform(baselinePath) ||
+                    HasLossyTransform(candidatePath),
                 MatchingAlgorithms.PathVersion));
             return PathMatchKind.Exact;
         }
@@ -336,10 +337,14 @@ internal sealed class CandidateEdgeFactory
             baselinePath.CanonicalUri,
             candidatePath.CanonicalUri,
             EvidenceOrigin.System,
-            Lossy: false,
+            Lossy: HasLossyTransform(baselinePath) ||
+                HasLossyTransform(candidatePath),
             MatchingAlgorithms.PathVersion));
         return PathMatchKind.None;
     }
+
+    private static bool HasLossyTransform(CanonicalPath path) =>
+        path.Transformations.Any(item => item.IsLossy);
 
     private bool AliasMapsPaths(
         PathAlias alias,
@@ -476,12 +481,19 @@ internal sealed class CandidateEdgeFactory
             agreement = AgreementBand.None;
         }
 
-        evidence.Add(EvidenceDraft.CreateBounded(
+        var messageEvidence = EvidenceDraft.CreateBounded(
             "message",
             baseline.CanonicalText,
             candidate.CanonicalText,
             EvidenceOrigin.System,
-            MatchingAlgorithms.MessageVersion));
+            MatchingAlgorithms.MessageVersion);
+        evidence.Add(
+            messageEvidence with
+            {
+                Lossy = messageEvidence.Lossy ||
+                    !baseline.NormalisationFlags.IsEmpty ||
+                    !candidate.NormalisationFlags.IsEmpty,
+            });
         return agreement;
     }
 
