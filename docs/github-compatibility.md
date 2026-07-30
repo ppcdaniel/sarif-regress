@@ -11,7 +11,7 @@ and [limit troubleshooting reference](https://docs.github.com/en/code-security/r
 
 | SARIF data | Hard maximum | Display/truncation threshold |
 |---|---:|---:|
-| gzip-compressed file | 10 MB | not applicable |
+| gzip-compressed file | 10 MB (`10,000,000` bytes) | not applicable |
 | runs per file | 20 | none |
 | results per run | 25,000 | 5,000 |
 | rules per run | 25,000 | none |
@@ -48,7 +48,8 @@ tracking. SarifRegress preserves all producer fingerprints and keeps its own
 
 ## Compressed-size evaluation
 
-The 10 MB limit applies to the gzip payload uploaded to GitHub, not to the raw SARIF byte count.
+The 10 MB limit is pinned as `10,000,000` bytes and applies to the gzip payload uploaded to
+GitHub, not to the raw SARIF byte count.
 The current file-based CLI reads raw JSON and does not control the gzip encoder or metadata that a
 later uploader will use. It therefore does not synthesize an upload size or infer acceptance from
 the raw size. `validate` reports `compressedUploadSizeEvaluation` as `not-evaluated` and
