@@ -467,7 +467,7 @@ public sealed class SarifConfigurationReader
 
         return new PolicyConfiguration(
             classifications.MoveToImmutable(),
-            wire.TreatGithubIncompatibilityAsError ?? false);
+            wire?.TreatGithubIncompatibilityAsError ?? false);
     }
 
     private static ReportingConfiguration CreateReporting(
