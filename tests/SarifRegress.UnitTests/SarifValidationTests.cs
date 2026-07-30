@@ -285,7 +285,7 @@ public sealed class SarifValidationTests
     {
         var limits = ResourceLimits.Default with
         {
-            MaximumThreadFlowLocationsPerResult = 1,
+            MaximumThreadFlowLocationsPerResult = 2,
         };
         var result = await IngestAsync(
             """
@@ -297,12 +297,17 @@ public sealed class SarifValidationTests
                   "ruleId": "R1",
                   "message": { "text": "message" },
                   "codeFlows": [{
-                    "threadFlows": [{
-                      "locations": [
-                        { "location": {} },
-                        { "location": {} }
-                      ]
-                    }]
+                    "threadFlows": [
+                      {
+                        "locations": [
+                          { "location": {} },
+                          { "location": {} }
+                        ]
+                      },
+                      {
+                        "locations": [{ "location": {} }]
+                      }
+                    ]
                   }]
                 }]
               }]
@@ -317,7 +322,7 @@ public sealed class SarifValidationTests
             item => item.Code == "SECURITY0102");
         Assert.Equal(
             "A SARIF thread-flow location collection exceeds the configured "
-            + "1-item limit.",
+            + "2-item limit.",
             diagnostic.Message);
     }
 
