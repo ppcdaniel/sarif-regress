@@ -1,22 +1,190 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíÛmõN‹Z–‹­¦ëeŠw¬ÕÕÍ¥¹œMåÍÑ•´¹½±±•Ñ¥½¹Ì¹%µµÕÑ…‰±”ì)ÕÍ¥¹œM…É¥™I•É•ÍÌ¹½É”¹¥…¹½ÍÑ¥Ìì)ÕÍ¥¹œM…É¥™I•É•ÍÌ¹M…É¥˜¹½µÁ…Ñ¥‰¥±¥Ñäì)ÕÍ¥¹œM…É¥™I•É•ÍÌ¹M…É¥˜¹%¹•ÍÑ¥½¸ì()¹…µ•ÍÁ…”M…É¥™I•É•ÍÌ¹U¹¥ÑQ•ÍÑÌì()ÁÕ‰±¥ŒÍ•…±•±…ÍÌ¥Ñ¡Õ‰½µÁ…Ñ¥‰¥±¥Ñå¡•­•ÉQ•ÍÑÌ)ì(€€€m…Ñt(€€€ÁÕ‰±¥ŒÙ½¥•™…Õ±Ñ}½µÁÉ•ÍÍ•‘}ÕÁ±½…‘}±¥µ¥Ñ}ÕÍ•Í}‘½Õµ•¹Ñ•‘}‘•¥µ…±}µ•…‰åÑ•Ì ¤(€€€ì(€€€€€€€ÍÍ•ÉÐ¹ÅÕ…° (€€€€€€€€€€€€ÄÁ|ÀÀÁ|ÀÀÁ0°(€€€€€€€€€€€¥Ñ¡Õ‰½µÁ…Ñ¥‰¥±¥Ñå1¥µ¥ÑÌ¹•™…Õ±Ð¹5…á¥µÕµ½µÁÉ•ÍÍ•‘UÁ±½…‘	åÑ•Ì¤ì(€€€ô((€€€m…Ñt(€€€ÁÕ‰±¥ŒÙ½¥MÕÁÁ½ÉÑ•‘}‘½Õµ•¹Ñ}‰•±½Ý}±¥µ¥ÑÍ}¡…Í}¹½}…‘Ù¥Í½É¥•Ì ¤(€€€ì(€€€€€€€Ù…ÈÍÕµµ…Éä€ô¹•ÜM…É¥™½Õµ•¹ÑMÕµµ…Éä (€€€€€€€€€€€%¹ÁÕÑ-¥¹¹…¹‘¥‘…Ñ”°(€€€€€€€€€€€€ˆÈ¸Ä¸Àˆ°(€€€€€€€€€€€%¹ÁÕÑ	åÑ•Ìè€Å|ÀÈÐ°(€€€€€€€€€€€½µÁÉ•ÍÍ•‘UÁ±½…‘	åÑ•Ìè€ÔÄÈ°(€€€€€€€€€€€l(€€€€€€€€€€€€€€€¹•ÜM…É¥™IÕ¹MÕµµ…Éä (€€€€€€€€€€€€€€€€€€€IÕ¹%¹‘•àè€À°(€€€€€€€€€€€€€€€€€€€I•ÍÕ±Ñ½Õ¹Ðè€Ä°(€€€€€€€€€€€€€€€€€€€IÕ±•½Õ¹Ðè€Ä°(€€€€€€€€€€€€€€€€€€€áÑ•¹Í¥½¹½Õ¹Ðè€À°(€€€€€€€€€€€€€€€€€€€5…á¥µÕµ1½…Ñ¥½¹ÍA•ÉI•ÍÕ±Ðè€Ä°(€€€€€€€€€€€€€€€€€€€5…á¥µÕµQ¡É•…‘±½Ý1½…Ñ¥½¹ÍA•ÉI•ÍÕ±Ðè€À°(€€€€€€€€€€€€€€€€€€€5…á¥µÕµQ…ÍA•ÉIÕ±”è€Ä°(€€€€€€€€€€€€€€€€€€€I•ÍÕ±ÑÍ]¥Ñ¡5Õ±Ñ¥Á±•1½…Ñ¥½¹Ìè€À°(€€€€€€€€€€€€€€€€€€€I•ÍÕ±ÑÍ]¥Ñ¡½ÕÑAÉ¥µ…Éå1½…Ñ¥½¹1¥¹•!…Í è€À°(€€€€€€€€€€€€€€€€€€€9½¹I•Á½Í¥Ñ½ÉåI•±…Ñ¥Ù•AÉ¥µ…Éå1½…Ñ¥½¹Ìè€À¤°(€€€€€€€€€€€t¤ì((€€€€€€€Ù…È‘¥…¹½ÍÑ¥Ì€ô¹•Ü¥Ñ¡Õ‰½µÁ…Ñ¥‰¥±¥Ñå¡•­•È ¤¹¡•¬¡ÍÕµµ…Éä¤ì((€€€€€€€ÍÍ•ÉÐ¹µÁÑä¡‘¥…¹½ÍÑ¥Ì¤ì(€€€ô((€€€m…Ñt(€€€ÁÕ‰±¥ŒÙ½¥%¹©•Ñ•‘}±¥µ¥ÑÍ}µ…­•}¡•­Í}½™™±¥¹•}…¹‘}Ñ•ÍÑ…‰±” ¤(€€€ì(€€€€€€€Ù…È±¥µ¥ÑÌ€ô¹•Ü¥Ñ¡Õ‰½µÁ…Ñ¥‰¥±¥Ñå1¥µ¥ÑÌ(€€€€€€€ì(€€€€€€€€€€€5…á¥µÕµ½µÁÉ•ÍÍ•‘UÁ±½…‘	åÑ•Ì€ô€ÄÀ°(€€€€€€€€€€€5…á¥µÕµIÕ¹ÍA•É¥±”€ô€Ä°(€€€€€€€€€€€5…á¥µÕµI•ÍÕ±ÑÍA•ÉIÕ¸€ô€È°(€€€€€€€€€€€M½™ÑI•ÍÕ±ÑÍA•ÉIÕ¸€ô€Ä°(€€€€€€€€€€€5…á¥µÕµIÕ±•ÍA•ÉIÕ¸€ô€È°(€€€€€€€€€€€5…á¥µÕµáÑ•¹Í¥½¹ÍA•ÉIÕ¸€ô€Ä°(€€€€€€€€€€€5…á¥µÕµQ¡É•…‘±½Ý1½…Ñ¥½¹ÍA•ÉI•ÍÕ±Ð€ô€È°(€€€€€€€€€€€M½™ÑQ¡É•…‘±½Ý1½…Ñ¥½¹ÍA•ÉI•ÍÕ±Ð€ô€Ä°(€€€€€€€€€€€5…á¥µÕµ1½…Ñ¥½¹ÍA•ÉI•ÍÕ±Ð€ô€È°(€€€€€€€€€€€M½™Ñ1½…Ñ¥½¹ÍA•ÉI•ÍÕ±Ð€ô€Ä°(€€€€€€€€€€€5…á¥µÕµQ…ÍA•ÉIÕ±”€ô€È°(€€€€€€€€€€€M½™ÑQ…ÍA•ÉIÕ±”€ô€Ä°(€€€€€€€€€€€5…á¥µÕµI•Á½Í¥Ñ½Éå±•ÉÑÌ€ô€È°(€€€€€€€ôì(€€€€€€€Ù…ÈÍÕµµ…Éä€ô¹•ÜM…É¥™½Õµ•¹ÑMÕµµ…Éä (€€€€€€€€€€€%¹ÁÕÑ-¥¹¹	…Í•±¥¹”°(€€€€€€€€€€€€ˆÈ¸À¸Àˆ°(€€€€€€€€€€€%¹ÁÕÑ	åÑ•Ìè€ÄÀÀ°(€€€€€€€€€€€½µÁÉ•ÍÍ•‘UÁ±½…‘	åÑ•Ìè€ÄÄ°(€€€€€€€€€€€l(€€€€€€€€€€€€€€€É•…Ñ•Y¥½±…Ñ¥¹IÕ¸ À¤°(€€€€€€€€€€€€€€€É•…Ñ•Y¥½±…Ñ¥¹IÕ¸ Ä¤°(€€€€€€€€€€€t¤ì((€€€€€€€Ù…È‘¥…¹½ÍÑ¥Ì€ô(€€€€€€€€€€€¹•Ü¥Ñ¡Õ‰½µÁ…Ñ¥‰¥±¥Ñå¡•­•È¡±¥µ¥ÑÌ¤¹¡•¬¡ÍÕµµ…Éä¤ì((€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì¡‘¥…¹½ÍÑ¥Ì°¥Ñ•´€ôø¥Ñ•´¹½‘”€ôô€‰!LÀÀÀÄˆ¤ì(€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì¡‘¥…¹½ÍÑ¥Ì°¥Ñ•´€ôø¥Ñ•´¹½‘”€ôô€‰!LÀÀÀÈˆ¤ì(€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì¡‘¥…¹½ÍÑ¥Ì°¥Ñ•´€ôø¥Ñ•´¹½‘”€ôô€‰!LÀÀÀÌˆ¤ì(€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì¡‘¥…¹½ÍÑ¥Ì°¥Ñ•´€ôø¥Ñ•´¹½‘”€ôô€‰!LÀÀÀÐˆ¤ì(€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì¡‘¥…¹½ÍÑ¥Ì°¥Ñ•´€ôø¥Ñ•´¹½‘”€ôô€‰!LÀÀÄÈˆ¤ì(€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì¡‘¥…¹½ÍÑ¥Ì°¥Ñ•´€ôø¥Ñ•´¹½‘”€ôô€‰!LÀÀÄÌˆ¤ì(€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì¡‘¥…¹½ÍÑ¥Ì°¥Ñ•´€ôø¥Ñ•´¹½‘”€ôô€‰!LÀÀÄÜˆ¤ì(€€€€€€€ÍÍ•ÉÐ¹½¹Ñ…¥¹Ì (€€€€€€€€€€€‘¥…¹½ÍÑ¥Ì°(€€€€€€€ƒmõ¶‰žËkºwµçHˆÜ‚ˆ‘ÒÔÌLHˆÜˆ‘ÒÔÌMˆŠH	‰‚ˆ][K“Y\ÜØYÙKÛÛZ[œÊˆ™š\œÝ‹ˆÝš[™ÐÛÛ\\š\ÛÛ‹“Ü™[˜[YÛ›Ü™PØ\ÙJJNÂˆ\ÜÙ\[
-ˆXYÛ›ÜÝXÜËˆ][HOˆ\ÜÙ\‘\]X[
-ˆ™Ú]X‹\Ý\ÜY\ÝXœÙ]LŒ‹LËLÌ‹ˆ][K”Ý[™\™˜\Ú\ÊJNÂˆ\ÜÙ\[
-ˆXYÛ›ÜÝXÜËˆ][HOˆ\ÜÙ\“›Ý\]X[
-XYÛ›ÜÝXÔÙ]™\š]K‘\œ›Ü‹][K”Ù]™\š]JJNÂˆB‚ˆÑ˜XÝBˆX›XÈ›ÚYÛÛ\]Xš[]WÙXYÛ›ÜÝXÜ×Ø\™WØž]WÛÜ™\—Ú[™\[™[
+using System.Collections.Immutable;
+using SarifRegress.Core.Diagnostics;
+using SarifRegress.Sarif.Compatibility;
+using SarifRegress.Sarif.Ingestion;
 
-BˆÂˆ˜\ˆš\œÝÝ[[X\žHH™]ÈØ\šY‘ØÝ[Y[Ý[[X\žJˆ[œ]Ú[™Ø[™Y]KˆŒ‹ŒKŒ‹ˆLˆ[ˆÐÜ™X]Uš[Û][™Ô[ŠJKÜ™X]Uš[Û][™Ô[Š
-WJNÂˆ˜\ˆÙXÛÛ™Ý[[X\žHHš\œÝÝ[[X\žHÚ]ˆÂˆ[œÈHš\œÝÝ[[X\žK”[œÂˆ”™]™\œÙJ
-Bˆ”Ù[XÝ
-ˆ[ˆOˆ[ˆÚ]ˆÂˆYÛ›Ü™Y›Ü\Y\ÈH[‹’YÛ›Ü™Y›Ü\Y\Âˆ”™]™\œÙJ
-Bˆ•Ò[[]]X›P\œ˜^J
-KˆJBˆ•Ò[[]]X›P\œ˜^J
-KˆNÂˆ˜\ˆÚXÚÙ\ˆH™]ÈÚ]XÛÛ\]Xš[]PÚXÚÙ\Šˆ™]ÈÚ]XÛÛ\]Xš[]S[Z]ÂˆÂˆX^[][T™\Ý[Ô\”[ˆH‹ˆÛÙ™\Ý[Ô\”[ˆHKˆX^[][T[\Ô\”[ˆH‹ˆX^[][Q^[œÚ[ÛœÔ\”[ˆHKˆX^[][U™XY›ÝÓØØ][ÛœÔ\”™\Ý[H‹ˆÛÙ™XY›ÝÓØØ][ÛœÔ\”™\Ý[HKˆX^[][SØØ][ÛœÔ\”™\Ý[H‹ˆÛÙØØ][ÛœÔ\”™\Ý[HKˆX^[][UYÜÔ\”[HH‹ˆÛÙYÜÔ\”[HHKˆX^[][T™\ÜÚ]ÜžP[\ÈH‹ˆJNÂ‚ˆ˜\ˆš\œÝHÚXÚÙ\‹ÚXÚÊš\œÝÝ[[X\žJNÂˆ˜\ˆÙXÛÛ™HÚXÚÙ\‹ÚXÚÊÙXÛÛ™Ý[[X\žJNÂ‚ˆ\ÜÙ\‘\]X[
-ˆš\œÝ”Ù[XÝ
-ÔÝX›QXYÛ›ÜÝXÕ\JKˆÙXÛÛ™”Ù[XÝ
-ÔÝX›QXYÛ›ÜÝXÕ\JJNÂˆB‚ˆš]˜]HÝ]XÈØ\šY”[”Ý[[X\žHÜ™X]Uš[Û][™Ô[Š[[’[™^
-HO‚ˆ™]Êˆ[’[™^ˆ™\Ý[ÛÝ[ˆËˆ[PÛÝ[ˆËˆ^[œÚ[ÛÛÝ[ˆ‹ˆX^[][SØØ][ÛœÔ\”™\Ý[ˆËˆX^[][U™XY›ÝÓØØ][ÛœÔ\”™\Ý[ˆËˆX^[][UYÜÔ\”[NˆËˆ™\Ý[ÕÚ]][\SØØ][ÛœÎˆKˆ™\Ý[ÕÚ]Ý]š[X\žSØØ][Û“[™R\ÚˆKˆ›Û”™\ÜÚ]ÜžT™[]]™Tš[X\žSØØ][ÛœÎˆKˆYÛ›Ü™Y›Ü\Y\Î‚ˆÂˆ™]ÈÚ]X’YÛ›Ü™Y›Ü\Q˜XÝ
-œ™\Ý[šÚ[™‹ŠKˆ™]ÈÚ]X’YÛ›Ü™Y›Ü\Q˜XÝ
-œ™\Ý[™š[™Ù\œš[È‹JKˆJNÂ‚ˆš]˜]HÝ]XÈ
-Ýš[™ÈÛÙKÝš[™ÈÚ[\‹Ýš[™ÈY\ÜØYÙJBˆÔÝX›QXYÛ›ÜÝXÕ\JXYÛ›ÜÝXÈXYÛ›ÜÝXÊHO‚ˆ
-ˆXYÛ›ÜÝXËÛÙKˆXYÛ›ÜÝXË”ÛÝ\˜ÙT™Y™\™[˜ÙOË’œÛÛ”Ú[\ˆÏÈÝš[™Ë‘[\KˆXYÛ›ÜÝXË“Y\ÜØYÙBˆ
-NÂŸB
+namespace SarifRegress.UnitTests;
+
+public sealed class GithubCompatibilityCheckerTests
+{
+    [Fact]
+    public void Default_compressed_upload_limit_uses_documented_decimal_megabytes()
+    {
+        Assert.Equal(
+            10_000_000L,
+            GithubCompatibilityLimits.Default.MaximumCompressedUploadBytes);
+    }
+
+    [Fact]
+    public void Supported_document_below_limits_has_no_advisories()
+    {
+        var summary = new SarifDocumentSummary(
+            InputKind.Candidate,
+            "2.1.0",
+            InputBytes: 1_024,
+            CompressedUploadBytes: 512,
+            [
+                new SarifRunSummary(
+                    RunIndex: 0,
+                    ResultCount: 1,
+                    RuleCount: 1,
+                    ExtensionCount: 0,
+                    MaximumLocationsPerResult: 1,
+                    MaximumThreadFlowLocationsPerResult: 0,
+                    MaximumTagsPerRule: 1,
+                    ResultsWithMultipleLocations: 0,
+                    ResultsWithoutPrimaryLocationLineHash: 0,
+                    NonRepositoryRelativePrimaryLocations: 0),
+            ]);
+
+        var diagnostics = new GithubCompatibilityChecker().Check(summary);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Injected_limits_make_checks_offline_and_testable()
+    {
+        var limits = new GithubCompatibilityLimits
+        {
+            MaximumCompressedUploadBytes = 10,
+            MaximumRunsPerFile = 1,
+            MaximumResultsPerRun = 2,
+            SoftResultsPerRun = 1,
+            MaximumRulesPerRun = 2,
+            MaximumExtensionsPerRun = 1,
+            MaximumThreadFlowLocationsPerResult = 2,
+            SoftThreadFlowLocationsPerResult = 1,
+            MaximumLocationsPerResult = 2,
+            SoftLocationsPerResult = 1,
+            MaximumTagsPerRule = 2,
+            SoftTagsPerRule = 1,
+            MaximumRepositoryAlerts = 2,
+        };
+        var summary = new SarifDocumentSummary(
+            InputKind.Baseline,
+            "2.0.0",
+            InputBytes: 100,
+            CompressedUploadBytes: 11,
+            [
+                CreateViolatingRun(0),
+                CreateViolatingRun(1),
+            ]);
+
+        var diagnostics =
+            new GithubCompatibilityChecker(limits).Check(summary);
+
+        Assert.Contains(diagnostics, item => item.Code == "GHCS0001");
+        Assert.Contains(diagnostics, item => item.Code == "GHCS0002");
+        Assert.Contains(diagnostics, item => item.Code == "GHCS0003");
+        Assert.Contains(diagnostics, item => item.Code == "GHCS0004");
+        Assert.Contains(diagnostics, item => item.Code == "GHCS0012");
+        Assert.Contains(diagnostics, item => item.Code == "GHCS0013");
+        Assert.Contains(diagnostics, item => item.Code == "GHCS0017");
+        Assert.Contains(
+            diagnostics,
+            item =>
+                item.Code == "GHCS0005" &&
+                item.Message.Contains(
+                    "top 1 results",
+                    StringComparison.Ordinal) &&
+                item.Message.Contains(
+                    "prioritizing by severity",
+                    StringComparison.Ordinal));
+        Assert.Contains(
+            diagnostics,
+            item =>
+                item.Code == "GHCS0009" &&
+                item.Message.Contains(
+                    "documented prioritization",
+                    StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            diagnostics,
+            item =>
+                (item.Code is "GHCS0005" or "GHCS0009" or
+                    "GHCS0011" or "GHCS0016") &&
+                item.Message.Contains(
+                    "first",
+                    StringComparison.OrdinalIgnoreCase));
+        Assert.All(
+            diagnostics,
+            item => Assert.Equal(
+                "github-supported-subset-2026-07-30",
+                item.StandardBasis));
+        Assert.All(
+            diagnostics,
+            item => Assert.NotEqual(DiagnosticSeverity.Error, item.Severity));
+    }
+
+    [Fact]
+    public void Compatibility_diagnostics_are_byte_order_independent()
+    {
+        var firstSummary = new SarifDocumentSummary(
+            InputKind.Candidate,
+            "2.1.0",
+            100,
+            null,
+            [CreateViolatingRun(1), CreateViolatingRun(0)]);
+        var secondSummary = firstSummary with
+        {
+            Runs = firstSummary.Runs
+                .Reverse()
+                .Select(
+                    run => run with
+                    {
+                        IgnoredProperties = run.IgnoredProperties
+                            .Reverse()
+                            .ToImmutableArray(),
+                    })
+                .ToImmutableArray(),
+        };
+        var checker = new GithubCompatibilityChecker(
+            new GithubCompatibilityLimits
+            {
+                MaximumResultsPerRun = 2,
+                SoftResultsPerRun = 1,
+                MaximumRulesPerRun = 2,
+                MaximumExtensionsPerRun = 1,
+                MaximumThreadFlowLocationsPerResult = 2,
+                SoftThreadFlowLocationsPerResult = 1,
+                MaximumLocationsPerResult = 2,
+                SoftLocationsPerResult = 1,
+                MaximumTagsPerRule = 2,
+                SoftTagsPerRule = 1,
+                MaximumRepositoryAlerts = 2,
+            });
+
+        var first = checker.Check(firstSummary);
+        var second = checker.Check(secondSummary);
+
+        Assert.Equal(
+            first.Select(ToStableDiagnosticTuple),
+            second.Select(ToStableDiagnosticTuple));
+    }
+
+    private static SarifRunSummary CreateViolatingRun(int runIndex) =>
+        new(
+            runIndex,
+            ResultCount: 3,
+            RuleCount: 3,
+            ExtensionCount: 2,
+            MaximumLocationsPerResult: 3,
+            MaximumThreadFlowLocationsPerResult: 3,
+            MaximumTagsPerRule: 3,
+            ResultsWithMultipleLocations: 1,
+            ResultsWithoutPrimaryLocationLineHash: 1,
+            NonRepositoryRelativePrimaryLocations: 1,
+            IgnoredProperties:
+            [
+                new GithubIgnoredPropertyFact("result.kind", 2),
+                new GithubIgnoredPropertyFact("result.fingerprints", 1),
+            ]);
+
+    private static (string Code, string Pointer, string Message)
+        ToStableDiagnosticTuple(Diagnostic diagnostic) =>
+        (
+            diagnostic.Code,
+            diagnostic.SourceReference?.JsonPointer ?? string.Empty,
+            diagnostic.Message
+        );
+}
