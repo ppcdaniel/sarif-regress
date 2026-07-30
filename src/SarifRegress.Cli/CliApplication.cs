@@ -48,8 +48,19 @@ public static class CliApplication
             Error = error,
         };
 
-        return rootCommand
-            .Parse(args)
+        var parseResult = rootCommand.Parse(args);
+        if (parseResult.Errors.Count > 0)
+        {
+            foreach (var parseError in parseResult.Errors)
+            {
+                error.Write(parseError.Message);
+                error.Write('\n');
+            }
+
+            return ExitCodes.InvalidUsage;
+        }
+
+        return parseResult
             .InvokeAsync(invocationConfiguration)
             .GetAwaiter()
             .GetResult();
