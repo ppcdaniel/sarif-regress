@@ -202,20 +202,16 @@ jobs:
             --no-cache \
             SarifRegress.Tool \
             --version "${package_version}"
-          expected_package_sha512="$(
-            openssl dgst -sha512 -binary "${package_files[0]}" |
-              base64 -w 0
-          )"
-          mapfile -d '' installed_hash_files < <(
+          mapfile -d '' installed_package_files < <(
             find release-tool/.store \
               -type f \
-              -iname 'sarifregress.tool.*.nupkg.sha512' \
+              -iname 'sarifregress.tool.*.nupkg' \
               -print0
           )
-          test "${#installed_hash_files[@]}" -eq 1
-          test "$(
-            tr -d '\r\n' < "${installed_hash_files[0]}"
-          )" = "${expected_package_sha512}"
+          test "${#installed_package_files[@]}" -eq 1
+          cmp --silent -- \
+            "${package_files[0]}" \
+            "${installed_package_files[0]}"
           release-tool/sarif-regress --help >/dev/null
 
       - name: Verify and execute exact Windows assets
@@ -272,31 +268,32 @@ jobs:
             throw "The exact .NET tool package could not be installed."
           }
 
-          $sha512 = [System.Security.Cryptography.SHA512]::Create()
-          try {
-            $expectedPackageHash = [Convert]::ToBase64String(
-              $sha512.ComputeHash(
-                [System.IO.File]::ReadAllBytes($packageFiles[0].FullName)))
-          }
-          finally {
-            $sha512.Dispose()
-          }
-
-          $installedHashFiles = @(
+          $installedPackageFiles = @(
             Get-ChildItem `
               -LiteralPath (Join-Path release-tool '.store') `
-              -Filter 'sarifregress.tool.*.nupkg.sha512' `
+              -Filter 'sarifregress.tool.*.nupkg' `
               -File `
               -Recurse
           )
-          if ($installedHashFiles.Count -ne 1) {
-            throw "Expected one installed tool-package hash."
+          if ($installedPackageFiles.Count -ne 1) {
+            throw "Expected one installed .NET tool package."
           }
 
+          $sourcePackageHash = (
+            Get-FileHash `
+              -LiteralPath $packageFiles[0].FullName `
+              -Algorithm SHA256
+          ).Hash
           $installedPackageHash = (
-            Get-Content -LiteralPath $installedHashFiles[0].FullName -Raw
-          ).Trim()
-          if ($installedPackageHash -ne $expectedPackageHash) {
+            Get-FileHash `
+              -LiteralPath $installedPackageFiles[0].FullName `
+              -Algorithm SHA256
+          ).Hash
+          $installedPackageDiffers = (
+            $installedPackageFiles[0].Length -ne $packageFiles[0].Length -or
+            $installedPackageHash -ne $sourcePackageHash
+          )
+          if ($installedPackageDiffers) {
             throw "The installed tool package bytes differ from the bundle."
           }
 
