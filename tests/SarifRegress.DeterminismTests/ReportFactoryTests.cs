@@ -1,5 +1,6 @@
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Matching;
+using SarifRegress.Report;
 
 namespace SarifRegress.DeterminismTests;
 
