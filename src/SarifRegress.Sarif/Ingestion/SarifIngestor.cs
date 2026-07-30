@@ -360,7 +360,7 @@ public sealed class SarifIngestor
             }
         }
 
-        return findings.MoveToImmutable();
+        return findings.ToImmutable();
     }
 
     private async ValueTask<Finding?> IngestResultAsync(

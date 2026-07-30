@@ -131,16 +131,16 @@ public sealed class PathCanonicalizer
             return PathKind.FileUri;
         }
 
-        if (HasUriScheme(value))
-        {
-            return PathKind.ExternalUri;
-        }
-
         if (IsDrivePrefix(value))
         {
             return value.Length >= 3 && IsSeparator(value[2])
                 ? PathKind.DriveAbsolute
                 : PathKind.DriveRelative;
+        }
+
+        if (HasUriScheme(value))
+        {
+            return PathKind.ExternalUri;
         }
 
         if (value[0] == '\\')

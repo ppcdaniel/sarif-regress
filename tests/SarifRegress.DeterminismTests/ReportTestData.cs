@@ -170,7 +170,8 @@ internal static class ReportTestData
             derivedFingerprintValue: includeDerivedFingerprint
                 ? DerivedFingerprintValue
                 : null,
-            region: region);
+            region: region,
+            useDefaultRegion: false);
         var decision = new FindingDecision(
             FindingClassification.New,
             Baseline: null,
@@ -202,7 +203,8 @@ internal static class ReportTestData
         string canonicalUri,
         string canonicalMessage,
         string? derivedFingerprintValue,
-        Region? region = null)
+        Region? region = null,
+        bool useDefaultRegion = true)
     {
         var sourceReference = new SourceReference(
             input,
@@ -231,7 +233,9 @@ internal static class ReportTestData
                 AliasApplied: false),
             new PrimaryLocation(
                 path,
-                region ?? new Region(12, 4, 12, 18),
+                useDefaultRegion
+                    ? region ?? new Region(12, 4, 12, 18)
+                    : region,
                 EmbeddedSnippet: null),
             new MessageIdentity(
                 canonicalMessage,

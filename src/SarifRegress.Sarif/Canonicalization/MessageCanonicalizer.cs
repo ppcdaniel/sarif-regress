@@ -62,7 +62,7 @@ public static class MessageCanonicalizer
             originalText,
             collapsed,
             comparison,
-            flags.MoveToImmutable());
+            flags.ToImmutable());
     }
 
     // Time: O(n), where n is the message length. Space: O(n).

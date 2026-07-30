@@ -466,7 +466,7 @@ public sealed class SarifConfigurationReader
         }
 
         return new PolicyConfiguration(
-            classifications.MoveToImmutable(),
+            classifications.ToImmutable(),
             wire?.TreatGithubIncompatibilityAsError ?? false);
     }
 
