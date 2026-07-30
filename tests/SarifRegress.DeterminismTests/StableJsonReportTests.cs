@@ -114,6 +114,30 @@ public sealed class StableJsonReportTests
     }
 
     [Fact]
+    public void Write_FlushBoundaries_DoNotChangeCanonicalBytes()
+    {
+        var canonicalReport = StableJsonReportSerializer.Deserialize(
+            StableJsonReportSerializer.Serialize(
+                ReportTestData.CreateRepresentativeReport()));
+        using var frequentFlush = new MemoryStream();
+        using var finalFlushOnly = new MemoryStream();
+
+        var frequentResult = StableJsonReportWriter.Write(
+            frequentFlush,
+            canonicalReport,
+            flushThresholdBytes: 1);
+        var finalResult = StableJsonReportWriter.Write(
+            finalFlushOnly,
+            canonicalReport,
+            flushThresholdBytes: int.MaxValue);
+
+        Assert.Equal(finalResult, frequentResult);
+        Assert.Equal(
+            finalFlushOnly.ToArray(),
+            frequentFlush.ToArray());
+    }
+
+    [Fact]
     public void Serialize_FindingSnapshot_UsesVersionOnePropertyOrder()
     {
         var bytes = StableJsonReportSerializer.Serialize(

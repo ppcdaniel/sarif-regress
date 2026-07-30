@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using SarifRegress.Core.Diagnostics;
@@ -15,6 +16,7 @@ internal readonly record struct StableJsonWriteResult(
 internal static class StableJsonReportWriter
 {
     private const byte LineFeed = (byte)'\n';
+    private const int FlushThresholdBytes = 64 * 1024;
     private const int MaximumDepth = 64;
 
     private static readonly JsonWriterOptions WriterOptions = new()
@@ -30,10 +32,22 @@ internal static class StableJsonReportWriter
 
     public static StableJsonWriteResult Write(
         Stream destination,
-        ComparisonReport report)
+        ComparisonReport report) =>
+        Write(destination, report, FlushThresholdBytes);
+
+    internal static StableJsonWriteResult Write(
+        Stream destination,
+        ComparisonReport report,
+        int flushThresholdBytes)
     {
         ArgumentNullException.ThrowIfNull(destination);
         ArgumentNullException.ThrowIfNull(report);
+        if (flushThresholdBytes <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(flushThresholdBytes));
+        }
+
         if (!destination.CanWrite)
         {
             throw new ArgumentException(
@@ -54,6 +68,10 @@ internal static class StableJsonReportWriter
         {
             explanationBytes = checked(
                 explanationBytes + WriteFinding(writer, finding));
+            if (writer.BytesPending >= flushThresholdBytes)
+            {
+                writer.Flush();
+            }
         }
 
         writer.WriteEndArray();
@@ -250,7 +268,7 @@ internal static class StableJsonReportWriter
     private static void WriteStrings(
         Utf8JsonWriter writer,
         string propertyName,
-        IEnumerable<string> values)
+        ImmutableArray<string> values)
     {
         writer.WriteStartArray(propertyName);
         foreach (var value in values)
@@ -263,7 +281,7 @@ internal static class StableJsonReportWriter
 
     private static void WriteDerivedFingerprints(
         Utf8JsonWriter writer,
-        IEnumerable<DerivedFingerprint> fingerprints)
+        ImmutableArray<DerivedFingerprint> fingerprints)
     {
         writer.WriteStartArray("derivedFingerprints");
         foreach (var fingerprint in fingerprints)
@@ -300,7 +318,7 @@ internal static class StableJsonReportWriter
 
     private static void WriteEvidence(
         Utf8JsonWriter writer,
-        IEnumerable<EvidenceRecord> evidence)
+        ImmutableArray<EvidenceRecord> evidence)
     {
         writer.WriteStartArray();
         foreach (var item in evidence)
@@ -333,7 +351,7 @@ internal static class StableJsonReportWriter
 
     private static void WriteRejectedAlternatives(
         Utf8JsonWriter writer,
-        IEnumerable<RejectedAlternative> alternatives)
+        ImmutableArray<RejectedAlternative> alternatives)
     {
         writer.WriteStartArray();
         foreach (var alternative in alternatives)
@@ -383,7 +401,7 @@ internal static class StableJsonReportWriter
 
     private static void WriteTransformations(
         Utf8JsonWriter writer,
-        IEnumerable<TransformationRecord> transformations)
+        ImmutableArray<TransformationRecord> transformations)
     {
         writer.WriteStartArray();
         foreach (var transformation in transformations)
@@ -411,7 +429,7 @@ internal static class StableJsonReportWriter
     private static void WriteDiagnostics(
         Utf8JsonWriter writer,
         string propertyName,
-        IEnumerable<Diagnostic> diagnostics)
+        ImmutableArray<Diagnostic> diagnostics)
     {
         writer.WritePropertyName(propertyName);
         WriteDiagnostics(writer, diagnostics);
@@ -419,7 +437,7 @@ internal static class StableJsonReportWriter
 
     private static void WriteDiagnostics(
         Utf8JsonWriter writer,
-        IEnumerable<Diagnostic> diagnostics)
+        ImmutableArray<Diagnostic> diagnostics)
     {
         writer.WriteStartArray();
         foreach (var diagnostic in diagnostics)
