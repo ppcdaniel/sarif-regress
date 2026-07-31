@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import os
 from pathlib import Path
+import stat
 from typing import Final, Sequence
 
 from PIL import Image, ImageDraw, ImageFont
@@ -98,13 +100,20 @@ def load_font(candidates: Sequence[str], size: int) -> ImageFont.FreeTypeFont:
 def read_summary_lines(summary_path: Path) -> tuple[str, ...]:
     """Read bounded summary text generated from the stable JSON report."""
 
-    summary_size = summary_path.stat().st_size
-    if summary_size > MAX_SUMMARY_UTF8_BYTES:
+    open_flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+    open_flags |= getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    descriptor = os.open(summary_path, open_flags)
+    with os.fdopen(descriptor, "rb") as summary_file:
+        if not stat.S_ISREG(os.fstat(summary_file.fileno()).st_mode):
+            raise ValueError("The demo summary must be a regular file.")
+        raw_bytes = summary_file.read(MAX_SUMMARY_UTF8_BYTES + 1)
+
+    if len(raw_bytes) > MAX_SUMMARY_UTF8_BYTES:
         raise ValueError(
-            f"The demo summary is {summary_size} bytes; "
-            f"the limit is {MAX_SUMMARY_UTF8_BYTES}."
+            "The demo summary exceeds the "
+            f"{MAX_SUMMARY_UTF8_BYTES}-byte limit."
         )
-    raw_text = summary_path.read_text(encoding="utf-8")
+    raw_text = raw_bytes.decode("utf-8")
     summary_lines = tuple(raw_text.splitlines())
     if not summary_lines:
         raise ValueError("The demo summary is empty.")
