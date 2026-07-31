@@ -51,7 +51,7 @@
     "noUnexplainedIngestionFailures": false,
     "noStructuralFailures": true,
     "completeLabelGraphSatisfied": false,
-    "crossPlatformByteIdentity": false,
+    "crossPlatformByteIdentity": true,
     "evaluationCompleted": true
   },
   "sarifRegress": {
@@ -1363,7 +1363,6 @@
   "recommendationReasons": [
     "recall-below-threshold",
     "unexplained-ingestion-failure",
-    "complete-label-graph-failed",
-    "cross-platform-determinism-failed"
+    "complete-label-graph-failed"
   ]
 }
