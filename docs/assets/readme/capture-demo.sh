@@ -220,23 +220,24 @@ summary_path = Path(sys.argv[1])
 source_path = Path(sys.argv[2])
 evidence_path = Path(sys.argv[3])
 
+
+def reject_uniform_image(image: Image.Image, description: str) -> None:
+    extrema = image.convert("RGB").getextrema()
+    if all(low == high for low, high in extrema):
+        raise ValueError(f"The {description} is uniform and has no report content.")
+
+
 with Image.open(summary_path) as summary:
     if summary.size != (1440, 1000):
         raise ValueError(f"Unexpected summary screenshot size: {summary.size}")
-    extrema = summary.convert("RGB").getextrema()
-    if all(channel == (255, 255) for channel in extrema):
-        raise ValueError("The summary screenshot is blank.")
+    reject_uniform_image(summary, "summary screenshot")
 
 with Image.open(source_path) as source:
     if source.size != (1440, 1700):
         raise ValueError(f"Unexpected evidence source size: {source.size}")
-    extrema = source.convert("RGB").getextrema()
-    if all(channel == (255, 255) for channel in extrema):
-        raise ValueError("The evidence source screenshot is blank.")
+    reject_uniform_image(source, "evidence source screenshot")
     with source.crop((0, 900, 1440, 1600)) as evidence:
-        extrema = evidence.convert("RGB").getextrema()
-        if all(channel == (255, 255) for channel in extrema):
-            raise ValueError("The evidence crop is blank.")
+        reject_uniform_image(evidence, "evidence crop")
         evidence.save(evidence_path, format="PNG")
 PY
 rm -- "${evidence_source_screenshot}"
