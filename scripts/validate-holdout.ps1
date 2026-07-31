@@ -1,8 +1,14 @@
 [CmdletBinding()]
-param()
+param(
+    [switch] $GenerateCrossPlatformAttestationCandidate,
+    [switch] $RegenerateAttestedExpected
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if ($GenerateCrossPlatformAttestationCandidate -and $RegenerateAttestedExpected) {
+    throw 'The two holdout report-generation modes are mutually exclusive.'
+}
 
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $validationProject = Join-Path `
@@ -10,6 +16,10 @@ $validationProject = Join-Path `
     'validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
 $captureToolsRoot = Join-Path $repositoryRoot 'validation/tools/capture'
 $expectedRoot = Join-Path $repositoryRoot 'validation/expected'
+$crossPlatformAttestation = Join-Path `
+    $repositoryRoot `
+    'validation/holdout/cross-platform-attestation.json'
+$artifactParent = Join-Path $repositoryRoot 'artifacts'
 $artifactRoot = Join-Path $repositoryRoot 'artifacts/holdout-validation'
 $localOnlyNuGetConfig = Join-Path `
     $repositoryRoot `
@@ -25,6 +35,18 @@ $multitoolPackageSizeBytes = 33705414L
 $workingRoot = Join-Path `
     ([System.IO.Path]::GetTempPath()) `
     "sarif-regress-holdout-$([Guid]::NewGuid().ToString('N'))"
+$beforeSnapshot = $null
+$isolatedEnvironmentNames = @(
+    'NUGET_PACKAGES',
+    'DOTNET_CLI_HOME',
+    'NUGET_HTTP_CACHE_PATH'
+)
+$previousEnvironment = @{}
+foreach ($name in $isolatedEnvironmentNames) {
+    $previousEnvironment[$name] = [Environment]::GetEnvironmentVariable(
+        $name,
+        [EnvironmentVariableTarget]::Process)
+}
 
 function Invoke-DotNet {
     param(
@@ -109,7 +131,39 @@ function Assert-FilesEqual {
     }
 }
 
+function Assert-RealDirectoryOrMissing {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+    $item = Get-Item -LiteralPath $Path -Force
+    if (-not $item.PSIsContainer) {
+        throw "Artifact path '$Path' exists but is not a directory."
+    }
+    if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw "Refusing to use reparseable artifact path '$Path'."
+    }
+}
+
 New-Item -ItemType Directory -Path $workingRoot | Out-Null
+Assert-RealDirectoryOrMissing -Path $artifactParent
+if (-not (Test-Path -LiteralPath $artifactParent)) {
+    New-Item -ItemType Directory -Path $artifactParent | Out-Null
+}
+Assert-RealDirectoryOrMissing -Path $artifactParent
+Assert-RealDirectoryOrMissing -Path $artifactRoot
+if (Test-Path -LiteralPath $artifactRoot) {
+    Get-ChildItem -LiteralPath $artifactRoot -Force |
+        Remove-Item -Recurse -Force
+}
+else {
+    New-Item -ItemType Directory -Path $artifactRoot | Out-Null
+}
+Assert-RealDirectoryOrMissing -Path $artifactRoot
 Push-Location -LiteralPath $repositoryRoot
 try {
     $installedRuntimes = & dotnet --list-runtimes
@@ -179,9 +233,18 @@ try {
 
     $localFeed = Join-Path $workingRoot 'feed'
     $toolDirectory = Join-Path $workingRoot 'tool'
+    $isolatedNuGetPackages = Join-Path $workingRoot 'nuget-packages'
+    $isolatedDotNetHome = Join-Path $workingRoot 'dotnet-home'
+    $isolatedHttpCache = Join-Path $workingRoot 'nuget-http-cache'
     New-Item -ItemType Directory -Path $localFeed | Out-Null
     New-Item -ItemType Directory -Path $toolDirectory | Out-Null
+    New-Item -ItemType Directory -Path $isolatedNuGetPackages | Out-Null
+    New-Item -ItemType Directory -Path $isolatedDotNetHome | Out-Null
+    New-Item -ItemType Directory -Path $isolatedHttpCache | Out-Null
     Copy-Item -LiteralPath $packagePath -Destination $localFeed
+    $env:NUGET_PACKAGES = $isolatedNuGetPackages
+    $env:DOTNET_CLI_HOME = $isolatedDotNetHome
+    $env:NUGET_HTTP_CACHE_PATH = $isolatedHttpCache
     Invoke-DotNet -Arguments @(
         'tool',
         'install',
@@ -196,6 +259,27 @@ try {
         '--version',
         $multitoolVersion
     )
+
+    $installedPackageFiles = @(
+        Get-ChildItem `
+            -LiteralPath (Join-Path $toolDirectory '.store') `
+            -Filter 'sarif.multitool.*.nupkg' `
+            -File `
+            -Recurse
+    )
+    if ($installedPackageFiles.Count -ne 1) {
+        throw "Expected exactly one retained installed $multitoolPackageId package."
+    }
+    $installedPackageHash = (
+        Get-FileHash `
+            -LiteralPath $installedPackageFiles[0].FullName `
+            -Algorithm SHA256
+    ).Hash.ToLowerInvariant()
+    if ($installedPackageFiles[0].Length -ne $multitoolPackageSizeBytes -or
+        $installedPackageHash -ne $multitoolPackageSha256) {
+        throw `
+            "The installed $multitoolPackageId package bytes differ from the verified download."
+    }
 
     $multitoolPath = Join-Path $toolDirectory 'sarif.exe'
     if (-not (Test-Path -LiteralPath $multitoolPath -PathType Leaf)) {
@@ -214,7 +298,8 @@ try {
     )
 
     $generatedRoot = Join-Path $workingRoot 'generated'
-    Invoke-DotNet -Arguments @(
+    New-Item -ItemType Directory -Path $generatedRoot | Out-Null
+    $evaluationArguments = @(
         'run',
         '--project',
         $validationProject,
@@ -228,17 +313,34 @@ try {
         $repositoryRoot,
         '--output-root',
         $generatedRoot,
-        '--expected-root',
-        $expectedRoot,
         '--multitool-path',
         $multitoolPath,
         '--multitool-version',
-        $multitoolVersion,
-        '--compare-expected',
-        'true',
-        '--cross-platform-byte-identity',
-        'true'
+        $multitoolVersion
     )
+    if ($GenerateCrossPlatformAttestationCandidate) {
+        $evaluationArguments += @('--compare-expected', 'false')
+    }
+    elseif ($RegenerateAttestedExpected) {
+        $evaluationArguments += @(
+            '--compare-expected',
+            'false',
+            '--cross-platform-attestation',
+            $crossPlatformAttestation
+        )
+    }
+    else {
+        $evaluationArguments += @(
+            '--expected-root',
+            $expectedRoot,
+            '--compare-expected',
+            'true',
+            '--cross-platform-attestation',
+            $crossPlatformAttestation
+        )
+    }
+    & dotnet @evaluationArguments
+    $evaluationExitCode = $LASTEXITCODE
 
     Write-HoldoutSnapshot -Destination $afterSnapshot
     Assert-FilesEqual `
@@ -253,42 +355,120 @@ try {
         'comparison-summary.json',
         'checksums.sha256'
     )
+    $missingEvidence = $false
     foreach ($reportName in $normalizedReports) {
         $generatedReport = Join-Path $generatedRoot $reportName
         if (-not (Test-Path -LiteralPath $generatedReport -PathType Leaf)) {
-            throw "Validation did not produce '$reportName'."
+            [Console]::Error.WriteLine(
+                "Validation did not produce '$reportName'.")
+            $missingEvidence = $true
+        }
+        else {
+            Copy-Item `
+                -LiteralPath $generatedReport `
+                -Destination (Join-Path $artifactRoot $reportName)
         }
     }
     $rawRoot = Join-Path $generatedRoot 'raw'
     if (-not (Test-Path -LiteralPath $rawRoot -PathType Container)) {
-        throw `
+        [Console]::Error.WriteLine(
             'Validation did not preserve raw Multitool output under output-root/raw.'
-    }
-
-    if (Test-Path -LiteralPath $artifactRoot -PathType Container) {
-        Get-ChildItem -LiteralPath $artifactRoot -Force |
-            Remove-Item -Recurse -Force
+        )
+        $missingEvidence = $true
     }
     else {
-        New-Item -ItemType Directory -Path $artifactRoot | Out-Null
-    }
-    foreach ($reportName in $normalizedReports) {
         Copy-Item `
-            -LiteralPath (Join-Path $generatedRoot $reportName) `
-            -Destination (Join-Path $artifactRoot $reportName)
+            -LiteralPath $rawRoot `
+            -Destination (Join-Path $artifactRoot 'raw') `
+            -Recurse
     }
-    Copy-Item `
-        -LiteralPath $rawRoot `
-        -Destination (Join-Path $artifactRoot 'raw') `
-        -Recurse
 
-    Write-Host `
-        'Holdout validation reproduced all committed normalized reports byte-for-byte.'
+    if ($missingEvidence) {
+        throw 'Holdout evaluation did not produce the complete evidence set.'
+    }
+    if ($GenerateCrossPlatformAttestationCandidate) {
+        if ($evaluationExitCode -ne 2) {
+            throw `
+                "Unattested candidate generation expected validation exit code 2, got $evaluationExitCode."
+        }
+        $summary = Get-Content `
+            -LiteralPath (Join-Path $generatedRoot 'comparison-summary.json') `
+            -Raw | ConvertFrom-Json
+        $conditions = $summary.releaseConditions
+        if ($conditions.evaluationCompleted -ne $true) {
+            throw 'Unattested evaluation did not complete successfully.'
+        }
+        if ($conditions.noStructuralFailures -ne $true) {
+            throw 'Unattested evaluation contains a structural failure.'
+        }
+        if ($conditions.crossPlatformByteIdentity -ne $false) {
+            throw 'Unattested evaluation unexpectedly asserts byte identity.'
+        }
+        if ($summary.releaseRecommendation -ne 'blocked') {
+            throw 'Unattested evaluation must retain a blocked recommendation.'
+        }
+        if ($summary.recommendationReasons -notcontains
+            'cross-platform-determinism-failed') {
+            throw 'Unattested evaluation omitted the determinism blocker.'
+        }
+    }
+    elseif ($evaluationExitCode -ne 0) {
+        throw `
+            "Holdout evaluation failed with exit code $evaluationExitCode; available evidence was preserved at $artifactRoot."
+    }
+
+    if ($GenerateCrossPlatformAttestationCandidate) {
+        Write-Host `
+            'Generated unattested normalized reports for a hosted attestation candidate.'
+    }
+    elseif ($RegenerateAttestedExpected) {
+        $summary = Get-Content `
+            -LiteralPath (Join-Path $generatedRoot 'comparison-summary.json') `
+            -Raw | ConvertFrom-Json
+        $conditions = $summary.releaseConditions
+        if ($conditions.evaluationCompleted -ne $true) {
+            throw 'Attested expected-output regeneration did not complete.'
+        }
+        if ($conditions.noStructuralFailures -ne $true) {
+            throw `
+                'Attested expected-output regeneration has a structural failure.'
+        }
+        if ($conditions.crossPlatformByteIdentity -ne $true) {
+            throw `
+                'Attested expected-output regeneration lacks validated byte identity.'
+        }
+        Write-Host `
+            'Regenerated attested normalized reports without comparing stale expected bytes.'
+    }
+    else {
+        Write-Host `
+            'Holdout validation reproduced all committed normalized reports byte-for-byte.'
+    }
     Write-Host "Evidence: $artifactRoot"
 }
 finally {
-    Pop-Location
-    if (Test-Path -LiteralPath $workingRoot -PathType Container) {
-        Remove-Item -LiteralPath $workingRoot -Recurse -Force
+    try {
+        if ($null -ne $beforeSnapshot -and
+            (Test-Path -LiteralPath $beforeSnapshot -PathType Leaf)) {
+            $finalSnapshot = Join-Path $workingRoot 'holdout-final.sha256'
+            Write-HoldoutSnapshot -Destination $finalSnapshot
+            Assert-FilesEqual `
+                -Left $beforeSnapshot `
+                -Right $finalSnapshot `
+                -FailureMessage `
+                    'Holdout validation modified one or more committed fixture files.'
+        }
+    }
+    finally {
+        Pop-Location
+        foreach ($name in $isolatedEnvironmentNames) {
+            [Environment]::SetEnvironmentVariable(
+                $name,
+                $previousEnvironment[$name],
+                [EnvironmentVariableTarget]::Process)
+        }
+        if (Test-Path -LiteralPath $workingRoot -PathType Container) {
+            Remove-Item -LiteralPath $workingRoot -Recurse -Force
+        }
     }
 }

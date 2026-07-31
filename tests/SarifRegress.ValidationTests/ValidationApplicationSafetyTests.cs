@@ -83,5 +83,5 @@ public sealed class ValidationApplicationSafetyTests
         MultitoolPath: null,
         MultitoolVersion: null,
         CompareExpected: false,
-        CrossPlatformByteIdentity: false);
+        CrossPlatformAttestationPath: null);
 }

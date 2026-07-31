@@ -371,6 +371,37 @@
                 "value": "1"
               }
             ]
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "mv",
+            "arguments": [
+              "--",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core.native"
+            ],
+            "environment": []
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "cp",
+            "arguments": [
+              "--",
+              "semgrep-core-loader.sh",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core"
+            ],
+            "environment": []
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "chmod",
+            "arguments": [
+              "0755",
+              "--",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core.native"
+            ],
+            "environment": []
           }
         ],
         "capture": [
@@ -386,6 +417,7 @@
               "--library-directory",
               "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs",
               "--",
+              "--legacy",
               "scan",
               "--config",
               "<repository-root>/validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml",
@@ -420,6 +452,7 @@
               "--library-directory",
               "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs",
               "--",
+              "--legacy",
               "scan",
               "--config",
               "<repository-root>/validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml",

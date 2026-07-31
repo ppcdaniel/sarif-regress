@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start Semgrep without loading its bundled libraries into the Python host."""
+"""Start legacy Semgrep while isolating its native core libraries."""
 
 from __future__ import annotations
 
@@ -28,33 +28,50 @@ def run(
         raise RunnerError(
             "Semgrep library directory must be a regular non-link directory."
         )
+    native_directory = libraries.parent
+    core_loader = native_directory / "semgrep-core"
+    native_core = native_directory / "semgrep-core.native"
+    if core_loader.is_symlink() or not core_loader.is_file():
+        raise RunnerError("Semgrep core loader must be a regular non-link file.")
+    if native_core.is_symlink() or not native_core.is_file():
+        raise RunnerError("Semgrep native core must be a regular non-link file.")
     command = list(arguments)
     if command[:1] == ["--"]:
         command.pop(0)
     if not command:
         raise RunnerError("Semgrep command arguments are required.")
+    if command[:1] != ["--legacy"] or command.count("--legacy") != 1:
+        raise RunnerError(
+            "Semgrep command must explicitly select one --legacy mode."
+        )
 
-    # Python is already initialized with system libraries before this assignment.
-    # Only Semgrep's subsequently exec'd native child sees the verified wheel
-    # library directory, avoiding host-dependent libraries without preloading
-    # the wheel's older libm into Python itself.
+    # The documented legacy escape hatch keeps this Python process in charge.
+    # The installed semgrep-core loader applies the wheel library directory to
+    # each native core invocation without exporting it to this process or any
+    # Python re-exec.
     environment_names = (
         "LD_LIBRARY_PATH",
+        "LD_PRELOAD",
         "SEMGREP_SEND_METRICS",
         "SEMGREP_ENABLE_VERSION_CHECK",
         "SEMGREP_VERSION_CHECK_TIMEOUT",
-        "LD_PRELOAD",
+        "SEMGREP_NEW_CLI_UX",
+        "PATH",
     )
     previous_environment = {
         name: os.environ.get(name) for name in environment_names
     }
     previous_arguments = sys.argv
     try:
-        os.environ["LD_LIBRARY_PATH"] = str(libraries)
+        # setup-python exports its own host library directory. Python has
+        # already initialized by this point, so remove all loader overrides
+        # before Semgrep can inherit them and restore them only for callers
+        # that invoke run() in-process.
+        os.environ.pop("LD_LIBRARY_PATH", None)
+        os.environ.pop("LD_PRELOAD", None)
         os.environ["SEMGREP_SEND_METRICS"] = "off"
         os.environ["SEMGREP_ENABLE_VERSION_CHECK"] = "0"
         os.environ["SEMGREP_VERSION_CHECK_TIMEOUT"] = "0"
-        os.environ.pop("LD_PRELOAD", None)
         sys.argv = [str(script), *command]
         runpy.run_path(str(script), run_name="__main__")
     finally:

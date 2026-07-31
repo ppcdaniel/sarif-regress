@@ -7,12 +7,13 @@ namespace SarifRegress.Validation;
 /// <summary>Runs the frozen SarifRegress corpus adapter over the separate holdout root.</summary>
 public sealed class SarifRegressHoldoutEvaluator
 {
-    private readonly CorpusRunner corpusRunner;
+    private readonly HoldoutCorpusRunnerAdapter corpusRunner;
 
     /// <summary>Creates an evaluator with the product's existing corpus runner.</summary>
     public SarifRegressHoldoutEvaluator(CorpusRunner? corpusRunner = null)
     {
-        this.corpusRunner = corpusRunner ?? new CorpusRunner();
+        this.corpusRunner = new HoldoutCorpusRunnerAdapter(
+            corpusRunner ?? new CorpusRunner());
     }
 
     /// <summary>
@@ -30,15 +31,14 @@ public sealed class SarifRegressHoldoutEvaluator
         string holdoutRoot = StablePath.Resolve(
             repositoryRoot,
             "validation/holdout");
-        CorpusRunResult result = await corpusRunner.RunAsync(
-                new CorpusRunRequest(
-                    holdoutRoot,
-                    CorpusThresholds.Mvp,
-                    ResourceLimits.Default),
+        ImmutableArray<CorpusCaseRun> completedRuns = await corpusRunner.RunAsync(
+                repositoryRoot,
+                holdoutRoot,
+                holdout,
                 cancellationToken)
             .ConfigureAwait(false);
 
-        Dictionary<string, CorpusCaseRun> caseRuns = result.Cases.ToDictionary(
+        Dictionary<string, CorpusCaseRun> caseRuns = completedRuns.ToDictionary(
             item => item.CaseName,
             StringComparer.Ordinal);
         string[] expectedCases = holdout.Cases.Select(item => item.Plan.Id)

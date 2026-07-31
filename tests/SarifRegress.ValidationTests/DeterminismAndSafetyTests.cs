@@ -186,7 +186,52 @@ public sealed class DeterminismAndSafetyTests
                 "Holdout validation modified one or more committed fixture files.",
                 script,
                 StringComparison.Ordinal);
+            Assert.Contains("holdout-final.sha256", script, StringComparison.Ordinal);
+            Assert.Contains(
+                "cross-platform-attestation.json",
+                script,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "Unattested candidate generation expected validation exit code 2",
+                script,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "crossPlatformByteIdentity",
+                script,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain(
+                "--cross-platform-byte-identity",
+                script,
+                StringComparison.Ordinal);
         }
+    }
+
+    [Fact]
+    public void Hosted_coordinator_binds_real_artifacts_into_a_raw_attestation()
+    {
+        string workflow = File.ReadAllText(Path.Combine(
+            ValidationTestRepository.FindRoot(),
+            ".github",
+            "workflows",
+            "holdout-validation.yml"));
+
+        Assert.Contains("artifact-id", workflow, StringComparison.Ordinal);
+        Assert.Contains("artifact-digest", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "cross-platform-attestation.json",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains("GITHUB_RUN_ID", workflow, StringComparison.Ordinal);
+        Assert.Contains("GITHUB_RUN_ATTEMPT", workflow, StringComparison.Ordinal);
+        Assert.Contains("GITHUB_SHA", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "Linux and Windows selected different attestation modes.",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "--cross-platform-byte-identity",
+            workflow,
+            StringComparison.Ordinal);
     }
 
     private static void WritePortableTree(string root)

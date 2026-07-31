@@ -18,6 +18,7 @@ public sealed class ValidationApplication
 
     private readonly HoldoutManifestReader manifestReader;
     private readonly EvaluationMetadataReader metadataReader;
+    private readonly CrossPlatformAttestationReader attestationReader;
     private readonly FrozenSourceVerifier sourceVerifier;
     private readonly SarifRegressHoldoutEvaluator sarifRegressEvaluator;
     private readonly SarifMultitoolEvaluator multitoolEvaluator;
@@ -28,6 +29,7 @@ public sealed class ValidationApplication
     public ValidationApplication(
         HoldoutManifestReader? manifestReader = null,
         EvaluationMetadataReader? metadataReader = null,
+        CrossPlatformAttestationReader? attestationReader = null,
         FrozenSourceVerifier? sourceVerifier = null,
         SarifRegressHoldoutEvaluator? sarifRegressEvaluator = null,
         SarifMultitoolEvaluator? multitoolEvaluator = null,
@@ -37,6 +39,8 @@ public sealed class ValidationApplication
         this.limits.Validate();
         this.manifestReader = manifestReader ?? new HoldoutManifestReader(this.limits);
         this.metadataReader = metadataReader ?? new EvaluationMetadataReader(this.limits);
+        this.attestationReader = attestationReader
+            ?? new CrossPlatformAttestationReader(this.limits);
         this.sourceVerifier = sourceVerifier ?? new FrozenSourceVerifier(limits: this.limits);
         this.sarifRegressEvaluator = sarifRegressEvaluator
             ?? new SarifRegressHoldoutEvaluator();
@@ -100,19 +104,32 @@ public sealed class ValidationApplication
             !item.InstrumentationStateMultisetPreserved
             || item.RelationshipResults.Any(relationship =>
                 relationship.ComparabilityReason == "tool-error"));
+        string metadataSha256 = BoundedJsonFile.ComputeSha256(
+            EvaluationMetadataReader.GetMetadataPath(repositoryRoot),
+            limits.MaximumManifestBytes,
+            repositoryRoot);
         var hashes = new ComparisonReportHashes(
             holdout.ManifestSha256,
-            BoundedJsonFile.ComputeSha256(
-                EvaluationMetadataReader.GetMetadataPath(repositoryRoot),
-                limits.MaximumManifestBytes,
-                repositoryRoot),
+            metadataSha256,
             Sha256(sarifRegressBytes),
             Sha256(multitoolBytes));
+        ValidatedCrossPlatformAttestation? attestation =
+            options.CrossPlatformAttestationPath is null
+                ? null
+                : attestationReader.Read(
+                    repositoryRoot,
+                    options.CrossPlatformAttestationPath,
+                    new CrossPlatformAttestationExpectation(
+                        metadata.Identity.RepositoryCommitSha,
+                        holdout.ManifestSha256,
+                        metadataSha256,
+                        hashes.SarifRegressReportSha256,
+                        hashes.SarifMultitoolBaselineReportSha256));
         ComparisonSummaryReport comparison = ComparisonSummaryBuilder.Create(
             sarifRegress,
             multitool,
             hashes,
-            options.CrossPlatformByteIdentity,
+            attestation is not null,
             evaluationCompleted: !externalReproducibilityFailed);
         byte[] comparisonBytes = StableReportSerializer.Serialize(comparison);
 
@@ -131,8 +148,13 @@ public sealed class ValidationApplication
         WriteAndValidateReports(repositoryRoot, outputRoot, normalized);
         byte[] checksums = CreateChecksumManifest(
             repositoryRoot,
-            normalized);
-        VerifyChecksumEntries(repositoryRoot, normalized, checksums);
+            normalized,
+            attestation);
+        VerifyChecksumEntries(
+            repositoryRoot,
+            normalized,
+            attestation,
+            checksums);
         AmbientDataGuard.Validate(checksums, repositoryRoot);
         string checksumPath = Path.Combine(
             outputRoot,
@@ -146,11 +168,24 @@ public sealed class ValidationApplication
             ExpectedOutputVerifier.Verify(options.ExpectedRoot!, allOutputs);
         }
 
-        bool ingestionOrStructureFailed = sarifRegress.Aggregate.IngestionFailures > 0
-            || sarifRegress.Aggregate.StructuralFailures > 0;
-        return ingestionOrStructureFailed
+        return DetermineEvaluationExitCode(
+            sarifRegress,
+            externalReproducibilityFailed,
+            attestation is not null);
+    }
+
+    /// <summary>
+    /// Treats reproduced engine defects as evidence while retaining infrastructure gates.
+    /// </summary>
+    internal static int DetermineEvaluationExitCode(
+        SarifRegressHoldoutReport sarifRegress,
+        bool externalReproducibilityFailed,
+        bool crossPlatformByteIdentity)
+    {
+        ArgumentNullException.ThrowIfNull(sarifRegress);
+        return sarifRegress.Aggregate.StructuralFailures > 0
             || externalReproducibilityFailed
-            || !options.CrossPlatformByteIdentity
+            || !crossPlatformByteIdentity
                 ? ValidationExitCodes.ValidationFailure
                 : ValidationExitCodes.Success;
     }
@@ -186,7 +221,8 @@ public sealed class ValidationApplication
 
     private byte[] CreateChecksumManifest(
         string repositoryRoot,
-        IReadOnlyDictionary<string, byte[]> reports)
+        IReadOnlyDictionary<string, byte[]> reports,
+        ValidatedCrossPlatformAttestation? attestation)
     {
         var files = new Dictionary<string, byte[]>(StringComparer.Ordinal)
         {
@@ -203,6 +239,12 @@ public sealed class ValidationApplication
         {
             files.Add($"{ExpectedRelativeRoot}/{name}", bytes);
         }
+        if (attestation is not null)
+        {
+            files.Add(
+                CrossPlatformAttestationReader.RelativePath,
+                attestation.ExactBytes);
+        }
 
         return ChecksumManifest.Create(files);
     }
@@ -210,6 +252,7 @@ public sealed class ValidationApplication
     private void VerifyChecksumEntries(
         string repositoryRoot,
         IReadOnlyDictionary<string, byte[]> reports,
+        ValidatedCrossPlatformAttestation? attestation,
         ReadOnlySpan<byte> checksumBytes)
     {
         ImmutableSortedDictionary<string, string> entries =
@@ -228,6 +271,12 @@ public sealed class ValidationApplication
         foreach ((string name, byte[] bytes) in reports)
         {
             expected.Add($"{ExpectedRelativeRoot}/{name}", bytes);
+        }
+        if (attestation is not null)
+        {
+            expected.Add(
+                CrossPlatformAttestationReader.RelativePath,
+                attestation.ExactBytes);
         }
 
         if (!entries.Keys.SequenceEqual(

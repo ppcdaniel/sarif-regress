@@ -15,6 +15,7 @@ readonly HOLDOUT_CASES_ROOT="${REPOSITORY_ROOT}/validation/holdout/cases"
 readonly PROJECTION_SCRIPT="${CAPTURE_SCRIPT_DIRECTORY}/project_holdout.py"
 readonly PROVENANCE_VERIFIER="${CAPTURE_SCRIPT_DIRECTORY}/verify_capture_provenance.py"
 readonly SEMGREP_RUNNER="${CAPTURE_SCRIPT_DIRECTORY}/run_semgrep.py"
+readonly SEMGREP_CORE_LOADER="${CAPTURE_SCRIPT_DIRECTORY}/semgrep-core-loader.sh"
 readonly TAR_EXTRACTOR="${CAPTURE_SCRIPT_DIRECTORY}/extract_tar.py"
 readonly ZIP_EXTRACTOR="${CAPTURE_SCRIPT_DIRECTORY}/extract_zip.py"
 readonly TRANSFORMATION_VERIFIER="${CAPTURE_SCRIPT_DIRECTORY}/verify_source_transformations.py"
@@ -25,7 +26,10 @@ readonly SEMGREP_WHEEL_NAME="semgrep-1.172.0-cp310.cp311.cp312.cp313.cp314.py310
 readonly SEMGREP_WHEEL_URL="https://files.pythonhosted.org/packages/84/a5/21624510b65271a673961a894af7511b5123d662e84c74c765560ea28b27/${SEMGREP_WHEEL_NAME}"
 readonly SEMGREP_WHEEL_SHA256="d8b94af4266a575287ad2cd844573743ab4fe58f6bfb6d9229327807937eade3"
 readonly SEMGREP_WHEEL_BYTES="69575334"
-readonly SEMGREP_HELP_SHA256="dbdc10d883da52320947fb5321309d2961b0221a16f116d4750925591cd08b3b"
+readonly SEMGREP_NATIVE_CORE_SHA256="8a7c27e6286381fdb6235eb91bd0fed40b919496a242c72f1e55d2b5caa10cb2"
+readonly SEMGREP_NATIVE_CORE_BYTES="253156344"
+readonly SEMGREP_CORE_LOADER_SHA256="7179bb8b955639c2ebf9b1b2db8f303c7fa3565b58849072982ff0a89fc81456"
+readonly SEMGREP_HELP_SHA256="b63d6e12f56f512a1c5cd1f9d9d931056c103c06dfec971b1ff26e12c2c16582"
 readonly CAPTURE_PYTHON_VERSION="3.12.13"
 readonly CAPTURE_JAVA_VENDOR="Eclipse Adoptium"
 readonly CAPTURE_JAVA_VERSION="17.0.19+10"
@@ -206,6 +210,34 @@ prepare_semgrep() {
   ((native_count > 0)) ||
     fail "the verified Semgrep wheel lacks its expected native executable."
 
+  # Pysemgrep invokes the packaged core several times. Apply the wheel's
+  # complete library closure only to those native processes. Exporting it
+  # process-wide is unsafe: osemgrep re-enters Python, whose loader would then
+  # pick up the wheel's older libm.
+  local semgrep_native_directory
+  semgrep_native_directory="${environment_root}/lib/python3.12/site-packages/semgrep/bin"
+  local semgrep_core="${semgrep_native_directory}/semgrep-core"
+  local semgrep_native_core="${semgrep_native_directory}/semgrep-core.native"
+  local observed_native_core_bytes
+  observed_native_core_bytes="$(stat --format='%s' -- "${semgrep_core}")"
+  [[ "${observed_native_core_bytes}" == "${SEMGREP_NATIVE_CORE_BYTES}" ]] ||
+    fail "the installed Semgrep native core has an unexpected size."
+  local observed_native_core_sha256
+  observed_native_core_sha256="$(sha256sum -- "${semgrep_core}" | cut -d ' ' -f 1)"
+  [[ "${observed_native_core_sha256}" == "${SEMGREP_NATIVE_CORE_SHA256}" ]] ||
+    fail "the installed Semgrep native core differs from the pinned wheel."
+  [[ -f "${SEMGREP_CORE_LOADER}" && ! -L "${SEMGREP_CORE_LOADER}" ]] ||
+    fail "the repository Semgrep core loader is unsafe."
+  local observed_loader_sha256
+  observed_loader_sha256="$(sha256sum -- "${SEMGREP_CORE_LOADER}" | cut -d ' ' -f 1)"
+  [[ "${observed_loader_sha256}" == "${SEMGREP_CORE_LOADER_SHA256}" ]] ||
+    fail "the repository Semgrep core loader differs from reviewed provenance."
+  [[ ! -e "${semgrep_native_core}" ]] ||
+    fail "the Semgrep native-core destination unexpectedly exists."
+  mv -- "${semgrep_core}" "${semgrep_native_core}"
+  cp -- "${SEMGREP_CORE_LOADER}" "${semgrep_core}"
+  chmod 0755 -- "${semgrep_core}" "${semgrep_native_core}"
+
   local semgrep_vendor_library_path
   semgrep_vendor_library_path="${environment_root}/lib/python3.12/site-packages/semgrep/bin/libs"
   local library_count=0
@@ -232,7 +264,7 @@ prepare_semgrep() {
     "${environment_root}/bin/python" -I -B "${SEMGREP_RUNNER}" \
       --semgrep-script "${environment_root}/bin/semgrep" \
       --library-directory "${semgrep_vendor_library_path}" \
-      -- --version
+      -- --legacy --version
   )"
   [[ "${observed_version}" == "${SEMGREP_VERSION}" ]] ||
     fail "expected Semgrep ${SEMGREP_VERSION}, found ${observed_version}."
@@ -241,7 +273,7 @@ prepare_semgrep() {
   "${environment_root}/bin/python" -I -B "${SEMGREP_RUNNER}" \
     --semgrep-script "${environment_root}/bin/semgrep" \
     --library-directory "${semgrep_vendor_library_path}" \
-    -- scan --help > "${help_output}"
+    -- --legacy scan --help > "${help_output}"
   local observed_help_sha256
   observed_help_sha256="$(sha256sum "${help_output}" | cut -d ' ' -f 1)"
   [[ "${observed_help_sha256}" == "${SEMGREP_HELP_SHA256}" ]] ||
@@ -353,7 +385,7 @@ capture_semgrep_side() {
     "${semgrep_environment}/bin/python" -I -B "${SEMGREP_RUNNER}" \
       --semgrep-script "${semgrep_executable}" \
       --library-directory "${semgrep_library_path}" \
-      -- scan \
+      -- --legacy scan \
       --config "${case_root}/producer-input/semgrep-rules.yml" \
       --disable-version-check \
       --metrics=off \
@@ -475,10 +507,12 @@ main() {
   esac
 
   require_command curl
+  require_command cp
   require_command cut
   require_command find
   require_command grep
   require_command python3
+  require_command mv
   require_command sha256sum
   require_command stat
   require_command java

@@ -19,7 +19,7 @@ from extract_tar import extract_regular_member
 from extract_zip import ArchiveError as ZipArchiveError
 from extract_zip import extract_zip
 from project_holdout import MAX_JSON_DEPTH, ProjectionError, _read_bounded_json
-from run_semgrep import run as run_semgrep
+from run_semgrep import RunnerError, run as run_semgrep
 from verify_capture_provenance import ProvenanceError
 from verify_capture_provenance import verify as verify_capture_provenance
 
@@ -112,38 +112,49 @@ class ZipExtractionTests(unittest.TestCase):
 
 
 class SemgrepRunnerTests(unittest.TestCase):
-    def test_sets_child_only_library_environment_and_restores_host(self) -> None:
+    @staticmethod
+    def _create_runner_fixture(root: Path) -> tuple[Path, Path, Path]:
+        script = root / "semgrep"
+        libraries = root / "native" / "libs"
+        output = root / "observed.txt"
+        libraries.mkdir(parents=True)
+        for native_name in ("semgrep-core", "semgrep-core.native"):
+            (libraries.parent / native_name).write_bytes(b"verified-native")
+        script.write_text(
+            "import os, pathlib, sys\n"
+            "assert sys.argv[1] == '--legacy'\n"
+            "pathlib.Path(sys.argv[2]).write_text("
+            "str('LD_LIBRARY_PATH' in os.environ) + '\\n' + "
+            "str('LD_PRELOAD' in os.environ) + '\\n' + "
+            "os.environ['SEMGREP_SEND_METRICS'] + '\\n' + "
+            "os.environ['SEMGREP_ENABLE_VERSION_CHECK'] + '\\n' + "
+            "os.environ['SEMGREP_VERSION_CHECK_TIMEOUT'], encoding='utf-8')\n",
+            encoding="utf-8",
+        )
+        return script, libraries, output
+
+    def test_keeps_loader_variables_out_of_python_and_restores_host(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            script = root / "semgrep"
-            libraries = root / "libs"
-            output = root / "observed.txt"
-            libraries.mkdir()
-            script.write_text(
-                "import os, pathlib, sys\n"
-                "pathlib.Path(sys.argv[1]).write_text("
-                "os.environ['LD_LIBRARY_PATH'] + '\\n' + "
-                "os.environ['SEMGREP_SEND_METRICS'] + '\\n' + "
-                "os.environ['SEMGREP_ENABLE_VERSION_CHECK'] + '\\n' + "
-                "os.environ['SEMGREP_VERSION_CHECK_TIMEOUT'] + '\\n' + "
-                "str('LD_PRELOAD' in os.environ), encoding='utf-8')\n",
-                encoding="utf-8",
-            )
+            script, libraries, output = self._create_runner_fixture(root)
             names = (
                 "LD_LIBRARY_PATH",
+                "LD_PRELOAD",
                 "SEMGREP_SEND_METRICS",
                 "SEMGREP_ENABLE_VERSION_CHECK",
                 "SEMGREP_VERSION_CHECK_TIMEOUT",
-                "LD_PRELOAD",
             )
             original = {name: os.environ.get(name) for name in names}
             for name in names:
                 os.environ[name] = f"ambient-{name.lower()}"
-            os.environ["LD_PRELOAD"] = "ambient-preload"
             try:
-                run_semgrep(script, libraries, ["--", str(output)])
+                run_semgrep(
+                    script,
+                    libraries,
+                    ["--", "--legacy", str(output)],
+                )
                 self.assertEqual(
-                    f"{libraries.resolve()}\noff\n0\n0\nFalse",
+                    "False\nFalse\noff\n0\n0",
                     output.read_text(encoding="utf-8"),
                 )
             finally:
@@ -154,6 +165,13 @@ class SemgrepRunnerTests(unittest.TestCase):
                         os.environ[name] = value
             for name, value in original.items():
                 self.assertEqual(value, os.environ.get(name))
+
+    def test_requires_explicit_legacy_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            script, libraries, output = self._create_runner_fixture(root)
+            with self.assertRaises(RunnerError):
+                run_semgrep(script, libraries, ["--", str(output)])
 
 
 class CaptureProvenanceTests(unittest.TestCase):
@@ -166,6 +184,7 @@ class CaptureProvenanceTests(unittest.TestCase):
             "validation/tools/capture/verify_projected_holdout.py",
             "validation/tools/capture/verify_source_transformations.py",
             "validation/tools/capture/run_semgrep.py",
+            "validation/tools/capture/semgrep-core-loader.sh",
             "validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock",
         )
         for mutation in ("help-hash", "reproduction-executable"):

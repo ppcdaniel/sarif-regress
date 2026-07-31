@@ -159,6 +159,7 @@ public sealed class TrackedOutputTests
             "validation/expected/comparison-summary.json",
             "validation/expected/sarif-multitool-baseline.json",
             "validation/expected/sarif-regress-holdout.json",
+            "validation/holdout/cross-platform-attestation.json",
             "validation/holdout/evaluation-metadata.json",
             "validation/holdout/manifest.json",
         ];

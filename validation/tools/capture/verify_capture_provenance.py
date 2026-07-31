@@ -90,7 +90,7 @@ EXPECTED_COMMAND_EVIDENCE: Final = {
             "<repository-root>/validation/tools/capture/run_semgrep.py "
             "--semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep "
             "--library-directory <temporary-tools>/semgrep-environment/lib/"
-            "python3.12/site-packages/semgrep/bin/libs -- --version"
+            "python3.12/site-packages/semgrep/bin/libs -- --legacy --version"
         ),
         "versionOutputSha256": (
             "82e4502ffa8035703c9a3c28b596f2977de9a0aee1f707e8bd524878f01939b9"
@@ -100,17 +100,22 @@ EXPECTED_COMMAND_EVIDENCE: Final = {
             "<repository-root>/validation/tools/capture/run_semgrep.py "
             "--semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep "
             "--library-directory <temporary-tools>/semgrep-environment/lib/"
-            "python3.12/site-packages/semgrep/bin/libs -- scan --help"
+            "python3.12/site-packages/semgrep/bin/libs -- --legacy scan --help"
         ),
         "helpSha256": (
-            "dbdc10d883da52320947fb5321309d2961b0221a16f116d4750925591cd08b3b"
+            "b63d6e12f56f512a1c5cd1f9d9d931056c103c06dfec971b1ff26e12c2c16582"
+        ),
+        "executionMode": (
+            "The runner explicitly selects Semgrep's --legacy mode; every "
+            "packaged native core invocation uses the reviewed loader without "
+            "exporting wheel libraries to Python."
         ),
         "execution": (
             "<temporary-tools>/semgrep-environment/bin/python -I -B "
             "<repository-root>/validation/tools/capture/run_semgrep.py "
             "--semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep "
             "--library-directory <temporary-tools>/semgrep-environment/lib/"
-            "python3.12/site-packages/semgrep/bin/libs -- scan --config "
+            "python3.12/site-packages/semgrep/bin/libs -- --legacy scan --config "
             "validation/holdout/cases/semgrep/producer-input/"
             "semgrep-rules.yml --disable-version-check --metrics=off "
             "--no-git-ignore --no-rewrite-rule-ids --oss-only --quiet "
@@ -210,6 +215,7 @@ def verify(repository_root: Path) -> None:
             "projectionVerificationScript",
             "sourceVerificationScript",
             "semgrepRunnerScript",
+            "semgrepCoreLoaderScript",
             "producers",
         },
         "capture provenance",
@@ -262,6 +268,9 @@ def verify(repository_root: Path) -> None:
             "validation/tools/capture/verify_source_transformations.py"
         ),
         "semgrepRunnerScript": "validation/tools/capture/run_semgrep.py",
+        "semgrepCoreLoaderScript": (
+            "validation/tools/capture/semgrep-core-loader.sh"
+        ),
     }
     for field, expected_path in expected_scripts.items():
         if provenance[field] != expected_path:
@@ -314,6 +323,9 @@ def verify(repository_root: Path) -> None:
             "license",
             "artifact",
             "dependencyLock",
+            "nativeCore",
+            "coreLoader",
+            "executionMode",
             "versionCommand",
             "versionOutputSha256",
             "helpCommand",
@@ -506,6 +518,68 @@ def verify(repository_root: Path) -> None:
         "semgrep-requirements.linux-x86_64-py312.lock"
     ):
         raise ProvenanceError("Semgrep dependency installation command differs.")
+
+    semgrep_native_core = _object(
+        provenance_producers["semgrep"].get("nativeCore"),
+        "semgrep nativeCore",
+    )
+    expected_native_core = {
+        "installedPath": (
+            "<temporary-tools>/semgrep-environment/lib/python3.12/"
+            "site-packages/semgrep/bin/semgrep-core"
+        ),
+        "renamedPath": (
+            "<temporary-tools>/semgrep-environment/lib/python3.12/"
+            "site-packages/semgrep/bin/semgrep-core.native"
+        ),
+        "bytes": 253156344,
+        "sha256": (
+            "8a7c27e6286381fdb6235eb91bd0fed40b919496a242c72f1e55d2b5caa10cb2"
+        ),
+    }
+    _require_exact_keys(
+        semgrep_native_core,
+        set(expected_native_core),
+        "semgrep nativeCore",
+    )
+    if semgrep_native_core != expected_native_core:
+        raise ProvenanceError("Semgrep native core evidence differs.")
+
+    semgrep_core_loader = _object(
+        provenance_producers["semgrep"].get("coreLoader"),
+        "semgrep coreLoader",
+    )
+    expected_core_loader = {
+        "sourcePath": "validation/tools/capture/semgrep-core-loader.sh",
+        "installedPath": (
+            "<temporary-tools>/semgrep-environment/lib/python3.12/"
+            "site-packages/semgrep/bin/semgrep-core"
+        ),
+        "sha256": (
+            "7179bb8b955639c2ebf9b1b2db8f303c7fa3565b58849072982ff0a89fc81456"
+        ),
+        "dynamicLoader": "/lib64/ld-linux-x86-64.so.2",
+        "invocation": (
+            "/lib64/ld-linux-x86-64.so.2 --library-path "
+            "<temporary-tools>/semgrep-environment/lib/python3.12/"
+            "site-packages/semgrep/bin/libs --argv0 semgrep-core "
+            "<temporary-tools>/semgrep-environment/lib/python3.12/"
+            "site-packages/semgrep/bin/semgrep-core.native <core-arguments>"
+        ),
+    }
+    _require_exact_keys(
+        semgrep_core_loader,
+        set(expected_core_loader),
+        "semgrep coreLoader",
+    )
+    if semgrep_core_loader != expected_core_loader:
+        raise ProvenanceError("Semgrep native core loader evidence differs.")
+    loader_source = _regular_repository_file(
+        repository_root,
+        _string(semgrep_core_loader.get("sourcePath"), "core loader sourcePath"),
+    )
+    if _sha256(loader_source) != semgrep_core_loader["sha256"]:
+        raise ProvenanceError("Semgrep core loader SHA-256 differs.")
 
     checksum_manifest = _object(
         provenance_producers["gitleaks"].get("officialChecksumManifest"),

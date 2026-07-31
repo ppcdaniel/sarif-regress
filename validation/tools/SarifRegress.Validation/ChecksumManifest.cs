@@ -43,7 +43,7 @@ public static partial class ChecksumManifest
             StringComparer.Ordinal);
         foreach (string line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            Match match = ChecksumLine().Match(line);
+            System.Text.RegularExpressions.Match match = ChecksumLine().Match(line);
             if (!match.Success)
             {
                 throw new InvalidDataException(

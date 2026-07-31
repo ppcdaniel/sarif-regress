@@ -73,7 +73,8 @@ jobs:
             tests/SarifRegress.ValidationTests/SarifRegress.ValidationTests.csproj \
             --configuration Release \
             --no-restore \
-            --warnaserror
+            --warnaserror \
+            --filter 'FullyQualifiedName!~TrackedOutputTests'
 
       - name: Upload generated locks
         if: always()

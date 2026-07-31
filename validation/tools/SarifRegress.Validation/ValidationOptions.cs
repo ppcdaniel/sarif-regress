@@ -25,7 +25,7 @@ public sealed record ValidationOptions(
     string? MultitoolPath,
     string? MultitoolVersion,
     bool CompareExpected,
-    bool CrossPlatformByteIdentity);
+    string? CrossPlatformAttestationPath);
 
 /// <summary>
 /// Parses a deliberately small, strict command line without ambient defaults.
@@ -44,15 +44,15 @@ public static class ValidationOptionsParser
             "--multitool-path",
             "--multitool-version",
             "--compare-expected",
-            "--cross-platform-byte-identity");
+            "--cross-platform-attestation");
 
     /// <summary>Gets stable command help used by both the CLI and tests.</summary>
     public static string HelpText =>
         "Usage:\n"
         + "  SarifRegress.Validation evaluate --repository-root PATH --output-root PATH "
         + "--multitool-path PATH --multitool-version VERSION "
-        + "--compare-expected true|false --cross-platform-byte-identity true|false "
-        + "[--expected-root PATH]\n"
+        + "--compare-expected true|false [--expected-root PATH] "
+        + "[--cross-platform-attestation PATH]\n"
         + "  SarifRegress.Validation validate-structure --repository-root PATH "
         + "--output-root PATH\n\n"
         + "evaluate reads the committed frozen evaluation metadata and writes "
@@ -60,7 +60,9 @@ public static class ValidationOptionsParser
         + "comparison-summary.json, and "
         + "checksums.sha256. Raw Multitool SARIF is written only below output-root/raw.\n"
         + "When --compare-expected is true, --expected-root is required and all four "
-        + "project-owned deterministic outputs are compared byte-for-byte.";
+        + "project-owned deterministic outputs are compared byte-for-byte. The optional "
+        + "cross-platform attestation must be the fixed committed validation input; when "
+        + "omitted, reports are written with a blocked unattested release condition.";
 
     /// <summary>
     /// Parses and validates one invocation. Duplicate and unknown options are rejected.
@@ -95,7 +97,7 @@ public static class ValidationOptionsParser
                 "--multitool-path",
                 "--multitool-version",
                 "--compare-expected",
-                "--cross-platform-byte-identity");
+                "--cross-platform-attestation");
             return new ValidationOptions(
                 command,
                 repositoryRoot,
@@ -104,16 +106,20 @@ public static class ValidationOptionsParser
                 null,
                 null,
                 CompareExpected: false,
-                CrossPlatformByteIdentity: false);
+                CrossPlatformAttestationPath: null);
         }
 
         string multitoolPath = RequiredValue(values, "--multitool-path");
         string multitoolVersion = RequiredValue(values, "--multitool-version");
         bool compareExpected = RequiredBoolean(values, "--compare-expected");
-        bool crossPlatformByteIdentity = RequiredBoolean(
+        string? crossPlatformAttestation = OptionalPath(
             values,
-            "--cross-platform-byte-identity");
+            "--cross-platform-attestation");
         ValidateVersion(multitoolVersion);
+        if (crossPlatformAttestation is not null)
+        {
+            ValidateAttestationPath(repositoryRoot, crossPlatformAttestation);
+        }
         if (compareExpected && expectedRoot is null)
         {
             throw new ValidationUsageException(
@@ -128,7 +134,7 @@ public static class ValidationOptionsParser
             multitoolPath,
             multitoolVersion,
             compareExpected,
-            crossPlatformByteIdentity);
+            crossPlatformAttestation);
     }
 
     private static ValidationCommand ParseCommand(string value) => value switch
@@ -226,6 +232,24 @@ public static class ValidationOptionsParser
             throw new ValidationUsageException(
                 "--multitool-version must be the repository-pinned exact version "
                 + $"{MultitoolRunner.ExactVersion}.");
+        }
+    }
+
+    private static void ValidateAttestationPath(
+        string repositoryRoot,
+        string suppliedPath)
+    {
+        string expectedPath = CrossPlatformAttestationReader.GetPath(repositoryRoot);
+        if (!string.Equals(
+            expectedPath,
+            suppliedPath,
+            OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal))
+        {
+            throw new ValidationUsageException(
+                "--cross-platform-attestation must identify the fixed committed "
+                + $"'{CrossPlatformAttestationReader.RelativePath}' file.");
         }
     }
 

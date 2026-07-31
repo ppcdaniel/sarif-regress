@@ -23,10 +23,16 @@ Semgrep dependencies are hash-locked for Python 3.12/Linux x86-64. Gitleaks and
 PMD archives are size- and SHA-256-verified before safe extraction. The capture
 uses only repository-created source and local rules; it does not execute fixture
 source, download rules, follow SARIF network URIs, or contain real secrets.
-Semgrep is started through `run_semgrep.py`: Python initializes against the
-host runtime first, then only the verified Semgrep native child sees the full
-wheel-bundled library directory. The runner also disables metrics and network
-version checks and rejects ambient `LD_PRELOAD` inheritance.
+Semgrep is started through `run_semgrep.py` in its explicit `--legacy` mode.
+After the wheel's native core is verified as
+`8a7c27e6286381fdb6235eb91bd0fed40b919496a242c72f1e55d2b5caa10cb2`,
+it is retained as `semgrep-core.native` and the reviewed
+`semgrep-core-loader.sh` is installed at the package's core path. The loader
+uses the Linux x86-64 dynamic loader's per-invocation `--library-path`, so only
+the native core sees the complete wheel library directory. The already-started
+Python parent scrubs and later restores hosted-runtime `LD_LIBRARY_PATH` and
+`LD_PRELOAD` values; they are never passed to Semgrep or its Python children.
+Metrics and network version checks are disabled as well.
 
 ## Reproduce source transformations
 

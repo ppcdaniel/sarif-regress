@@ -203,7 +203,7 @@ public static class HoldoutOutcomeClassifier
                 "The corpus result case name does not match the holdout plan.");
         }
 
-        ObservedCase observed = ParseObservedCase(caseRun.Artifact.Json.AsSpan());
+        ObservedCase observed = ParseObservedCase(caseRun.Artifact.Json);
         ImmutableArray<IngestionFailure> ingestionFailures =
             CreateIngestionFailures(caseRun, observed);
         string status = ingestionFailures.IsEmpty
@@ -561,7 +561,7 @@ public static class HoldoutOutcomeClassifier
                 ?? "INGESTION_FAILURE"))
         .ToImmutableArray();
 
-    private static ObservedCase ParseObservedCase(ReadOnlySpan<byte> artifact)
+    private static ObservedCase ParseObservedCase(ReadOnlyMemory<byte> artifact)
     {
         using JsonDocument document = JsonDocument.Parse(artifact);
         var decisions = ImmutableArray.CreateBuilder<ObservedDecision>();

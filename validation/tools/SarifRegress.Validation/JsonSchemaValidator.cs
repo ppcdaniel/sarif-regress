@@ -1,4 +1,5 @@
 using Json.Schema;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace SarifRegress.Validation;
@@ -29,12 +30,6 @@ public sealed class JsonSchemaValidator
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(schemaPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(instancePath);
-        JsonNode schemaNode = BoundedJsonFile.ReadNode(
-            schemaPath,
-            limits.MaximumSchemaBytes,
-            limits.MaximumJsonDepth,
-            limits.MaximumStringCharacters,
-            schemaApprovedRoot);
         JsonNode instanceNode = BoundedJsonFile.ReadNode(
             instancePath,
             maximumInstanceBytes,
@@ -42,21 +37,46 @@ public sealed class JsonSchemaValidator
             limits.MaximumStringCharacters,
             instanceApprovedRoot);
 
+        return ValidateNode(
+            schemaPath,
+            instanceNode,
+            Path.GetFileName(instancePath),
+            schemaApprovedRoot);
+    }
+
+    /// <summary>Validates an already bounded and uniquely parsed JSON node.</summary>
+    public JsonNode ValidateNode(
+        string schemaPath,
+        JsonNode instanceNode,
+        string instanceName,
+        string? schemaApprovedRoot = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(schemaPath);
+        ArgumentNullException.ThrowIfNull(instanceNode);
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceName);
+        JsonNode schemaNode = BoundedJsonFile.ReadNode(
+            schemaPath,
+            limits.MaximumSchemaBytes,
+            limits.MaximumJsonDepth,
+            limits.MaximumStringCharacters,
+            schemaApprovedRoot);
+
         JsonSchema schema;
         try
         {
             schema = JsonSchema.FromText(schemaNode.ToJsonString());
         }
         catch (Exception exception) when (
-            exception is JsonException or SchemaException)
+            exception is JsonException or JsonSchemaException)
         {
             throw new InvalidDataException(
                 $"Schema '{Path.GetFileName(schemaPath)}' is invalid.",
                 exception);
         }
 
+        JsonElement instanceElement = JsonSerializer.SerializeToElement(instanceNode);
         EvaluationResults results = schema.Evaluate(
-            instanceNode,
+            instanceElement,
             new EvaluationOptions
             {
                 OutputFormat = OutputFormat.List,
@@ -64,7 +84,7 @@ public sealed class JsonSchemaValidator
         if (!results.IsValid)
         {
             throw new InvalidDataException(
-                $"JSON file '{Path.GetFileName(instancePath)}' does not satisfy "
+                $"JSON file '{instanceName}' does not satisfy "
                 + $"schema '{Path.GetFileName(schemaPath)}'.");
         }
 

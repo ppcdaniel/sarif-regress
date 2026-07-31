@@ -10,7 +10,7 @@ permissions:
 jobs:
   capture:
     name: Capture pinned producer SARIF (Linux)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
 
     steps:
@@ -37,6 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           bash -n validation/tools/capture/capture-holdout.sh
+          sh -n validation/tools/capture/semgrep-core-loader.sh
           python3 -B - <<'PY'
           from pathlib import Path
 
@@ -57,6 +58,12 @@ jobs:
           {
             python3 --version
             java -version
+            getconf GNU_LIBC_VERSION
+            stat --format='dynamic-loader-bytes=%s' /lib64/ld-linux-x86-64.so.2
+            sha256sum /lib64/ld-linux-x86-64.so.2
+            /lib64/ld-linux-x86-64.so.2 --version
+            printf 'runner-image-os=%s\n' "${ImageOS:-unknown}"
+            printf 'runner-image-version=%s\n' "${ImageVersion:-unknown}"
           } > artifacts/holdout-capture/capture-environment.txt 2>&1
           ./validation/tools/capture/capture-holdout.sh \
             --output-root artifacts/holdout-capture/cases
@@ -86,6 +93,22 @@ jobs:
               "${root}/${producer}/candidate.sarif" >/dev/null
             jq -e '.pairs | length == 25' \
               "${root}/${producer}/labels.json" >/dev/null
+            for reproducible_file in \
+              baseline.sarif \
+              candidate.sarif \
+              labels.json \
+              producer-input/captures/baseline.raw.sarif \
+              producer-input/captures/candidate.raw.sarif \
+              producer-input/projection-audit.json; do
+              committed_file="validation/holdout/cases/${producer}/${reproducible_file}"
+              captured_file="${root}/${producer}/${reproducible_file}"
+              if ! cmp --silent -- "${committed_file}" "${captured_file}"; then
+                echo \
+                  "Pinned capture differs from committed bytes: ${producer}/${reproducible_file}." \
+                  >&2
+                exit 1
+              fi
+            done
           done
           if find "${root}" -type l -print -quit | grep -q .; then
             echo 'Capture artifact contains a symbolic link.' >&2
@@ -97,6 +120,7 @@ jobs:
           fi
 
       - name: Upload capture evidence
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: independent-holdout-capture

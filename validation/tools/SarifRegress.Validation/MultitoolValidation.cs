@@ -1609,15 +1609,16 @@ public sealed partial class MultitoolRunner
         string instrumentedCandidateRelative = rawPrefix + ".instrumented-candidate.sarif";
         string instrumentedOutputRelative = rawPrefix + ".instrumented-output.sarif";
         string uninstrumentedOutputRelative = rawPrefix + ".uninstrumented-output.sarif";
-        ImmutableArray<string> normalizedArguments = command.PrefixArguments.AddRange(
+        ImmutableArray<string> normalizedArguments =
         [
+            .. command.PrefixArguments,
             "match-results-forward",
             instrumentedCandidateRelative,
             "--previous",
             instrumentedBaselineRelative,
             "--output-file-path",
             instrumentedOutputRelative,
-        ]);
+        ];
         return new MultitoolCaseExecution(
             new NormalizedInvocation(
                 ".",
