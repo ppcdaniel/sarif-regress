@@ -214,6 +214,19 @@ public sealed class MultitoolValidationTests
     }
 
     [Fact]
+    public void Help_evidence_hash_normalizes_the_observed_windows_console_banner()
+    {
+        string linux = ToolOutputNormalizer.ComputeHelpSha256(
+            string.Empty,
+            "© Microsoft Corporation. All rights reserved.\n--previous\n");
+        string windows = ToolOutputNormalizer.ComputeHelpSha256(
+            string.Empty,
+            "c Microsoft Corporation. All rights reserved.\r\n--previous\r\n");
+
+        Assert.Equal(linux, windows);
+    }
+
+    [Fact]
     public void Pinned_subcommand_help_validates_its_actual_syntax_without_repeating_name()
     {
         const string generatedHelp = """

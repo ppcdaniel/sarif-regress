@@ -1259,10 +1259,33 @@ public static class ToolOutputNormalizer
         return Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     }
 
+    /// <summary>
+    /// Hashes generated Multitool help after canonicalizing its known console-encoding
+    /// projection of the copyright banner. Raw output remains unchanged in artifacts.
+    /// </summary>
+    public static string ComputeHelpSha256(
+        string standardOutput,
+        string standardError) => ComputeSha256(
+        NormalizeCopyrightBanner(standardOutput),
+        NormalizeCopyrightBanner(standardError));
+
     /// <summary>Converts CRLF and bare CR to LF without other rewriting.</summary>
     public static string NormalizeNewlines(string value) => value
         .Replace("\r\n", "\n", StringComparison.Ordinal)
         .Replace('\r', '\n');
+
+    private static string NormalizeCopyrightBanner(string value)
+    {
+        const string unicodeBanner =
+            "© Microsoft Corporation. All rights reserved.";
+        const string windowsConsoleBanner =
+            "c Microsoft Corporation. All rights reserved.";
+        const string normalizedBanner =
+            "Copyright Microsoft Corporation. All rights reserved.";
+        return NormalizeNewlines(value)
+            .Replace(unicodeBanner, normalizedBanner, StringComparison.Ordinal)
+            .Replace(windowsConsoleBanner, normalizedBanner, StringComparison.Ordinal);
+    }
 }
 
 /// <summary>
@@ -1473,7 +1496,7 @@ public sealed partial class MultitoolRunner
             PackageSha256,
             PackageSizeBytes,
             "MIT",
-            ToolOutputNormalizer.ComputeSha256(
+            ToolOutputNormalizer.ComputeHelpSha256(
                 help.StandardOutput,
                 help.StandardError),
             ToolOutputNormalizer.ComputeSha256(

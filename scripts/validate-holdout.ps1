@@ -341,6 +341,10 @@ try {
     }
     & dotnet @evaluationArguments
     $evaluationExitCode = $LASTEXITCODE
+    # The bootstrap command intentionally returns validation code 2 until the
+    # hosted attestation is committed. Retain it for the checks below without
+    # leaking that accepted native status through the dot-sourced workflow host.
+    $global:LASTEXITCODE = 0
 
     Write-HoldoutSnapshot -Destination $afterSnapshot
     Assert-FilesEqual `
