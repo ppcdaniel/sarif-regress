@@ -1,0 +1,444 @@
+name: Independent holdout validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - '.config/dotnet-tools.json'
+      - '.github/workflows/**'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'SarifRegress.slnx'
+      - 'corpus/schema/**'
+      - 'scripts/verify.ps1'
+      - 'scripts/verify.sh'
+      - 'scripts/validate-holdout.ps1'
+      - 'scripts/validate-holdout.sh'
+      - 'schemas/**'
+      - 'src/**'
+      - 'tests/SarifRegress.ValidationTests/**'
+      - 'validation/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Evaluate committed holdout (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Install Multitool runtime
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.423
+
+      - name: Install projection verifier runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Restore locked dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet restore SarifRegress.slnx --locked-mode
+
+      - name: Verify repository
+        shell: bash
+        run: ./scripts/verify.sh
+
+      - name: Evaluate holdout
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd -- "${RUNNER_TEMP}"
+          "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh"
+
+      - name: Upload Linux evaluation evidence
+        id: upload-evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-linux
+          path: artifacts/holdout-validation
+          if-no-files-found: warn
+          retention-days: 30
+
+  windows:
+    name: Evaluate committed holdout (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    outputs:
+      artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Install Multitool runtime
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.423
+
+      - name: Install projection verifier runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Restore locked dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet restore SarifRegress.slnx --locked-mode
+          if ($LASTEXITCODE -ne 0) {
+            throw "Locked solution restore failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Verify repository
+        shell: pwsh
+        run: .\scripts\verify.ps1
+
+      - name: Evaluate holdout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Push-Location -LiteralPath $env:RUNNER_TEMP
+          try {
+            & (Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1')
+          }
+          finally {
+            Pop-Location
+          }
+
+      - name: Upload Windows evaluation evidence
+        id: upload-evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-windows
+          path: artifacts/holdout-validation
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    name: Compare Linux and Windows normalized bytes
+    needs:
+      - linux
+      - windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Install attestation serializer runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Download Linux evaluation
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: holdout-linux
+          path: artifacts/download/linux
+
+      - name: Download Windows evaluation
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: holdout-windows
+          path: artifacts/download/windows
+
+      - name: Verify normalized byte identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly verified_directory='artifacts/verified'
+          mkdir -p "${verified_directory}"
+
+          readonly reports=(
+            'sarif-regress-holdout.json'
+            'sarif-multitool-baseline.json'
+            'comparison-summary.json'
+            'checksums.sha256'
+          )
+
+          for report_name in "${reports[@]}"; do
+            linux_report="artifacts/download/linux/${report_name}"
+            windows_report="artifacts/download/windows/${report_name}"
+            if [[ ! -f "${linux_report}" || ! -f "${windows_report}" ]]; then
+              echo "Missing normalized report '${report_name}' from a producer job." >&2
+              exit 1
+            fi
+
+            linux_hash="$(sha256sum "${linux_report}" | cut -d ' ' -f 1)"
+            windows_hash="$(sha256sum "${windows_report}" | cut -d ' ' -f 1)"
+            if [[ "${linux_hash}" != "${windows_hash}" ]]; then
+              echo \
+                "${report_name} hash differs: Linux ${linux_hash}, Windows ${windows_hash}." \
+                >&2
+              exit 1
+            fi
+
+            if ! cmp --silent -- "${linux_report}" "${windows_report}"; then
+              echo "${report_name} bytes differ despite equal hashes." >&2
+              exit 1
+            fi
+            cp -- "${linux_report}" "${verified_directory}/${report_name}"
+          done
+
+      - name: Create cross-platform artifact attestation projection
+        shell: bash
+        env:
+          LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.artifact_id }}
+          LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.artifact_digest }}
+          WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.artifact_id }}
+          WINDOWS_ARTIFACT_DIGEST: ${{ needs.windows.outputs.artifact_digest }}
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+
+          root = pathlib.Path.cwd()
+          verified = root / "artifacts" / "verified"
+          linux = root / "artifacts" / "download" / "linux"
+          windows = root / "artifacts" / "download" / "windows"
+          maximum_bytes = 64 * 1024 * 1024
+          sha256_pattern = re.compile(r"[0-9a-f]{64}")
+          commit_pattern = re.compile(r"[0-9a-f]{40}")
+
+          def read_bounded(path):
+              size = path.stat().st_size
+              if size <= 0 or size > maximum_bytes:
+                  raise SystemExit(
+                      f"Attestation input {path.name!r} has invalid size {size}.")
+              return path.read_bytes()
+
+          def sha256(path):
+              return hashlib.sha256(read_bounded(path)).hexdigest()
+
+          def reject_duplicate(pairs):
+              result = {}
+              for key, value in pairs:
+                  if key in result:
+                      raise ValueError(f"duplicate JSON property {key!r}")
+                  result[key] = value
+              return result
+
+          def load_json(path):
+              return json.loads(
+                  read_bounded(path),
+                  object_pairs_hook=reject_duplicate)
+
+          def required_decimal(name, maximum=9_007_199_254_740_991):
+              value = os.environ[name]
+              if not re.fullmatch(r"[1-9][0-9]*", value):
+                  raise SystemExit(f"{name} is not a positive decimal integer.")
+              parsed = int(value)
+              if parsed > maximum:
+                  raise SystemExit(f"{name} exceeds its permitted range.")
+              return parsed
+
+          def required_sha256(name):
+              value = os.environ[name]
+              if sha256_pattern.fullmatch(value) is None or set(value) == {"0"}:
+                  raise SystemExit(f"{name} is not a nonzero lowercase SHA-256.")
+              return value
+
+          def parse_checksum_manifest(path):
+              text = read_bounded(path).decode("utf-8", errors="strict")
+              if not text.endswith("\n") or "\r" in text:
+                  raise SystemExit(f"{path.name} is not canonical LF text.")
+              result = {}
+              for line in text.splitlines():
+                  match = re.fullmatch(
+                      r"([0-9a-f]{64})  ([A-Za-z0-9][A-Za-z0-9._/-]*)",
+                      line)
+                  if match is None or match.group(2) in result:
+                      raise SystemExit(f"{path.name} contains an invalid entry.")
+                  result[match.group(2)] = match.group(1)
+              return result
+
+          linux_artifact_id = required_decimal("LINUX_ARTIFACT_ID")
+          windows_artifact_id = required_decimal("WINDOWS_ARTIFACT_ID")
+          if linux_artifact_id == windows_artifact_id:
+              raise SystemExit("Linux and Windows evidence reused one artifact ID.")
+          linux_artifact_digest = required_sha256("LINUX_ARTIFACT_DIGEST")
+          windows_artifact_digest = required_sha256("WINDOWS_ARTIFACT_DIGEST")
+
+          report_names = (
+              "sarif-regress-holdout.json",
+              "sarif-multitool-baseline.json",
+          )
+          report_hashes = {}
+          for name in report_names:
+              linux_hash = sha256(linux / name)
+              windows_hash = sha256(windows / name)
+              verified_hash = sha256(verified / name)
+              if linux_hash != windows_hash or linux_hash != verified_hash:
+                  raise SystemExit(f"{name} changed after byte-identity verification.")
+              report_hashes[name] = verified_hash
+
+          metadata_path = root / "validation" / "holdout" / "evaluation-metadata.json"
+          manifest_path = root / "validation" / "holdout" / "manifest.json"
+          metadata_sha256 = sha256(metadata_path)
+          manifest_sha256 = sha256(manifest_path)
+          metadata = load_json(metadata_path)
+          frozen_commit = metadata.get("repositoryCommitSha")
+          if not isinstance(frozen_commit, str) or commit_pattern.fullmatch(
+                  frozen_commit) is None:
+              raise SystemExit("Evaluation metadata has no exact frozen commit SHA.")
+          if metadata.get("holdoutManifestSha256") != manifest_sha256:
+              raise SystemExit("Evaluation metadata does not hash the current manifest.")
+
+          sarif_report = load_json(verified / report_names[0])
+          multitool_report = load_json(verified / report_names[1])
+          for name, report in (
+                  (report_names[0], sarif_report),
+                  (report_names[1], multitool_report)):
+              evaluation = report.get("evaluation", {})
+              if evaluation.get("repositoryCommitSha") != frozen_commit:
+                  raise SystemExit(f"{name} does not identify the frozen commit.")
+              if evaluation.get("holdoutManifestSha256") != manifest_sha256:
+                  raise SystemExit(f"{name} does not identify the holdout manifest.")
+
+          checksums = parse_checksum_manifest(verified / "checksums.sha256")
+          required_checksums = {
+              "validation/holdout/manifest.json": manifest_sha256,
+              "validation/holdout/evaluation-metadata.json": metadata_sha256,
+              "validation/expected/sarif-regress-holdout.json":
+                  report_hashes[report_names[0]],
+              "validation/expected/sarif-multitool-baseline.json":
+                  report_hashes[report_names[1]],
+          }
+          for name, expected in required_checksums.items():
+              if checksums.get(name) != expected:
+                  raise SystemExit(f"checksums.sha256 does not bind {name!r}.")
+
+          comparison = load_json(verified / "comparison-summary.json")
+          comparison_hashes = comparison.get("reportHashes", {})
+          expected_comparison_hashes = {
+              "holdoutManifestSha256": manifest_sha256,
+              "evaluationMetadataSha256": metadata_sha256,
+              "sarifRegressReportSha256": report_hashes[report_names[0]],
+              "sarifMultitoolBaselineReportSha256": report_hashes[report_names[1]],
+          }
+          if comparison_hashes != expected_comparison_hashes:
+              raise SystemExit("comparison-summary.json does not bind the base inputs.")
+
+          run_id = required_decimal("GITHUB_RUN_ID")
+          run_attempt = required_decimal("GITHUB_RUN_ATTEMPT", maximum=1000)
+          workflow_head = os.environ["GITHUB_SHA"]
+          if commit_pattern.fullmatch(workflow_head) is None:
+              raise SystemExit("GITHUB_SHA is not a lowercase commit SHA.")
+
+          base_report_digests = {
+              "sarifRegressHoldoutSha256": report_hashes[report_names[0]],
+              "sarifMultitoolBaselineSha256": report_hashes[report_names[1]],
+          }
+          candidate = {
+              "schemaVersion": "1",
+              "repository": "ppcdaniel/sarif-regress",
+              "repositoryCommitSha": frozen_commit,
+              "holdoutManifestSha256": manifest_sha256,
+              "evaluationMetadataSha256": metadata_sha256,
+              "baseReports": base_report_digests,
+              "githubActions": {
+                  "workflowPath": ".github/workflows/holdout-validation.yml",
+                  "runId": run_id,
+                  "runAttempt": run_attempt,
+                  "runUrl": (
+                      "https://github.com/ppcdaniel/sarif-regress/actions/runs/"
+                      f"{run_id}"),
+                  "workflowHeadSha": workflow_head,
+                  "conclusion": "success",
+                  "coordinatorJobName":
+                      "Compare Linux and Windows normalized bytes",
+              },
+              "artifacts": {
+                  "linux": {
+                      "name": "holdout-linux",
+                      "artifactId": linux_artifact_id,
+                      "archiveSha256": linux_artifact_digest,
+                      "reportDigests": dict(base_report_digests),
+                  },
+                  "windows": {
+                      "name": "holdout-windows",
+                      "artifactId": windows_artifact_id,
+                      "archiveSha256": windows_artifact_digest,
+                      "reportDigests": dict(base_report_digests),
+                  },
+              },
+              "byteIdentity": {
+                  "sarifRegressHoldout": True,
+                  "sarifMultitoolBaseline": True,
+              },
+          }
+          candidate_bytes = (
+              json.dumps(candidate, ensure_ascii=False, indent=2) + "\n"
+          ).encode("utf-8")
+          candidate_path = verified / "cross-platform-attestation.json"
+          candidate_path.write_bytes(candidate_bytes)
+
+          coordinator_files = (
+              "checksums.sha256",
+              "comparison-summary.json",
+              "cross-platform-attestation.json",
+              "sarif-multitool-baseline.json",
+              "sarif-regress-holdout.json",
+          )
+          coordinator_manifest = "".join(
+              f"{sha256(verified / name)}  {name}\n"
+              for name in coordinator_files)
+          (verified / "cross-platform-checksums.sha256").write_bytes(
+              coordinator_manifest.encode("ascii"))
+          PY
+
+      - name: Upload cross-platform evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-cross-platform
+          path: artifacts/verified
+          if-no-files-found: error
+          retention-days: 30

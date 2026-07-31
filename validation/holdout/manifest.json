@@ -1,0 +1,1095 @@
+{
+  "schemaVersion": "1",
+  "holdoutId": "independent-holdout-v1",
+  "producers": [
+    {
+      "id": "gitleaks",
+      "family": "gitleaks",
+      "displayName": "Gitleaks",
+      "exactVersion": "8.30.1",
+      "sourceCommit": "83d9cd684c87d95d656c1458ef04895a7f1cbd8e",
+      "projectUrl": "https://github.com/gitleaks/gitleaks",
+      "releaseUrl": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
+      "license": {
+        "spdxIdentifier": "MIT",
+        "name": "MIT License",
+        "url": "https://github.com/gitleaks/gitleaks/blob/83d9cd684c87d95d656c1458ef04895a7f1cbd8e/LICENSE"
+      },
+      "captureDate": "2026-08-01",
+      "commands": {
+        "reproduction": {
+          "workingDirectory": "validation/tools/capture",
+          "executable": "./capture-holdout.sh",
+          "arguments": [
+            "--output-root",
+            "<new-staging-directory>",
+            "--producer",
+            "gitleaks"
+          ],
+          "environment": []
+        },
+        "install": [
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "grep",
+            "arguments": [
+              "-Fqx",
+              "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks_8.30.1_linux_x64.tar.gz",
+              "<temporary-tools>/gitleaks_8.30.1_checksums.txt"
+            ],
+            "environment": []
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "python3",
+            "arguments": [
+              "-B",
+              "extract_tar.py",
+              "--archive",
+              "<temporary-tools>/gitleaks_8.30.1_linux_x64.tar.gz",
+              "--destination",
+              "<temporary-tools>/gitleaks",
+              "--member",
+              "gitleaks"
+            ],
+            "environment": [
+              {
+                "name": "PYTHONDONTWRITEBYTECODE",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "chmod",
+            "arguments": [
+              "0755",
+              "<temporary-tools>/gitleaks/gitleaks"
+            ],
+            "environment": []
+          }
+        ],
+        "capture": [
+          {
+            "workingDirectory": "validation/holdout/cases/gitleaks/producer-input/baseline",
+            "executable": "<temporary-tools>/gitleaks/gitleaks",
+            "arguments": [
+              "dir",
+              ".",
+              "--config",
+              "<repository-root>/validation/holdout/cases/gitleaks/producer-input/gitleaks.toml",
+              "--exit-code",
+              "0",
+              "--log-level",
+              "error",
+              "--no-banner",
+              "--no-color",
+              "--redact=100",
+              "--report-format",
+              "sarif",
+              "--report-path",
+              "<new-staging-directory>/gitleaks/producer-input/captures/baseline.producer.sarif"
+            ],
+            "environment": []
+          },
+          {
+            "workingDirectory": "validation/holdout/cases/gitleaks/producer-input/candidate",
+            "executable": "<temporary-tools>/gitleaks/gitleaks",
+            "arguments": [
+              "dir",
+              ".",
+              "--config",
+              "<repository-root>/validation/holdout/cases/gitleaks/producer-input/gitleaks.toml",
+              "--exit-code",
+              "0",
+              "--log-level",
+              "error",
+              "--no-banner",
+              "--no-color",
+              "--redact=100",
+              "--report-format",
+              "sarif",
+              "--report-path",
+              "<new-staging-directory>/gitleaks/producer-input/captures/candidate.producer.sarif"
+            ],
+            "environment": []
+          }
+        ]
+      },
+      "downloads": [
+        {
+          "fileName": "gitleaks_8.30.1_checksums.txt",
+          "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt",
+          "sha256": "061476c21adaf5441516f96f185c1a4706a83cd6329b9b38762271b3d4a52fae",
+          "sizeBytes": 999,
+          "immutable": true
+        },
+        {
+          "fileName": "gitleaks_8.30.1_linux_x64.tar.gz",
+          "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+          "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+          "sizeBytes": 8230402,
+          "immutable": true
+        }
+      ],
+      "capturePolicy": {
+        "rulesSource": "local-fixture",
+        "downloadsRemoteRules": false,
+        "executesFixtureCode": false,
+        "followsSarifNetworkUris": false
+      }
+    },
+    {
+      "id": "pmd",
+      "family": "pmd",
+      "displayName": "PMD",
+      "exactVersion": "7.26.0",
+      "sourceCommit": "8fd38edf285a33e1164f66205ebe243441db9557",
+      "projectUrl": "https://github.com/pmd/pmd",
+      "releaseUrl": "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0",
+      "license": {
+        "spdxIdentifier": "LicenseRef-PMD-BSD-Style",
+        "name": "PMD BSD-style license with Apache-2.0-licensed components",
+        "url": "https://github.com/pmd/pmd/blob/8fd38edf285a33e1164f66205ebe243441db9557/LICENSE"
+      },
+      "captureDate": "2026-08-01",
+      "commands": {
+        "reproduction": {
+          "workingDirectory": "validation/tools/capture",
+          "executable": "./capture-holdout.sh",
+          "arguments": [
+            "--output-root",
+            "<new-staging-directory>",
+            "--producer",
+            "pmd"
+          ],
+          "environment": []
+        },
+        "install": [
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "python3",
+            "arguments": [
+              "-B",
+              "extract_zip.py",
+              "--archive",
+              "<temporary-tools>/pmd-dist-7.26.0-bin.zip",
+              "--destination",
+              "<temporary-tools>/pmd",
+              "--required-prefix",
+              "pmd-bin-7.26.0"
+            ],
+            "environment": [
+              {
+                "name": "PYTHONDONTWRITEBYTECODE",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "chmod",
+            "arguments": [
+              "0755",
+              "<temporary-tools>/pmd/pmd-bin-7.26.0/bin/pmd"
+            ],
+            "environment": []
+          }
+        ],
+        "capture": [
+          {
+            "workingDirectory": "validation/holdout/cases/pmd/producer-input/baseline",
+            "executable": "<temporary-tools>/pmd/pmd-bin-7.26.0/bin/pmd",
+            "arguments": [
+              "check",
+              "--dir",
+              ".",
+              "--format",
+              "sarif",
+              "--no-cache",
+              "--no-fail-on-violation",
+              "--no-progress",
+              "--relativize-paths-with",
+              "<repository-root>/validation/holdout/cases/pmd/producer-input/baseline",
+              "--report-file",
+              "<new-staging-directory>/pmd/producer-input/captures/baseline.raw.sarif",
+              "--rulesets",
+              "<repository-root>/validation/holdout/cases/pmd/producer-input/pmd-ruleset.xml",
+              "--threads",
+              "0",
+              "--use-version",
+              "java-17"
+            ],
+            "environment": [
+              {
+                "name": "JAVA_HOME",
+                "value": "<verified-java-17-home>"
+              },
+              {
+                "name": "LD_LIBRARY_PATH",
+                "value": "<verified-java-17-home>/lib:<verified-java-17-home>/lib/server"
+              }
+            ]
+          },
+          {
+            "workingDirectory": "validation/holdout/cases/pmd/producer-input/candidate",
+            "executable": "<temporary-tools>/pmd/pmd-bin-7.26.0/bin/pmd",
+            "arguments": [
+              "check",
+              "--dir",
+              ".",
+              "--format",
+              "sarif",
+              "--no-cache",
+              "--no-fail-on-violation",
+              "--no-progress",
+              "--relativize-paths-with",
+              "<repository-root>/validation/holdout/cases/pmd/producer-input/candidate",
+              "--report-file",
+              "<new-staging-directory>/pmd/producer-input/captures/candidate.raw.sarif",
+              "--rulesets",
+              "<repository-root>/validation/holdout/cases/pmd/producer-input/pmd-ruleset.xml",
+              "--threads",
+              "0",
+              "--use-version",
+              "java-17"
+            ],
+            "environment": [
+              {
+                "name": "JAVA_HOME",
+                "value": "<verified-java-17-home>"
+              },
+              {
+                "name": "LD_LIBRARY_PATH",
+                "value": "<verified-java-17-home>/lib:<verified-java-17-home>/lib/server"
+              }
+            ]
+          }
+        ]
+      },
+      "downloads": [
+        {
+          "fileName": "pmd-dist-7.26.0-bin.zip",
+          "url": "https://github.com/pmd/pmd/releases/download/pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip",
+          "sha256": "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9",
+          "sizeBytes": 73646044,
+          "immutable": true
+        }
+      ],
+      "capturePolicy": {
+        "rulesSource": "pinned-built-in",
+        "downloadsRemoteRules": false,
+        "executesFixtureCode": false,
+        "followsSarifNetworkUris": false
+      }
+    },
+    {
+      "id": "semgrep",
+      "family": "semgrep",
+      "displayName": "Semgrep Community Edition",
+      "exactVersion": "1.172.0",
+      "sourceCommit": "651f37efa397bf066e1cf627414eeabe40b07e27",
+      "projectUrl": "https://github.com/semgrep/semgrep",
+      "releaseUrl": "https://github.com/semgrep/semgrep/releases/tag/v1.172.0",
+      "license": {
+        "spdxIdentifier": "LGPL-2.1-only",
+        "name": "GNU Lesser General Public License v2.1 only",
+        "url": "https://github.com/semgrep/semgrep/blob/651f37efa397bf066e1cf627414eeabe40b07e27/LICENSE"
+      },
+      "captureDate": "2026-08-01",
+      "commands": {
+        "reproduction": {
+          "workingDirectory": "validation/tools/capture",
+          "executable": "./capture-holdout.sh",
+          "arguments": [
+            "--output-root",
+            "<new-staging-directory>",
+            "--producer",
+            "semgrep"
+          ],
+          "environment": []
+        },
+        "install": [
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "python3",
+            "arguments": [
+              "-m",
+              "venv",
+              "<temporary-tools>/semgrep-environment"
+            ],
+            "environment": [
+              {
+                "name": "PYTHONDONTWRITEBYTECODE",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "<temporary-tools>/semgrep-environment/bin/python",
+            "arguments": [
+              "-m",
+              "pip",
+              "download",
+              "--disable-pip-version-check",
+              "--dest",
+              "<temporary-tools>/semgrep-wheelhouse",
+              "--only-binary=:all:",
+              "--quiet",
+              "--require-hashes",
+              "--requirement",
+              "semgrep-requirements.linux-x86_64-py312.lock"
+            ],
+            "environment": [
+              {
+                "name": "PYTHONDONTWRITEBYTECODE",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "<temporary-tools>/semgrep-environment/bin/python",
+            "arguments": [
+              "-m",
+              "pip",
+              "install",
+              "--disable-pip-version-check",
+              "--no-index",
+              "--find-links",
+              "<temporary-tools>/semgrep-wheelhouse",
+              "--only-binary=:all:",
+              "--quiet",
+              "--require-hashes",
+              "--requirement",
+              "semgrep-requirements.linux-x86_64-py312.lock"
+            ],
+            "environment": [
+              {
+                "name": "PYTHONDONTWRITEBYTECODE",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "mv",
+            "arguments": [
+              "--",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core.native"
+            ],
+            "environment": []
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "cp",
+            "arguments": [
+              "--",
+              "semgrep-core-loader.sh",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core"
+            ],
+            "environment": []
+          },
+          {
+            "workingDirectory": "validation/tools/capture",
+            "executable": "chmod",
+            "arguments": [
+              "0755",
+              "--",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core.native"
+            ],
+            "environment": []
+          }
+        ],
+        "capture": [
+          {
+            "workingDirectory": "validation/holdout/cases/semgrep/producer-input/baseline",
+            "executable": "<temporary-tools>/semgrep-environment/bin/python",
+            "arguments": [
+              "-I",
+              "-B",
+              "<repository-root>/validation/tools/capture/run_semgrep.py",
+              "--semgrep-script",
+              "<temporary-tools>/semgrep-environment/bin/semgrep",
+              "--library-directory",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs",
+              "--",
+              "--legacy",
+              "scan",
+              "--config",
+              "<repository-root>/validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml",
+              "--disable-version-check",
+              "--metrics=off",
+              "--no-git-ignore",
+              "--no-rewrite-rule-ids",
+              "--oss-only",
+              "--quiet",
+              "--sarif",
+              "--strict",
+              "--output",
+              "<new-staging-directory>/semgrep/producer-input/captures/baseline.raw.sarif",
+              "."
+            ],
+            "environment": [
+              {
+                "name": "PYTHONDONTWRITEBYTECODE",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "workingDirectory": "validation/holdout/cases/semgrep/producer-input/candidate",
+            "executable": "<temporary-tools>/semgrep-environment/bin/python",
+            "arguments": [
+              "-I",
+              "-B",
+              "<repository-root>/validation/tools/capture/run_semgrep.py",
+              "--semgrep-script",
+              "<temporary-tools>/semgrep-environment/bin/semgrep",
+              "--library-directory",
+              "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs",
+              "--",
+              "--legacy",
+              "scan",
+              "--config",
+              "<repository-root>/validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml",
+              "--disable-version-check",
+              "--metrics=off",
+              "--no-git-ignore",
+              "--no-rewrite-rule-ids",
+              "--oss-only",
+              "--quiet",
+              "--sarif",
+              "--strict",
+              "--output",
+              "<new-staging-directory>/semgrep/producer-input/captures/candidate.raw.sarif",
+              "."
+            ],
+            "environment": [
+              {
+                "name": "PYTHONDONTWRITEBYTECODE",
+                "value": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "downloads": [
+        {
+          "fileName": "semgrep-1.172.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-manylinux_2_34_x86_64.whl",
+          "url": "https://files.pythonhosted.org/packages/84/a5/21624510b65271a673961a894af7511b5123d662e84c74c765560ea28b27/semgrep-1.172.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-manylinux_2_34_x86_64.whl",
+          "sha256": "d8b94af4266a575287ad2cd844573743ab4fe58f6bfb6d9229327807937eade3",
+          "sizeBytes": 69575334,
+          "immutable": true
+        }
+      ],
+      "capturePolicy": {
+        "rulesSource": "local-fixture",
+        "downloadsRemoteRules": false,
+        "executesFixtureCode": false,
+        "followsSarifNetworkUris": false
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "gitleaks",
+      "producerId": "gitleaks",
+      "paths": {
+        "directory": "validation/holdout/cases/gitleaks",
+        "baselineSarif": "validation/holdout/cases/gitleaks/baseline.sarif",
+        "candidateSarif": "validation/holdout/cases/gitleaks/candidate.sarif",
+        "labels": "validation/holdout/cases/gitleaks/labels.json",
+        "notes": "validation/holdout/cases/gitleaks/notes.md",
+        "producerInputDirectory": "validation/holdout/cases/gitleaks/producer-input",
+        "config": "validation/holdout/cases/gitleaks/config.json"
+      },
+      "scenarios": [
+        "exact-unchanged",
+        "inserted-lines",
+        "moved-within-file",
+        "file-rename",
+        "repository-path-rebase",
+        "new-finding",
+        "resolved-finding",
+        "message-change",
+        "metadata-change",
+        "missing-producer-fingerprint",
+        "duplicate-producer-fingerprint",
+        "similar-findings-same-file",
+        "similar-findings-different-contexts",
+        "one-to-many-ambiguity",
+        "many-to-one-ambiguity",
+        "producer-version-metadata-change",
+        "windows-posix-path-projection"
+      ],
+      "counts": {
+        "baselineFindings": 30,
+        "candidateFindings": 30,
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "sameFindingRelationships": 25,
+        "newFindings": 3,
+        "resolvedFindings": 3,
+        "newOrResolvedFindings": 6,
+        "ambiguousOrNearCollisionRelationships": 2
+      },
+      "inputProvenance": {
+        "origin": "created-for-repository",
+        "license": {
+          "spdxIdentifier": "MIT",
+          "name": "MIT License",
+          "url": "https://spdx.org/licenses/MIT.html"
+        },
+        "sourceUrl": null,
+        "containsRealSecrets": false,
+        "containsProprietaryCode": false
+      },
+      "sourceTransformations": [
+        {
+          "id": "gitleaks-stable-source-identity",
+          "kind": "unchanged-copy",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/case-plan.json",
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src/exact",
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src/message",
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src/ambiguous.env"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src/exact",
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src/message",
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src/ambiguous.env"
+          ],
+          "description": "The read-only verifier proves that each exact, message-projection, and ambiguity finding line retains the same source path and line; message wording changes occur only in the documented SARIF projection."
+        },
+        {
+          "id": "gitleaks-inserted-lines",
+          "kind": "insert-lines",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src/line-shift"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src/line-shift"
+          ],
+          "description": "The verifier proves that candidate findings retain their source bytes while exactly one through five controlled comments are inserted immediately above their markers."
+        },
+        {
+          "id": "gitleaks-moved-code",
+          "kind": "move-code",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src/moved"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src/moved"
+          ],
+          "description": "The verifier proves that each unchanged synthetic assignment moves downward within its file and that only controlled neutral padding accounts for the surrounding difference."
+        },
+        {
+          "id": "gitleaks-renamed-files",
+          "kind": "rename-file",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src/renamed-old"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src/renamed-new"
+          ],
+          "description": "The verifier proves a byte-identical directory rename from renamed-old to renamed-new for the five finding files."
+        },
+        {
+          "id": "gitleaks-added-source",
+          "kind": "add-source-finding",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/case-plan.json",
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src/new"
+          ],
+          "description": "The case plan and source inventory prove three candidate-only synthetic assignments, each in a separate controlled file."
+        },
+        {
+          "id": "gitleaks-removed-source",
+          "kind": "remove-source-finding",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/baseline/src/resolved"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/gitleaks/producer-input/candidate/src",
+            "validation/holdout/cases/gitleaks/producer-input/case-plan.json"
+          ],
+          "description": "The case plan and source inventory prove that three baseline-only files and their findings are absent from the candidate source tree."
+        }
+      ],
+      "rawSarifMutations": [
+        {
+          "id": "gitleaks-baseline-result-order-normalization",
+          "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/baseline.producer.sarif",
+          "script": "validation/tools/capture/normalize_gitleaks_sarif.py",
+          "changedFields": [
+            "/runs/0/results"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "Gitleaks 8.30.1 emits findings from concurrent directory-fragment scans in completion order. The untouched producer capture remains committed; this ordering-only copy sorts complete result objects by canonical JSON so the observed permutations of the same producer-serialized result objects produce the same projection input. No SARIF result field or finding identity changes."
+        },
+        {
+          "id": "gitleaks-baseline-deterministic-projection",
+          "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/baseline.raw.sarif",
+          "script": "validation/tools/capture/project_holdout.py",
+          "changedFields": [
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/4/partialFingerprints",
+            "/runs/0/results/11/locations/0/physicalLocation/artifactLocation/uri"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "The deterministic ordering-only projection input is preserved. The selected URI is projected to the documented POSIX rebase, the exact-03 fingerprint is removed, and both near-collision members receive the same partial fingerprint. These operations preserve the underlying source findings and do not add semantic IDs or labels to SARIF."
+        },
+        {
+          "id": "gitleaks-candidate-result-order-normalization",
+          "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/candidate.producer.sarif",
+          "script": "validation/tools/capture/normalize_gitleaks_sarif.py",
+          "changedFields": [
+            "/runs/0/results"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "Gitleaks 8.30.1 emits findings from concurrent directory-fragment scans in completion order. The untouched producer capture remains committed; this ordering-only copy sorts complete result objects by canonical JSON so the observed permutations of the same producer-serialized result objects produce the same projection input. No SARIF result field or finding identity changes."
+        },
+        {
+          "id": "gitleaks-candidate-deterministic-projection",
+          "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/candidate.raw.sarif",
+          "script": "validation/tools/capture/project_holdout.py",
+          "changedFields": [
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/4/partialFingerprints",
+            "/runs/0/results/11/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/12/message/text",
+            "/runs/0/results/13/message/text",
+            "/runs/0/results/14/message/text",
+            "/runs/0/results/15/message/text",
+            "/runs/0/results/16/message/text",
+            "/runs/0/tool/driver/semanticVersion"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "The deterministic ordering-only projection input is preserved while missing and duplicate fingerprint projections are applied to candidate findings; one URI is projected to the documented Windows-style rebase, five messages receive a controlled suffix, and the producer semanticVersion is changed to the declared candidate projection. Endpoint identity is preserved while message and metadata changes remain explicit classification evidence."
+        }
+      ]
+    },
+    {
+      "id": "pmd",
+      "producerId": "pmd",
+      "paths": {
+        "directory": "validation/holdout/cases/pmd",
+        "baselineSarif": "validation/holdout/cases/pmd/baseline.sarif",
+        "candidateSarif": "validation/holdout/cases/pmd/candidate.sarif",
+        "labels": "validation/holdout/cases/pmd/labels.json",
+        "notes": "validation/holdout/cases/pmd/notes.md",
+        "producerInputDirectory": "validation/holdout/cases/pmd/producer-input",
+        "config": "validation/holdout/cases/pmd/config.json"
+      },
+      "scenarios": [
+        "exact-unchanged",
+        "inserted-lines",
+        "moved-within-file",
+        "file-rename",
+        "repository-path-rebase",
+        "new-finding",
+        "resolved-finding",
+        "message-change",
+        "metadata-change",
+        "missing-producer-fingerprint",
+        "duplicate-producer-fingerprint",
+        "similar-findings-same-file",
+        "similar-findings-different-contexts",
+        "one-to-many-ambiguity",
+        "many-to-one-ambiguity",
+        "producer-version-metadata-change",
+        "windows-posix-path-projection"
+      ],
+      "counts": {
+        "baselineFindings": 30,
+        "candidateFindings": 30,
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "sameFindingRelationships": 25,
+        "newFindings": 3,
+        "resolvedFindings": 3,
+        "newOrResolvedFindings": 6,
+        "ambiguousOrNearCollisionRelationships": 2
+      },
+      "inputProvenance": {
+        "origin": "created-for-repository",
+        "license": {
+          "spdxIdentifier": "MIT",
+          "name": "MIT License",
+          "url": "https://spdx.org/licenses/MIT.html"
+        },
+        "sourceUrl": null,
+        "containsRealSecrets": false,
+        "containsProprietaryCode": false
+      },
+      "sourceTransformations": [
+        {
+          "id": "pmd-stable-source-identity",
+          "kind": "unchanged-copy",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/pmd/producer-input/case-plan.json",
+            "validation/holdout/cases/pmd/producer-input/baseline/src/StableCases.java",
+            "validation/holdout/cases/pmd/producer-input/baseline/src/AmbiguousCases.java"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/pmd/producer-input/candidate/src/StableCases.java",
+            "validation/holdout/cases/pmd/producer-input/candidate/src/AmbiguousCases.java"
+          ],
+          "description": "The read-only verifier proves that exact, message-projection, and ambiguity calls retain their source identity and that message wording changes occur only in the documented SARIF projection."
+        },
+        {
+          "id": "pmd-inserted-lines",
+          "kind": "insert-lines",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/pmd/producer-input/baseline/src/StableCases.java"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/pmd/producer-input/candidate/src/StableCases.java"
+          ],
+          "description": "The verifier proves that five call sites retain their source bytes while local insertion blocks of one through five inert Java comments produce cumulative line deltas 1, 3, 6, 10, and 15 in the shared file."
+        },
+        {
+          "id": "pmd-moved-code",
+          "kind": "move-code",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/pmd/producer-input/baseline/src/StableCases.java"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/pmd/producer-input/candidate/src/StableCases.java"
+          ],
+          "description": "The verifier proves that five unchanged printStackTrace call sites move downward with their method contexts and that only controlled inert padding changes the surrounding ordering."
+        },
+        {
+          "id": "pmd-renamed-file",
+          "kind": "rename-file",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/pmd/producer-input/baseline/src/renamed-old/RenamedCases.java"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/pmd/producer-input/candidate/src/renamed-new/RenamedCases.java"
+          ],
+          "description": "The verifier proves the Java file bytes and five call locations are identical across the controlled renamed-old to renamed-new path change."
+        },
+        {
+          "id": "pmd-added-source",
+          "kind": "add-source-finding",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/pmd/producer-input/case-plan.json",
+            "validation/holdout/cases/pmd/producer-input/baseline/src"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/pmd/producer-input/candidate/src/NewCases.java"
+          ],
+          "description": "The case plan and source inventory prove three candidate-only printStackTrace calls in the added NewCases.java fixture."
+        },
+        {
+          "id": "pmd-removed-source",
+          "kind": "remove-source-finding",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/pmd/producer-input/baseline/src/ResolvedCases.java"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/pmd/producer-input/candidate/src",
+            "validation/holdout/cases/pmd/producer-input/case-plan.json"
+          ],
+          "description": "The case plan and source inventory prove that ResolvedCases.java and its three baseline findings are absent from candidate source."
+        }
+      ],
+      "rawSarifMutations": [
+        {
+          "id": "pmd-baseline-deterministic-projection",
+          "originalCapture": "validation/holdout/cases/pmd/producer-input/captures/baseline.raw.sarif",
+          "script": "validation/tools/capture/project_holdout.py",
+          "changedFields": [
+            "/runs/0/results/0/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/2/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/3/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/4/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/5/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/6/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/7/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/8/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/9/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/10/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/11/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/12/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/13/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/14/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/15/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/16/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/17/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/18/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/19/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/20/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/21/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/22/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/23/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/24/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/25/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/26/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/27/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/28/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/29/locations/0/physicalLocation/artifactLocation/uri"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "After resolving each PMD file URI to exactly one regular controlled source file, ambient absolute checkout prefixes are removed, the selected line-shift URI receives the documented POSIX rebase, producer-emitted result order is preserved, and the ambiguity pair receives one duplicate partial fingerprint. No label or semantic ID is written into SARIF."
+        },
+        {
+          "id": "pmd-candidate-deterministic-projection",
+          "originalCapture": "validation/holdout/cases/pmd/producer-input/captures/candidate.raw.sarif",
+          "script": "validation/tools/capture/project_holdout.py",
+          "changedFields": [
+            "/runs/0/results/0/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/2/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/3/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/4/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/5/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/6/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/7/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/8/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/9/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/10/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/10/message/text",
+            "/runs/0/results/11/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/11/message/text",
+            "/runs/0/results/12/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/12/message/text",
+            "/runs/0/results/13/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/13/message/text",
+            "/runs/0/results/14/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/14/message/text",
+            "/runs/0/results/15/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/16/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/17/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/18/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/19/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/20/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/21/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/22/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/23/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/24/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/25/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/26/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/27/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/28/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/29/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/tool/driver/version"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "Controlled PMD candidate URIs are made checkout-independent, one receives the Windows-style rebase, producer-emitted result order is preserved, the ambiguity fingerprint is duplicated, five messages receive the documented suffix, and the driver version changes to the candidate projection. These changes preserve source finding identity while exposing path, message, and metadata robustness."
+        }
+      ]
+    },
+    {
+      "id": "semgrep",
+      "producerId": "semgrep",
+      "paths": {
+        "directory": "validation/holdout/cases/semgrep",
+        "baselineSarif": "validation/holdout/cases/semgrep/baseline.sarif",
+        "candidateSarif": "validation/holdout/cases/semgrep/candidate.sarif",
+        "labels": "validation/holdout/cases/semgrep/labels.json",
+        "notes": "validation/holdout/cases/semgrep/notes.md",
+        "producerInputDirectory": "validation/holdout/cases/semgrep/producer-input",
+        "config": "validation/holdout/cases/semgrep/config.json"
+      },
+      "scenarios": [
+        "exact-unchanged",
+        "inserted-lines",
+        "moved-within-file",
+        "file-rename",
+        "repository-path-rebase",
+        "new-finding",
+        "resolved-finding",
+        "message-change",
+        "metadata-change",
+        "missing-producer-fingerprint",
+        "duplicate-producer-fingerprint",
+        "similar-findings-same-file",
+        "similar-findings-different-contexts",
+        "one-to-many-ambiguity",
+        "many-to-one-ambiguity",
+        "producer-version-metadata-change",
+        "windows-posix-path-projection"
+      ],
+      "counts": {
+        "baselineFindings": 30,
+        "candidateFindings": 30,
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "sameFindingRelationships": 25,
+        "newFindings": 3,
+        "resolvedFindings": 3,
+        "newOrResolvedFindings": 6,
+        "ambiguousOrNearCollisionRelationships": 2
+      },
+      "inputProvenance": {
+        "origin": "created-for-repository",
+        "license": {
+          "spdxIdentifier": "MIT",
+          "name": "MIT License",
+          "url": "https://spdx.org/licenses/MIT.html"
+        },
+        "sourceUrl": null,
+        "containsRealSecrets": false,
+        "containsProprietaryCode": false
+      },
+      "sourceTransformations": [
+        {
+          "id": "semgrep-stable-source-identity",
+          "kind": "unchanged-copy",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/case-plan.json",
+            "validation/holdout/cases/semgrep/producer-input/baseline/src/stable.py",
+            "validation/holdout/cases/semgrep/producer-input/baseline/src/ambiguous.py"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/candidate/src/stable.py",
+            "validation/holdout/cases/semgrep/producer-input/candidate/src/ambiguous.py"
+          ],
+          "description": "The read-only verifier proves that exact, message-projection, and ambiguity calls retain their source identity; five message changes occur only in the deterministic SARIF projection."
+        },
+        {
+          "id": "semgrep-inserted-lines",
+          "kind": "insert-lines",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/baseline/src/stable.py"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/candidate/src/stable.py"
+          ],
+          "description": "The verifier proves five unchanged sink calls receive local insertion blocks of one through five controlled inert comments, producing cumulative line deltas 1, 3, 6, 10, and 15 in the shared file."
+        },
+        {
+          "id": "semgrep-moved-code",
+          "kind": "move-code",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/baseline/src/stable.py"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/candidate/src/stable.py"
+          ],
+          "description": "The verifier proves five unchanged sink calls move downward within stable.py and that controlled inert padding accounts for the surrounding difference."
+        },
+        {
+          "id": "semgrep-renamed-file",
+          "kind": "rename-file",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/baseline/src/renamed-old/renamed.py"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/candidate/src/renamed-new/renamed.py"
+          ],
+          "description": "The verifier proves the Python file bytes and five sink locations are identical across the controlled renamed-old to renamed-new path change."
+        },
+        {
+          "id": "semgrep-added-source",
+          "kind": "add-source-finding",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/case-plan.json",
+            "validation/holdout/cases/semgrep/producer-input/baseline/src"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/candidate/src/new.py"
+          ],
+          "description": "The case plan and source inventory prove three candidate-only sink calls in the added new.py fixture."
+        },
+        {
+          "id": "semgrep-removed-source",
+          "kind": "remove-source-finding",
+          "script": "validation/tools/capture/verify_source_transformations.py",
+          "inputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/baseline/src/resolved.py"
+          ],
+          "outputPaths": [
+            "validation/holdout/cases/semgrep/producer-input/candidate/src",
+            "validation/holdout/cases/semgrep/producer-input/case-plan.json"
+          ],
+          "description": "The case plan and source inventory prove that resolved.py and its three baseline sink findings are absent from candidate source."
+        }
+      ],
+      "rawSarifMutations": [
+        {
+          "id": "semgrep-baseline-deterministic-projection",
+          "originalCapture": "validation/holdout/cases/semgrep/producer-input/captures/baseline.raw.sarif",
+          "script": "validation/tools/capture/project_holdout.py",
+          "changedFields": [
+            "/runs/0/results/0/fingerprints",
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/fingerprints",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/12/fingerprints",
+            "/runs/0/results/29/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/29/locations/0/physicalLocation/artifactLocation/uriBaseId"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "The projector preserves producer-emitted result order, removes the exact-03 producer fingerprint, assigns one duplicate partial fingerprint to the two near-collision members, and projects one URI to the documented POSIX rebase while removing its URI base. These changes preserve source finding identity and never place semantic IDs or labels in SARIF."
+        },
+        {
+          "id": "semgrep-candidate-deterministic-projection",
+          "originalCapture": "validation/holdout/cases/semgrep/producer-input/captures/candidate.raw.sarif",
+          "script": "validation/tools/capture/project_holdout.py",
+          "changedFields": [
+            "/runs/0/results/0/fingerprints",
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/fingerprints",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/12/fingerprints",
+            "/runs/0/results/15/message/text",
+            "/runs/0/results/16/message/text",
+            "/runs/0/results/17/message/text",
+            "/runs/0/results/18/message/text",
+            "/runs/0/results/19/message/text",
+            "/runs/0/results/29/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/29/locations/0/physicalLocation/artifactLocation/uriBaseId",
+            "/runs/0/tool/driver/semanticVersion"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "The candidate preserves producer-emitted order while receiving the same fingerprint controls, one Windows-style URI rebase, five documented message suffixes, and a controlled semanticVersion projection. The endpoint remains the same source finding even where message or producer metadata changes classification evidence."
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "producerFamilies": 3,
+    "cases": 3,
+    "groundTruthUnits": 99,
+    "labelledRelationships": 75,
+    "sameFindingRelationships": 75,
+    "newFindings": 9,
+    "resolvedFindings": 9,
+    "newOrResolvedFindings": 18,
+    "ambiguousOrNearCollisionRelationships": 6
+  }
+}

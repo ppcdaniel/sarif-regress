@@ -1,0 +1,142 @@
+name: Regenerate holdout capture evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture pinned producer SARIF (Linux)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install exact Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Install Java 17
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '17.0.19+10'
+
+      - name: Capture and project authentic SARIF
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          bash -n validation/tools/capture/capture-holdout.sh
+          sh -n validation/tools/capture/semgrep-core-loader.sh
+          python3 -B - <<'PY'
+          from pathlib import Path
+
+          for name in (
+              "validation/tools/capture/extract_tar.py",
+              "validation/tools/capture/extract_zip.py",
+              "validation/tools/capture/normalize_gitleaks_sarif.py",
+              "validation/tools/capture/project_holdout.py",
+              "validation/tools/capture/run_semgrep.py",
+              "validation/tools/capture/verify_capture_provenance.py",
+              "validation/tools/capture/verify_projected_holdout.py",
+              "validation/tools/capture/verify_source_transformations.py",
+          ):
+              source = Path(name).read_text(encoding="utf-8")
+              compile(source, name, "exec")
+          PY
+          python3 -B validation/tools/capture/test_capture_tools.py
+          mkdir -p artifacts/holdout-capture
+          {
+            python3 --version
+            java -version
+            getconf GNU_LIBC_VERSION
+            readlink -f /lib64/ld-linux-x86-64.so.2
+            stat --dereference --format='dynamic-loader-bytes=%s' /lib64/ld-linux-x86-64.so.2
+            sha256sum "$(readlink -f /lib64/ld-linux-x86-64.so.2)"
+            /lib64/ld-linux-x86-64.so.2 --version
+            readlink -f /lib/x86_64-linux-gnu/libc.so.6
+            stat --dereference --format='libc-bytes=%s' /lib/x86_64-linux-gnu/libc.so.6
+            sha256sum "$(readlink -f /lib/x86_64-linux-gnu/libc.so.6)"
+            printf 'runner-image-os=%s\n' "${ImageOS:-unknown}"
+            printf 'runner-image-version=%s\n' "${ImageVersion:-unknown}"
+          } > artifacts/holdout-capture/capture-environment.txt 2>&1
+          if [[ "${ImageOS:-}" != 'ubuntu24' ||
+                "${ImageVersion:-}" != '20260720.247.2' ]]; then
+            echo 'Hosted capture runner image differs from the reviewed pin.' >&2
+            exit 1
+          fi
+          ./validation/tools/capture/capture-holdout.sh \
+            --output-root artifacts/holdout-capture/cases
+
+      - name: Check captured artifact structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly root='artifacts/holdout-capture/cases'
+          mapfile -t producers < <(
+            find "${root}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' |
+              LC_ALL=C sort
+          )
+          [[ "${producers[*]}" == 'gitleaks pmd semgrep' ]]
+          for producer in "${producers[@]}"; do
+            for file in \
+              baseline.sarif \
+              candidate.sarif \
+              labels.json \
+              producer-input/captures/baseline.raw.sarif \
+              producer-input/captures/candidate.raw.sarif \
+              producer-input/projection-audit.json; do
+              test -s "${root}/${producer}/${file}"
+            done
+            if [[ "${producer}" == 'gitleaks' ]]; then
+              test -s "${root}/${producer}/producer-input/captures/baseline.producer.sarif"
+              test -s "${root}/${producer}/producer-input/captures/candidate.producer.sarif"
+            fi
+            jq -e '.version == "2.1.0"' \
+              "${root}/${producer}/baseline.sarif" \
+              "${root}/${producer}/candidate.sarif" >/dev/null
+            jq -e '.pairs | length == 25' \
+              "${root}/${producer}/labels.json" >/dev/null
+            for reproducible_file in \
+              baseline.sarif \
+              candidate.sarif \
+              labels.json \
+              producer-input/captures/baseline.raw.sarif \
+              producer-input/captures/candidate.raw.sarif \
+              producer-input/projection-audit.json; do
+              committed_file="validation/holdout/cases/${producer}/${reproducible_file}"
+              captured_file="${root}/${producer}/${reproducible_file}"
+              if ! cmp --silent -- "${committed_file}" "${captured_file}"; then
+                echo \
+                  "Deterministic capture projection differs from committed bytes: ${producer}/${reproducible_file}." \
+                  >&2
+                exit 1
+              fi
+            done
+          done
+          if find "${root}" -type l -print -quit | grep -q .; then
+            echo 'Capture artifact contains a symbolic link.' >&2
+            exit 1
+          fi
+          if find "${root}" -type f -size +16M -print -quit | grep -q .; then
+            echo 'Capture artifact contains a file larger than 16 MiB.' >&2
+            exit 1
+          fi
+
+      - name: Upload capture evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: independent-holdout-capture
+          path: artifacts/holdout-capture
+          if-no-files-found: error
+          retention-days: 30

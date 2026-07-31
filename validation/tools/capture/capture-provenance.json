@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "1",
+  "captureDate": "2026-08-01",
+  "captureEnvironment": {
+    "operatingSystem": "Linux",
+    "architecture": "x86-64",
+    "pythonVersion": "3.12.13",
+    "javaDistribution": "Eclipse Temurin",
+    "javaVersion": "17.0.19+10",
+    "verifiedRecaptureRunnerImage": {
+      "label": "ubuntu-24.04",
+      "imageOs": "ubuntu24",
+      "imageVersion": "20260720.247.2"
+    },
+    "glibcVersion": "2.39",
+    "dynamicLoader": {
+      "path": "/lib64/ld-linux-x86-64.so.2",
+      "bytes": 236616,
+      "sha256": "1cd555ac46b7887edeaf3c42aac5408c8135e52f6b37870da2cf82d5fe14e829"
+    },
+    "libc": {
+      "path": "/lib/x86_64-linux-gnu/libc.so.6",
+      "bytes": 2125328,
+      "sha256": "d8db8739a1633c972cec6a4fe0566bdcec6fd088f98723492ab0361f66238f75"
+    },
+    "networkPolicy": "Network is used only for the verified producer artifacts and Semgrep dependency wheels. Rules and controlled fixture source are repository-local."
+  },
+  "captureScript": "validation/tools/capture/capture-holdout.sh",
+  "reproductionCommand": "./validation/tools/capture/capture-holdout.sh --output-root <new-staging-directory> --producer all",
+  "projectionScript": "validation/tools/capture/project_holdout.py",
+  "gitleaksOrderingNormalization": {
+    "script": "validation/tools/capture/normalize_gitleaks_sarif.py",
+    "algorithmVersion": "gitleaks-result-order/v1",
+    "invocation": "python3 -B validation/tools/capture/normalize_gitleaks_sarif.py --input <producer-capture> --output <normalized-projection-input>",
+    "changedField": "/runs/0/results",
+    "reason": "Gitleaks 8.30.1 appends findings produced by concurrent directory-fragment scans in completion order. The untouched producer bytes remain committed; only the complete result objects are sorted for a deterministic projection input.",
+    "committedProducerCaptureSha256": {
+      "baseline": "cad561b429c9b7d11fa813100c8e69024af07628dc9f9384063e015dd11a3648",
+      "candidate": "f29cbab56140a42c3e9a80cba724dc268aec99cda71ff4c63539b628c4049fec"
+    },
+    "normalizedProjectionInputSha256": {
+      "baseline": "8ed8b94d440520aeb028479aad47ea5d2579604275fe6db80a70c87cefe5058a",
+      "candidate": "51c156706f2680353587f3fc21e10094fac1d4581488f8c447bd2f3a1afe2a13"
+    }
+  },
+  "projectionVerificationScript": "validation/tools/capture/verify_projected_holdout.py",
+  "sourceVerificationScript": "validation/tools/capture/verify_source_transformations.py",
+  "semgrepRunnerScript": "validation/tools/capture/run_semgrep.py",
+  "semgrepCoreLoaderScript": "validation/tools/capture/semgrep-core-loader.sh",
+  "producers": [
+    {
+      "id": "semgrep",
+      "name": "Semgrep Community Edition",
+      "version": "1.172.0",
+      "sourceCommit": "651f37efa397bf066e1cf627414eeabe40b07e27",
+      "officialProject": "https://github.com/semgrep/semgrep",
+      "officialRelease": "https://github.com/semgrep/semgrep/releases/tag/v1.172.0",
+      "license": "LGPL-2.1-only",
+      "artifact": {
+        "kind": "Python wheel",
+        "url": "https://files.pythonhosted.org/packages/84/a5/21624510b65271a673961a894af7511b5123d662e84c74c765560ea28b27/semgrep-1.172.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-manylinux_2_34_x86_64.whl",
+        "bytes": 69575334,
+        "sha256": "d8b94af4266a575287ad2cd844573743ab4fe58f6bfb6d9229327807937eade3"
+      },
+      "dependencyLock": {
+        "path": "validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock",
+        "sha256": "456592933b886b3d60a68dfe83dba4af3f3e1872e492dbafcbbb388574e7039e",
+        "pythonVersion": "3.12",
+        "installation": "<temporary-tools>/semgrep-environment/bin/python -m pip install --no-index --find-links <temporary-wheelhouse> --only-binary=:all: --require-hashes --requirement validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock"
+      },
+      "nativeCore": {
+        "installedPath": "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core",
+        "renamedPath": "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core.native",
+        "bytes": 253156344,
+        "sha256": "8a7c27e6286381fdb6235eb91bd0fed40b919496a242c72f1e55d2b5caa10cb2"
+      },
+      "coreLoader": {
+        "sourcePath": "validation/tools/capture/semgrep-core-loader.sh",
+        "installedPath": "<temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core",
+        "sha256": "64930ae1e1bb0be1ca7b742c20c900f21a05352699d2852da141154077c68613",
+        "dynamicLoader": "/lib64/ld-linux-x86-64.so.2",
+        "invocation": "/lib64/ld-linux-x86-64.so.2 --library-path <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs --argv0 semgrep-core <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/semgrep-core.native <core-arguments>"
+      },
+      "executionMode": "The runner explicitly selects Semgrep's --legacy mode; every packaged native core invocation uses the reviewed loader without exporting wheel libraries to Python.",
+      "versionCommand": "<temporary-tools>/semgrep-environment/bin/python -I -B <repository-root>/validation/tools/capture/run_semgrep.py --semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep --library-directory <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs -- --legacy --version",
+      "versionOutputSha256": "82e4502ffa8035703c9a3c28b596f2977de9a0aee1f707e8bd524878f01939b9",
+      "helpCommand": "<temporary-tools>/semgrep-environment/bin/python -I -B <repository-root>/validation/tools/capture/run_semgrep.py --semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep --library-directory <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs -- --legacy scan --help",
+      "helpSha256": "b63d6e12f56f512a1c5cd1f9d9d931056c103c06dfec971b1ff26e12c2c16582",
+      "execution": "<temporary-tools>/semgrep-environment/bin/python -I -B <repository-root>/validation/tools/capture/run_semgrep.py --semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep --library-directory <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs -- --legacy scan --config validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml --disable-version-check --metrics=off --no-git-ignore --no-rewrite-rule-ids --oss-only --quiet --sarif --strict --output <raw-capture> ."
+    },
+    {
+      "id": "gitleaks",
+      "name": "Gitleaks",
+      "version": "8.30.1",
+      "sourceCommit": "83d9cd684c87d95d656c1458ef04895a7f1cbd8e",
+      "officialProject": "https://github.com/gitleaks/gitleaks",
+      "officialRelease": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
+      "license": "MIT",
+      "artifact": {
+        "kind": "release archive",
+        "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+        "bytes": 8230402,
+        "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+      },
+      "officialChecksumManifest": {
+        "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt",
+        "bytes": 999,
+        "sha256": "061476c21adaf5441516f96f185c1a4706a83cd6329b9b38762271b3d4a52fae"
+      },
+      "installation": "Verify the official checksum manifest and archive size/SHA-256, run python3 -B validation/tools/capture/extract_tar.py --archive <archive> --destination <temporary-tools>/gitleaks --member gitleaks, then set mode 0755.",
+      "versionCommand": "gitleaks version",
+      "helpCommand": "gitleaks dir --help",
+      "helpSha256": "ff55bf949d8ac8354e133f09c8be4ccac32cf82ec3a01446e2f31cbe20857a86",
+      "versionOutputSha256": "c9fd9ccb6682c54b5fcb0363757b6c6873564e7c067f70b3b5581b611528b9f4",
+      "execution": "gitleaks dir . --config validation/holdout/cases/gitleaks/producer-input/gitleaks.toml --exit-code 0 --log-level error --no-banner --no-color --redact=100 --report-format sarif --report-path <producer-capture>"
+    },
+    {
+      "id": "pmd",
+      "name": "PMD",
+      "version": "7.26.0",
+      "sourceCommit": "8fd38edf285a33e1164f66205ebe243441db9557",
+      "officialProject": "https://github.com/pmd/pmd",
+      "officialRelease": "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0",
+      "license": "LicenseRef-PMD-BSD-Style",
+      "artifact": {
+        "kind": "release archive",
+        "url": "https://github.com/pmd/pmd/releases/download/pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip",
+        "bytes": 73646044,
+        "sha256": "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
+      },
+      "installation": "Verify archive size/SHA-256, extract with validation/tools/capture/extract_zip.py, then set the bundled bin/pmd launcher mode to 0755.",
+      "versionCommand": "pmd --version",
+      "helpCommand": "pmd check --help",
+      "helpSha256": "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91",
+      "execution": "pmd check --dir . --format sarif --no-cache --no-fail-on-violation --no-progress --relativize-paths-with <controlled-source-root> --report-file <raw-capture> --rulesets validation/holdout/cases/pmd/producer-input/pmd-ruleset.xml --threads 0 --use-version java-17"
+    }
+  ]
+}

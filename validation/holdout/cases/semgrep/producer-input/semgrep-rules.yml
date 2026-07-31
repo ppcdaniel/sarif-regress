@@ -1,0 +1,7 @@
+rules:
+  - id: holdout-sink
+    languages:
+      - python
+    message: Controlled holdout sink invocation
+    severity: WARNING
+    pattern: holdout_sink($VALUE)
