@@ -1,31 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-evaluation_mode='strict'
-if (($# > 1)); then
-  echo \
-    "Usage: $0 [--generate-cross-platform-attestation-candidate|--regenerate-attested-expected]" \
-    >&2
+if (($# != 0)); then
+  echo "Usage: $0" >&2
   exit 1
 fi
-if (($# == 1)); then
-  case "$1" in
-    --generate-cross-platform-attestation-candidate)
-      evaluation_mode='bootstrap'
-      ;;
-    --regenerate-attested-expected)
-      evaluation_mode='regenerate'
-      ;;
-    *)
-      echo "Unknown option '$1'." >&2
-      echo \
-        "Usage: $0 [--generate-cross-platform-attestation-candidate|--regenerate-attested-expected]" \
-        >&2
-      exit 1
-      ;;
-  esac
-fi
-readonly evaluation_mode
 
 readonly script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly repository_root="$(cd -- "${script_directory}/.." && pwd)"
@@ -42,6 +21,8 @@ readonly multitool_runtime_version="8.0.29"
 readonly multitool_package_url="https://api.nuget.org/v3-flatcontainer/sarif.multitool/5.5.0/sarif.multitool.5.5.0.nupkg"
 readonly multitool_package_sha256="2d2c73cc1fa4b79e5a41bded05d94dd645fa61d003492054260d7e106e838149"
 readonly multitool_package_size_bytes="33705414"
+
+cd -- "${repository_root}"
 
 assert_real_directory_or_missing() {
   local path="$1"
@@ -228,25 +209,10 @@ evaluation_arguments=(
   --output-root "${generated_root}"
   --multitool-path "${multitool_path}"
   --multitool-version "${multitool_version}"
+  --expected-root "${expected_root}"
+  --compare-expected true
+  --cross-platform-attestation "${cross_platform_attestation}"
 )
-case "${evaluation_mode}" in
-  bootstrap)
-    evaluation_arguments+=(--compare-expected false)
-    ;;
-  regenerate)
-    evaluation_arguments+=(
-      --compare-expected false
-      --cross-platform-attestation "${cross_platform_attestation}"
-    )
-    ;;
-  strict)
-    evaluation_arguments+=(
-      --expected-root "${expected_root}"
-      --compare-expected true
-      --cross-platform-attestation "${cross_platform_attestation}"
-    )
-    ;;
-esac
 set +e
 dotnet run \
   --project "${validation_project}" \
@@ -291,68 +257,12 @@ fi
 if ((missing_evidence != 0)); then
   exit 1
 fi
-if [[ "${evaluation_mode}" == 'bootstrap' ]]; then
-  if ((evaluation_exit_code != 2)); then
-    echo \
-      "Unattested candidate generation expected validation exit code 2, got ${evaluation_exit_code}." \
-      >&2
-    exit 1
-  fi
-  python3 -B - "${generated_root}/comparison-summary.json" <<'PY'
-import json
-import pathlib
-import sys
-
-def reject_duplicate(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"duplicate JSON property {key!r}")
-        result[key] = value
-    return result
-
-summary_path = pathlib.Path(sys.argv[1])
-with summary_path.open("r", encoding="utf-8") as stream:
-    summary = json.load(stream, object_pairs_hook=reject_duplicate)
-conditions = summary.get("releaseConditions", {})
-reasons = summary.get("recommendationReasons", [])
-if conditions.get("evaluationCompleted") is not True:
-    raise SystemExit("Unattested evaluation did not complete successfully.")
-if conditions.get("noStructuralFailures") is not True:
-    raise SystemExit("Unattested evaluation contains a structural failure.")
-if conditions.get("crossPlatformByteIdentity") is not False:
-    raise SystemExit("Unattested evaluation unexpectedly asserts byte identity.")
-if summary.get("releaseRecommendation") != "blocked":
-    raise SystemExit("Unattested evaluation must retain a blocked recommendation.")
-if "cross-platform-determinism-failed" not in reasons:
-    raise SystemExit("Unattested evaluation omitted the determinism blocker.")
-PY
-elif ((evaluation_exit_code != 0)); then
+if ((evaluation_exit_code != 0)); then
   echo \
     "Holdout evaluation failed with exit code ${evaluation_exit_code}; available evidence was preserved at ${artifact_root}." \
     >&2
   exit "${evaluation_exit_code}"
 fi
 
-if [[ "${evaluation_mode}" == 'bootstrap' ]]; then
-  echo "Generated unattested normalized reports for a hosted attestation candidate."
-elif [[ "${evaluation_mode}" == 'regenerate' ]]; then
-  python3 -B - "${generated_root}/comparison-summary.json" <<'PY'
-import json
-import pathlib
-import sys
-
-summary = json.loads(pathlib.Path(sys.argv[1]).read_bytes())
-conditions = summary.get("releaseConditions", {})
-if conditions.get("evaluationCompleted") is not True:
-    raise SystemExit("Attested expected-output regeneration did not complete.")
-if conditions.get("noStructuralFailures") is not True:
-    raise SystemExit("Attested expected-output regeneration has a structural failure.")
-if conditions.get("crossPlatformByteIdentity") is not True:
-    raise SystemExit("Attested expected-output regeneration lacks validated byte identity.")
-PY
-  echo "Regenerated attested normalized reports without comparing stale expected bytes."
-else
-  echo "Holdout validation reproduced all committed normalized reports byte-for-byte."
-fi
+echo "Holdout validation reproduced all committed normalized reports byte-for-byte."
 echo "Evidence: ${artifact_root}"

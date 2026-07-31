@@ -1,7 +1,6 @@
 name: Regenerate holdout capture evidence
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:

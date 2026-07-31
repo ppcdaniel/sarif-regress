@@ -139,6 +139,13 @@ context evidence. GitHub code-scanning compatibility checks are advisory, not an
 The public corpus gates precision at `0.95`, recall at `0.90`, exact classifications and diagnostics,
 zero silently matched labelled ambiguity, and byte-identical approved Windows/Linux reports.
 
+An [independent holdout evaluation](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/independent-validation.md)
+freezes the MVP against 75 known relationships from Gitleaks 8.30.1, PMD 7.26.0, and Semgrep
+1.172.0. Its current release recommendation is **blocked**: the matcher made no false positive
+matches or silent ambiguity choices, but accepted none of the 75 pairs and could not ingest the two
+Semgrep inputs. The failures and external Microsoft SARIF Multitool comparison remain published
+without matcher or label tuning.
+
 ## Commands
 
 | Command | Purpose |
@@ -179,7 +186,7 @@ for packaging and release verification.
 | Configuration | [Guide](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/configuration.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/config.schema.json) |
 | JSON, HTML, and SARIF output | [Output contract](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/output-contract.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/output.schema.json) |
 | Security and resource limits | [Security](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/security.md) · [Budgets](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/resource-budgets.md) |
-| Evaluation and interoperability | [Corpus](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/corpus.md) · [GitHub profile](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/github-compatibility.md) |
+| Evaluation and interoperability | [Corpus](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/corpus.md) · [Independent holdout](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/independent-validation.md) · [GitHub profile](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/github-compatibility.md) |
 
 The supplied [architecture](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/architecture.md)
 is the source of truth. SarifRegress is not a hosted service, general SARIF viewer, or automatic
