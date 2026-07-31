@@ -57,6 +57,7 @@ browser_profile_directory="${staging_directory}/browser-profile"
 terminal_gif="${staging_directory}/eslint-line-shift-terminal.gif"
 report_screenshot="${staging_directory}/eslint-line-shift-report.png"
 evidence_screenshot="${staging_directory}/eslint-line-shift-evidence.png"
+evidence_source_screenshot="${staging_directory}/eslint-line-shift-evidence-source.png"
 
 for required_command in jq python3; do
     if ! command -v "${required_command}" >/dev/null 2>&1; then
@@ -169,6 +170,7 @@ fi
 capture_browser_screenshot() {
     local page_uri="$1"
     local destination_path="$2"
+    local viewport_height="$3"
     local profile_path="${browser_profile_directory}/$(basename -- "${destination_path}")"
 
     "${browser_path}" \
@@ -190,16 +192,54 @@ capture_browser_screenshot() {
         --run-all-compositor-stages-before-draw \
         --user-data-dir="${profile_path}" \
         --virtual-time-budget=1000 \
-        --window-size=1440,1000 \
+        --window-size="1440,${viewport_height}" \
         --screenshot="${destination_path}" \
         "${page_uri}" >/dev/null 2>&1
 }
 
-capture_browser_screenshot "${report_uri}" "${report_screenshot}"
 capture_browser_screenshot \
-    "${report_uri}#finding-0" \
-    "${evidence_screenshot}"
+    "${report_uri}" \
+    "${report_screenshot}" \
+    1000
+capture_browser_screenshot \
+    "${report_uri}" \
+    "${evidence_source_screenshot}" \
+    1700
 rm -rf -- "${browser_profile_directory}"
+
+python3 - \
+    "${report_screenshot}" \
+    "${evidence_source_screenshot}" \
+    "${evidence_screenshot}" <<'PY'
+from pathlib import Path
+import sys
+
+from PIL import Image
+
+summary_path = Path(sys.argv[1])
+source_path = Path(sys.argv[2])
+evidence_path = Path(sys.argv[3])
+
+with Image.open(summary_path) as summary:
+    if summary.size != (1440, 1000):
+        raise ValueError(f"Unexpected summary screenshot size: {summary.size}")
+    extrema = summary.convert("RGB").getextrema()
+    if all(channel == (255, 255) for channel in extrema):
+        raise ValueError("The summary screenshot is blank.")
+
+with Image.open(source_path) as source:
+    if source.size != (1440, 1700):
+        raise ValueError(f"Unexpected evidence source size: {source.size}")
+    extrema = source.convert("RGB").getextrema()
+    if all(channel == (255, 255) for channel in extrema):
+        raise ValueError("The evidence source screenshot is blank.")
+    with source.crop((0, 900, 1440, 1600)) as evidence:
+        extrema = evidence.convert("RGB").getextrema()
+        if all(channel == (255, 255) for channel in extrema):
+            raise ValueError("The evidence crop is blank.")
+        evidence.save(evidence_path, format="PNG")
+PY
+rm -- "${evidence_source_screenshot}"
 
 for generated_asset in \
     "${terminal_gif}" \
@@ -211,26 +251,6 @@ do
         exit 1
     fi
 done
-
-python3 - \
-    "${report_screenshot}" \
-    "${evidence_screenshot}" <<'PY'
-from pathlib import Path
-import sys
-
-from PIL import Image
-
-for raw_path in sys.argv[1:]:
-    image_path = Path(raw_path)
-    with Image.open(image_path) as image:
-        if image.size != (1440, 1000):
-            raise ValueError(
-                f"Unexpected screenshot size for {image_path}: {image.size}"
-            )
-        extrema = image.convert("RGB").getextrema()
-        if all(channel == (255, 255) for channel in extrema):
-            raise ValueError(f"Screenshot is blank: {image_path}")
-PY
 
 (
     cd -- "${staging_directory}"

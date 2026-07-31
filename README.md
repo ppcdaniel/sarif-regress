@@ -52,8 +52,8 @@ line 3 to 4. Neither is misreported as new or resolved.
 
 ![Terminal demo showing two real ESLint findings classified as moved](https://raw.githubusercontent.com/ppcdaniel/sarif-regress/main/docs/assets/readme/eslint-line-shift-terminal.gif)
 
-The animation runs the real CLI. `jq` only condenses the generated stable JSON for display; it does
-not perform matching. The [capture recipe](https://github.com/ppcdaniel/sarif-regress/tree/main/docs/assets/readme)
+The single-pass animation runs the real CLI. `jq` only condenses the generated stable JSON for
+display; it does not perform matching. The [capture recipe](https://github.com/ppcdaniel/sarif-regress/tree/main/docs/assets/readme)
 asserts the exact result before rendering the asset.
 
 | Rule | Baseline | Candidate | Result | Decision |

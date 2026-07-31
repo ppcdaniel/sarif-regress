@@ -8,8 +8,9 @@ licensing, and deterministic normalisations.
 
 `capture-demo.sh` runs a real SarifRegress executable against that fixture. It
 asserts the exact comparison summary, renders the terminal GIF from a `jq`
-projection of the generated stable JSON, and takes an unmodified headless-browser
-screenshot of the generated static HTML report.
+projection of the generated stable JSON, takes an unmodified headless-browser
+screenshot of the generated static HTML report, and crops the first finding card
+from a second browser capture.
 
 From a Linux checkout with Python 3.10+, `jq`, Chrome or Chromium, and DejaVu Sans Mono installed:
 

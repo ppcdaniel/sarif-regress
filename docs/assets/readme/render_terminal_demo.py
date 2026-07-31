@@ -25,7 +25,8 @@ MAX_SUMMARY_LINE_CHARACTERS: Final = 100
 MAX_SUMMARY_UTF8_BYTES: Final = (
     MAX_SUMMARY_LINES * ((MAX_SUMMARY_LINE_CHARACTERS * 4) + 1)
 )
-FINAL_FRAME_DURATION_MILLISECONDS: Final = 5_000
+FINAL_FRAME_DURATION_MILLISECONDS: Final = 2_000
+MAX_ANIMATION_DURATION_MILLISECONDS: Final = 5_000
 
 BACKGROUND_COLOR: Final = "#0d1117"
 WINDOW_COLOR: Final = "#161b22"
@@ -165,11 +166,11 @@ def build_animation_stages(total_line_count: int) -> tuple[AnimationStage, ...]:
     """Create cumulative reveal stages ending in a long readable frame."""
 
     candidate_stages = (
-        AnimationStage(5, 1_700),
-        AnimationStage(7, 900),
-        AnimationStage(8, 900),
-        AnimationStage(9, 1_200),
-        AnimationStage(10, 1_200),
+        AnimationStage(5, 700),
+        AnimationStage(7, 400),
+        AnimationStage(8, 400),
+        AnimationStage(9, 500),
+        AnimationStage(10, 500),
         AnimationStage(total_line_count, FINAL_FRAME_DURATION_MILLISECONDS),
     )
     return tuple(
@@ -261,6 +262,8 @@ def save_animation(
 
     if not frames or len(frames) != len(durations):
         raise ValueError("Animation frames and durations must be non-empty and aligned.")
+    if sum(durations) > MAX_ANIMATION_DURATION_MILLISECONDS:
+        raise ValueError("The README animation must not exceed five seconds.")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     quantized_frames = tuple(
@@ -276,7 +279,6 @@ def save_animation(
         save_all=True,
         append_images=list(quantized_frames[1:]),
         duration=list(durations),
-        loop=1,
         optimize=True,
         disposal=1,
     )
