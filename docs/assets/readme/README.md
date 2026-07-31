@@ -11,7 +11,7 @@ asserts the exact comparison summary, renders the terminal GIF from a `jq`
 projection of the generated stable JSON, and takes an unmodified headless-browser
 screenshot of the generated static HTML report.
 
-From a Linux checkout with Python 3, `jq`, and Chrome or Chromium installed:
+From a Linux checkout with Python 3.10+, `jq`, Chrome or Chromium, and DejaVu Sans Mono installed:
 
 ```bash
 python3 -m pip install \

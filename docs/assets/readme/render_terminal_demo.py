@@ -20,6 +20,9 @@ LINE_HEIGHT: Final = 27
 FONT_SIZE: Final = 21
 MAX_SUMMARY_LINES: Final = 8
 MAX_SUMMARY_LINE_CHARACTERS: Final = 100
+MAX_SUMMARY_UTF8_BYTES: Final = (
+    MAX_SUMMARY_LINES * ((MAX_SUMMARY_LINE_CHARACTERS * 4) + 1)
+)
 FINAL_FRAME_DURATION_MILLISECONDS: Final = 5_000
 
 BACKGROUND_COLOR: Final = "#0d1117"
@@ -95,6 +98,12 @@ def load_font(candidates: Sequence[str], size: int) -> ImageFont.FreeTypeFont:
 def read_summary_lines(summary_path: Path) -> tuple[str, ...]:
     """Read bounded summary text generated from the stable JSON report."""
 
+    summary_size = summary_path.stat().st_size
+    if summary_size > MAX_SUMMARY_UTF8_BYTES:
+        raise ValueError(
+            f"The demo summary is {summary_size} bytes; "
+            f"the limit is {MAX_SUMMARY_UTF8_BYTES}."
+        )
     raw_text = summary_path.read_text(encoding="utf-8")
     summary_lines = tuple(raw_text.splitlines())
     if not summary_lines:
@@ -258,7 +267,7 @@ def save_animation(
         save_all=True,
         append_images=list(quantized_frames[1:]),
         duration=list(durations),
-        loop=0,
+        loop=1,
         optimize=True,
         disposal=1,
     )

@@ -37,6 +37,10 @@ fi
 mkdir -p -- "${output_parent}"
 output_parent="$(cd -- "${output_parent}" && pwd -P)"
 output_directory="${output_parent}/${output_name}"
+if [[ -e "${output_directory}" || -L "${output_directory}" ]]; then
+    echo "The output directory must not already exist: ${output_directory}" >&2
+    exit 1
+fi
 staging_directory="$(
     mktemp -d "${output_parent}/.${output_name}.capture.XXXXXXXX"
 )"
@@ -49,6 +53,7 @@ cleanup_staging_directory() {
 trap cleanup_staging_directory EXIT
 
 run_directory="${staging_directory}/run"
+browser_profile_directory="${staging_directory}/browser-profile"
 terminal_gif="${staging_directory}/eslint-line-shift-terminal.gif"
 report_screenshot="${staging_directory}/eslint-line-shift-report.png"
 evidence_screenshot="${staging_directory}/eslint-line-shift-evidence.png"
@@ -74,16 +79,16 @@ if [[ -z "${browser_path}" || ! -x "${browser_path}" ]]; then
     exit 1
 fi
 browser_path="$(realpath -e -- "${browser_path}")"
+"${browser_path}" --version > "${staging_directory}/browser-version.txt"
 
-mkdir -p -- "${run_directory}/bin"
+mkdir -p -- "${run_directory}"
 cp -- "${demo_fixture_directory}/baseline.sarif" "${run_directory}/baseline.sarif"
 cp -- "${demo_fixture_directory}/candidate.sarif" "${run_directory}/candidate.sarif"
 cp -- "${script_directory}/demo-summary.jq" "${run_directory}/demo-summary.jq"
-ln -s -- "${executable_path}" "${run_directory}/bin/sarif-regress"
 
 (
     cd -- "${run_directory}"
-    PATH="${run_directory}/bin:${PATH}" sarif-regress compare \
+    "${executable_path}" compare \
         --baseline baseline.sarif \
         --candidate candidate.sarif \
         --json-out report.json \
@@ -164,17 +169,26 @@ fi
 capture_browser_screenshot() {
     local page_uri="$1"
     local destination_path="$2"
+    local profile_path="${browser_profile_directory}/$(basename -- "${destination_path}")"
 
     "${browser_path}" \
         --headless=new \
+        --disable-background-networking \
+        --disable-component-update \
+        --disable-default-apps \
         --disable-dev-shm-usage \
+        --disable-extensions \
         --disable-gpu \
+        --disable-sync \
         --hide-scrollbars \
         "${browser_sandbox_arguments[@]}" \
         --force-color-profile=srgb \
         --force-device-scale-factor=1 \
         --lang=en-US \
+        --metrics-recording-only \
+        --no-first-run \
         --run-all-compositor-stages-before-draw \
+        --user-data-dir="${profile_path}" \
         --virtual-time-budget=1000 \
         --window-size=1440,1000 \
         --screenshot="${destination_path}" \
@@ -185,6 +199,7 @@ capture_browser_screenshot "${report_uri}" "${report_screenshot}"
 capture_browser_screenshot \
     "${report_uri}#finding-0" \
     "${evidence_screenshot}"
+rm -rf -- "${browser_profile_directory}"
 
 for generated_asset in \
     "${terminal_gif}" \
@@ -197,18 +212,43 @@ do
     fi
 done
 
-rm -- "${run_directory}/bin/sarif-regress"
-rmdir -- "${run_directory}/bin"
+python3 - \
+    "${report_screenshot}" \
+    "${evidence_screenshot}" <<'PY'
+from pathlib import Path
+import sys
+
+from PIL import Image
+
+for raw_path in sys.argv[1:]:
+    image_path = Path(raw_path)
+    with Image.open(image_path) as image:
+        if image.size != (1440, 1000):
+            raise ValueError(
+                f"Unexpected screenshot size for {image_path}: {image.size}"
+            )
+        extrema = image.convert("RGB").getextrema()
+        if all(channel == (255, 255) for channel in extrema):
+            raise ValueError(f"Screenshot is blank: {image_path}")
+PY
+
 (
     cd -- "${staging_directory}"
     sha256sum \
         run/report.json \
         run/report.html \
+        browser-version.txt \
         eslint-line-shift-terminal.gif \
         eslint-line-shift-report.png \
         eslint-line-shift-evidence.png \
         > checksums.sha256
 )
 
-mv -- "${staging_directory}" "${output_directory}"
+mv --no-target-directory --no-clobber -- \
+    "${staging_directory}" \
+    "${output_directory}"
+if [[ -d "${staging_directory}" ]]; then
+    echo "The output directory was created concurrently: ${output_directory}" >&2
+    exit 1
+fi
 trap - EXIT

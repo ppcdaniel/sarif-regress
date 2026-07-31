@@ -32,7 +32,10 @@ jobs:
 
       - name: Install terminal renderer dependency
         shell: bash
-        run: python3 -m pip install --disable-pip-version-check Pillow==11.3.0
+        run: >-
+          python3 -m pip install
+          --disable-pip-version-check
+          --requirement docs/assets/readme/requirements.txt
 
       - name: Package real release executable
         shell: bash

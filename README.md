@@ -89,8 +89,8 @@ dotnet run \
 
 On Windows, use `.\scripts\build.ps1` from PowerShell. When tagged releases are available, the
 [release page](https://github.com/ppcdaniel/sarif-regress/releases) will provide a .NET tool package
-and self-contained Linux and Windows binaries. The .NET tool requires a compatible .NET 10 runtime;
-the standalone binaries do not.
+and self-contained Linux x64 and Windows x64 binaries. The .NET tool requires a compatible .NET 10
+runtime; the standalone binaries do not.
 
 For an installed command, the normal comparison shape is:
 
