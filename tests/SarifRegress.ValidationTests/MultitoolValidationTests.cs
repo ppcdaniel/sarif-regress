@@ -214,6 +214,25 @@ public sealed class MultitoolValidationTests
     }
 
     [Fact]
+    public void Pinned_subcommand_help_validates_its_actual_syntax_without_repeating_name()
+    {
+        const string generatedHelp = """
+            --previous          Path to the previous SARIF log.
+            --output-file-path  Path to the annotated output log.
+            <currentFiles>      Required current SARIF log paths.
+            """;
+
+        MultitoolRunner.ValidateGeneratedHelp(generatedHelp);
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(() =>
+            MultitoolRunner.ValidateGeneratedHelp(
+                generatedHelp.Replace(
+                    "--previous",
+                    "--different",
+                    StringComparison.Ordinal)));
+        Assert.Contains("--previous", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Tool_failure_preserves_every_ground_truth_unit_as_an_explicit_error()
     {
         CorpusLabels labels = new(

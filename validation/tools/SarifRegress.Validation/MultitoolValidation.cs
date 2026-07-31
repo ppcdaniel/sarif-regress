@@ -1461,20 +1461,7 @@ public sealed partial class MultitoolRunner
                 "Installed Multitool version output does not identify the pinned exact version.");
         }
 
-        string helpText = help.StandardOutput + "\n" + help.StandardError;
-        foreach (string required in new[]
-                 {
-                     "match-results-forward",
-                     "--previous",
-                     "--output-file-path",
-                 })
-        {
-            if (!helpText.Contains(required, StringComparison.Ordinal))
-            {
-                throw new InvalidDataException(
-                    $"Generated Multitool help does not contain required syntax '{required}'.");
-            }
-        }
+        ValidateGeneratedHelp(help.StandardOutput + "\n" + help.StandardError);
 
         return new MultitoolToolEvidence(
             "Microsoft SARIF Multitool",
@@ -1492,6 +1479,27 @@ public sealed partial class MultitoolRunner
             ToolOutputNormalizer.ComputeSha256(
                 version.StandardOutput,
                 version.StandardError));
+    }
+
+    internal static void ValidateGeneratedHelp(string helpText)
+    {
+        ArgumentNullException.ThrowIfNull(helpText);
+        // Multitool 5.5.0 does not repeat the selected command name in its
+        // generated subcommand help. The successful exact command invocation
+        // establishes that identity; these tokens verify its actual input syntax.
+        foreach (string required in new[]
+                 {
+                     "--previous",
+                     "--output-file-path",
+                     "<currentFiles>",
+                 })
+        {
+            if (!helpText.Contains(required, StringComparison.Ordinal))
+            {
+                throw new InvalidDataException(
+                    $"Generated Multitool help does not contain required syntax '{required}'.");
+            }
+        }
     }
 
     /// <summary>Runs one complete case and returns its normalized invocation and raw path.</summary>
