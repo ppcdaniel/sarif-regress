@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset
+  xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+  name="SarifRegress controlled PMD holdout rules">
+  <description>
+    Local, network-independent rules for the SarifRegress PMD holdout.
+  </description>
+  <rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace"/>
+</ruleset>

@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "1",
+  "producer": "pmd",
+  "producerVersion": "7.26.0",
+  "candidateVersionProjection": "7.26.0+holdout-candidate-projection",
+  "projectionVersion": "holdout-projection/v1",
+  "entries": [
+    {
+      "semanticId": "pmd-exact-01",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "pmd-exact-02",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "pmd-exact-03",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "pmd-exact-04",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "pmd-exact-05",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "pmd-line-shift-01",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-line-shift-02",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-line-shift-03",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-line-shift-04",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-line-shift-05",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-moved-01",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-moved-02",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-moved-03",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-moved-04",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-moved-05",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-renamed-01",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-renamed-02",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-renamed-03",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-renamed-04",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-renamed-05",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "pmd-message-modified-01",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "pmd-message-modified-02",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "pmd-message-modified-03",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "pmd-message-modified-04",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "pmd-message-modified-05",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "pmd-resolved-01",
+      "scenario": "resolved",
+      "presence": "baseline"
+    },
+    {
+      "semanticId": "pmd-resolved-02",
+      "scenario": "resolved",
+      "presence": "baseline"
+    },
+    {
+      "semanticId": "pmd-resolved-03",
+      "scenario": "resolved",
+      "presence": "baseline"
+    },
+    {
+      "semanticId": "pmd-new-01",
+      "scenario": "new",
+      "presence": "candidate"
+    },
+    {
+      "semanticId": "pmd-new-02",
+      "scenario": "new",
+      "presence": "candidate"
+    },
+    {
+      "semanticId": "pmd-new-03",
+      "scenario": "new",
+      "presence": "candidate"
+    },
+    {
+      "semanticId": "pmd-ambiguous-01",
+      "scenario": "ambiguous",
+      "presence": "both"
+    },
+    {
+      "semanticId": "pmd-ambiguous-02",
+      "scenario": "ambiguous",
+      "presence": "both"
+    }
+  ]
+}

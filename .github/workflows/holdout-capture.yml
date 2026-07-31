@@ -1,0 +1,106 @@
+name: Regenerate holdout capture evidence
+
+on:
+  push:
+    branches:
+      - agent/independent-holdout-validation
+    paths:
+      - '.github/workflows/holdout-capture.yml'
+      - 'validation/holdout/cases/**/producer-input/**'
+      - 'validation/tools/capture/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture pinned producer SARIF (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install exact Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Install Java 17
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Capture and project authentic SARIF
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          bash -n validation/tools/capture/capture-holdout.sh
+          python3 -B - <<'PY'
+          from pathlib import Path
+
+          for name in (
+              "validation/tools/capture/extract_zip.py",
+              "validation/tools/capture/project_holdout.py",
+              "validation/tools/capture/verify_source_transformations.py",
+          ):
+              source = Path(name).read_text(encoding="utf-8")
+              compile(source, name, "exec")
+          PY
+          mkdir -p artifacts/holdout-capture
+          {
+            python3 --version
+            java -version
+          } > artifacts/holdout-capture/capture-environment.txt 2>&1
+          ./validation/tools/capture/capture-holdout.sh \
+            --output-root artifacts/holdout-capture/cases
+
+      - name: Check captured artifact structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly root='artifacts/holdout-capture/cases'
+          mapfile -t producers < <(
+            find "${root}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' |
+              LC_ALL=C sort
+          )
+          [[ "${producers[*]}" == 'gitleaks pmd semgrep' ]]
+          for producer in "${producers[@]}"; do
+            for file in \
+              baseline.sarif \
+              candidate.sarif \
+              labels.json \
+              producer-input/captures/baseline.raw.sarif \
+              producer-input/captures/candidate.raw.sarif \
+              producer-input/projection-audit.json; do
+              test -s "${root}/${producer}/${file}"
+            done
+            jq -e '.version == "2.1.0"' \
+              "${root}/${producer}/baseline.sarif" \
+              "${root}/${producer}/candidate.sarif" >/dev/null
+            jq -e '.pairs | length == 25' \
+              "${root}/${producer}/labels.json" >/dev/null
+          done
+          if find "${root}" -type l -print -quit | grep -q .; then
+            echo 'Capture artifact contains a symbolic link.' >&2
+            exit 1
+          fi
+          if find "${root}" -type f -size +16M -print -quit | grep -q .; then
+            echo 'Capture artifact contains a file larger than 16 MiB.' >&2
+            exit 1
+          fi
+
+      - name: Upload capture evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: independent-holdout-capture
+          path: artifacts/holdout-capture
+          if-no-files-found: error
+          retention-days: 30

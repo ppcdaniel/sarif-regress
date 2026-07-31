@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "1",
+  "producer": "semgrep",
+  "producerVersion": "1.172.0",
+  "candidateVersionProjection": "1.172.0+holdout-candidate-projection",
+  "projectionVersion": "holdout-projection/v1",
+  "entries": [
+    {
+      "semanticId": "semgrep-exact-01",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "semgrep-exact-02",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "semgrep-exact-03",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "semgrep-exact-04",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "semgrep-exact-05",
+      "scenario": "exact",
+      "presence": "both",
+      "classification": "unchanged"
+    },
+    {
+      "semanticId": "semgrep-line-shift-01",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-line-shift-02",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-line-shift-03",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-line-shift-04",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-line-shift-05",
+      "scenario": "line-shift",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-moved-01",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-moved-02",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-moved-03",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-moved-04",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-moved-05",
+      "scenario": "moved",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-renamed-01",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-renamed-02",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-renamed-03",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-renamed-04",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-renamed-05",
+      "scenario": "renamed",
+      "presence": "both",
+      "classification": "moved"
+    },
+    {
+      "semanticId": "semgrep-message-modified-01",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "semgrep-message-modified-02",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "semgrep-message-modified-03",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "semgrep-message-modified-04",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "semgrep-message-modified-05",
+      "scenario": "message-modified",
+      "presence": "both",
+      "classification": "modified"
+    },
+    {
+      "semanticId": "semgrep-resolved-01",
+      "scenario": "resolved",
+      "presence": "baseline"
+    },
+    {
+      "semanticId": "semgrep-resolved-02",
+      "scenario": "resolved",
+      "presence": "baseline"
+    },
+    {
+      "semanticId": "semgrep-resolved-03",
+      "scenario": "resolved",
+      "presence": "baseline"
+    },
+    {
+      "semanticId": "semgrep-new-01",
+      "scenario": "new",
+      "presence": "candidate"
+    },
+    {
+      "semanticId": "semgrep-new-02",
+      "scenario": "new",
+      "presence": "candidate"
+    },
+    {
+      "semanticId": "semgrep-new-03",
+      "scenario": "new",
+      "presence": "candidate"
+    },
+    {
+      "semanticId": "semgrep-ambiguous-01",
+      "scenario": "ambiguous",
+      "presence": "both"
+    },
+    {
+      "semanticId": "semgrep-ambiguous-02",
+      "scenario": "ambiguous",
+      "presence": "both"
+    }
+  ]
+}

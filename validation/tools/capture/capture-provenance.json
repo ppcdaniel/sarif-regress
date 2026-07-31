@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1",
+  "captureDate": "2026-08-01",
+  "captureEnvironment": {
+    "operatingSystem": "Linux",
+    "architecture": "x86-64",
+    "networkPolicy": "Network is used only for the verified producer artifacts and Semgrep dependency wheels. Rules and controlled fixture source are repository-local."
+  },
+  "captureScript": "validation/tools/capture/capture-holdout.sh",
+  "projectionScript": "validation/tools/capture/project_holdout.py",
+  "sourceVerificationScript": "validation/tools/capture/verify_source_transformations.py",
+  "producers": [
+    {
+      "id": "semgrep",
+      "name": "Semgrep Community Edition",
+      "version": "1.172.0",
+      "officialProject": "https://github.com/semgrep/semgrep",
+      "officialRelease": "https://github.com/semgrep/semgrep/releases/tag/v1.172.0",
+      "license": "LGPL-2.1",
+      "artifact": {
+        "kind": "Python wheel",
+        "url": "https://files.pythonhosted.org/packages/84/a5/21624510b65271a673961a894af7511b5123d662e84c74c765560ea28b27/semgrep-1.172.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-manylinux_2_34_x86_64.whl",
+        "bytes": 69575334,
+        "sha256": "d8b94af4266a575287ad2cd844573743ab4fe58f6bfb6d9229327807937eade3"
+      },
+      "dependencyLock": {
+        "path": "validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock",
+        "sha256": "456592933b886b3d60a68dfe83dba4af3f3e1872e492dbafcbbb388574e7039e",
+        "pythonVersion": "3.12",
+        "installation": "python3 -m pip install --no-index --find-links <temporary-wheelhouse> --only-binary=:all: --require-hashes --requirement validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock"
+      },
+      "versionCommand": "semgrep --version",
+      "helpCommand": "semgrep scan --help",
+      "execution": "semgrep scan --config validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml --disable-version-check --metrics=off --no-git-ignore --no-rewrite-rule-ids --oss-only --quiet --sarif --strict --output <raw-capture> ."
+    },
+    {
+      "id": "gitleaks",
+      "name": "Gitleaks",
+      "version": "8.30.1",
+      "officialProject": "https://github.com/gitleaks/gitleaks",
+      "officialRelease": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
+      "license": "MIT",
+      "artifact": {
+        "kind": "release archive",
+        "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+        "bytes": 8230402,
+        "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+      },
+      "officialChecksumManifest": {
+        "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt",
+        "bytes": 999,
+        "sha256": "061476c21adaf5441516f96f185c1a4706a83cd6329b9b38762271b3d4a52fae"
+      },
+      "installation": "Verify the official checksum manifest and archive size/SHA-256, extract only the regular non-link gitleaks member, then set mode 0755.",
+      "versionCommand": "gitleaks version",
+      "helpCommand": "gitleaks dir --help",
+      "helpSha256": "ff55bf949d8ac8354e133f09c8be4ccac32cf82ec3a01446e2f31cbe20857a86",
+      "versionOutputSha256": "c9fd9ccb6682c54b5fcb0363757b6c6873564e7c067f70b3b5581b611528b9f4",
+      "execution": "gitleaks dir . --config validation/holdout/cases/gitleaks/producer-input/gitleaks.toml --exit-code 0 --log-level error --no-banner --no-color --redact=100 --report-format sarif --report-path <raw-capture>"
+    },
+    {
+      "id": "pmd",
+      "name": "PMD",
+      "version": "7.26.0",
+      "officialProject": "https://github.com/pmd/pmd",
+      "officialRelease": "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0",
+      "license": "PMD BSD-style license",
+      "artifact": {
+        "kind": "release archive",
+        "url": "https://github.com/pmd/pmd/releases/download/pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip",
+        "bytes": 73646044,
+        "sha256": "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
+      },
+      "installation": "Verify archive size/SHA-256, extract with validation/tools/capture/extract_zip.py, then set the bundled bin/pmd launcher mode to 0755.",
+      "versionCommand": "pmd --version",
+      "helpCommand": "pmd check --help",
+      "helpSha256": "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91",
+      "execution": "pmd check --dir . --format sarif --no-cache --no-fail-on-violation --no-progress --relativize-paths-with <controlled-source-root> --report-file <raw-capture> --rulesets validation/holdout/cases/pmd/producer-input/pmd-ruleset.xml --threads 0 --use-version java-17"
+    }
+  ]
+}
