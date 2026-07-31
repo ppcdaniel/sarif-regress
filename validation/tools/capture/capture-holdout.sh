@@ -170,13 +170,18 @@ PY
     fail "the verified Semgrep wheel lacks its expected native executable."
 
   local observed_version
-  local semgrep_library_path
-  semgrep_library_path="${environment_root}/lib/python3.12/site-packages/semgrep/bin/libs"
-  [[ -f "${semgrep_library_path}/libtree-sitter.so.0.22" ]] ||
+  local semgrep_vendor_library_path
+  semgrep_vendor_library_path="${environment_root}/lib/python3.12/site-packages/semgrep/bin/libs"
+  local semgrep_tree_sitter_path="${semgrep_vendor_library_path}/libtree-sitter.so.0.22"
+  [[ -f "${semgrep_tree_sitter_path}" && ! -L "${semgrep_tree_sitter_path}" ]] ||
     fail "the verified Semgrep wheel lacks its expected tree-sitter library."
+  local semgrep_runtime_library_path="${environment_root}/holdout-runtime-libs"
+  mkdir -- "${semgrep_runtime_library_path}"
+  cp -- "${semgrep_tree_sitter_path}" "${semgrep_runtime_library_path}/"
+  chmod 0644 -- "${semgrep_runtime_library_path}/libtree-sitter.so.0.22"
   observed_version="$(
     SEMGREP_SEND_METRICS=off \
-      LD_LIBRARY_PATH="${semgrep_library_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" \
+      LD_LIBRARY_PATH="${semgrep_runtime_library_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" \
       "${environment_root}/bin/semgrep" --version
   )"
   [[ "${observed_version}" == "${SEMGREP_VERSION}" ]] ||
@@ -268,8 +273,7 @@ capture_semgrep_side() {
   local source_root="${case_root}/producer-input/${side}"
   local semgrep_environment
   semgrep_environment="$(cd -- "$(dirname -- "${semgrep_executable}")/.." && pwd -P)"
-  local semgrep_library_path
-  semgrep_library_path="${semgrep_environment}/lib/python3.12/site-packages/semgrep/bin/libs"
+  local semgrep_library_path="${semgrep_environment}/holdout-runtime-libs"
 
   (
     cd -- "${source_root}"
