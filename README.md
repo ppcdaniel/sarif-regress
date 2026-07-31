@@ -1,279 +1,190 @@
 # SarifRegress
 
-SarifRegress is a CLI-first, local-first engine for explaining whether findings in two SARIF 2.1.0
-runs represent the same underlying issue after paths, line numbers, messages, source context, tool
-versions, or producer metadata change.
+[![CI](https://github.com/ppcdaniel/sarif-regress/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ppcdaniel/sarif-regress/actions/workflows/ci.yml)
+[![Cross-platform determinism](https://github.com/ppcdaniel/sarif-regress/actions/workflows/determinism.yml/badge.svg?branch=main)](https://github.com/ppcdaniel/sarif-regress/actions/workflows/determinism.yml)
 
-Its thesis is deliberately falsifiable: conservative, deterministic one-to-one matching should
-preserve identity across non-semantic changes, refuse unsafe ambiguity, explain every decision,
-and produce byte-stable JSON on Windows and Linux.
+**Explainable, deterministic regression matching for SARIF 2.1.0.**
 
-The architectural source of truth is [docs/architecture.md](docs/architecture.md). The stable JSON
-and configuration contracts are independently versioned at schema version `1`.
+SarifRegress compares a baseline analysis run with a candidate run and answers the useful question:
+is this the same finding after code, paths, line numbers, messages, or tool metadata changed? It
+produces deterministic one-to-one decisions, refuses unsafe ambiguity, and explains the evidence
+behind every result.
 
-## MVP capabilities
+> [!NOTE]
+> SarifRegress is pre-release. Build from source until the first tagged release is published.
 
-The MVP surface:
+## Same finding, different line
 
-- streams and validates the comparison-relevant SARIF 2.1.0 subset;
-- canonicalises POSIX, URI, Windows drive, drive-relative, UNC, and device-path forms;
-- resolves artifact indexes and bounded URI-base chains;
-- preserves producer fingerprints and derives separately versioned SarifRegress fingerprints;
-- optionally reads bounded, read-only source context from an explicitly approved repository root;
-- performs deterministic maximum-cardinality, lexicographic one-to-one assignment;
-- classifies findings as `new`, `unchanged`, `moved`, `modified`, `resolved`, or `ambiguous`;
-- emits structured evidence, transformations, rejected alternatives, and diagnostics;
-- uses stable JSON as the source of truth, with optional static HTML and canonical SARIF projections;
-- checks the documented GitHub code-scanning subset as an advisory compatibility profile;
-- evaluates a labelled corpus against precision, recall, classification, and ambiguity gates;
-- provides bounded synthetic benchmark datasets and checksummed release packaging.
+This controlled fixture uses real ESLint 8.57.1 output produced through Microsoft's SARIF
+formatter. The candidate adds one comment; the analysed code is otherwise unchanged.
 
-Automatic matching uses a collision-resistant producer identity and permits tool-version changes;
-the readable producer family is display metadata, not the match key. Cross-producer rule
-equivalence requires an explicit `ruleAliases` entry and still needs both a qualifying path and
-exact context evidence. Equal semantic alternatives are never resolved by array order.
+**Before** ([source](https://github.com/ppcdaniel/sarif-regress/blob/main/corpus/cases/eslint-real-mutation/producer-input/baseline.js))
 
-## Non-goals
+```javascript
+function compare(userInput, expected) {
+  if (userInput == expected) {
+    return eval(userInput);
+  }
 
-SarifRegress does not:
+  return null;
+}
 
-- provide a hosted service, account system, database, collaborative triage product, or IDE extension;
-- replace analysers or act as a general-purpose SARIF viewer;
-- emulate GitHub code-scanning ingestion completely;
-- infer cross-producer equivalence without explicit mappings;
-- use an LLM, opaque machine-learning score, or a greedy order-dependent matcher;
-- execute repository code, restore its packages, invoke language servers, or fetch network URIs;
-- perform automatic source fixes or provide a universal severity taxonomy;
-- support every optional SARIF feature in the MVP;
-- use Native AOT.
+compare("1", "1");
+```
 
-## Prerequisites
+**After** ([source](https://github.com/ppcdaniel/sarif-regress/blob/main/corpus/cases/eslint-real-mutation/producer-input/candidate.js))
 
-The repository pins .NET SDK `10.0.302` in `global.json` with roll-forward disabled.
+```javascript
+// Controlled mutation: insert one source line.
+function compare(userInput, expected) {
+  if (userInput == expected) {
+    return eval(userInput);
+  }
 
-Windows contributors need:
+  return null;
+}
 
-- a Windows version supported by the pinned SDK;
-- the pinned .NET 10 SDK;
-- PowerShell 5.1 or later;
-- Git.
+compare("1", "1");
+```
 
-Linux and CI contributors need:
+SarifRegress preserves both identities: `eqeqeq` moves from line 2 to 3, and `no-eval` moves from
+line 3 to 4. Neither is misreported as new or resolved.
 
-- a Linux distribution supported by .NET 10;
-- the pinned .NET 10 SDK;
-- Bash, `sha256sum`, and Git;
-- PowerShell only when explicitly validating the PowerShell scripts on Linux.
+![Terminal demo showing two real ESLint findings classified as moved](https://raw.githubusercontent.com/ppcdaniel/sarif-regress/main/docs/assets/readme/eslint-line-shift-terminal.gif)
 
-The framework-dependent .NET tool also needs a compatible .NET 10 runtime. The Windows and Linux
-self-contained release binaries do not.
+The single-pass animation replays an authentic CLI run. `jq` only condenses the generated stable
+JSON for display; it does not perform matching. The [capture recipe](https://github.com/ppcdaniel/sarif-regress/tree/main/docs/assets/readme)
+asserts the exact result before rendering the asset; the table below is its static equivalent.
 
-## Quick start
+| Rule | Baseline | Candidate | Result | Decision |
+|---|---:|---:|---|---|
+| `eslint/eqeqeq` | 2 | 3 | `moved` | high-confidence `exact-canonical` |
+| `eslint/no-eval` | 3 | 4 | `moved` | high-confidence `exact-canonical` |
 
-Compare two files and write stable JSON to standard output:
+![Generated SarifRegress HTML report showing the comparison summary](https://raw.githubusercontent.com/ppcdaniel/sarif-regress/main/docs/assets/readme/eslint-line-shift-report.png)
+
+![Generated report showing the first moved finding and its decision](https://raw.githubusercontent.com/ppcdaniel/sarif-regress/main/docs/assets/readme/eslint-line-shift-evidence.png)
+
+The summary is an unmodified browser capture of the offline HTML emitted by `--html-out`; the
+finding image is a deterministic crop from the same generated report. It confirms a high-confidence
+`exact-canonical` decision with ambiguity explicitly false.
+
+## Try it from source
+
+The repository pins .NET SDK `10.0.302` in `global.json`.
+
+```bash
+git clone https://github.com/ppcdaniel/sarif-regress.git
+cd sarif-regress
+./scripts/build.sh
+
+dotnet run \
+  --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
+  --configuration Release \
+  --no-build \
+  --no-restore \
+  -- \
+  compare \
+  --baseline corpus/cases/eslint-real-mutation/baseline.sarif \
+  --candidate corpus/cases/eslint-real-mutation/candidate.sarif \
+  --json-out artifacts/demo/report.json \
+  --html-out artifacts/demo/report.html
+```
+
+On Windows, use `.\scripts\build.ps1` from PowerShell. When tagged releases are available, the
+[release page](https://github.com/ppcdaniel/sarif-regress/releases) will provide a .NET tool package
+and self-contained Linux x64 and Windows x64 binaries. The .NET tool requires a compatible .NET 10
+runtime; the standalone binaries do not.
+
+For an installed command, the normal comparison shape is:
 
 ```bash
 sarif-regress compare \
   --baseline baseline.sarif \
-  --candidate candidate.sarif
+  --candidate candidate.sarif \
+  --json-out report.json \
+  --html-out report.html \
+  --sarif-out canonical.sarif
 ```
 
-On PowerShell, select repository context and all report projections explicitly:
+Stable JSON is the source of truth. HTML consumes that JSON contract and never calls the matcher;
+canonical SARIF is a separate projection. Multi-output writes are transactional.
 
-```powershell
-sarif-regress compare `
-  --baseline baseline.sarif `
-  --candidate candidate.sarif `
-  --repo C:\work\project `
-  --config config\regress.json `
-  --json-out artifacts\report.json `
-  --html-out artifacts\report.html `
-  --sarif-out artifacts\canonical.sarif
-```
+## Classifications
 
-When `--json-out` is omitted, JSON is written to standard output. When it is supplied, standard
-output is silent. Diagnostics use deterministic lines on standard error. Multi-file report output
-is transactional: an output failure does not leave a partial set of new reports or overwrite an
-input.
+| Classification | Meaning |
+|---|---|
+| `new` | A candidate finding has no safe baseline match. |
+| `unchanged` | Identity, logical location, and context remain materially stable. |
+| `moved` | The same finding moved by path or region. |
+| `modified` | Identity continues, but message, context, or flow changed materially. |
+| `resolved` | A baseline finding has no safe candidate match. |
+| `ambiguous` | Equal or unsafe alternatives are explicitly refused. |
 
-Existing parent-directory links and junctions are resolved for output identity checks, so two
-lexically different options cannot silently select one physical destination.
+## Why SarifRegress
+
+- **Explainable:** every decision records evidence, transformations, rejected alternatives, and
+  diagnostics.
+- **Deterministic:** stable reports use explicit ordering, versioned hashes, LF line endings, and
+  byte checks across Windows and Linux.
+- **Conservative:** matching is globally one-to-one; semantic ties are never broken by array order.
+- **Local and bounded:** SARIF and optional repository context are treated as untrusted input. The
+  tool performs no network requests, analysed-repository package restore, repository-code
+  execution, or telemetry.
+
+Automatic matching is intended for the same producer family while allowing tool-version changes.
+Cross-producer rule equivalence requires an explicit alias and still needs qualifying path and
+context evidence. GitHub code-scanning compatibility checks are advisory, not an ingestion emulator.
+
+The public corpus gates precision at `0.95`, recall at `0.90`, exact classifications and diagnostics,
+zero silently matched labelled ambiguity, and byte-identical approved Windows/Linux reports.
 
 ## Commands
 
 | Command | Purpose |
 |---|---|
-| `compare` | Compare baseline and candidate SARIF and apply regression policy |
-| `validate` | Validate one SARIF input and report supported-subset and GitHub-profile diagnostics |
-| `canonicalise` | Project one input into deterministic canonical SARIF |
-| `corpus run` | Evaluate labelled cases and enforce the published quality gates |
-| `bench` | Run a bounded synthetic benchmark dataset |
+| `compare` | Compare baseline and candidate SARIF and apply regression policy. |
+| `validate` | Validate SARIF and report supported-subset diagnostics. |
+| `canonicalise` | Write deterministic canonical SARIF. |
+| `corpus run` | Evaluate labelled cases and enforce quality gates. |
+| `bench` | Run bounded 1k, 10k, or 100k synthetic datasets. |
 
-The complete option and output contract is in [docs/cli.md](docs/cli.md). The concise forms are:
+The [CLI reference](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/cli.md) documents every
+option. Stable exit codes are `0` for success, `1` for command/input errors, `3` for a completed run
+whose policy failed, and `4` for an internal invariant failure; `2` remains reserved. A policy failure
+still writes the requested comparison report.
 
-```text
-sarif-regress compare --baseline <path> --candidate <path>
-  [--config <path>] [--repo <path>]
-  [--json-out <path>] [--html-out <path>] [--sarif-out <path>]
+## Develop
 
-sarif-regress validate --input <path>
-  [--config <path>] [--repo <path>] [--json-out <path>]
+Run the complete platform verification command before committing:
 
-sarif-regress canonicalise --input <path>
-  [--config <path>] [--repo <path>] [--sarif-out <path>]
-
-sarif-regress corpus run [--corpus <path>] [--json-out <path>]
-
-sarif-regress bench
-  [--size <1000|10000|100000>]
-  [--dataset <unique|pathological>]
-  [--enforce-budgets]
-  [--json-out <path>]
-  [--deterministic-out <path>]
+```bash
+./scripts/verify.sh
 ```
-
-`corpus run` defaults to `corpus` relative to the invocation directory. `bench` defaults to
-`--size 1000 --dataset unique`. The pathological benchmark records bounded refusal when a work
-budget is exceeded; it never changes matching policy to improve a timing result.
-`--enforce-budgets` returns `3` when the published latency, working-set, or bounded-refusal gate
-fails after writing the benchmark report. `--deterministic-out` writes the first-class stable
-benchmark projection used for raw Windows/Linux byte comparison.
-
-## Exit codes
-
-| Code | Meaning |
-|---:|---|
-| `0` | Command completed and its configured policy or quality gates passed |
-| `1` | Command syntax, input, configuration, validation, or I/O error |
-| `2` | Reserved for the historical bootstrap placeholder; completed MVP commands do not use it |
-| `3` | Comparison policy, corpus quality, or enforced benchmark budget failed |
-| `4` | Internal invariant failure |
-
-A `compare` invocation still writes its requested report before returning `3`, so CI can inspect
-the exact regressions that failed policy.
-
-## Configuration and path resolution
-
-Configuration is JSON validated against [schemas/config.schema.json](schemas/config.schema.json).
-See [docs/configuration.md](docs/configuration.md) for every section and bound.
-
-Path resolution is explicit:
-
-- command-line relative paths are resolved from the invocation directory;
-- a relative `repoRoot` inside a configuration file is resolved from that configuration file's
-  directory;
-- `--repo` overrides `repoRoot`;
-- the current directory is never selected as repository context merely because it exists;
-- aliases and rebases match complete path-segment prefixes, with the longest match winning;
-- equal conflicting prefixes are invalid configuration.
-
-Repository context is optional, bounded, read-only, and contained beneath the approved root.
-
-## Determinism and matching
-
-Stable reports use UTF-8 without a byte-order mark, LF line endings, explicit property order,
-ordinal sorting, invariant formatting, and versioned algorithms. They contain no generated
-timestamp, process identifier, machine name, random value, or ambient absolute path.
-
-The matcher commits reliable, unique exact evidence first, splits remaining candidate edges into
-bipartite components, and chooses the lexicographically best maximum-cardinality one-to-one
-assignment. Stable finding keys order work and output only. If equal semantic assignments remain,
-the affected component is `ambiguous`; it is not silently matched.
-
-See [docs/output-contract.md](docs/output-contract.md) and
-[ADR 0001](docs/decisions/0001-mvp-determinism-security-and-matching-policy.md).
-
-## Corpus and quality gates
-
-Corpus labels record expected pairs, classifications, ambiguity, new findings, resolved findings,
-intentionally invalid inputs, exact diagnostic sets where selected, and structured explanation
-goldens. Passing the MVP gate requires:
-
-- precision of at least `0.95`;
-- recall of at least `0.90`;
-- exact expected matched classifications, new, resolved, and ambiguous sets;
-- no unexpected invalid inputs;
-- every selected diagnostic and explanation golden to match exactly;
-- zero silently matched labelled ambiguity.
-
-The corpus report is stable LF/no-BOM JSON. The cross-platform workflow produces it independently
-on Windows and Linux, then compares the report bytes and SHA-256 hashes in a separate coordinator
-job. Each case embeds its complete comparison or invalid-diagnostic artifact. The workflow also
-compares the deterministic benchmark projection, including the generated comparison-report hash.
-See [docs/corpus.md](docs/corpus.md).
-
-## Build, test, lint, verify, and package
-
-Scripts locate the repository relative to their own file, so they work from any current directory.
-The examples below assume the repository root; from elsewhere, invoke the script through its
-checkout path.
-
-Windows:
 
 ```powershell
-.\scripts\build.ps1
-.\scripts\test.ps1
 .\scripts\verify.ps1
-.\scripts\package.ps1
 ```
 
-Linux:
+Both restore locked dependencies, verify formatting, build Release with warnings as errors, and run
+the complete test suite. See [CONTRIBUTING.md](https://github.com/ppcdaniel/sarif-regress/blob/main/CONTRIBUTING.md)
+for contributor workflow and [docs/releasing.md](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/releasing.md)
+for packaging and release verification.
 
-```bash
-./scripts/build.sh
-./scripts/test.sh
-./scripts/verify.sh
-./scripts/package.sh
-```
+## Documentation
 
-The reproducible lint/format check on either platform is:
+| Topic | Reference |
+|---|---|
+| Architecture and matching policy | [Architecture](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/architecture.md) · [ADR 0001](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/decisions/0001-mvp-determinism-security-and-matching-policy.md) |
+| Configuration | [Guide](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/configuration.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/config.schema.json) |
+| JSON, HTML, and SARIF output | [Output contract](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/output-contract.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/output.schema.json) |
+| Security and resource limits | [Security](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/security.md) · [Budgets](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/resource-budgets.md) |
+| Evaluation and interoperability | [Corpus](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/corpus.md) · [GitHub profile](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/github-compatibility.md) |
 
-```bash
-dotnet restore SarifRegress.slnx --locked-mode
-dotnet format SarifRegress.slnx --no-restore --verify-no-changes
-```
+The supplied [architecture](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/architecture.md)
+is the source of truth. SarifRegress is not a hosted service, general SARIF viewer, or automatic
+source-fixing tool.
 
-`verify` restores locked dependencies, checks formatting, performs a deterministic Release build
-with warnings as errors, and runs the complete solution. `package` performs a locked Release pack
-and produces:
+## License
 
-- `SarifRegress.Tool.<version>.nupkg`;
-- `sarif-regress-linux-x64`;
-- `sarif-regress-win-x64.exe`;
-- `checksums.sha256`.
-
-The release bundle is under `artifacts/release/`. Packaging uses normal .NET tool and self-contained
-single-file publish modes, not trimming, ReadyToRun, or Native AOT. See
-[docs/releasing.md](docs/releasing.md).
-
-## Installation
-
-After the tool package is available from a configured NuGet feed:
-
-```bash
-dotnet tool install --global SarifRegress.Tool --version 0.1.0
-```
-
-To test a locally built package:
-
-```bash
-dotnet tool install \
-  --tool-path ./artifacts/tool \
-  --add-source ./artifacts/release \
-  SarifRegress.Tool \
-  --version 0.1.0
-```
-
-Alternatively, download the matching self-contained binary and `checksums.sha256` from a tagged
-GitHub release, verify its SHA-256 digest, and on Linux mark the downloaded binary executable if
-the transfer did not preserve its mode.
-
-## Current status
-
-The MVP implementation is tracked under Issue #3 and remains pre-release until its draft pull
-request is reviewed and a release is tagged. Verification state belongs to the corresponding
-GitHub Actions runs; this README does not claim a particular unpublished run or release succeeded.
-
-## Licence
-
-SarifRegress is available under the [MIT License](LICENSE).
+[MIT](https://github.com/ppcdaniel/sarif-regress/blob/main/LICENSE)
