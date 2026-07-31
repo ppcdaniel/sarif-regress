@@ -1,0 +1,54 @@
+name: Capture README demo
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/readme-demo-capture.yml
+      - corpus/cases/eslint-real-mutation/**
+      - docs/assets/readme/**
+      - src/**
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Run real CLI and capture assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Install terminal renderer dependency
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check Pillow==11.3.0
+
+      - name: Package real release executable
+        shell: bash
+        run: ./scripts/package.sh
+
+      - name: Capture authentic demo assets
+        shell: bash
+        run: |
+          ./docs/assets/readme/capture-demo.sh \
+            ./artifacts/release/sarif-regress-linux-x64 \
+            ./artifacts/readme-demo
+
+      - name: Upload demo evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: readme-demo-evidence
+          path: artifacts/readme-demo
+          if-no-files-found: error
+          retention-days: 7
