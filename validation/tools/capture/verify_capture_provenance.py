@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any, Final, Mapping, Sequence
 
+from normalize_gitleaks_sarif import ALGORITHM_VERSION
 from project_holdout import ProjectionError, _read_bounded_json
 
 
@@ -62,7 +63,8 @@ EXPECTED_COMMAND_EVIDENCE: Final = {
             "gitleaks dir . --config "
             "validation/holdout/cases/gitleaks/producer-input/gitleaks.toml "
             "--exit-code 0 --log-level error --no-banner --no-color "
-            "--redact=100 --report-format sarif --report-path <raw-capture>"
+            "--redact=100 --report-format sarif --report-path "
+            "<producer-capture>"
         ),
     },
     "pmd": {
@@ -212,6 +214,7 @@ def verify(repository_root: Path) -> None:
             "captureScript",
             "reproductionCommand",
             "projectionScript",
+            "gitleaksOrderingNormalization",
             "projectionVerificationScript",
             "sourceVerificationScript",
             "semgrepRunnerScript",
@@ -235,6 +238,9 @@ def verify(repository_root: Path) -> None:
             "pythonVersion",
             "javaDistribution",
             "javaVersion",
+            "verifiedRecaptureRunnerImage",
+            "glibcVersion",
+            "dynamicLoader",
             "networkPolicy",
         },
         "captureEnvironment",
@@ -245,12 +251,46 @@ def verify(repository_root: Path) -> None:
         "pythonVersion": "3.12.13",
         "javaDistribution": "Eclipse Temurin",
         "javaVersion": "17.0.19+10",
+        "glibcVersion": "2.39",
     }
     for field, expected in expected_environment.items():
         if environment[field] != expected:
             raise ProvenanceError(
                 f"Capture environment {field} must remain {expected!r}."
             )
+    runner_image = _object(
+        environment["verifiedRecaptureRunnerImage"],
+        "verifiedRecaptureRunnerImage",
+    )
+    expected_runner_image = {
+        "label": "ubuntu-24.04",
+        "imageOs": "ubuntu24",
+        "imageVersion": "20260720.247.2",
+    }
+    _require_exact_keys(
+        runner_image,
+        set(expected_runner_image),
+        "verifiedRecaptureRunnerImage",
+    )
+    if runner_image != expected_runner_image:
+        raise ProvenanceError("Verified recapture runner image differs.")
+    dynamic_loader = _object(
+        environment["dynamicLoader"],
+        "captureEnvironment.dynamicLoader",
+    )
+    expected_dynamic_loader = {
+        "path": "/lib64/ld-linux-x86-64.so.2",
+        "sha256": (
+            "1cd555ac46b7887edeaf3c42aac5408c8135e52f6b37870da2cf82d5fe14e829"
+        ),
+    }
+    _require_exact_keys(
+        dynamic_loader,
+        set(expected_dynamic_loader),
+        "captureEnvironment.dynamicLoader",
+    )
+    if dynamic_loader != expected_dynamic_loader:
+        raise ProvenanceError("Verified recapture dynamic-loader pin differs.")
     if environment["networkPolicy"] != (
         "Network is used only for the verified producer artifacts and "
         "Semgrep dependency wheels. Rules and controlled fixture source are "
@@ -279,6 +319,84 @@ def verify(repository_root: Path) -> None:
             repository_root,
             expected_path,
         )
+
+    ordering = _object(
+        provenance["gitleaksOrderingNormalization"],
+        "gitleaksOrderingNormalization",
+    )
+    _require_exact_keys(
+        ordering,
+        {
+            "script",
+            "algorithmVersion",
+            "invocation",
+            "changedField",
+            "reason",
+            "committedProducerCaptureSha256",
+            "normalizedProjectionInputSha256",
+        },
+        "gitleaksOrderingNormalization",
+    )
+    normalizer_path = (
+        "validation/tools/capture/normalize_gitleaks_sarif.py"
+    )
+    if ordering["script"] != normalizer_path:
+        raise ProvenanceError("Gitleaks ordering normalizer path differs.")
+    _regular_repository_file(repository_root, normalizer_path)
+    if ordering["algorithmVersion"] != ALGORITHM_VERSION:
+        raise ProvenanceError("Gitleaks ordering algorithm version differs.")
+    if ordering["invocation"] != (
+        "python3 -B validation/tools/capture/normalize_gitleaks_sarif.py "
+        "--input <producer-capture> --output "
+        "<normalized-projection-input>"
+    ):
+        raise ProvenanceError("Gitleaks ordering normalizer invocation differs.")
+    if ordering["changedField"] != "/runs/0/results":
+        raise ProvenanceError("Gitleaks ordering changed-field declaration differs.")
+    if ordering["reason"] != (
+        "Gitleaks 8.30.1 appends findings produced by concurrent "
+        "directory-fragment scans in completion order. The untouched "
+        "producer bytes remain committed; only the complete result objects "
+        "are sorted for a deterministic projection input."
+    ):
+        raise ProvenanceError("Gitleaks ordering rationale differs.")
+    producer_hashes = _object(
+        ordering["committedProducerCaptureSha256"],
+        "committedProducerCaptureSha256",
+    )
+    normalized_hashes = _object(
+        ordering["normalizedProjectionInputSha256"],
+        "normalizedProjectionInputSha256",
+    )
+    _require_exact_keys(
+        producer_hashes,
+        {"baseline", "candidate"},
+        "committedProducerCaptureSha256",
+    )
+    _require_exact_keys(
+        normalized_hashes,
+        {"baseline", "candidate"},
+        "normalizedProjectionInputSha256",
+    )
+    for side in ("baseline", "candidate"):
+        producer_capture = _regular_repository_file(
+            repository_root,
+            "validation/holdout/cases/gitleaks/producer-input/captures/"
+            f"{side}.producer.sarif",
+        )
+        normalized_capture = _regular_repository_file(
+            repository_root,
+            "validation/holdout/cases/gitleaks/producer-input/captures/"
+            f"{side}.raw.sarif",
+        )
+        if _sha256(producer_capture) != producer_hashes.get(side):
+            raise ProvenanceError(
+                f"Committed Gitleaks {side} producer capture hash differs."
+            )
+        if _sha256(normalized_capture) != normalized_hashes.get(side):
+            raise ProvenanceError(
+                f"Committed Gitleaks {side} normalized capture hash differs."
+            )
     if provenance["reproductionCommand"] != (
         "./validation/tools/capture/capture-holdout.sh --output-root "
         "<new-staging-directory> --producer all"
@@ -556,7 +674,7 @@ def verify(repository_root: Path) -> None:
             "site-packages/semgrep/bin/semgrep-core"
         ),
         "sha256": (
-            "7179bb8b955639c2ebf9b1b2db8f303c7fa3565b58849072982ff0a89fc81456"
+            "64930ae1e1bb0be1ca7b742c20c900f21a05352699d2852da141154077c68613"
         ),
         "dynamicLoader": "/lib64/ld-linux-x86-64.so.2",
         "invocation": (

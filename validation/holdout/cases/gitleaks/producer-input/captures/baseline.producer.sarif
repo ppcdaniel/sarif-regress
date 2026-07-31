@@ -21,176 +21,6 @@
    "results": [
     {
      "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/ambiguous.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/ambiguous.env"
-        },
-        "region": {
-         "startLine": 2,
-         "startColumn": 14,
-         "endLine": 2,
-         "endColumn": 55,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/ambiguous.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/ambiguous.env"
-        },
-        "region": {
-         "startLine": 4,
-         "startColumn": 14,
-         "endLine": 4,
-         "endColumn": 55,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-01.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/exact/gitleaks-exact-01.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-02.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/exact/gitleaks-exact-02.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-03.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/exact/gitleaks-exact-03.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
       "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-04.env."
      },
      "ruleId": "holdout-synthetic-token",
@@ -199,142 +29,6 @@
        "physicalLocation": {
         "artifactLocation": {
          "uri": "src/exact/gitleaks-exact-04.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-05.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/exact/gitleaks-exact-05.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-01.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/line-shift/gitleaks-line-shift-01.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-02.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/line-shift/gitleaks-line-shift-02.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-03.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/line-shift/gitleaks-line-shift-03.env"
         },
         "region": {
          "startLine": 3,
@@ -375,142 +69,6 @@
          "startColumn": 11,
          "endLine": 3,
          "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-05.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/line-shift/gitleaks-line-shift-05.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/message/gitleaks-message-modified-01.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/message/gitleaks-message-modified-01.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 13,
-         "endLine": 3,
-         "endColumn": 49,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/message/gitleaks-message-modified-02.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/message/gitleaks-message-modified-02.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 13,
-         "endLine": 3,
-         "endColumn": 49,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/message/gitleaks-message-modified-03.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/message/gitleaks-message-modified-03.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 13,
-         "endLine": 3,
-         "endColumn": 49,
          "snippet": {
           "text": "REDACTED"
          }
@@ -599,14 +157,252 @@
     },
     {
      "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-01.env."
+      "text": "holdout-synthetic-token has detected secret for file src/message/gitleaks-message-modified-01.env."
      },
      "ruleId": "holdout-synthetic-token",
      "locations": [
       {
        "physicalLocation": {
         "artifactLocation": {
-         "uri": "src/moved/gitleaks-moved-01.env"
+         "uri": "src/message/gitleaks-message-modified-01.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 13,
+         "endLine": 3,
+         "endColumn": 49,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-01.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/renamed-old/gitleaks-renamed-01.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 13,
+         "endLine": 3,
+         "endColumn": 49,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-03.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/moved/gitleaks-moved-03.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/ambiguous.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/ambiguous.env"
+        },
+        "region": {
+         "startLine": 2,
+         "startColumn": 14,
+         "endLine": 2,
+         "endColumn": 55,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/ambiguous.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/ambiguous.env"
+        },
+        "region": {
+         "startLine": 4,
+         "startColumn": 14,
+         "endLine": 4,
+         "endColumn": 55,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-02.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/line-shift/gitleaks-line-shift-02.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-02.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/renamed-old/gitleaks-renamed-02.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 13,
+         "endLine": 3,
+         "endColumn": 49,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-04.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/moved/gitleaks-moved-04.env"
         },
         "region": {
          "startLine": 3,
@@ -667,116 +463,14 @@
     },
     {
      "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-03.env."
+      "text": "holdout-synthetic-token has detected secret for file src/message/gitleaks-message-modified-02.env."
      },
      "ruleId": "holdout-synthetic-token",
      "locations": [
       {
        "physicalLocation": {
         "artifactLocation": {
-         "uri": "src/moved/gitleaks-moved-03.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-04.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/moved/gitleaks-moved-04.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-05.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/moved/gitleaks-moved-05.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 11,
-         "endLine": 3,
-         "endColumn": 45,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-01.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/renamed-old/gitleaks-renamed-01.env"
+         "uri": "src/message/gitleaks-message-modified-02.env"
         },
         "region": {
          "startLine": 3,
@@ -803,122 +497,20 @@
     },
     {
      "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-02.env."
+      "text": "holdout-synthetic-token has detected secret for file src/resolved/gitleaks-resolved-03.env."
      },
      "ruleId": "holdout-synthetic-token",
      "locations": [
       {
        "physicalLocation": {
         "artifactLocation": {
-         "uri": "src/renamed-old/gitleaks-renamed-02.env"
+         "uri": "src/resolved/gitleaks-resolved-03.env"
         },
         "region": {
          "startLine": 3,
-         "startColumn": 13,
+         "startColumn": 14,
          "endLine": 3,
-         "endColumn": 49,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-03.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/renamed-old/gitleaks-renamed-03.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 13,
-         "endLine": 3,
-         "endColumn": 49,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-04.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/renamed-old/gitleaks-renamed-04.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 13,
-         "endLine": 3,
-         "endColumn": 49,
-         "snippet": {
-          "text": "REDACTED"
-         }
-        }
-       }
-      }
-     ],
-     "partialFingerprints": {
-      "commitSha": "",
-      "email": "",
-      "author": "",
-      "date": "",
-      "commitMessage": ""
-     },
-     "properties": {
-      "tags": []
-     }
-    },
-    {
-     "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-05.env."
-     },
-     "ruleId": "holdout-synthetic-token",
-     "locations": [
-      {
-       "physicalLocation": {
-        "artifactLocation": {
-         "uri": "src/renamed-old/gitleaks-renamed-05.env"
-        },
-        "region": {
-         "startLine": 3,
-         "startColumn": 13,
-         "endLine": 3,
-         "endColumn": 49,
+         "endColumn": 51,
          "snippet": {
           "text": "REDACTED"
          }
@@ -973,20 +565,20 @@
     },
     {
      "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/resolved/gitleaks-resolved-02.env."
+      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-02.env."
      },
      "ruleId": "holdout-synthetic-token",
      "locations": [
       {
        "physicalLocation": {
         "artifactLocation": {
-         "uri": "src/resolved/gitleaks-resolved-02.env"
+         "uri": "src/exact/gitleaks-exact-02.env"
         },
         "region": {
          "startLine": 3,
-         "startColumn": 14,
+         "startColumn": 11,
          "endLine": 3,
-         "endColumn": 51,
+         "endColumn": 45,
          "snippet": {
           "text": "REDACTED"
          }
@@ -1007,14 +599,422 @@
     },
     {
      "message": {
-      "text": "holdout-synthetic-token has detected secret for file src/resolved/gitleaks-resolved-03.env."
+      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-05.env."
      },
      "ruleId": "holdout-synthetic-token",
      "locations": [
       {
        "physicalLocation": {
         "artifactLocation": {
-         "uri": "src/resolved/gitleaks-resolved-03.env"
+         "uri": "src/exact/gitleaks-exact-05.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-03.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/renamed-old/gitleaks-renamed-03.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 13,
+         "endLine": 3,
+         "endColumn": 49,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-01.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/exact/gitleaks-exact-01.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-01.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/line-shift/gitleaks-line-shift-01.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-03.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/line-shift/gitleaks-line-shift-03.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/line-shift/gitleaks-line-shift-05.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/line-shift/gitleaks-line-shift-05.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/exact/gitleaks-exact-03.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/exact/gitleaks-exact-03.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-05.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/renamed-old/gitleaks-renamed-05.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 13,
+         "endLine": 3,
+         "endColumn": 49,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/message/gitleaks-message-modified-03.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/message/gitleaks-message-modified-03.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 13,
+         "endLine": 3,
+         "endColumn": 49,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-01.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/moved/gitleaks-moved-01.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-04.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/renamed-old/gitleaks-renamed-04.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 13,
+         "endLine": 3,
+         "endColumn": 49,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/moved/gitleaks-moved-05.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/moved/gitleaks-moved-05.env"
+        },
+        "region": {
+         "startLine": 3,
+         "startColumn": 11,
+         "endLine": 3,
+         "endColumn": 45,
+         "snippet": {
+          "text": "REDACTED"
+         }
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "commitSha": "",
+      "email": "",
+      "author": "",
+      "date": "",
+      "commitMessage": ""
+     },
+     "properties": {
+      "tags": []
+     }
+    },
+    {
+     "message": {
+      "text": "holdout-synthetic-token has detected secret for file src/resolved/gitleaks-resolved-02.env."
+     },
+     "ruleId": "holdout-synthetic-token",
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "src/resolved/gitleaks-resolved-02.env"
         },
         "region": {
          "startLine": 3,

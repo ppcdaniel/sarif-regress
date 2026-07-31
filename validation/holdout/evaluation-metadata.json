@@ -24,7 +24,7 @@
   ],
   "outputSchemaVersion": "1",
   "configurationSchemaVersion": "1",
-  "holdoutManifestSha256": "eb7064da0e403206ec66aae324a594acabdfb048f40f735808958d895e1e81fe",
+  "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
   "environment": {
     "operatingSystem": "linux",
     "architecture": "x64",

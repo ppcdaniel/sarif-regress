@@ -14,7 +14,12 @@ the committed SARIF and works on Linux and Windows.
 
 The capture date was 2026-08-01 on Linux x86-64 with Python 3.12.13
 and Eclipse Temurin 17.0.19+10. The script rejects any other Python version,
-Java vendor, or Java runtime. Exact immutable URLs, byte sizes, dependency
+Java vendor, or Java runtime. The hosted byte-recapture check additionally
+fails closed unless it uses runner image `ubuntu24/20260720.247.2`, glibc
+`2.39`, and dynamic-loader SHA-256
+`1cd555ac46b7887edeaf3c42aac5408c8135e52f6b37870da2cf82d5fe14e829`.
+Those are verified reproduction-environment pins, not a claim that the first
+capture was made on a GitHub runner. Exact immutable URLs, byte sizes, dependency
 hashes, generated-help hashes, install commands, and execution commands are in
 [`capture-provenance.json`](capture-provenance.json) and the holdout
 [`manifest.json`](../../holdout/manifest.json).
@@ -59,8 +64,12 @@ The output path must not exist:
 
 Use `semgrep`, `gitleaks`, or `pmd` instead of `all` to capture one
 family. Raw producer output is retained under each staged
-`producer-input/captures/` directory. Projection preserves producer-emitted
-result order and writes deterministic SARIF, labels, and a field-level audit.
+`producer-input/captures/` directory. PMD and Semgrep project directly from
+their untouched `*.raw.sarif` files. Gitleaks additionally retains untouched
+`*.producer.sarif` bytes, then uses `normalize_gitleaks_sarif.py` to create an
+ordering-only `*.raw.sarif` copy because its concurrent directory scan emits
+the same findings in nondeterministic completion order. Projection writes
+deterministic SARIF, labels, and a field-level audit.
 Each producer's `commands.reproduction` manifest entry is the authoritative
 end-to-end invocation. The adjacent `install` and `capture` arrays expose the
 security-relevant subprocess arguments for review; the script itself is the
@@ -75,6 +84,7 @@ python3 -B validation/tools/capture/verify_projected_holdout.py \
   --output-root ../holdout-projection-check
 ```
 
-This regenerates all projected SARIF, labels, and projection audits from the
-committed raw captures and compares exact bytes. It is also run by both hosted
+This first reproduces each Gitleaks ordering-only input from the untouched
+capture, then regenerates all projected SARIF, labels, and projection audits
+from committed inputs and compares exact bytes. It is also run by both hosted
 evaluation jobs.

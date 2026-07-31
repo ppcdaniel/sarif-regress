@@ -31,12 +31,15 @@ if [ ! -d "${library_directory}" ] || [ -L "${library_directory}" ]; then
   echo "Semgrep core loader cannot find its verified library directory." >&2
   exit 126
 fi
-if [ ! -x "${dynamic_loader}" ]; then
+resolved_dynamic_loader="$(readlink -f -- "${dynamic_loader}")"
+if [ ! -f "${resolved_dynamic_loader}" ] ||
+  [ -L "${resolved_dynamic_loader}" ] ||
+  [ ! -x "${resolved_dynamic_loader}" ]; then
   echo "Semgrep core loader cannot find the Linux x86-64 dynamic loader." >&2
   exit 126
 fi
 
-exec "${dynamic_loader}" \
+exec "${resolved_dynamic_loader}" \
   --library-path "${library_directory}" \
   --argv0 semgrep-core \
   "${native_executable}" \

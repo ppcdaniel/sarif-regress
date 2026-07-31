@@ -212,12 +212,12 @@ public sealed class CrossPlatformAttestationTests
         string name,
         long artifactId,
         string archiveSha256) => new()
-    {
-        ["name"] = name,
-        ["artifactId"] = artifactId,
-        ["archiveSha256"] = archiveSha256,
-        ["reportDigests"] = ReportDigests(),
-    };
+        {
+            ["name"] = name,
+            ["artifactId"] = artifactId,
+            ["archiveSha256"] = archiveSha256,
+            ["reportDigests"] = ReportDigests(),
+        };
 
     private static JsonObject ReportDigests() => new()
     {

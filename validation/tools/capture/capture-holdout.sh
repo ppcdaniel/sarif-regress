@@ -13,6 +13,7 @@ readonly REPOSITORY_ROOT="$(
 )"
 readonly HOLDOUT_CASES_ROOT="${REPOSITORY_ROOT}/validation/holdout/cases"
 readonly PROJECTION_SCRIPT="${CAPTURE_SCRIPT_DIRECTORY}/project_holdout.py"
+readonly GITLEAKS_NORMALIZER="${CAPTURE_SCRIPT_DIRECTORY}/normalize_gitleaks_sarif.py"
 readonly PROVENANCE_VERIFIER="${CAPTURE_SCRIPT_DIRECTORY}/verify_capture_provenance.py"
 readonly SEMGREP_RUNNER="${CAPTURE_SCRIPT_DIRECTORY}/run_semgrep.py"
 readonly SEMGREP_CORE_LOADER="${CAPTURE_SCRIPT_DIRECTORY}/semgrep-core-loader.sh"
@@ -28,11 +29,14 @@ readonly SEMGREP_WHEEL_SHA256="d8b94af4266a575287ad2cd844573743ab4fe58f6bfb6d922
 readonly SEMGREP_WHEEL_BYTES="69575334"
 readonly SEMGREP_NATIVE_CORE_SHA256="8a7c27e6286381fdb6235eb91bd0fed40b919496a242c72f1e55d2b5caa10cb2"
 readonly SEMGREP_NATIVE_CORE_BYTES="253156344"
-readonly SEMGREP_CORE_LOADER_SHA256="7179bb8b955639c2ebf9b1b2db8f303c7fa3565b58849072982ff0a89fc81456"
+readonly SEMGREP_CORE_LOADER_SHA256="64930ae1e1bb0be1ca7b742c20c900f21a05352699d2852da141154077c68613"
 readonly SEMGREP_HELP_SHA256="b63d6e12f56f512a1c5cd1f9d9d931056c103c06dfec971b1ff26e12c2c16582"
 readonly CAPTURE_PYTHON_VERSION="3.12.13"
 readonly CAPTURE_JAVA_VENDOR="Eclipse Adoptium"
 readonly CAPTURE_JAVA_VERSION="17.0.19+10"
+readonly CAPTURE_GLIBC_VERSION="glibc 2.39"
+readonly CAPTURE_DYNAMIC_LOADER="/lib64/ld-linux-x86-64.so.2"
+readonly CAPTURE_DYNAMIC_LOADER_SHA256="1cd555ac46b7887edeaf3c42aac5408c8135e52f6b37870da2cf82d5fe14e829"
 
 readonly GITLEAKS_VERSION="8.30.1"
 readonly GITLEAKS_ARCHIVE_NAME="gitleaks_8.30.1_linux_x64.tar.gz"
@@ -135,6 +139,21 @@ if actual != expected:
 if platform.system() != "Linux" or platform.machine() not in {"x86_64", "AMD64"}:
     raise SystemExit("Holdout capture is pinned to Linux x86-64.")
 PY
+
+  local observed_glibc_version
+  observed_glibc_version="$(getconf GNU_LIBC_VERSION)"
+  [[ "${observed_glibc_version}" == "${CAPTURE_GLIBC_VERSION}" ]] ||
+    fail "capture requires ${CAPTURE_GLIBC_VERSION}; found ${observed_glibc_version}."
+  local resolved_dynamic_loader
+  resolved_dynamic_loader="$(readlink -f -- "${CAPTURE_DYNAMIC_LOADER}")"
+  [[ -f "${resolved_dynamic_loader}" && ! -L "${resolved_dynamic_loader}" && -x "${resolved_dynamic_loader}" ]] ||
+    fail "capture dynamic loader does not resolve to a regular executable."
+  local observed_dynamic_loader_sha256
+  observed_dynamic_loader_sha256="$(
+    sha256sum -- "${resolved_dynamic_loader}" | cut -d ' ' -f 1
+  )"
+  [[ "${observed_dynamic_loader_sha256}" == "${CAPTURE_DYNAMIC_LOADER_SHA256}" ]] ||
+    fail "capture dynamic-loader SHA-256 differs from the reviewed runtime."
 
   local java_executable
   java_executable="$(readlink -f -- "$(command -v -- java)")"
@@ -464,10 +483,20 @@ capture_and_project() {
 
   local side
   for side in baseline candidate; do
-    "capture_${producer}_side" \
-      "${executable}" \
-      "${side}" \
-      "${capture_root}/${side}.raw.sarif"
+    if [[ "${producer}" == "gitleaks" ]]; then
+      "capture_${producer}_side" \
+        "${executable}" \
+        "${side}" \
+        "${capture_root}/${side}.producer.sarif"
+      python3 -B "${GITLEAKS_NORMALIZER}" \
+        --input "${capture_root}/${side}.producer.sarif" \
+        --output "${capture_root}/${side}.raw.sarif"
+    else
+      "capture_${producer}_side" \
+        "${executable}" \
+        "${side}" \
+        "${capture_root}/${side}.raw.sarif"
+    fi
   done
   python3 -B "${PROJECTION_SCRIPT}" \
     --case-root "${HOLDOUT_CASES_ROOT}/${producer}" \
@@ -510,6 +539,7 @@ main() {
   require_command cp
   require_command cut
   require_command find
+  require_command getconf
   require_command grep
   require_command python3
   require_command mv

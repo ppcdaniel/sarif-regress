@@ -13,11 +13,26 @@ SHA-256 values, help-output hash, and commands are recorded in
 only the verified regular `gitleaks` member, checks `gitleaks version`, and runs:
 
 ```text
-gitleaks dir . --config <case>/producer-input/gitleaks.toml --exit-code 0 --log-level error --no-banner --no-color --redact=100 --report-format sarif --report-path <raw-capture>
+gitleaks dir . --config <case>/producer-input/gitleaks.toml --exit-code 0 --log-level error --no-banner --no-color --redact=100 --report-format sarif --report-path <producer-capture>
 ```
 
-`producer-input/captures/*.raw.sarif` are untouched Gitleaks output. Full
-redaction prevents synthetic token text from becoming a matching shortcut.
+`producer-input/captures/*.producer.sarif` are the untouched Gitleaks output.
+Gitleaks scans directory fragments concurrently and emits results in completion
+order, which varied in the hosted recapture even though all 30 result objects
+were identical as a multiset. This behavior follows from the pinned
+[`Files.Fragments`](https://github.com/gitleaks/gitleaks/blob/83d9cd684c87d95d656c1458ef04895a7f1cbd8e/sources/files.go)
+dispatch and
+[`Detector.AddFinding`](https://github.com/gitleaks/gitleaks/blob/83d9cd684c87d95d656c1458ef04895a7f1cbd8e/detect/detect.go)
+append path. `normalize_gitleaks_sarif.py` therefore creates
+the adjacent `*.raw.sarif` projection input by sorting complete result objects
+by canonical JSON. No result field changes, and the original bytes remain for
+review. Its exact invocation is:
+
+```text
+python3 -B validation/tools/capture/normalize_gitleaks_sarif.py --input <producer-capture> --output <normalized-projection-input>
+```
+
+Full redaction prevents synthetic token text from becoming a matching shortcut.
 Each result is mapped to the immediately preceding `HOLDOUT:<semantic-id>`
 comment in controlled source; that comment is not part of the matched text or
 SARIF snippet. `case-plan.json`, not either matcher's output, supplies labels.
@@ -82,8 +97,9 @@ fingerprint, and the `gitleaks-line-shift-05` POSIX/Windows URI pair. The two
 URI prefixes are explicitly rebased in `config.json`. No semantic ID or label
 field is added by the projection; producer-emitted source paths remain. The
 sidecar `projection-audit.json` records original URI/message/fingerprint hashes
-and mutation names. Producer-emitted result order is preserved; labels use
-those raw indices rather than rearranging input.
+and mutation names. Labels use indices from the documented canonical result
+ordering; that ordering exists solely to make the projection reproducible and
+is not evidence about finding identity.
 
 Reproduce the source proof and capture with:
 

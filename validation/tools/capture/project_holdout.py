@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Project authentic producer SARIF into deterministic holdout cases.
 
-The raw captures remain untouched. This adapter locates each finding through the
-immediately preceding HOLDOUT marker in controlled source, applies only the
-documented path/version/message/fingerprint projections, and derives labels from
-the case plan without consulting SarifRegress output.
+Projection inputs remain untouched by this adapter. Gitleaks uses a separately
+documented ordering-only input while retaining its original producer bytes;
+other producers use their raw output directly. This adapter locates each finding
+through the immediately preceding HOLDOUT marker in controlled source, applies
+only documented path/version/message/fingerprint projections, and derives labels
+from the case plan without consulting SarifRegress output.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -129,7 +132,17 @@ def _validate_json_depth(document: Any, path: Path) -> None:
 def _read_bounded_json(path: Path) -> Any:
     """Read one bounded UTF-8 JSON document."""
 
-    with path.open("rb") as stream:
+    if path.is_symlink():
+        raise ProjectionError(f"{path} must not be a symbolic link.")
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as error:
+        raise ProjectionError(f"{path} could not be opened safely: {error}") from error
+    with os.fdopen(descriptor, "rb") as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ProjectionError(f"{path} must be a regular file.")
         payload = stream.read(MAX_JSON_BYTES + 1)
     if len(payload) > MAX_JSON_BYTES:
         raise ProjectionError(
@@ -662,7 +675,11 @@ def _project_capture(
         )
     audit = {
         "rawCaptureSha256": _sha256_file(raw_path),
-        "resultOrdering": "producer-emitted",
+        "resultOrdering": (
+            "gitleaks-result-order/v1"
+            if plan.producer == "gitleaks"
+            else "producer-emitted"
+        ),
         "runMutations": run_mutations,
         "results": result_audit,
     }

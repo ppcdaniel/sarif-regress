@@ -203,7 +203,7 @@ public static class HoldoutOutcomeClassifier
                 "The corpus result case name does not match the holdout plan.");
         }
 
-        ObservedCase observed = ParseObservedCase(caseRun.Artifact.Json);
+        ObservedCase observed = ParseObservedCase(caseRun.Artifact.Json.ToArray());
         ImmutableArray<IngestionFailure> ingestionFailures =
             CreateIngestionFailures(caseRun, observed);
         string status = ingestionFailures.IsEmpty
@@ -503,10 +503,10 @@ public static class HoldoutOutcomeClassifier
     {
         var relationships = CreateGroundTruthRelationships(caseId, labels);
         return relationships.Select(item => item with
-            {
-                Actual = new ActualRelationship(actualState, null, null),
-                Outcome = outcome,
-            })
+        {
+            Actual = new ActualRelationship(actualState, null, null),
+            Outcome = outcome,
+        })
             .ToImmutableArray();
     }
 

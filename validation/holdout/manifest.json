@@ -88,7 +88,7 @@
               "--report-format",
               "sarif",
               "--report-path",
-              "<new-staging-directory>/gitleaks/producer-input/captures/baseline.raw.sarif"
+              "<new-staging-directory>/gitleaks/producer-input/captures/baseline.producer.sarif"
             ],
             "environment": []
           },
@@ -110,7 +110,7 @@
               "--report-format",
               "sarif",
               "--report-path",
-              "<new-staging-directory>/gitleaks/producer-input/captures/candidate.raw.sarif"
+              "<new-staging-directory>/gitleaks/producer-input/captures/candidate.producer.sarif"
             ],
             "environment": []
           }
@@ -631,36 +631,56 @@
       ],
       "rawSarifMutations": [
         {
+          "id": "gitleaks-baseline-result-order-normalization",
+          "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/baseline.producer.sarif",
+          "script": "validation/tools/capture/normalize_gitleaks_sarif.py",
+          "changedFields": [
+            "/runs/0/results"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "Gitleaks 8.30.1 emits findings from concurrent directory-fragment scans in completion order. The untouched producer capture remains committed; this ordering-only copy sorts complete result objects by canonical JSON so the observed permutations of the same producer-serialized result objects produce the same projection input. No SARIF result field or finding identity changes."
+        },
+        {
           "id": "gitleaks-baseline-deterministic-projection",
           "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/baseline.raw.sarif",
           "script": "validation/tools/capture/project_holdout.py",
           "changedFields": [
-            "/runs/0/results/7/partialFingerprints",
-            "/runs/0/results/8/partialFingerprints",
-            "/runs/0/results/22/locations/0/physicalLocation/artifactLocation/uri",
-            "/runs/0/results/23/partialFingerprints"
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/4/partialFingerprints",
+            "/runs/0/results/11/locations/0/physicalLocation/artifactLocation/uri"
           ],
           "semanticIdentity": "preserved",
-          "rationale": "Producer-emitted result order is preserved. The selected URI is projected to the documented POSIX rebase, the exact-03 fingerprint is removed, and both near-collision members receive the same partial fingerprint. These operations preserve the underlying source findings and do not add semantic IDs or labels to SARIF."
+          "rationale": "The deterministic ordering-only projection input is preserved. The selected URI is projected to the documented POSIX rebase, the exact-03 fingerprint is removed, and both near-collision members receive the same partial fingerprint. These operations preserve the underlying source findings and do not add semantic IDs or labels to SARIF."
+        },
+        {
+          "id": "gitleaks-candidate-result-order-normalization",
+          "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/candidate.producer.sarif",
+          "script": "validation/tools/capture/normalize_gitleaks_sarif.py",
+          "changedFields": [
+            "/runs/0/results"
+          ],
+          "semanticIdentity": "preserved",
+          "rationale": "Gitleaks 8.30.1 emits findings from concurrent directory-fragment scans in completion order. The untouched producer capture remains committed; this ordering-only copy sorts complete result objects by canonical JSON so the observed permutations of the same producer-serialized result objects produce the same projection input. No SARIF result field or finding identity changes."
         },
         {
           "id": "gitleaks-candidate-deterministic-projection",
           "originalCapture": "validation/holdout/cases/gitleaks/producer-input/captures/candidate.raw.sarif",
           "script": "validation/tools/capture/project_holdout.py",
           "changedFields": [
-            "/runs/0/results/5/partialFingerprints",
-            "/runs/0/results/8/message/text",
-            "/runs/0/results/9/message/text",
-            "/runs/0/results/10/partialFingerprints",
-            "/runs/0/results/11/partialFingerprints",
-            "/runs/0/results/18/message/text",
-            "/runs/0/results/19/message/text",
-            "/runs/0/results/25/locations/0/physicalLocation/artifactLocation/uri",
-            "/runs/0/results/27/message/text",
+            "/runs/0/results/0/partialFingerprints",
+            "/runs/0/results/1/partialFingerprints",
+            "/runs/0/results/4/partialFingerprints",
+            "/runs/0/results/11/locations/0/physicalLocation/artifactLocation/uri",
+            "/runs/0/results/12/message/text",
+            "/runs/0/results/13/message/text",
+            "/runs/0/results/14/message/text",
+            "/runs/0/results/15/message/text",
+            "/runs/0/results/16/message/text",
             "/runs/0/tool/driver/semanticVersion"
           ],
           "semanticIdentity": "preserved",
-          "rationale": "Producer-emitted result order is preserved while missing and duplicate fingerprint projections are applied to candidate findings; one URI is projected to the documented Windows-style rebase, five messages receive a controlled suffix, and the producer semanticVersion is changed to the declared candidate projection. Endpoint identity is preserved while message and metadata changes remain explicit classification evidence."
+          "rationale": "The deterministic ordering-only projection input is preserved while missing and duplicate fingerprint projections are applied to candidate findings; one URI is projected to the documented Windows-style rebase, five messages receive a controlled suffix, and the producer semanticVersion is changed to the declared candidate projection. Endpoint identity is preserved while message and metadata changes remain explicit classification evidence."
         }
       ]
     },

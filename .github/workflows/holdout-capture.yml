@@ -44,6 +44,7 @@ jobs:
           for name in (
               "validation/tools/capture/extract_tar.py",
               "validation/tools/capture/extract_zip.py",
+              "validation/tools/capture/normalize_gitleaks_sarif.py",
               "validation/tools/capture/project_holdout.py",
               "validation/tools/capture/run_semgrep.py",
               "validation/tools/capture/verify_capture_provenance.py",
@@ -59,12 +60,21 @@ jobs:
             python3 --version
             java -version
             getconf GNU_LIBC_VERSION
-            stat --format='dynamic-loader-bytes=%s' /lib64/ld-linux-x86-64.so.2
-            sha256sum /lib64/ld-linux-x86-64.so.2
+            readlink -f /lib64/ld-linux-x86-64.so.2
+            stat --dereference --format='dynamic-loader-bytes=%s' /lib64/ld-linux-x86-64.so.2
+            sha256sum "$(readlink -f /lib64/ld-linux-x86-64.so.2)"
             /lib64/ld-linux-x86-64.so.2 --version
+            readlink -f /lib/x86_64-linux-gnu/libc.so.6
+            stat --dereference --format='libc-bytes=%s' /lib/x86_64-linux-gnu/libc.so.6
+            sha256sum "$(readlink -f /lib/x86_64-linux-gnu/libc.so.6)"
             printf 'runner-image-os=%s\n' "${ImageOS:-unknown}"
             printf 'runner-image-version=%s\n' "${ImageVersion:-unknown}"
           } > artifacts/holdout-capture/capture-environment.txt 2>&1
+          if [[ "${ImageOS:-}" != 'ubuntu24' ||
+                "${ImageVersion:-}" != '20260720.247.2' ]]; then
+            echo 'Hosted capture runner image differs from the reviewed pin.' >&2
+            exit 1
+          fi
           ./validation/tools/capture/capture-holdout.sh \
             --output-root artifacts/holdout-capture/cases
 
@@ -88,6 +98,10 @@ jobs:
               producer-input/projection-audit.json; do
               test -s "${root}/${producer}/${file}"
             done
+            if [[ "${producer}" == 'gitleaks' ]]; then
+              test -s "${root}/${producer}/producer-input/captures/baseline.producer.sarif"
+              test -s "${root}/${producer}/producer-input/captures/candidate.producer.sarif"
+            fi
             jq -e '.version == "2.1.0"' \
               "${root}/${producer}/baseline.sarif" \
               "${root}/${producer}/candidate.sarif" >/dev/null
@@ -104,7 +118,7 @@ jobs:
               captured_file="${root}/${producer}/${reproducible_file}"
               if ! cmp --silent -- "${committed_file}" "${captured_file}"; then
                 echo \
-                  "Pinned capture differs from committed bytes: ${producer}/${reproducible_file}." \
+                  "Deterministic capture projection differs from committed bytes: ${producer}/${reproducible_file}." \
                   >&2
                 exit 1
               fi

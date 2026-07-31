@@ -408,12 +408,12 @@ public static class ComparisonSummaryBuilder
     private static bool IsSarifRegressCorrect(
         string outcome,
         bool requireClassification) => outcome switch
-    {
-        "true-positive" or "correct-new" or "correct-resolved"
-            or "correct-ambiguity-refusal" => true,
-        "classification-mismatch" => !requireClassification,
-        _ => false,
-    };
+        {
+            "true-positive" or "correct-new" or "correct-resolved"
+                or "correct-ambiguity-refusal" => true,
+            "classification-mismatch" => !requireClassification,
+            _ => false,
+        };
 
     private static bool CompleteLabelGraphSatisfied(
         SarifRegressHoldoutReport report) =>

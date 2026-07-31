@@ -12,12 +12,17 @@ import tarfile
 import tempfile
 import unittest
 import zipfile
+from collections import Counter
 from pathlib import Path
 
 from extract_tar import ArchiveError as TarArchiveError
 from extract_tar import extract_regular_member
 from extract_zip import ArchiveError as ZipArchiveError
 from extract_zip import extract_zip
+from normalize_gitleaks_sarif import (
+    NormalizationError,
+    normalize_capture,
+)
 from project_holdout import MAX_JSON_DEPTH, ProjectionError, _read_bounded_json
 from run_semgrep import RunnerError, run as run_semgrep
 from verify_capture_provenance import ProvenanceError
@@ -45,6 +50,101 @@ class StrictJsonTests(unittest.TestCase):
         self._assert_rejected(
             json.dumps(document, separators=(",", ":")).encode("utf-8")
         )
+
+    def test_symbolic_link_input_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target.json"
+            link = root / "input.json"
+            target.write_text("{}", encoding="utf-8")
+            try:
+                link.symlink_to(target)
+            except OSError as error:
+                self.skipTest(f"symbolic links unavailable: {error}")
+            with self.assertRaises(ProjectionError):
+                _read_bounded_json(link)
+
+
+class GitleaksNormalizationTests(unittest.TestCase):
+    @staticmethod
+    def _document(results: list[dict[str, object]]) -> dict[str, object]:
+        return {
+            "version": "2.1.0",
+            "runs": [
+                {
+                    "tool": {"driver": {"name": "gitleaks"}},
+                    "results": results,
+                }
+            ],
+        }
+
+    def _normalize(self, document: dict[str, object]) -> bytes:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "producer.sarif"
+            destination = root / "normalized.sarif"
+            source.write_text(
+                json.dumps(document, indent=1) + "\n",
+                encoding="utf-8",
+            )
+            normalize_capture(source, destination)
+            return destination.read_bytes()
+
+    def test_permuted_results_normalize_to_identical_bytes(self) -> None:
+        first = {"ruleId": "rule", "message": {"text": "first"}}
+        second = {"ruleId": "rule", "message": {"text": "second"}}
+        self.assertEqual(
+            self._normalize(self._document([first, second])),
+            self._normalize(self._document([second, first])),
+        )
+
+    def test_normalization_changes_only_order_and_keeps_source_bytes(self) -> None:
+        repeated = {"ruleId": "rule", "message": {"text": "same"}}
+        last = {"ruleId": "rule", "message": {"text": "last"}}
+        document = self._document([last, repeated, repeated])
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "producer.sarif"
+            destination = root / "normalized.sarif"
+            source_bytes = (json.dumps(document, indent=1) + "\n").encode(
+                "utf-8"
+            )
+            source.write_bytes(source_bytes)
+            normalize_capture(source, destination)
+            self.assertEqual(source_bytes, source.read_bytes())
+
+            normalized = json.loads(destination.read_text(encoding="utf-8"))
+            original_results = document["runs"][0]["results"]
+            normalized_results = normalized["runs"][0]["results"]
+            self.assertEqual(len(original_results), len(normalized_results))
+            canonical = lambda item: json.dumps(  # noqa: E731
+                item,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+            self.assertEqual(
+                Counter(map(canonical, original_results)),
+                Counter(map(canonical, normalized_results)),
+            )
+            document_without_results = json.loads(json.dumps(document))
+            normalized_without_results = json.loads(json.dumps(normalized))
+            document_without_results["runs"][0]["results"] = []
+            normalized_without_results["runs"][0]["results"] = []
+            self.assertEqual(
+                document_without_results,
+                normalized_without_results,
+            )
+
+    def test_rejects_non_gitleaks_document(self) -> None:
+        document = self._document([])
+        document["runs"][0]["tool"]["driver"]["name"] = "other"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "producer.sarif"
+            source.write_text(json.dumps(document), encoding="utf-8")
+            with self.assertRaises(NormalizationError):
+                normalize_capture(source, root / "normalized.sarif")
 
 
 class TarExtractionTests(unittest.TestCase):
@@ -179,7 +279,12 @@ class CaptureProvenanceTests(unittest.TestCase):
         source_root = Path(__file__).resolve().parents[3]
         relative_files = (
             "validation/holdout/manifest.json",
+            "validation/holdout/cases/gitleaks/producer-input/captures/baseline.producer.sarif",
+            "validation/holdout/cases/gitleaks/producer-input/captures/baseline.raw.sarif",
+            "validation/holdout/cases/gitleaks/producer-input/captures/candidate.producer.sarif",
+            "validation/holdout/cases/gitleaks/producer-input/captures/candidate.raw.sarif",
             "validation/tools/capture/capture-holdout.sh",
+            "validation/tools/capture/normalize_gitleaks_sarif.py",
             "validation/tools/capture/project_holdout.py",
             "validation/tools/capture/verify_projected_holdout.py",
             "validation/tools/capture/verify_source_transformations.py",
@@ -187,7 +292,11 @@ class CaptureProvenanceTests(unittest.TestCase):
             "validation/tools/capture/semgrep-core-loader.sh",
             "validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock",
         )
-        for mutation in ("help-hash", "reproduction-executable"):
+        for mutation in (
+            "help-hash",
+            "reproduction-executable",
+            "producer-capture",
+        ):
             with self.subTest(mutation=mutation):
                 with tempfile.TemporaryDirectory() as directory:
                     root = Path(directory)
@@ -211,7 +320,7 @@ class CaptureProvenanceTests(unittest.TestCase):
                             if item["id"] == "semgrep"
                         )
                         semgrep["helpSha256"] = "0" * 64
-                    else:
+                    elif mutation == "reproduction-executable":
                         manifest = json.loads(
                             manifest_path.read_text(encoding="utf-8")
                         )
@@ -226,6 +335,15 @@ class CaptureProvenanceTests(unittest.TestCase):
                         manifest_path.write_text(
                             json.dumps(manifest, indent=2) + "\n",
                             encoding="utf-8",
+                        )
+                    else:
+                        producer_capture = (
+                            root
+                            / "validation/holdout/cases/gitleaks/"
+                            "producer-input/captures/baseline.producer.sarif"
+                        )
+                        producer_capture.write_bytes(
+                            producer_capture.read_bytes() + b" "
                         )
                     destination = (
                         root / "validation/tools/capture/capture-provenance.json"

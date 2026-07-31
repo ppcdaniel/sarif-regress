@@ -8,6 +8,10 @@ import sys
 from pathlib import Path
 from typing import Final, Sequence
 
+from normalize_gitleaks_sarif import (
+    NormalizationError,
+    normalize_capture,
+)
 from project_holdout import ProjectionError, project_case
 
 
@@ -51,9 +55,28 @@ def verify(repository_root: Path, output_root: Path) -> None:
     for producer in PRODUCERS:
         case_root = cases_root / producer
         generated_case_root = output_root / producer
+        capture_root = case_root / "producer-input" / "captures"
+        if producer == "gitleaks":
+            normalized_root = output_root / "_gitleaks-normalized-captures"
+            normalized_root.mkdir()
+            for side in ("baseline", "candidate"):
+                normalize_capture(
+                    capture_root / f"{side}.producer.sarif",
+                    normalized_root / f"{side}.raw.sarif",
+                )
+                if _read_regular_bounded(
+                    capture_root / f"{side}.raw.sarif"
+                ) != _read_regular_bounded(
+                    normalized_root / f"{side}.raw.sarif"
+                ):
+                    raise VerificationError(
+                        "Committed Gitleaks order normalization is not "
+                        f"byte-reproducible: {side}.raw.sarif"
+                    )
+            capture_root = normalized_root
         project_case(
             case_root.resolve(strict=True),
-            (case_root / "producer-input" / "captures").resolve(strict=True),
+            capture_root.resolve(strict=True),
             generated_case_root,
         )
         for relative_name in PROJECTED_FILES:
@@ -84,7 +107,12 @@ def main(arguments: Sequence[str] | None = None) -> int:
     parsed = _parser().parse_args(arguments)
     try:
         verify(parsed.repository_root, parsed.output_root)
-    except (OSError, ProjectionError, VerificationError) as error:
+    except (
+        OSError,
+        NormalizationError,
+        ProjectionError,
+        VerificationError,
+    ) as error:
         print(f"holdout projection verification failed: {error}", file=sys.stderr)
         return 1
     print(
