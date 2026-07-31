@@ -1,9 +1,7 @@
 name: Regenerate holdout capture evidence
 
 on:
-  push:
-    branches:
-      - agent/independent-holdout-validation
+  pull_request:
     paths:
       - '.github/workflows/holdout-capture.yml'
       - 'validation/holdout/cases/**/producer-input/**'
