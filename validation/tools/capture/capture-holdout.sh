@@ -13,6 +13,9 @@ readonly REPOSITORY_ROOT="$(
 )"
 readonly HOLDOUT_CASES_ROOT="${REPOSITORY_ROOT}/validation/holdout/cases"
 readonly PROJECTION_SCRIPT="${CAPTURE_SCRIPT_DIRECTORY}/project_holdout.py"
+readonly PROVENANCE_VERIFIER="${CAPTURE_SCRIPT_DIRECTORY}/verify_capture_provenance.py"
+readonly SEMGREP_RUNNER="${CAPTURE_SCRIPT_DIRECTORY}/run_semgrep.py"
+readonly TAR_EXTRACTOR="${CAPTURE_SCRIPT_DIRECTORY}/extract_tar.py"
 readonly ZIP_EXTRACTOR="${CAPTURE_SCRIPT_DIRECTORY}/extract_zip.py"
 readonly TRANSFORMATION_VERIFIER="${CAPTURE_SCRIPT_DIRECTORY}/verify_source_transformations.py"
 readonly SEMGREP_REQUIREMENTS_LOCK="${CAPTURE_SCRIPT_DIRECTORY}/semgrep-requirements.linux-x86_64-py312.lock"
@@ -22,6 +25,10 @@ readonly SEMGREP_WHEEL_NAME="semgrep-1.172.0-cp310.cp311.cp312.cp313.cp314.py310
 readonly SEMGREP_WHEEL_URL="https://files.pythonhosted.org/packages/84/a5/21624510b65271a673961a894af7511b5123d662e84c74c765560ea28b27/${SEMGREP_WHEEL_NAME}"
 readonly SEMGREP_WHEEL_SHA256="d8b94af4266a575287ad2cd844573743ab4fe58f6bfb6d9229327807937eade3"
 readonly SEMGREP_WHEEL_BYTES="69575334"
+readonly SEMGREP_HELP_SHA256="dbdc10d883da52320947fb5321309d2961b0221a16f116d4750925591cd08b3b"
+readonly CAPTURE_PYTHON_VERSION="3.12.13"
+readonly CAPTURE_JAVA_VENDOR="Eclipse Adoptium"
+readonly CAPTURE_JAVA_VERSION="17.0.19+10"
 
 readonly GITLEAKS_VERSION="8.30.1"
 readonly GITLEAKS_ARCHIVE_NAME="gitleaks_8.30.1_linux_x64.tar.gz"
@@ -32,6 +39,8 @@ readonly GITLEAKS_CHECKSUMS_NAME="gitleaks_8.30.1_checksums.txt"
 readonly GITLEAKS_CHECKSUMS_URL="https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/${GITLEAKS_CHECKSUMS_NAME}"
 readonly GITLEAKS_CHECKSUMS_SHA256="061476c21adaf5441516f96f185c1a4706a83cd6329b9b38762271b3d4a52fae"
 readonly GITLEAKS_CHECKSUMS_BYTES="999"
+readonly GITLEAKS_HELP_SHA256="ff55bf949d8ac8354e133f09c8be4ccac32cf82ec3a01446e2f31cbe20857a86"
+readonly GITLEAKS_VERSION_OUTPUT_SHA256="c9fd9ccb6682c54b5fcb0363757b6c6873564e7c067f70b3b5581b611528b9f4"
 
 readonly PMD_VERSION="7.26.0"
 readonly PMD_ARCHIVE_NAME="pmd-dist-7.26.0-bin.zip"
@@ -39,6 +48,7 @@ readonly PMD_ARCHIVE_URL="https://github.com/pmd/pmd/releases/download/pmd_relea
 readonly PMD_ARCHIVE_SHA256="9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
 readonly PMD_ARCHIVE_BYTES="73646044"
 readonly PMD_ARCHIVE_PREFIX="pmd-bin-7.26.0"
+readonly PMD_HELP_SHA256="babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91"
 
 readonly MAX_CAPTURE_BYTES=$((16 * 1024 * 1024))
 TEMPORARY_ROOT=""
@@ -107,25 +117,52 @@ assert_regular_bounded_capture() {
     fail "${capture_path} has disallowed size ${capture_bytes} bytes."
 }
 
+verify_capture_environment() {
+  python3 -B - "${CAPTURE_PYTHON_VERSION}" <<'PY'
+import platform
+import sys
+
+expected = sys.argv[1]
+actual = sys.version.split()[0]
+if actual != expected:
+    raise SystemExit(
+        f"Holdout capture requires Python {expected}; found {actual}."
+    )
+if platform.system() != "Linux" or platform.machine() not in {"x86_64", "AMD64"}:
+    raise SystemExit("Holdout capture is pinned to Linux x86-64.")
+PY
+
+  local java_executable
+  java_executable="$(readlink -f -- "$(command -v -- java)")"
+  local java_home
+  java_home="$(cd -- "$(dirname -- "${java_executable}")/.." && pwd -P)"
+  local java_library_path="${java_home}/lib:${java_home}/lib/server"
+  local java_properties
+  java_properties="$(
+    LC_ALL=C \
+      JAVA_HOME="${java_home}" \
+      LD_LIBRARY_PATH="${java_library_path}" \
+      "${java_executable}" -XshowSettings:properties -version 2>&1
+  )"
+  local observed_java_vendor
+  observed_java_vendor="$(
+    sed -n 's/^[[:space:]]*java.vendor = //p' <<<"${java_properties}"
+  )"
+  [[ "${observed_java_vendor}" == "${CAPTURE_JAVA_VENDOR}" ]] ||
+    fail "capture requires ${CAPTURE_JAVA_VENDOR} Java."
+  local observed_java_version
+  observed_java_version="$(
+    sed -n 's/^[[:space:]]*java.runtime.version = //p' <<<"${java_properties}"
+  )"
+  [[ "${observed_java_version}" == "${CAPTURE_JAVA_VERSION}" ]] ||
+    fail "capture requires Java runtime ${CAPTURE_JAVA_VERSION}."
+}
+
 prepare_semgrep() {
   local tools_root="$1"
   local wheelhouse="${tools_root}/semgrep-wheelhouse"
   local environment_root="${tools_root}/semgrep-environment"
   mkdir -p -- "${wheelhouse}"
-
-  python3 -B - <<'PY'
-import platform
-import sys
-
-if sys.version_info[:2] != (3, 12):
-    raise SystemExit(
-        f"Semgrep capture requires Python 3.12; found {sys.version.split()[0]}."
-    )
-if platform.system() != "Linux" or platform.machine() not in {"x86_64", "AMD64"}:
-    raise SystemExit(
-        "Semgrep capture lock is valid only for Linux x86-64."
-    )
-PY
 
   download_verified \
     "${SEMGREP_WHEEL_URL}" \
@@ -169,23 +206,46 @@ PY
   ((native_count > 0)) ||
     fail "the verified Semgrep wheel lacks its expected native executable."
 
-  local observed_version
   local semgrep_vendor_library_path
   semgrep_vendor_library_path="${environment_root}/lib/python3.12/site-packages/semgrep/bin/libs"
-  local semgrep_tree_sitter_path="${semgrep_vendor_library_path}/libtree-sitter.so.0.22"
-  [[ -f "${semgrep_tree_sitter_path}" && ! -L "${semgrep_tree_sitter_path}" ]] ||
-    fail "the verified Semgrep wheel lacks its expected tree-sitter library."
-  local semgrep_runtime_library_path="${environment_root}/holdout-runtime-libs"
-  mkdir -- "${semgrep_runtime_library_path}"
-  cp -- "${semgrep_tree_sitter_path}" "${semgrep_runtime_library_path}/"
-  chmod 0644 -- "${semgrep_runtime_library_path}/libtree-sitter.so.0.22"
+  local library_count=0
+  local library_path
+  while IFS= read -r -d '' library_path; do
+    [[ -f "${library_path}" && ! -L "${library_path}" ]] ||
+      fail "the verified Semgrep wheel contains an unsafe runtime library entry."
+    local library_bytes
+    library_bytes="$(stat --format='%s' -- "${library_path}")"
+    ((library_bytes > 0 && library_bytes <= 64 * 1024 * 1024)) ||
+      fail "the verified Semgrep wheel contains an oversized runtime library."
+    library_count=$((library_count + 1))
+  done < <(
+    find "${semgrep_vendor_library_path}" \
+      -mindepth 1 \
+      -maxdepth 1 \
+      -print0
+  )
+  ((library_count > 0 && library_count <= 64)) ||
+    fail "the verified Semgrep runtime library set has an invalid member count."
+
+  local observed_version
   observed_version="$(
-    SEMGREP_SEND_METRICS=off \
-      LD_LIBRARY_PATH="${semgrep_runtime_library_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" \
-      "${environment_root}/bin/semgrep" --version
+    "${environment_root}/bin/python" -I -B "${SEMGREP_RUNNER}" \
+      --semgrep-script "${environment_root}/bin/semgrep" \
+      --library-directory "${semgrep_vendor_library_path}" \
+      -- --version
   )"
   [[ "${observed_version}" == "${SEMGREP_VERSION}" ]] ||
     fail "expected Semgrep ${SEMGREP_VERSION}, found ${observed_version}."
+
+  local help_output="${tools_root}/semgrep-scan-help.txt"
+  "${environment_root}/bin/python" -I -B "${SEMGREP_RUNNER}" \
+    --semgrep-script "${environment_root}/bin/semgrep" \
+    --library-directory "${semgrep_vendor_library_path}" \
+    -- scan --help > "${help_output}"
+  local observed_help_sha256
+  observed_help_sha256="$(sha256sum "${help_output}" | cut -d ' ' -f 1)"
+  [[ "${observed_help_sha256}" == "${SEMGREP_HELP_SHA256}" ]] ||
+    fail "Semgrep scan help differs from the reviewed command evidence."
   printf '%s\n' "${environment_root}/bin/semgrep"
 }
 
@@ -210,17 +270,10 @@ prepare_gitleaks() {
     "${GITLEAKS_ARCHIVE_SHA256}" \
     "${GITLEAKS_ARCHIVE_BYTES}" \
     "${archive_path}"
-  mkdir -- "${extraction_root}"
-  tar -tzf "${archive_path}" | grep -Fqx "gitleaks" ||
-    fail "Gitleaks archive does not contain the expected executable."
-  tar \
-    --extract \
-    --gzip \
-    --file "${archive_path}" \
-    --directory "${extraction_root}" \
-    --no-same-owner \
-    --no-same-permissions \
-    -- gitleaks
+  python3 -B "${TAR_EXTRACTOR}" \
+    --archive "${archive_path}" \
+    --destination "${extraction_root}" \
+    --member gitleaks
   [[ -f "${extraction_root}/gitleaks" && ! -L "${extraction_root}/gitleaks" ]] ||
     fail "the extracted Gitleaks executable is not a regular non-link file."
   chmod 0755 -- "${extraction_root}/gitleaks"
@@ -229,6 +282,18 @@ prepare_gitleaks() {
   observed_version="$("${extraction_root}/gitleaks" version)"
   [[ "${observed_version}" == "${GITLEAKS_VERSION}" ]] ||
     fail "expected Gitleaks ${GITLEAKS_VERSION}, found ${observed_version}."
+  local observed_version_sha256
+  observed_version_sha256="$(
+    printf '%s\n' "${observed_version}" | sha256sum | cut -d ' ' -f 1
+  )"
+  [[ "${observed_version_sha256}" == "${GITLEAKS_VERSION_OUTPUT_SHA256}" ]] ||
+    fail "Gitleaks version output differs from the reviewed evidence."
+  local help_output="${tools_root}/gitleaks-dir-help.txt"
+  "${extraction_root}/gitleaks" dir --help > "${help_output}"
+  local observed_help_sha256
+  observed_help_sha256="$(sha256sum "${help_output}" | cut -d ' ' -f 1)"
+  [[ "${observed_help_sha256}" == "${GITLEAKS_HELP_SHA256}" ]] ||
+    fail "Gitleaks dir help differs from the reviewed command evidence."
   printf '%s\n' "${extraction_root}/gitleaks"
 }
 
@@ -257,11 +322,19 @@ prepare_pmd() {
   local observed_version
   observed_version="$(
     JAVA_HOME="${java_home}" \
-      LD_LIBRARY_PATH="${java_library_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" \
+      LD_LIBRARY_PATH="${java_library_path}" \
       "${pmd_executable}" --version
   )"
   grep -Fq "PMD ${PMD_VERSION}" <<<"${observed_version}" ||
     fail "expected PMD ${PMD_VERSION}, found ${observed_version}."
+  local help_output="${tools_root}/pmd-check-help.txt"
+  JAVA_HOME="${java_home}" \
+    LD_LIBRARY_PATH="${java_library_path}" \
+    "${pmd_executable}" check --help > "${help_output}"
+  local observed_help_sha256
+  observed_help_sha256="$(sha256sum "${help_output}" | cut -d ' ' -f 1)"
+  [[ "${observed_help_sha256}" == "${PMD_HELP_SHA256}" ]] ||
+    fail "PMD check help differs from the reviewed command evidence."
   printf '%s\n' "${pmd_executable}"
 }
 
@@ -273,13 +346,14 @@ capture_semgrep_side() {
   local source_root="${case_root}/producer-input/${side}"
   local semgrep_environment
   semgrep_environment="$(cd -- "$(dirname -- "${semgrep_executable}")/.." && pwd -P)"
-  local semgrep_library_path="${semgrep_environment}/holdout-runtime-libs"
+  local semgrep_library_path="${semgrep_environment}/lib/python3.12/site-packages/semgrep/bin/libs"
 
   (
     cd -- "${source_root}"
-    SEMGREP_SEND_METRICS=off \
-      LD_LIBRARY_PATH="${semgrep_library_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" \
-      "${semgrep_executable}" scan \
+    "${semgrep_environment}/bin/python" -I -B "${SEMGREP_RUNNER}" \
+      --semgrep-script "${semgrep_executable}" \
+      --library-directory "${semgrep_library_path}" \
+      -- scan \
       --config "${case_root}/producer-input/semgrep-rules.yml" \
       --disable-version-check \
       --metrics=off \
@@ -332,7 +406,7 @@ capture_pmd_side() {
   (
     cd -- "${source_root}"
     JAVA_HOME="${java_home}" \
-      LD_LIBRARY_PATH="${java_library_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" \
+      LD_LIBRARY_PATH="${java_library_path}" \
       "${pmd_executable}" check \
       --dir . \
       --format sarif \
@@ -402,12 +476,16 @@ main() {
 
   require_command curl
   require_command cut
+  require_command find
   require_command grep
   require_command python3
   require_command sha256sum
   require_command stat
-  require_command tar
   require_command java
+  require_command readlink
+  require_command sed
+
+  verify_capture_environment
 
   local output_parent
   output_parent="$(dirname -- "${output_root}")"
@@ -432,6 +510,8 @@ main() {
   mkdir -- "${tools_root}"
 
   python3 -B "${TRANSFORMATION_VERIFIER}" \
+    --repository-root "${REPOSITORY_ROOT}"
+  python3 -B "${PROVENANCE_VERIFIER}" \
     --repository-root "${REPOSITORY_ROOT}"
 
   if [[ "${selected_producer}" == "all" || "${selected_producer}" == "semgrep" ]]; then

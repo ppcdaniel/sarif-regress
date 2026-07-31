@@ -34,6 +34,15 @@ def _is_symbolic_link(member: zipfile.ZipInfo) -> bool:
     return stat.S_ISLNK(unix_mode)
 
 
+def _has_unsupported_file_type(member: zipfile.ZipInfo) -> bool:
+    if member.create_system != 3:
+        return False
+    unix_mode = member.external_attr >> 16
+    file_type = stat.S_IFMT(unix_mode)
+    expected_type = stat.S_IFDIR if member.is_dir() else stat.S_IFREG
+    return file_type not in {0, expected_type}
+
+
 # Time: O(M + B); Space: O(M), for M members and B expanded bytes.
 def extract_zip(archive: Path, destination: Path, required_prefix: str) -> None:
     """Extract regular files below one required top-level prefix."""
@@ -55,6 +64,7 @@ def extract_zip(archive: Path, destination: Path, required_prefix: str) -> None:
             )
 
         normalized_prefix = required_prefix.rstrip("/") + "/"
+        observed_paths: set[PurePosixPath] = set()
         for member in members:
             if not member.filename.startswith(normalized_prefix):
                 raise ArchiveError(
@@ -65,7 +75,21 @@ def extract_zip(archive: Path, destination: Path, required_prefix: str) -> None:
                 raise ArchiveError(
                     f"Archive member {member.filename!r} is a symbolic link."
                 )
+            if _has_unsupported_file_type(member):
+                raise ArchiveError(
+                    f"Archive member {member.filename!r} has an unsupported "
+                    "file type."
+                )
+            if (member.flag_bits & 0x1) != 0:
+                raise ArchiveError(
+                    f"Archive member {member.filename!r} is encrypted."
+                )
             relative_path = _validated_relative_path(member.filename)
+            if relative_path in observed_paths:
+                raise ArchiveError(
+                    f"Archive contains duplicate member {member.filename!r}."
+                )
+            observed_paths.add(relative_path)
             target = destination.joinpath(*relative_path.parts)
             try:
                 target.resolve().relative_to(resolved_destination)

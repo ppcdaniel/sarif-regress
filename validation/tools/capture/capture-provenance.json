@@ -4,19 +4,26 @@
   "captureEnvironment": {
     "operatingSystem": "Linux",
     "architecture": "x86-64",
+    "pythonVersion": "3.12.13",
+    "javaDistribution": "Eclipse Temurin",
+    "javaVersion": "17.0.19+10",
     "networkPolicy": "Network is used only for the verified producer artifacts and Semgrep dependency wheels. Rules and controlled fixture source are repository-local."
   },
   "captureScript": "validation/tools/capture/capture-holdout.sh",
+  "reproductionCommand": "./validation/tools/capture/capture-holdout.sh --output-root <new-staging-directory> --producer all",
   "projectionScript": "validation/tools/capture/project_holdout.py",
+  "projectionVerificationScript": "validation/tools/capture/verify_projected_holdout.py",
   "sourceVerificationScript": "validation/tools/capture/verify_source_transformations.py",
+  "semgrepRunnerScript": "validation/tools/capture/run_semgrep.py",
   "producers": [
     {
       "id": "semgrep",
       "name": "Semgrep Community Edition",
       "version": "1.172.0",
+      "sourceCommit": "651f37efa397bf066e1cf627414eeabe40b07e27",
       "officialProject": "https://github.com/semgrep/semgrep",
       "officialRelease": "https://github.com/semgrep/semgrep/releases/tag/v1.172.0",
-      "license": "LGPL-2.1",
+      "license": "LGPL-2.1-only",
       "artifact": {
         "kind": "Python wheel",
         "url": "https://files.pythonhosted.org/packages/84/a5/21624510b65271a673961a894af7511b5123d662e84c74c765560ea28b27/semgrep-1.172.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-manylinux_2_34_x86_64.whl",
@@ -27,16 +34,19 @@
         "path": "validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock",
         "sha256": "456592933b886b3d60a68dfe83dba4af3f3e1872e492dbafcbbb388574e7039e",
         "pythonVersion": "3.12",
-        "installation": "python3 -m pip install --no-index --find-links <temporary-wheelhouse> --only-binary=:all: --require-hashes --requirement validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock"
+        "installation": "<temporary-tools>/semgrep-environment/bin/python -m pip install --no-index --find-links <temporary-wheelhouse> --only-binary=:all: --require-hashes --requirement validation/tools/capture/semgrep-requirements.linux-x86_64-py312.lock"
       },
-      "versionCommand": "semgrep --version",
-      "helpCommand": "semgrep scan --help",
-      "execution": "semgrep scan --config validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml --disable-version-check --metrics=off --no-git-ignore --no-rewrite-rule-ids --oss-only --quiet --sarif --strict --output <raw-capture> ."
+      "versionCommand": "<temporary-tools>/semgrep-environment/bin/python -I -B <repository-root>/validation/tools/capture/run_semgrep.py --semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep --library-directory <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs -- --version",
+      "versionOutputSha256": "82e4502ffa8035703c9a3c28b596f2977de9a0aee1f707e8bd524878f01939b9",
+      "helpCommand": "<temporary-tools>/semgrep-environment/bin/python -I -B <repository-root>/validation/tools/capture/run_semgrep.py --semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep --library-directory <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs -- scan --help",
+      "helpSha256": "dbdc10d883da52320947fb5321309d2961b0221a16f116d4750925591cd08b3b",
+      "execution": "<temporary-tools>/semgrep-environment/bin/python -I -B <repository-root>/validation/tools/capture/run_semgrep.py --semgrep-script <temporary-tools>/semgrep-environment/bin/semgrep --library-directory <temporary-tools>/semgrep-environment/lib/python3.12/site-packages/semgrep/bin/libs -- scan --config validation/holdout/cases/semgrep/producer-input/semgrep-rules.yml --disable-version-check --metrics=off --no-git-ignore --no-rewrite-rule-ids --oss-only --quiet --sarif --strict --output <raw-capture> ."
     },
     {
       "id": "gitleaks",
       "name": "Gitleaks",
       "version": "8.30.1",
+      "sourceCommit": "83d9cd684c87d95d656c1458ef04895a7f1cbd8e",
       "officialProject": "https://github.com/gitleaks/gitleaks",
       "officialRelease": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
       "license": "MIT",
@@ -51,7 +61,7 @@
         "bytes": 999,
         "sha256": "061476c21adaf5441516f96f185c1a4706a83cd6329b9b38762271b3d4a52fae"
       },
-      "installation": "Verify the official checksum manifest and archive size/SHA-256, extract only the regular non-link gitleaks member, then set mode 0755.",
+      "installation": "Verify the official checksum manifest and archive size/SHA-256, run python3 -B validation/tools/capture/extract_tar.py --archive <archive> --destination <temporary-tools>/gitleaks --member gitleaks, then set mode 0755.",
       "versionCommand": "gitleaks version",
       "helpCommand": "gitleaks dir --help",
       "helpSha256": "ff55bf949d8ac8354e133f09c8be4ccac32cf82ec3a01446e2f31cbe20857a86",
@@ -62,9 +72,10 @@
       "id": "pmd",
       "name": "PMD",
       "version": "7.26.0",
+      "sourceCommit": "8fd38edf285a33e1164f66205ebe243441db9557",
       "officialProject": "https://github.com/pmd/pmd",
       "officialRelease": "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0",
-      "license": "PMD BSD-style license",
+      "license": "LicenseRef-PMD-BSD-Style",
       "artifact": {
         "kind": "release archive",
         "url": "https://github.com/pmd/pmd/releases/download/pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip",

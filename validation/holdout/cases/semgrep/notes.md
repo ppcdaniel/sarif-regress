@@ -33,11 +33,11 @@ Each row explains why the two findings are the same source-authored issue.
 | `semgrep-exact-03` | unchanged | The same `holdout_sink("SEMGREP_EXACT_03")` call remains at the same path and line; producer fingerprints are removed from both projections to test missing fingerprints. |
 | `semgrep-exact-04` | unchanged | The same `holdout_sink("SEMGREP_EXACT_04")` call remains at the same path and line. |
 | `semgrep-exact-05` | unchanged | The same `holdout_sink("SEMGREP_EXACT_05")` call remains at the same path and line. |
-| `semgrep-line-shift-01` | moved | One inert comment is inserted above the unchanged `SEMGREP_SHIFT_01` call. |
-| `semgrep-line-shift-02` | moved | Two inert comments are inserted above the unchanged `SEMGREP_SHIFT_02` call. |
-| `semgrep-line-shift-03` | moved | Three inert comments are inserted above the unchanged `SEMGREP_SHIFT_03` call. |
-| `semgrep-line-shift-04` | moved | Four inert comments are inserted above the unchanged `SEMGREP_SHIFT_04` call. |
-| `semgrep-line-shift-05` | moved | Five inert comments are inserted above the unchanged `SEMGREP_SHIFT_05` call; this relationship also carries the documented POSIX/Windows URI projection and matching rebase. |
+| `semgrep-line-shift-01` | moved | A local block of one inert comment is inserted; its cumulative line delta is 1. |
+| `semgrep-line-shift-02` | moved | A local block of two comments follows the earlier block in the shared file; its cumulative line delta is 3. |
+| `semgrep-line-shift-03` | moved | A local block of three comments produces cumulative line delta 6. |
+| `semgrep-line-shift-04` | moved | A local block of four comments produces cumulative line delta 10. |
+| `semgrep-line-shift-05` | moved | A local block of five comments produces cumulative line delta 15; this relationship also carries the documented POSIX/Windows URI projection and matching rebase. |
 | `semgrep-moved-01` | moved | The unchanged `SEMGREP_MOVED_01` call moves below the inert `neutral_padding` function in the same file. |
 | `semgrep-moved-02` | moved | The unchanged `SEMGREP_MOVED_02` call moves with its source group below `neutral_padding`. |
 | `semgrep-moved-03` | moved | The unchanged `SEMGREP_MOVED_03` call moves with its source group below `neutral_padding`. |
@@ -83,8 +83,8 @@ The original captures are retained. The deterministic projection changes only:
 
 No semantic IDs or labels are inserted into projected SARIF. Original URI,
 message, and fingerprint hashes plus every mutation name live only in
-`producer-input/projection-audit.json`. Results are ordered by semantic ID so
-the labels have deterministic finding keys. Run the read-only source proof and
+`producer-input/projection-audit.json`. Producer-emitted result order is
+preserved, and labels use those raw indices. Run the read-only source proof and
 full capture with:
 
 ```sh

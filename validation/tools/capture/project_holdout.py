@@ -23,6 +23,7 @@ from urllib.parse import unquote, urlparse
 
 
 MAX_JSON_BYTES: Final = 16 * 1024 * 1024
+MAX_JSON_DEPTH: Final = 128
 MARKER_PATTERN: Final = re.compile(
     r"^\s*(?:#|//)\s*HOLDOUT:(?P<semantic_id>[a-z0-9-]+)\s*$"
 )
@@ -96,6 +97,35 @@ class LocatedResult:
     result: dict[str, Any]
 
 
+def _object_without_duplicate_keys(
+    pairs: list[tuple[str, Any]],
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ProjectionError(f"Duplicate JSON object key {key!r}.")
+        result[key] = value
+    return result
+
+
+def _reject_nonstandard_constant(value: str) -> None:
+    raise ProjectionError(f"Non-standard JSON numeric constant {value!r}.")
+
+
+def _validate_json_depth(document: Any, path: Path) -> None:
+    stack: list[tuple[Any, int]] = [(document, 1)]
+    while stack:
+        value, depth = stack.pop()
+        if depth > MAX_JSON_DEPTH:
+            raise ProjectionError(
+                f"{path} exceeds the JSON nesting bound {MAX_JSON_DEPTH}."
+            )
+        if isinstance(value, dict):
+            stack.extend((item, depth + 1) for item in value.values())
+        elif isinstance(value, list):
+            stack.extend((item, depth + 1) for item in value)
+
+
 def _read_bounded_json(path: Path) -> Any:
     """Read one bounded UTF-8 JSON document."""
 
@@ -108,9 +138,22 @@ def _read_bounded_json(path: Path) -> Any:
     if payload.startswith(b"\xef\xbb\xbf"):
         raise ProjectionError(f"{path} must be UTF-8 without a BOM.")
     try:
-        return json.loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ProjectionError(f"{path} is not valid UTF-8 JSON: {error}") from error
+        document = json.loads(
+            payload.decode("utf-8"),
+            object_pairs_hook=_object_without_duplicate_keys,
+            parse_constant=_reject_nonstandard_constant,
+        )
+    except (
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        RecursionError,
+        ValueError,
+    ) as error:
+        raise ProjectionError(
+            f"{path} is not strict bounded UTF-8 JSON: {error}"
+        ) from error
+    _validate_json_depth(document, path)
+    return document
 
 
 def _require_object(value: Any, context: str) -> dict[str, Any]:
@@ -268,19 +311,31 @@ def _source_path_from_uri(
         raise ProjectionError(f"Unsupported non-file artifact URI {uri!r}.")
 
     if parsed.scheme.lower() == "file":
-        decoded_path = unquote(parsed.path)
-        candidates = [Path(decoded_path)]
+        if parsed.netloc not in {"", "localhost"}:
+            raise ProjectionError(
+                f"Unsupported file URI authority in artifact URI {uri!r}."
+            )
+        normalized = unquote(parsed.path).replace("\\", "/")
+        candidates = [Path(normalized)]
     else:
         normalized = unquote(uri).replace("\\", "/").removeprefix("./")
         raw_path = Path(normalized)
         candidates = [source_root / raw_path]
-        parts = tuple(
-            part for part in PurePosixPath(normalized).parts if part != "."
-        )
-        candidates.extend(
-            source_root.joinpath(*parts[index:])
-            for index in range(1, len(parts))
-        )
+
+    # Some producers, notably PMD 7.26.0, emit an absolute file URI despite a
+    # relativization option. Replaying a committed raw capture in another
+    # checkout must not depend on the original runner prefix. Each suffix is
+    # resolved strictly beneath the controlled source root; zero or multiple
+    # matches fail closed, and the URI itself is never opened outside that root.
+    parts = tuple(
+        part
+        for part in PurePosixPath(normalized).parts
+        if part not in {".", "/"}
+    )
+    candidates.extend(
+        source_root.joinpath(*parts[index:])
+        for index in range(len(parts))
+    )
 
     resolved_root = source_root.resolve(strict=True)
     matches: dict[Path, PurePosixPath] = {}
@@ -519,6 +574,7 @@ def _project_result(
         _sha256_text(
             json.dumps(
                 fingerprint_fields,
+                allow_nan=False,
                 ensure_ascii=False,
                 separators=(",", ":"),
                 sort_keys=True,
@@ -555,6 +611,7 @@ def _project_candidate_version(
         )
     serialized_versions = json.dumps(
         original_versions,
+        allow_nan=False,
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
@@ -578,7 +635,6 @@ def _project_capture(
 ) -> tuple[dict[str, Any], Mapping[str, int], dict[str, Any]]:
     document = _require_object(_read_bounded_json(raw_path), str(raw_path))
     run, located_results = _locate_results(document, source_root, side, plan)
-    located_results.sort(key=lambda item: item.semantic_id)
     result_audit: list[dict[str, Any]] = []
     for projected_index, located in enumerate(located_results):
         audit_entry = _project_result(located, side, plan)
@@ -594,14 +650,19 @@ def _project_capture(
         for index, located in enumerate(located_results)
     }
     source_root_text = str(source_root.resolve(strict=True))
-    serialized = json.dumps(document, ensure_ascii=False, sort_keys=True)
+    serialized = json.dumps(
+        document,
+        allow_nan=False,
+        ensure_ascii=False,
+        sort_keys=True,
+    )
     if source_root_text in serialized:
         raise ProjectionError(
             f"{side} projection retained its ambient absolute source root."
         )
     audit = {
         "rawCaptureSha256": _sha256_file(raw_path),
-        "resultOrdering": "semantic-id-ordinal",
+        "resultOrdering": "producer-emitted",
         "runMutations": run_mutations,
         "results": result_audit,
     }
@@ -674,6 +735,7 @@ def _stable_json_bytes(document: Any) -> bytes:
     return (
         json.dumps(
             document,
+            allow_nan=False,
             ensure_ascii=False,
             indent=2,
             sort_keys=True,

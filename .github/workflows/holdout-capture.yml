@@ -2,10 +2,6 @@ name: Regenerate holdout capture evidence
 
 on:
   pull_request:
-    paths:
-      - '.github/workflows/holdout-capture.yml'
-      - 'validation/holdout/cases/**/producer-input/**'
-      - 'validation/tools/capture/**'
   workflow_dispatch:
 
 permissions:
@@ -32,7 +28,7 @@ jobs:
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '17.0.19+10'
 
       - name: Capture and project authentic SARIF
         shell: bash
@@ -45,13 +41,18 @@ jobs:
           from pathlib import Path
 
           for name in (
+              "validation/tools/capture/extract_tar.py",
               "validation/tools/capture/extract_zip.py",
               "validation/tools/capture/project_holdout.py",
+              "validation/tools/capture/run_semgrep.py",
+              "validation/tools/capture/verify_capture_provenance.py",
+              "validation/tools/capture/verify_projected_holdout.py",
               "validation/tools/capture/verify_source_transformations.py",
           ):
               source = Path(name).read_text(encoding="utf-8")
               compile(source, name, "exec")
           PY
+          python3 -B validation/tools/capture/test_capture_tools.py
           mkdir -p artifacts/holdout-capture
           {
             python3 --version

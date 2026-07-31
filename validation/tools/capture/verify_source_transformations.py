@@ -360,6 +360,28 @@ def _verify_producer(repository_root: Path, producer: str) -> None:
                     raise VerificationError(
                         f"{semantic_id} does not prove its exact inserted-line count."
                     )
+                expected_line_delta = sum(
+                    _controlled_insertions_before_marker(
+                        candidate_source_root,
+                        other_occurrence,
+                    )
+                    for other_id, other_occurrence in candidate.items()
+                    if other_id.startswith(f"{producer}-line-shift-")
+                    and other_occurrence.source_path
+                    == candidate_occurrence.source_path
+                    and other_occurrence.marker_line
+                    <= candidate_occurrence.marker_line
+                )
+                actual_line_delta = (
+                    candidate_occurrence.result_line
+                    - baseline_occurrence.result_line
+                )
+                if actual_line_delta != expected_line_delta:
+                    raise VerificationError(
+                        f"{semantic_id} line delta is {actual_line_delta}, "
+                        f"expected cumulative controlled delta "
+                        f"{expected_line_delta}."
+                    )
             elif _without_controlled_insertions(
                 _source_lines(baseline_source_root, baseline_occurrence)
             ) != _without_controlled_insertions(

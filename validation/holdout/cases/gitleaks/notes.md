@@ -80,9 +80,10 @@ Other deterministic changes are limited to the five candidate message suffixes,
 missing fingerprints for `gitleaks-exact-03`, one shared ambiguity partial
 fingerprint, and the `gitleaks-line-shift-05` POSIX/Windows URI pair. The two
 URI prefixes are explicitly rebased in `config.json`. No semantic ID or label
-is embedded in projected SARIF. The sidecar `projection-audit.json` records
-original URI/message/fingerprint hashes and mutation names, while results are
-ordered by semantic ID for stable finding keys.
+field is added by the projection; producer-emitted source paths remain. The
+sidecar `projection-audit.json` records original URI/message/fingerprint hashes
+and mutation names. Producer-emitted result order is preserved; labels use
+those raw indices rather than rearranging input.
 
 Reproduce the source proof and capture with:
 

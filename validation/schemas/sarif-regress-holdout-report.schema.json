@@ -1,0 +1,733 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/sarif-regress-holdout-report.schema.json",
+  "title": "SarifRegress independent holdout evaluation report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportKind",
+    "evaluation",
+    "aggregate",
+    "producers",
+    "cases",
+    "diagnosticCounts"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "reportKind": {
+      "const": "sarif-regress-independent-holdout"
+    },
+    "evaluation": {
+      "$ref": "#/$defs/evaluation"
+    },
+    "aggregate": {
+      "$ref": "#/$defs/metrics"
+    },
+    "producers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/producerMetrics"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/caseResult"
+      }
+    },
+    "diagnosticCounts": {
+      "$ref": "#/$defs/diagnosticCounts"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "nonAmbientString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!\\\\\\\\)[^\\u0000\\r\\n]+$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!\\\\\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
+    },
+    "gitCommitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?![vV]?[lL][aA][tT][eE][sS][tT]$)(?!.*[ *xX^~><=|])[0-9A-Za-z][0-9A-Za-z._+-]*$"
+    },
+    "schemaVersionValue": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[0-9]+(?:\\.[0-9]+)*$"
+    },
+    "algorithmVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+/-]*$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "nullableFindingKey": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/nonAmbientString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "namedAlgorithm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "version": {
+          "$ref": "#/$defs/algorithmVersion"
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryCommitSha",
+        "sourceTreeSha256",
+        "sarifRegressToolVersion",
+        "matcherAlgorithmVersion",
+        "fingerprintAlgorithmVersions",
+        "outputSchemaVersion",
+        "configurationSchemaVersion",
+        "holdoutManifestSha256"
+      ],
+      "properties": {
+        "repositoryCommitSha": {
+          "$ref": "#/$defs/gitCommitSha"
+        },
+        "sourceTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "sarifRegressToolVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "matcherAlgorithmVersion": {
+          "$ref": "#/$defs/algorithmVersion"
+        },
+        "fingerprintAlgorithmVersions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/namedAlgorithm"
+          }
+        },
+        "outputSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "configurationSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "holdoutManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groundTruthUnits",
+        "labelledRelationships",
+        "labelledMatches",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "classificationMismatches",
+        "newClassifications",
+        "resolvedClassifications",
+        "ambiguousClassifications",
+        "correctNewClassifications",
+        "correctResolvedClassifications",
+        "correctAmbiguityRefusals",
+        "unexpectedAmbiguityRefusals",
+        "incorrectlyAutoMatchedAmbiguousCases",
+        "ingestionFailures",
+        "structuralFailures",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "groundTruthUnits": {
+          "$ref": "#/$defs/count"
+        },
+        "labelledRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "labelledMatches": {
+          "$ref": "#/$defs/count"
+        },
+        "truePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falsePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "classificationMismatches": {
+          "$ref": "#/$defs/count"
+        },
+        "newClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "resolvedClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "ambiguousClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "correctNewClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "correctResolvedClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "correctAmbiguityRefusals": {
+          "$ref": "#/$defs/count"
+        },
+        "unexpectedAmbiguityRefusals": {
+          "$ref": "#/$defs/count"
+        },
+        "incorrectlyAutoMatchedAmbiguousCases": {
+          "$ref": "#/$defs/count"
+        },
+        "ingestionFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "structuralFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "precision": {
+          "$ref": "#/$defs/ratio"
+        },
+        "recall": {
+          "$ref": "#/$defs/ratio"
+        },
+        "f1": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "producerMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerId",
+        "metrics"
+      ],
+      "properties": {
+        "producerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "metrics": {
+          "$ref": "#/$defs/metrics"
+        }
+      }
+    },
+    "groundTruth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "baselineKey",
+        "candidateKey",
+        "expectedClassification"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "match",
+            "new",
+            "resolved",
+            "ambiguous"
+          ]
+        },
+        "baselineKey": {
+          "$ref": "#/$defs/nullableFindingKey"
+        },
+        "candidateKey": {
+          "$ref": "#/$defs/nullableFindingKey"
+        },
+        "expectedClassification": {
+          "enum": [
+            "unchanged",
+            "moved",
+            "modified",
+            "new",
+            "resolved",
+            "ambiguous"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "match"
+            },
+            "baselineKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "candidateKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "expectedClassification": {
+              "enum": [
+                "unchanged",
+                "moved",
+                "modified"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "new"
+            },
+            "baselineKey": {
+              "type": "null"
+            },
+            "candidateKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "expectedClassification": {
+              "const": "new"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "resolved"
+            },
+            "baselineKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "candidateKey": {
+              "type": "null"
+            },
+            "expectedClassification": {
+              "const": "resolved"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "ambiguous"
+            },
+            "expectedClassification": {
+              "const": "ambiguous"
+            }
+          },
+          "anyOf": [
+            {
+              "properties": {
+                "baselineKey": {
+                  "$ref": "#/$defs/nonAmbientString"
+                }
+              }
+            },
+            {
+              "properties": {
+                "candidateKey": {
+                  "$ref": "#/$defs/nonAmbientString"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "actualResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "baselineKey",
+        "candidateKey"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "unchanged",
+            "moved",
+            "modified",
+            "new",
+            "resolved",
+            "ambiguous",
+            "not-reported",
+            "ingestion-failure",
+            "structural-failure"
+          ]
+        },
+        "baselineKey": {
+          "$ref": "#/$defs/nullableFindingKey"
+        },
+        "candidateKey": {
+          "$ref": "#/$defs/nullableFindingKey"
+        }
+      }
+    },
+    "relationshipResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationshipId",
+        "groundTruth",
+        "actual",
+        "outcome"
+      ],
+      "properties": {
+        "relationshipId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "groundTruth": {
+          "$ref": "#/$defs/groundTruth"
+        },
+        "actual": {
+          "$ref": "#/$defs/actualResult"
+        },
+        "outcome": {
+          "enum": [
+            "true-positive",
+            "false-match",
+        "missed-match",
+        "classification-mismatch",
+            "correct-new",
+            "incorrect-new",
+            "correct-resolved",
+            "incorrect-resolved",
+            "correct-ambiguity-refusal",
+            "unexpected-ambiguity-refusal",
+            "incorrect-ambiguity-match",
+            "ingestion-failure",
+            "structural-failure"
+          ]
+        }
+      }
+    },
+    "relationshipReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationshipId"
+      ],
+      "properties": {
+        "relationshipId": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "ambiguityRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationshipId",
+        "expected"
+      ],
+      "properties": {
+        "relationshipId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
+    },
+    "diagnosticCode": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Z][A-Z0-9_.-]*$"
+    },
+    "ingestionFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "diagnosticCode"
+      ],
+      "properties": {
+        "input": {
+          "enum": [
+            "baseline",
+            "candidate",
+            "configuration",
+            "labels"
+          ]
+        },
+        "diagnosticCode": {
+          "$ref": "#/$defs/diagnosticCode"
+        }
+      }
+    },
+    "structuralFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "relativePath"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/diagnosticCode"
+        },
+        "relativePath": {
+          "$ref": "#/$defs/relativePath"
+        }
+      }
+    },
+    "outcomeDetails": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "falseMatches",
+        "missedMatches",
+        "classificationMismatches",
+        "ambiguityRefusals",
+        "incorrectAmbiguityMatches",
+        "ingestionFailures",
+        "structuralFailures"
+      ],
+      "properties": {
+        "falseMatches": {
+          "type": "array",
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/relationshipReference"
+          }
+        },
+        "missedMatches": {
+          "type": "array",
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/relationshipReference"
+          }
+        },
+        "classificationMismatches": {
+          "type": "array",
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/relationshipReference"
+          }
+        },
+        "ambiguityRefusals": {
+          "type": "array",
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ambiguityRefusal"
+          }
+        },
+        "incorrectAmbiguityMatches": {
+          "type": "array",
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/relationshipReference"
+          }
+        },
+        "ingestionFailures": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ingestionFailure"
+          }
+        },
+        "structuralFailures": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/structuralFailure"
+          }
+        }
+      }
+    },
+    "caseInputHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineSarifSha256",
+        "candidateSarifSha256",
+        "labelsSha256",
+        "notesSha256",
+        "producerInputTreeSha256",
+        "configSha256"
+      ],
+      "properties": {
+        "baselineSarifSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "candidateSarifSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "labelsSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "notesSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "producerInputTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "configSha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "diagnosticCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "count"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/diagnosticCode"
+        },
+        "count": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "diagnosticCounts": {
+      "type": "array",
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/diagnosticCount"
+      }
+    },
+    "caseResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "producerId",
+        "status",
+        "inputHashes",
+        "engineReportSha256",
+        "metrics",
+        "relationshipResults",
+        "outcomes",
+        "diagnosticCounts"
+      ],
+      "properties": {
+        "caseId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "producerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "status": {
+          "enum": [
+            "evaluated",
+            "ingestion-failure",
+            "structural-failure"
+          ]
+        },
+        "inputHashes": {
+          "$ref": "#/$defs/caseInputHashes"
+        },
+        "engineReportSha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "$ref": "#/$defs/metrics"
+        },
+        "relationshipResults": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/relationshipResult"
+          }
+        },
+        "outcomes": {
+          "$ref": "#/$defs/outcomeDetails"
+        },
+        "diagnosticCounts": {
+          "$ref": "#/$defs/diagnosticCounts"
+        }
+      }
+    }
+  }
+}

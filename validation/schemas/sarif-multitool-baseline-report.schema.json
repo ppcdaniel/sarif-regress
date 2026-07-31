@@ -1,0 +1,778 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/sarif-multitool-baseline-report.schema.json",
+  "title": "Microsoft SARIF Multitool normalized holdout baseline report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportKind",
+    "evaluation",
+    "tool",
+    "aggregate",
+    "producers",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "reportKind": {
+      "const": "sarif-multitool-normalized-baseline"
+    },
+    "evaluation": {
+      "$ref": "#/$defs/evaluation"
+    },
+    "tool": {
+      "$ref": "#/$defs/tool"
+    },
+    "aggregate": {
+      "$ref": "#/$defs/metrics"
+    },
+    "producers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/producerMetrics"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/caseResult"
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "nonAmbientString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!\\\\\\\\)[^\\u0000\\r\\n]+$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!\\\\\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
+    },
+    "gitCommitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?![vV]?[lL][aA][tT][eE][sS][tT]$)(?!.*[ *xX^~><=|])[0-9A-Za-z][0-9A-Za-z._+-]*$"
+    },
+    "schemaVersionValue": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[0-9]+(?:\\.[0-9]+)*$"
+    },
+    "algorithmVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+/-]*$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "nullableFindingKey": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/nonAmbientString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "namedAlgorithm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "version": {
+          "$ref": "#/$defs/algorithmVersion"
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryCommitSha",
+        "sourceTreeSha256",
+        "sarifRegressToolVersion",
+        "matcherAlgorithmVersion",
+        "fingerprintAlgorithmVersions",
+        "outputSchemaVersion",
+        "configurationSchemaVersion",
+        "holdoutManifestSha256"
+      ],
+      "properties": {
+        "repositoryCommitSha": {
+          "$ref": "#/$defs/gitCommitSha"
+        },
+        "sourceTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "sarifRegressToolVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "matcherAlgorithmVersion": {
+          "$ref": "#/$defs/algorithmVersion"
+        },
+        "fingerprintAlgorithmVersions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/namedAlgorithm"
+          }
+        },
+        "outputSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "configurationSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "holdoutManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "packageId",
+        "exactVersion",
+        "projectUrl",
+        "sourceCommitSha",
+        "packageUrl",
+        "packageSha256",
+        "packageSizeBytes",
+        "license",
+        "helpOutputSha256",
+        "versionOutputSha256"
+      ],
+      "properties": {
+        "name": {
+          "const": "Microsoft SARIF Multitool"
+        },
+        "packageId": {
+          "const": "Sarif.Multitool"
+        },
+        "exactVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "projectUrl": {
+          "const": "https://github.com/microsoft/sarif-sdk"
+        },
+        "sourceCommitSha": {
+          "const": "e68c02f86ac02bb9acb3b9da6c3de2291d5b0e2a"
+        },
+        "packageUrl": {
+          "const": "https://api.nuget.org/v3-flatcontainer/sarif.multitool/5.5.0/sarif.multitool.5.5.0.nupkg"
+        },
+        "packageSha256": {
+          "const": "2d2c73cc1fa4b79e5a41bded05d94dd645fa61d003492054260d7e106e838149"
+        },
+        "packageSizeBytes": {
+          "const": 33705414
+        },
+        "license": {
+          "const": "MIT"
+        },
+        "helpOutputSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "versionOutputSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "stateCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "new",
+        "absent",
+        "unchanged",
+        "updated",
+        "error",
+        "unsupported"
+      ],
+      "properties": {
+        "new": {
+          "$ref": "#/$defs/count"
+        },
+        "absent": {
+          "$ref": "#/$defs/count"
+        },
+        "unchanged": {
+          "$ref": "#/$defs/count"
+        },
+        "updated": {
+          "$ref": "#/$defs/count"
+        },
+        "error": {
+          "$ref": "#/$defs/count"
+        },
+        "unsupported": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groundTruthUnits",
+        "labelledRelationships",
+        "comparableRelationships",
+        "nonComparableRelationships",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "errors",
+        "unsupported",
+        "precision",
+        "recall",
+        "f1",
+        "states"
+      ],
+      "properties": {
+        "groundTruthUnits": {
+          "$ref": "#/$defs/count"
+        },
+        "labelledRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "comparableRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "nonComparableRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "truePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falsePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "errors": {
+          "$ref": "#/$defs/count"
+        },
+        "unsupported": {
+          "$ref": "#/$defs/count"
+        },
+        "precision": {
+          "$ref": "#/$defs/ratio"
+        },
+        "recall": {
+          "$ref": "#/$defs/ratio"
+        },
+        "f1": {
+          "$ref": "#/$defs/ratio"
+        },
+        "states": {
+          "$ref": "#/$defs/stateCounts"
+        }
+      }
+    },
+    "producerMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerId",
+        "metrics"
+      ],
+      "properties": {
+        "producerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "metrics": {
+          "$ref": "#/$defs/metrics"
+        }
+      }
+    },
+    "groundTruth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "baselineKey",
+        "candidateKey",
+        "expectedClassification"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "match",
+            "new",
+            "resolved",
+            "ambiguous"
+          ]
+        },
+        "baselineKey": {
+          "$ref": "#/$defs/nullableFindingKey"
+        },
+        "candidateKey": {
+          "$ref": "#/$defs/nullableFindingKey"
+        },
+        "expectedClassification": {
+          "enum": [
+            "unchanged",
+            "moved",
+            "modified",
+            "new",
+            "resolved",
+            "ambiguous"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "match"
+            },
+            "baselineKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "candidateKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "expectedClassification": {
+              "enum": [
+                "unchanged",
+                "moved",
+                "modified"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "new"
+            },
+            "baselineKey": {
+              "type": "null"
+            },
+            "candidateKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "expectedClassification": {
+              "const": "new"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "resolved"
+            },
+            "baselineKey": {
+              "$ref": "#/$defs/nonAmbientString"
+            },
+            "candidateKey": {
+              "type": "null"
+            },
+            "expectedClassification": {
+              "const": "resolved"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "ambiguous"
+            },
+            "expectedClassification": {
+              "const": "ambiguous"
+            }
+          },
+          "anyOf": [
+            {
+              "properties": {
+                "baselineKey": {
+                  "$ref": "#/$defs/nonAmbientString"
+                }
+              }
+            },
+            {
+              "properties": {
+                "candidateKey": {
+                  "$ref": "#/$defs/nonAmbientString"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workingDirectory",
+        "executable",
+        "arguments"
+      ],
+      "properties": {
+        "workingDirectory": {
+          "const": "."
+        },
+        "executable": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!\\\\\\\\)[A-Za-z0-9._+-]+$"
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "maxLength": 4096,
+            "pattern": "^(?!.*(?:^|=)(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\))[^\\u0000\\r\\n]*$"
+          }
+        }
+      }
+    },
+    "mappedClassification": {
+      "enum": [
+        null,
+        "new",
+        "unchanged",
+        "moved",
+        "modified",
+        "resolved",
+        "ambiguous"
+      ]
+    },
+    "comparabilityReason": {
+      "enum": [
+        "equivalent-state-semantics",
+        "multitool-taxonomy-not-equivalent",
+        "multitool-does-not-express-ambiguity",
+        "unsupported-sarif-shape",
+        "tool-error",
+        "missing-correspondence-data",
+        "run-to-run-not-applicable",
+        "path-rebase-configuration-not-supported"
+      ]
+    },
+    "errorCodeOrNull": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Z][A-Z0-9_.-]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "relationshipResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationshipId",
+        "groundTruth",
+        "multitoolState",
+        "taxonomyMapped",
+        "mappedClassification",
+        "comparable",
+        "comparabilityReason",
+        "correct",
+        "errorOrUnsupportedCode"
+      ],
+      "properties": {
+        "relationshipId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "groundTruth": {
+          "$ref": "#/$defs/groundTruth"
+        },
+        "multitoolState": {
+          "enum": [
+            "new",
+            "absent",
+            "unchanged",
+            "updated",
+            "error",
+            "unsupported"
+          ]
+        },
+        "taxonomyMapped": {
+          "type": "boolean"
+        },
+        "mappedClassification": {
+          "$ref": "#/$defs/mappedClassification"
+        },
+        "comparable": {
+          "type": "boolean"
+        },
+        "comparabilityReason": {
+          "$ref": "#/$defs/comparabilityReason"
+        },
+        "correct": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "errorOrUnsupportedCode": {
+          "$ref": "#/$defs/errorCodeOrNull"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "comparable": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "multitoolState": {
+                "enum": [
+                  "new",
+                  "absent",
+                  "unchanged",
+                  "updated"
+                ]
+              },
+              "taxonomyMapped": {
+                "type": "boolean"
+              },
+              "mappedClassification": {
+                "$ref": "#/$defs/mappedClassification"
+              },
+              "comparabilityReason": {
+                "const": "equivalent-state-semantics"
+              },
+              "correct": {
+                "type": "boolean"
+              },
+              "errorOrUnsupportedCode": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "comparabilityReason": {
+                "enum": [
+                  "multitool-taxonomy-not-equivalent",
+                  "multitool-does-not-express-ambiguity",
+                  "unsupported-sarif-shape",
+                  "tool-error",
+                  "missing-correspondence-data",
+                  "run-to-run-not-applicable",
+                  "path-rebase-configuration-not-supported"
+                ]
+              },
+              "correct": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "taxonomyMapped": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mappedClassification": {
+                "enum": [
+                  "new",
+                  "unchanged",
+                  "moved",
+                  "modified",
+                  "resolved",
+                  "ambiguous"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "mappedClassification": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "multitoolState": {
+                "enum": [
+                  "error",
+                  "unsupported"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "comparable": {
+                "const": false
+              },
+              "errorOrUnsupportedCode": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Z][A-Z0-9_.-]*$"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "errorOrUnsupportedCode": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "caseInputHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineSarifSha256",
+        "candidateSarifSha256",
+        "labelsSha256",
+        "notesSha256",
+        "producerInputTreeSha256",
+        "configSha256"
+      ],
+      "properties": {
+        "baselineSarifSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "candidateSarifSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "labelsSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "notesSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "producerInputTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "configSha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "caseResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "producerId",
+        "inputHashes",
+        "invocation",
+        "rawArtifactRelativePath",
+        "instrumentationStateMultisetPreserved",
+        "metrics",
+        "relationshipResults"
+      ],
+      "properties": {
+        "caseId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "producerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "inputHashes": {
+          "$ref": "#/$defs/caseInputHashes"
+        },
+        "invocation": {
+          "$ref": "#/$defs/invocation"
+        },
+        "rawArtifactRelativePath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "instrumentationStateMultisetPreserved": {
+          "type": "boolean"
+        },
+        "metrics": {
+          "$ref": "#/$defs/metrics"
+        },
+        "relationshipResults": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/relationshipResult"
+          }
+        }
+      }
+    }
+  }
+}

@@ -35,11 +35,11 @@ Each row explains why the two PMD violations are the same source-authored issue.
 | `pmd-exact-03` | unchanged | The same call remains at the same path and line; producer fingerprints are absent in both projections. |
 | `pmd-exact-04` | unchanged | The same `exception.printStackTrace()` call remains at the same path and line. |
 | `pmd-exact-05` | unchanged | The same `exception.printStackTrace()` call remains at the same path and line. |
-| `pmd-line-shift-01` | moved | One inert Java comment is inserted above the unchanged call. |
-| `pmd-line-shift-02` | moved | Two inert Java comments are inserted above the unchanged call. |
-| `pmd-line-shift-03` | moved | Three inert Java comments are inserted above the unchanged call. |
-| `pmd-line-shift-04` | moved | Four inert Java comments are inserted above the unchanged call. |
-| `pmd-line-shift-05` | moved | Five inert Java comments are inserted above the unchanged call; this pair also carries the documented POSIX/Windows URI projection and rebase. |
+| `pmd-line-shift-01` | moved | A local block of one inert Java comment is inserted; its cumulative line delta is 1. |
+| `pmd-line-shift-02` | moved | A local block of two comments follows the earlier block in the shared file; its cumulative line delta is 3. |
+| `pmd-line-shift-03` | moved | A local block of three comments produces cumulative line delta 6. |
+| `pmd-line-shift-04` | moved | A local block of four comments produces cumulative line delta 10. |
+| `pmd-line-shift-05` | moved | A local block of five comments produces cumulative line delta 15; this pair also carries the documented POSIX/Windows URI projection and rebase. |
 | `pmd-moved-01` | moved | The unchanged call moves below the inert `neutralPadding` method in the same class. |
 | `pmd-moved-02` | moved | The unchanged call moves with its method group below `neutralPadding`. |
 | `pmd-moved-03` | moved | The unchanged call moves with its method group below `neutralPadding`. |
@@ -85,7 +85,7 @@ fingerprint, and the `pmd-line-shift-05` POSIX/Windows URI pair. `config.json`
 rebases only that explicit URI pair and aliases only the controlled renamed
 directory. No semantic IDs or labels enter projected SARIF. Original field
 hashes and every mutation name live in `projection-audit.json`; results are
-ordered by semantic ID for deterministic finding keys.
+kept in producer-emitted order and labels use those raw indices.
 
 Reproduce the source proof and Linux-only capture with:
 

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "sarif.multitool": {
+      "version": "5.5.0",
+      "commands": [
+        "sarif"
+      ],
+      "rollForward": false
+    }
+  }
+}
