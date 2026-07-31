@@ -36,7 +36,11 @@ readonly CAPTURE_JAVA_VENDOR="Eclipse Adoptium"
 readonly CAPTURE_JAVA_VERSION="17.0.19+10"
 readonly CAPTURE_GLIBC_VERSION="glibc 2.39"
 readonly CAPTURE_DYNAMIC_LOADER="/lib64/ld-linux-x86-64.so.2"
+readonly CAPTURE_DYNAMIC_LOADER_BYTES="236616"
 readonly CAPTURE_DYNAMIC_LOADER_SHA256="1cd555ac46b7887edeaf3c42aac5408c8135e52f6b37870da2cf82d5fe14e829"
+readonly CAPTURE_LIBC="/lib/x86_64-linux-gnu/libc.so.6"
+readonly CAPTURE_LIBC_BYTES="2125328"
+readonly CAPTURE_LIBC_SHA256="d8db8739a1633c972cec6a4fe0566bdcec6fd088f98723492ab0361f66238f75"
 
 readonly GITLEAKS_VERSION="8.30.1"
 readonly GITLEAKS_ARCHIVE_NAME="gitleaks_8.30.1_linux_x64.tar.gz"
@@ -148,12 +152,30 @@ PY
   resolved_dynamic_loader="$(readlink -f -- "${CAPTURE_DYNAMIC_LOADER}")"
   [[ -f "${resolved_dynamic_loader}" && ! -L "${resolved_dynamic_loader}" && -x "${resolved_dynamic_loader}" ]] ||
     fail "capture dynamic loader does not resolve to a regular executable."
+  local observed_dynamic_loader_bytes
+  observed_dynamic_loader_bytes="$(stat --format='%s' -- "${resolved_dynamic_loader}")"
+  [[ "${observed_dynamic_loader_bytes}" == "${CAPTURE_DYNAMIC_LOADER_BYTES}" ]] ||
+    fail "capture dynamic-loader size differs from the reviewed runtime."
   local observed_dynamic_loader_sha256
   observed_dynamic_loader_sha256="$(
     sha256sum -- "${resolved_dynamic_loader}" | cut -d ' ' -f 1
   )"
   [[ "${observed_dynamic_loader_sha256}" == "${CAPTURE_DYNAMIC_LOADER_SHA256}" ]] ||
     fail "capture dynamic-loader SHA-256 differs from the reviewed runtime."
+  local resolved_libc
+  resolved_libc="$(readlink -f -- "${CAPTURE_LIBC}")"
+  [[ -f "${resolved_libc}" && ! -L "${resolved_libc}" && -x "${resolved_libc}" ]] ||
+    fail "capture libc does not resolve to a regular executable."
+  local observed_libc_bytes
+  observed_libc_bytes="$(stat --format='%s' -- "${resolved_libc}")"
+  [[ "${observed_libc_bytes}" == "${CAPTURE_LIBC_BYTES}" ]] ||
+    fail "capture libc size differs from the reviewed runtime."
+  local observed_libc_sha256
+  observed_libc_sha256="$(
+    sha256sum -- "${resolved_libc}" | cut -d ' ' -f 1
+  )"
+  [[ "${observed_libc_sha256}" == "${CAPTURE_LIBC_SHA256}" ]] ||
+    fail "capture libc SHA-256 differs from the reviewed runtime."
 
   local java_executable
   java_executable="$(readlink -f -- "$(command -v -- java)")"

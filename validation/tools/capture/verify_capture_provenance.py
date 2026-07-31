@@ -241,6 +241,7 @@ def verify(repository_root: Path) -> None:
             "verifiedRecaptureRunnerImage",
             "glibcVersion",
             "dynamicLoader",
+            "libc",
             "networkPolicy",
         },
         "captureEnvironment",
@@ -280,6 +281,7 @@ def verify(repository_root: Path) -> None:
     )
     expected_dynamic_loader = {
         "path": "/lib64/ld-linux-x86-64.so.2",
+        "bytes": 236616,
         "sha256": (
             "1cd555ac46b7887edeaf3c42aac5408c8135e52f6b37870da2cf82d5fe14e829"
         ),
@@ -291,6 +293,24 @@ def verify(repository_root: Path) -> None:
     )
     if dynamic_loader != expected_dynamic_loader:
         raise ProvenanceError("Verified recapture dynamic-loader pin differs.")
+    libc = _object(
+        environment["libc"],
+        "captureEnvironment.libc",
+    )
+    expected_libc = {
+        "path": "/lib/x86_64-linux-gnu/libc.so.6",
+        "bytes": 2125328,
+        "sha256": (
+            "d8db8739a1633c972cec6a4fe0566bdcec6fd088f98723492ab0361f66238f75"
+        ),
+    }
+    _require_exact_keys(
+        libc,
+        set(expected_libc),
+        "captureEnvironment.libc",
+    )
+    if libc != expected_libc:
+        raise ProvenanceError("Verified recapture libc pin differs.")
     if environment["networkPolicy"] != (
         "Network is used only for the verified producer artifacts and "
         "Semgrep dependency wheels. Rules and controlled fixture source are "

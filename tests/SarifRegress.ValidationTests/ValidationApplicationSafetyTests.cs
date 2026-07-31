@@ -42,7 +42,7 @@ public sealed class ValidationApplicationSafetyTests
             {
                 _ = Directory.CreateSymbolicLink(link, target);
             }
-            catch (Exception exception) when (exception is
+            catch (Exception linkCreationException) when (linkCreationException is
                 NotSupportedException or
                 UnauthorizedAccessException or
                 IOException or

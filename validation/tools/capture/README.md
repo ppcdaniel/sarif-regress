@@ -18,6 +18,8 @@ Java vendor, or Java runtime. The hosted byte-recapture check additionally
 fails closed unless it uses runner image `ubuntu24/20260720.247.2`, glibc
 `2.39`, and dynamic-loader SHA-256
 `1cd555ac46b7887edeaf3c42aac5408c8135e52f6b37870da2cf82d5fe14e829`.
+The host `libc.so.6` is likewise pinned by its 2,125,328-byte size and SHA-256
+`d8db8739a1633c972cec6a4fe0566bdcec6fd088f98723492ab0361f66238f75`.
 Those are verified reproduction-environment pins, not a claim that the first
 capture was made on a GitHub runner. Exact immutable URLs, byte sizes, dependency
 hashes, generated-help hashes, install commands, and execution commands are in
