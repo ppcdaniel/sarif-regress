@@ -282,6 +282,9 @@ public sealed class HoldoutManifestReader
         HoldoutCasePlan plan)
     {
         string expectedDirectory = $"{CasesRelativeRoot}/{plan.Id}";
+        StablePath.RequireRepositoryRelative(
+            plan.Paths.Directory,
+            "paths.directory");
         if (!string.Equals(
             plan.Paths.Directory,
             expectedDirectory,
@@ -325,7 +328,6 @@ public sealed class HoldoutManifestReader
     private static IEnumerable<(string Field, string Path)> EnumerateCasePaths(
         HoldoutCasePaths paths)
     {
-        yield return ("paths.directory", paths.Directory);
         yield return ("paths.baselineSarif", paths.BaselineSarif);
         yield return ("paths.candidateSarif", paths.CandidateSarif);
         yield return ("paths.labels", paths.Labels);

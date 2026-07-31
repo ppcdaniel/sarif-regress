@@ -185,6 +185,9 @@ public static class HoldoutMetricsCalculator
 /// </summary>
 public static class HoldoutOutcomeClassifier
 {
+    private const string ComparisonArtifactKind = "comparison";
+    private const string InvalidInputArtifactKind = "invalid-input-diagnostics";
+
     /// <summary>
     /// Time: O(r log r); Space: O(r), where r is labelled plus observed relationships.
     /// </summary>
@@ -203,7 +206,9 @@ public static class HoldoutOutcomeClassifier
                 "The corpus result case name does not match the holdout plan.");
         }
 
-        ObservedCase observed = ParseObservedCase(caseRun.Artifact.Json.ToArray());
+        ObservedCase observed = ParseObservedCase(
+            caseRun.Artifact.Kind,
+            caseRun.Artifact.Json.ToArray());
         ImmutableArray<IngestionFailure> ingestionFailures =
             CreateIngestionFailures(caseRun, observed);
         string status = ingestionFailures.IsEmpty
@@ -561,12 +566,38 @@ public static class HoldoutOutcomeClassifier
                 ?? "INGESTION_FAILURE"))
         .ToImmutableArray();
 
-    private static ObservedCase ParseObservedCase(ReadOnlyMemory<byte> artifact)
+    private static ObservedCase ParseObservedCase(
+        string artifactKind,
+        ReadOnlyMemory<byte> artifact)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(artifactKind);
         using JsonDocument document = JsonDocument.Parse(artifact);
         var decisions = ImmutableArray.CreateBuilder<ObservedDecision>();
-        if (document.RootElement.TryGetProperty("findings", out JsonElement findings))
+        bool isComparison = string.Equals(
+            artifactKind,
+            ComparisonArtifactKind,
+            StringComparison.Ordinal);
+        bool isInvalidInput = string.Equals(
+            artifactKind,
+            InvalidInputArtifactKind,
+            StringComparison.Ordinal);
+        if (!isComparison && !isInvalidInput)
         {
+            throw new InvalidDataException(
+                $"The corpus runner produced unsupported artifact kind '{artifactKind}'.");
+        }
+
+        if (isComparison)
+        {
+            if (!document.RootElement.TryGetProperty(
+                    "findings",
+                    out JsonElement findings)
+                || findings.ValueKind != JsonValueKind.Array)
+            {
+                throw new InvalidDataException(
+                    "A comparison artifact lacks its findings array.");
+            }
+
             foreach (JsonElement finding in findings.EnumerateArray())
             {
                 FindingClassification classification = ParseClassification(
@@ -587,7 +618,10 @@ public static class HoldoutOutcomeClassifier
         return new ObservedCase(
             ordered,
             CountDiagnostics(document.RootElement),
-            ReadIngestionDiagnosticCodes(document.RootElement));
+            isInvalidInput
+                ? ReadIngestionDiagnosticCodes(document.RootElement)
+                : ImmutableSortedDictionary<string, string>.Empty
+                    .WithComparers(StringComparer.Ordinal));
     }
 
     private static ImmutableSortedDictionary<string, string>
@@ -597,7 +631,14 @@ public static class HoldoutOutcomeClassifier
             StringComparer.Ordinal);
         if (!root.TryGetProperty("inputs", out JsonElement inputs))
         {
-            return values.ToImmutable();
+            throw new InvalidDataException(
+                "An invalid-input diagnostic artifact lacks its inputs array.");
+        }
+
+        if (inputs.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidDataException(
+                "An invalid-input diagnostic artifact has a non-array inputs field.");
         }
 
         foreach (JsonElement input in inputs.EnumerateArray())

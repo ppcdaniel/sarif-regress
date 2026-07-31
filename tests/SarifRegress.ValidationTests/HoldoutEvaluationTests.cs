@@ -135,15 +135,27 @@ public sealed class HoldoutEvaluationTests
             "ingestion",
             """
             {
-              "diagnostics": [{
-                "code": "PARSE0100",
-                "severity": "error",
-                "stage": "parse"
-              }]
+              "inputs": [
+                {
+                  "input": "baseline",
+                  "valid": false,
+                  "diagnostics": [{
+                    "code": "PARSE0100",
+                    "severity": "error",
+                    "stage": "parse"
+                  }]
+                },
+                {
+                  "input": "candidate",
+                  "valid": true,
+                  "diagnostics": []
+                }
+              ]
             }
             """,
             new CorpusMetrics(1, 0, 0, 1, 0, 0, 1m, 0m, 0m),
-            observedInvalidInputs: [InputKind.Baseline]);
+            observedInvalidInputs: [InputKind.Baseline],
+            artifactKind: "invalid-input-diagnostics");
 
         SarifRegressCaseResult result = HoldoutOutcomeClassifier.Classify(
             CreateHoldoutCase("ingestion", labels),
@@ -163,6 +175,32 @@ public sealed class HoldoutEvaluationTests
             relationship => Assert.Equal("ingestion-failure", relationship.Outcome));
     }
 
+    [Fact]
+    public void Unknown_corpus_artifact_kind_is_rejected()
+    {
+        CorpusLabels labels = new(
+            "1",
+            [Pair("baseline:0:0", "candidate:0:0")],
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty,
+            ImmutableHashSet<string>.Empty);
+        CorpusCaseRun run = CreateCaseRun(
+            "unknown-artifact",
+            """{ "findings": [] }""",
+            new CorpusMetrics(1, 0, 0, 1, 0, 0, 1m, 0m, 0m),
+            artifactKind: "unknown");
+
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(() =>
+            HoldoutOutcomeClassifier.Classify(
+                CreateHoldoutCase("unknown-artifact", labels),
+                run));
+
+        Assert.Contains(
+            "unsupported artifact kind",
+            exception.Message,
+            StringComparison.Ordinal);
+    }
+
     private static LabelledPair Pair(string baseline, string candidate) => new(
         baseline,
         candidate,
@@ -172,12 +210,13 @@ public sealed class HoldoutEvaluationTests
         string caseId,
         string artifactJson,
         CorpusMetrics metrics,
-        ImmutableArray<InputKind> observedInvalidInputs = default) => new(
+        ImmutableArray<InputKind> observedInvalidInputs = default,
+        string artifactKind = "comparison") => new(
         caseId,
         [],
         observedInvalidInputs.IsDefault ? [] : observedInvalidInputs,
         new CorpusCaseArtifact(
-            "comparison",
+            artifactKind,
             ValidationTestRepository.Utf8(artifactJson + "\n")),
         metrics,
         Passed: false);

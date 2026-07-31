@@ -51,6 +51,31 @@ public sealed class HoldoutManifestTests
     }
 
     [Fact]
+    public void Schema_validation_is_repeatable_with_isolated_registries()
+    {
+        string root = ValidationTestRepository.FindRoot();
+        string schemaPath = Path.Combine(
+            root,
+            "validation",
+            "schemas",
+            "holdout-manifest.schema.json");
+        string manifestPath = Path.Combine(
+            root,
+            "validation",
+            "holdout",
+            "manifest.json");
+        var validator = new JsonSchemaValidator();
+
+        Parallel.For(
+            0,
+            8,
+            _ => validator.ValidateFile(
+                schemaPath,
+                manifestPath,
+                ValidationLimits.Default.MaximumManifestBytes));
+    }
+
+    [Fact]
     public void Schema_rejects_a_manifest_missing_required_provenance()
     {
         string root = ValidationTestRepository.FindRoot();
@@ -349,6 +374,42 @@ public sealed class HoldoutManifestTests
 
             Assert.Contains(
                 "does not exactly match",
+                exception.Message,
+                StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Case_child_path_outside_its_declared_directory_is_rejected()
+    {
+        string temporaryRoot =
+            ValidationTestRepository.CopyStructuralInputsToTemporaryRepository();
+        try
+        {
+            string manifestPath = Path.Combine(
+                temporaryRoot,
+                "validation",
+                "holdout",
+                "manifest.json");
+            JsonObject manifest = JsonNode.Parse(File.ReadAllBytes(manifestPath))!
+                .AsObject();
+            JsonObject firstCase = manifest["cases"]![0]!.AsObject();
+            string firstId = firstCase["id"]!.GetValue<string>();
+            string differentId = manifest["cases"]![1]!["id"]!.GetValue<string>();
+            firstCase["paths"]!["candidateSarif"] =
+                $"validation/holdout/cases/{differentId}/candidate.sarif";
+            File.WriteAllText(manifestPath, manifest.ToJsonString());
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(
+                () => new HoldoutManifestReader().Read(temporaryRoot));
+
+            Assert.Contains(firstId, exception.Message, StringComparison.Ordinal);
+            Assert.Contains(
+                "outside its case directory",
                 exception.Message,
                 StringComparison.Ordinal);
         }

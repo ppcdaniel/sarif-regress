@@ -64,7 +64,12 @@ public sealed class JsonSchemaValidator
         JsonSchema schema;
         try
         {
-            schema = JsonSchema.FromText(schemaNode.ToJsonString());
+            schema = JsonSchema.FromText(
+                schemaNode.ToJsonString(),
+                new BuildOptions
+                {
+                    SchemaRegistry = new SchemaRegistry(),
+                });
         }
         catch (Exception exception) when (
             exception is JsonException or JsonSchemaException)
