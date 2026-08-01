@@ -75,6 +75,54 @@ public sealed class ValidationApplication
         }
 
         EnsureOutputRoot(outputRoot);
+        if (options.Command == ValidationCommand.SparseRun)
+        {
+            SparseExperimentObservations observations =
+                await new SparseSarifExperimentRunner(limits)
+                    .RunAsync(repositoryRoot, outputRoot, cancellationToken)
+                    .ConfigureAwait(false);
+            byte[] bytes = SparseSarifExperimentSerializer.Serialize(observations);
+            AmbientDataGuard.Validate(bytes, repositoryRoot);
+            string outputPath = Path.Combine(
+                outputRoot,
+                SparseSarifExperimentRunner.OutputFileName);
+            StableJson.WriteFile(outputPath, bytes);
+            schemaValidator.ValidateFile(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    SparseResearchManifestReader.SparseRootRelativePath
+                    + "/schemas/experiment-observations.schema.json"),
+                outputPath,
+                limits.MaximumSarifBytes,
+                repositoryRoot,
+                outputRoot);
+            return ValidationExitCodes.Success;
+        }
+
+        if (options.Command == ValidationCommand.SparseEvaluate)
+        {
+            SparseExperimentGateEvidence evidence =
+                new SparseSarifExperimentEvaluator(limits).Evaluate(
+                    repositoryRoot,
+                    options.ObservationsPath!);
+            byte[] bytes = SparseSarifExperimentSerializer.Serialize(evidence);
+            AmbientDataGuard.Validate(bytes, repositoryRoot);
+            string outputPath = Path.Combine(
+                outputRoot,
+                SparseSarifExperimentEvaluator.OutputFileName);
+            StableJson.WriteFile(outputPath, bytes);
+            schemaValidator.ValidateFile(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    SparseResearchManifestReader.SparseRootRelativePath
+                    + "/schemas/experiment-gate-evidence.schema.json"),
+                outputPath,
+                limits.MaximumSarifBytes,
+                repositoryRoot,
+                outputRoot);
+            return ValidationExitCodes.Success;
+        }
+
         ValidatedHoldout holdout = manifestReader.Read(repositoryRoot);
         EvaluationMetadata metadata = metadataReader.Read(
             repositoryRoot,

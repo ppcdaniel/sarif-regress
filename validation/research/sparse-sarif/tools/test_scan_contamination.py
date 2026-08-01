@@ -12,6 +12,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Callable
 from unittest.mock import patch
 
 from scan_contamination import (
@@ -20,6 +21,12 @@ from scan_contamination import (
     DOWNLOAD_COMMAND,
     EXPERIMENT_SCENARIO_IDS,
     EXPERIMENT_VARIANT_IDS,
+    EXPERIMENT_GATES_KIND,
+    EXPERIMENT_IMPLEMENTATION_KIND,
+    EXPERIMENT_IMPLEMENTATION_ROOT_FILES,
+    EXPERIMENT_IMPLEMENTATION_ROOTS,
+    EXPERIMENT_OBSERVATIONS_KIND,
+    EXPERIMENT_SUPPORTING_ARTIFACT_NAMES,
     FAIL_CLOSED_SCENARIOS,
     FIXED_EXPERIMENT_GATES,
     PMD_LICENSE_URL,
@@ -49,6 +56,17 @@ def _write_json(path: Path, value: object) -> None:
         encoding="utf-8",
         newline="\n",
     )
+
+
+def _workflow_artifacts(role: str) -> list[dict[str, object]]:
+    return [
+        {
+            "name": name,
+            "id": 1001 + index,
+            "digest": format(8 + (index % 8), "x") * 64,
+        }
+        for index, name in enumerate(EXPERIMENT_SUPPORTING_ARTIFACT_NAMES[role])
+    ]
 
 
 def _selector(uri: str, *, line: int = 4) -> dict[str, object]:
@@ -113,6 +131,11 @@ def _gate_projection(**overrides: object) -> dict[str, object]:
         "pmdRecall": 1.0,
         "aggregatePrecision": 1.0,
         "aggregateRecall": 1.0,
+        "classificationMismatches": 0,
+        "missedNew": 0,
+        "incorrectNew": 0,
+        "missedResolved": 0,
+        "incorrectResolved": 0,
         "silentlyMatchedAmbiguity": 0,
         "sourceSideLeakage": 0,
         "containmentRegressions": 0,
@@ -156,6 +179,7 @@ def _metrics(
         "truePositives": true_positives,
         "falsePositives": false_positives,
         "falseNegatives": false_negatives,
+        "acceptedPairs": true_positives + false_positives,
         "precision": precision,
         "recall": recall,
         "f1": f1,
@@ -167,43 +191,63 @@ def _experiment_variant(
     **projection_overrides: object,
 ) -> dict[str, object]:
     projection = _gate_projection(**projection_overrides)
+    matrix_within_limits = projection["resourceBudgetsWithinLimits"]
+    if variant_id != "sarif-only-control":
+        projection["resourceBudgetsWithinLimits"] = False
     scenarios = [
         {
             "scenarioId": scenario_id,
-            "assertionsPassed": True,
-            "preflightAccepted": scenario_id not in FAIL_CLOSED_SCENARIOS,
-            "acceptedRelationships": 0,
-            "baselineReadsFromCandidateRoot": 0,
-            "candidateReadsFromBaselineRoot": 0,
-            "containmentViolations": 0,
-            "unexplainedIngestionFailures": 0,
-            "structuralFailures": 0,
+            "families": [
+                {
+                    "familyId": family_id,
+                    "assertionsPassed": True,
+                    "preflightAccepted": scenario_id
+                    not in FAIL_CLOSED_SCENARIOS,
+                    "acceptedRelationships": 0,
+                    "affectedEndpointMatches": 0,
+                    "baselineReadsFromCandidateRoot": 0,
+                    "candidateReadsFromBaselineRoot": 0,
+                    "containmentViolations": 0,
+                    "unexplainedIngestionFailures": 0,
+                    "structuralFailures": 0,
+                }
+                for family_id in ("pmd-clean-a", "pmd-clean-b")
+            ],
         }
         for scenario_id in EXPERIMENT_SCENARIO_IDS
     ]
     if projection["rootConfusions"]:
-        scenarios[6]["preflightAccepted"] = True
-        scenarios[6]["acceptedRelationships"] = projection["rootConfusions"]
-        scenarios[6]["assertionsPassed"] = False
+        scenarios[6]["families"][0]["preflightAccepted"] = True
+        scenarios[6]["families"][0]["acceptedRelationships"] = projection[
+            "rootConfusions"
+        ]
+        scenarios[6]["families"][0]["assertionsPassed"] = False
     if projection["sourceSideLeakage"]:
-        scenarios[7]["candidateReadsFromBaselineRoot"] = projection[
+        scenarios[7]["families"][0]["candidateReadsFromBaselineRoot"] = projection[
             "sourceSideLeakage"
         ]
-        scenarios[7]["assertionsPassed"] = False
+        scenarios[7]["families"][0]["assertionsPassed"] = False
     if projection["containmentRegressions"]:
-        scenarios[5]["containmentViolations"] = projection[
+        scenarios[5]["families"][0]["containmentViolations"] = projection[
             "containmentRegressions"
         ]
-        scenarios[5]["assertionsPassed"] = False
+        scenarios[5]["families"][0]["assertionsPassed"] = False
     if projection["scenarioMatrixPassed"] is False and all(
-        scenario["assertionsPassed"] is True for scenario in scenarios
+        family["assertionsPassed"] is True
+        for scenario in scenarios
+        for family in scenario["families"]
     ):
-        scenarios[0]["assertionsPassed"] = False
+        scenarios[0]["families"][0]["assertionsPassed"] = False
     no_hash_scenarios = json.loads(json.dumps(scenarios))
+    for scenario in no_hash_scenarios:
+        if scenario["scenarioId"] in FAIL_CLOSED_SCENARIOS:
+            for family in scenario["families"]:
+                family["preflightAccepted"] = True
     if projection["corpusSpecificPreflightRequired"]:
-        no_hash_scenarios[5]["assertionsPassed"] = False
-        no_hash_scenarios[5]["preflightAccepted"] = True
-        no_hash_scenarios[5]["acceptedRelationships"] = 1
+        no_hash_scenarios[5]["families"][0]["assertionsPassed"] = False
+        no_hash_scenarios[5]["families"][0]["preflightAccepted"] = True
+        no_hash_scenarios[5]["families"][0]["acceptedRelationships"] = 1
+        no_hash_scenarios[5]["families"][0]["affectedEndpointMatches"] = 1
     same_digest = "d" * 64
     linux_second_digest = (
         same_digest if projection["repeatedRunByteIdentical"] else "e" * 64
@@ -229,7 +273,7 @@ def _experiment_variant(
                 "withinDocumentedLimits": True,
             }
         )
-    if projection["resourceBudgetsWithinLimits"] is False:
+    if matrix_within_limits is False:
         resource_cells[0]["elapsedMilliseconds"] = 10_001
         resource_cells[0]["withinDocumentedLimits"] = False
     return {
@@ -241,6 +285,20 @@ def _experiment_variant(
                 {"familyId": "pmd-clean-a", **_metrics(8, 0, 0)},
                 {"familyId": "pmd-clean-b", **_metrics(11, 0, 0)},
             ],
+        },
+        "classification": {
+            "matchedRelationships": 19,
+            "classificationMismatches": projection[
+                "classificationMismatches"
+            ],
+        },
+        "lifecycle": {
+            "expectedNew": 3,
+            "correctNew": 3 - projection["incorrectNew"],
+            "incorrectNew": projection["incorrectNew"],
+            "expectedResolved": 3,
+            "correctResolved": 3 - projection["incorrectResolved"],
+            "incorrectResolved": projection["incorrectResolved"],
         },
         "gateProjection": projection,
         "releaseEvidence": {
@@ -284,8 +342,9 @@ def _experiment_variant(
             "structuralFailures": 0,
         },
         "security": {
-            "sourceSideLeakage": projection["sourceSideLeakage"],
-            "containmentRegressions": projection["containmentRegressions"],
+            "baselineReadsFromCandidateRoot": 0,
+            "candidateReadsFromBaselineRoot": projection["sourceSideLeakage"],
+            "containmentViolations": projection["containmentRegressions"],
             "rootConfusions": projection["rootConfusions"],
         },
         "determinism": {
@@ -304,7 +363,8 @@ def _experiment_variant(
             },
         },
         "resources": {
-            "withinDocumentedLimits": projection["resourceBudgetsWithinLimits"],
+            "withinDocumentedLimits": matrix_within_limits,
+            "sourceContextProjectionBenchmarked": False,
             "cells": resource_cells,
         },
     }
@@ -316,11 +376,40 @@ def _experiment_report(
     decision: str,
 ) -> dict[str, object]:
     return {
-        "schemaVersion": "1",
+        "schemaVersion": "2",
         "corpusManifestSha256": "0" * 64,
+        "evidence": {
+            "observations": {
+                "kind": EXPERIMENT_OBSERVATIONS_KIND,
+                "path": "expected/sparse-experiment-observations.json",
+                "sha256": "0" * 64,
+            },
+            "gates": {
+                "kind": EXPERIMENT_GATES_KIND,
+                "path": "expected/sparse-experiment-gate-evidence.json",
+                "sha256": "0" * 64,
+            },
+            "release": {
+                "kind": "sparse-experiment-release-evidence/v1",
+                "path": "expected/sparse-experiment-release-evidence.json",
+                "sha256": "0" * 64,
+            },
+            "determinism": {
+                "kind": "sparse-experiment-determinism-evidence/v1",
+                "path": "expected/sparse-experiment-determinism-evidence.json",
+                "sha256": "0" * 64,
+            },
+            "resources": {
+                "kind": "sparse-experiment-resource-evidence/v1",
+                "path": "expected/sparse-experiment-resource-evidence.json",
+                "sha256": "0" * 64,
+            },
+        },
         "implementation": {
             "name": "SarifRegress experiment harness",
             "version": "not-bound",
+            "manifestPath": "experiment-implementation-manifest.json",
+            "manifestSha256": "0" * 64,
         },
         "fixedGates": dict(FIXED_EXPERIMENT_GATES),
         "variants": variants,
@@ -332,6 +421,205 @@ def _experiment_report(
 
 def _complete_experiment_variants() -> list[dict[str, object]]:
     return [_experiment_variant(variant_id) for variant_id in EXPERIMENT_VARIANT_IDS]
+
+
+def _complete_limitation_report() -> dict[str, object]:
+    variants = _complete_experiment_variants()
+    for variant in variants:
+        variant["releaseEvidence"]["holdout"]["metrics"] = _metrics(50, 0, 25)
+        variant["releaseEvidence"]["holdout"]["byProducer"][2][
+            "metrics"
+        ] = _metrics(0, 0, 25)
+        variant["gateProjection"]["aggregateRecall"] = 50 / 75
+    return _experiment_report(variants, None, "document-limitation")
+
+
+def _bind_experiment_evidence(
+    root: Path,
+    report_path: Path,
+    report: dict[str, object],
+    manifest_sha256: str,
+) -> None:
+    implementation_path = root / "experiment-implementation-manifest.json"
+    implementation_sha256 = hashlib.sha256(
+        implementation_path.read_bytes()
+    ).hexdigest()
+    report["implementation"]["manifestSha256"] = implementation_sha256
+    observation_variants = []
+    for variant in report["variants"]:
+        observation_scenarios = [
+            {
+                "scenarioId": value,
+                "families": [
+                    {
+                        "familyId": family_id,
+                        "preflightAccepted": value not in FAIL_CLOSED_SCENARIOS,
+                        "acceptedPairs": [],
+                        "affectedBaselineFindings": [],
+                        "affectedCandidateFindings": [],
+                        "baselineReadsFromCandidateRoot": 0,
+                        "candidateReadsFromBaselineRoot": 0,
+                        "containmentViolations": 0,
+                        "ingestionFailures": 0,
+                        "structuralFailures": 0,
+                    }
+                    for family_id in ("pmd-clean-a", "pmd-clean-b")
+                ],
+            }
+            for value in EXPERIMENT_SCENARIO_IDS
+        ]
+        no_hash_observation_scenarios = json.loads(
+            json.dumps(observation_scenarios)
+        )
+        for scenario in no_hash_observation_scenarios:
+            if scenario["scenarioId"] in FAIL_CLOSED_SCENARIOS:
+                for family in scenario["families"]:
+                    family["preflightAccepted"] = True
+        observation_families = [
+            {
+                "familyId": family_id,
+                "baselineSarifSha256": "a" * 64,
+                "candidateSarifSha256": "b" * 64,
+                "baselineSourceTreeSha256": "c" * 64,
+                "candidateSourceTreeSha256": "d" * 64,
+                "acceptedPairs": [],
+                "newFindings": [],
+                "resolvedFindings": [],
+                "ambiguousBaselineFindings": [],
+                "ambiguousCandidateFindings": [],
+                "diagnosticCodes": [],
+                "operationCounts": {
+                    "sourceFindingsIndexed": 0,
+                    "sourceAtomsIndexed": 0,
+                    "sourceIndexLookups": 0,
+                    "candidateEdges": 0,
+                    "components": 0,
+                    "ambiguousComponents": 0,
+                },
+                "ingestionFailures": 0,
+                "structuralFailures": 0,
+            }
+            for family_id in ("pmd-clean-a", "pmd-clean-b")
+        ]
+        ingestion = {
+            "casesEvaluated": 4,
+            "failures": 0,
+            "structuralFailures": 0,
+        }
+        security = {
+            "baselineReadsFromCandidateRoot": 0,
+            "candidateReadsFromBaselineRoot": 0,
+            "containmentViolations": 0,
+            "rootConfusions": 0,
+        }
+        observation_variants.append(
+            {
+                "id": variant["id"],
+                "algorithmVersion": {
+                    "sarif-only-control": "sarifregress/sparse-control/v1",
+                    "exact-region-snippet": "exact-region-snippet/v1",
+                    "token-window": "token-window/v1",
+                    "relative-context": "relative-context/v1",
+                    "agreement-only-combination": (
+                        "agreement-only-combination/v1"
+                    ),
+                }.get(variant["id"], "invalid/v1"),
+                "parameters": {
+                    "snippetLineRadius": 20,
+                    "maximumTokenWindowTerms": 256,
+                    "maximumRelativeSurroundingTerms": 32,
+                    "maximumRelativeRegionTerms": 256,
+                    "endColumnIsExclusive": True,
+                    "relativeContextParts": (
+                        "before:nearest-32-within-20-lines,region:256,"
+                        "after:nearest-32-within-20-lines"
+                    ),
+                    "sourceTextNormalization": "utf8-bom-lf-nfc/v1",
+                    "requireUniqueOnBothSides": variant["id"]
+                    != "sarif-only-control",
+                    "agreementOnly": variant["id"]
+                    == "agreement-only-combination",
+                },
+                "families": observation_families,
+                "scenarios": observation_scenarios,
+                "ingestion": ingestion,
+                "security": security,
+                "productionApplicability": {
+                    "trustedTreeHashPreflightEnabled": False,
+                    "families": observation_families,
+                    "scenariosWithoutTrustedTreeHashes": (
+                        no_hash_observation_scenarios
+                    ),
+                    "ingestion": ingestion,
+                    "security": security,
+                },
+            }
+        )
+    observations_path = root / "expected/sparse-experiment-observations.json"
+    _write_json(
+        observations_path,
+        {
+            "schemaVersion": "1",
+            "kind": EXPERIMENT_OBSERVATIONS_KIND,
+            "corpusManifestSha256": manifest_sha256,
+            "implementationManifestSha256": implementation_sha256,
+            "variants": observation_variants,
+        },
+    )
+    observations_sha256 = hashlib.sha256(
+        observations_path.read_bytes()
+    ).hexdigest()
+    report["evidence"]["observations"]["sha256"] = observations_sha256
+    gates_path = root / "expected/sparse-experiment-gate-evidence.json"
+    _write_json(
+        gates_path,
+        {
+            "schemaVersion": "1",
+            "kind": EXPERIMENT_GATES_KIND,
+            "corpusManifestSha256": manifest_sha256,
+            "observationsSha256": observations_sha256,
+            "variants": [
+                Scanner._scored_variant_projection(variant)
+                for variant in report["variants"]
+            ],
+        },
+    )
+    report["evidence"]["gates"]["sha256"] = hashlib.sha256(
+        gates_path.read_bytes()
+    ).hexdigest()
+    supporting = {
+        "release": "releaseEvidence",
+        "determinism": "determinism",
+        "resources": "resources",
+    }
+    for role, report_key in supporting.items():
+        evidence_path = root / str(report["evidence"][role]["path"])
+        _write_json(
+            evidence_path,
+            {
+                "schemaVersion": "1",
+                "kind": report["evidence"][role]["kind"],
+                "corpusManifestSha256": manifest_sha256,
+                "implementationManifestSha256": implementation_sha256,
+                "workflow": {
+                    "runId": 123,
+                    "sourceHeadSha": "7" * 40,
+                    "artifacts": _workflow_artifacts(role),
+                },
+                "variants": [
+                    {
+                        "id": variant["id"],
+                        "value": variant[report_key],
+                    }
+                    for variant in report["variants"]
+                ],
+            },
+        )
+        report["evidence"][role]["sha256"] = hashlib.sha256(
+            evidence_path.read_bytes()
+        ).hexdigest()
+    report["corpusManifestSha256"] = manifest_sha256
+    _write_json(report_path, report)
 
 
 def _proof(
@@ -565,6 +853,40 @@ def _create_fixture(root: Path) -> None:
         encoding="utf-8",
         newline="\n",
     )
+    repository_root = root.parents[2]
+    implementation_paths = list(EXPERIMENT_IMPLEMENTATION_ROOT_FILES)
+    implementation_paths.extend(
+        f"{root_path}/Synthetic.cs" for root_path in EXPERIMENT_IMPLEMENTATION_ROOTS
+    )
+    implementation_paths.extend(
+        f"{root_path}/Synthetic.csproj"
+        for root_path in EXPERIMENT_IMPLEMENTATION_ROOTS
+    )
+    implementation_paths.sort()
+    implementation_files = []
+    for index, relative in enumerate(implementation_paths):
+        source_path = repository_root / relative
+        source_path.parent.mkdir(parents=True, exist_ok=True)
+        source_path.write_text(
+            f"// synthetic implementation file {index}\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        implementation_files.append(
+            {
+                "path": relative,
+                "sha256": hashlib.sha256(source_path.read_bytes()).hexdigest(),
+            }
+        )
+    _write_json(
+        root / "experiment-implementation-manifest.json",
+        {
+            "schemaVersion": "1",
+            "kind": EXPERIMENT_IMPLEMENTATION_KIND,
+            "algorithm": "sha256",
+            "files": implementation_files,
+        },
+    )
     manifest = {
         "schemaVersion": "1",
         "corpusId": "pmd-sparse-research",
@@ -709,38 +1031,68 @@ def _refresh(root: Path) -> None:
                 and {"fixedGates", "variants", "selectedVariant", "decision"}
                 <= set(document)
             ):
-                document["corpusManifestSha256"] = manifest_sha256
-                _write_json(path, document)
-        expected_files = sorted(
-            (
-                path
-                for path in expected_root.rglob("*")
-                if path.is_file()
-                and not path.is_symlink()
-                and path.name != "checksums.sha256"
-            ),
-            key=lambda path: path.relative_to(expected_root).as_posix(),
-        )
-        checksum_text = "".join(
-            f"{hashlib.sha256(path.read_bytes()).hexdigest()}  "
-            f"{path.relative_to(expected_root).as_posix()}\n"
-            for path in expected_files
-        )
-        (expected_root / "checksums.sha256").write_text(
-            checksum_text,
-            encoding="ascii",
-            newline="\n",
-        )
+                _bind_experiment_evidence(
+                    root,
+                    path,
+                    document,
+                    manifest_sha256,
+                )
+        _refresh_expected_checksums(root)
+
+
+def _refresh_expected_checksums(root: Path) -> None:
+    expected_root = root / "expected"
+    expected_files = sorted(
+        (
+            path
+            for path in expected_root.rglob("*")
+            if path.is_file()
+            and not path.is_symlink()
+            and path.name != "checksums.sha256"
+        ),
+        key=lambda path: path.relative_to(expected_root).as_posix(),
+    )
+    checksum_text = "".join(
+        f"{hashlib.sha256(path.read_bytes()).hexdigest()}  "
+        f"{path.relative_to(expected_root).as_posix()}\n"
+        for path in expected_files
+    )
+    (expected_root / "checksums.sha256").write_text(
+        checksum_text,
+        encoding="ascii",
+        newline="\n",
+    )
 
 
 def _codes(root: Path) -> set[str]:
     return {finding.code for finding in scan_research_root(root)}
 
 
+def _forge_bound_experiment_evidence(
+    root: Path,
+    role: str,
+    mutate: Callable[[dict[str, object]], None],
+) -> None:
+    report_path = root / "expected/experiment-report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    reference = report["evidence"][role]
+    evidence_path = root / reference["path"]
+    document = json.loads(evidence_path.read_text(encoding="utf-8"))
+    mutate(document)
+    _write_json(evidence_path, document)
+    reference["sha256"] = hashlib.sha256(evidence_path.read_bytes()).hexdigest()
+    _write_json(report_path, report)
+    _refresh_expected_checksums(root)
+
+
 class ContaminationScannerTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
-        self.root = Path(self.temporary.name)
+        self.root = (
+            Path(self.temporary.name)
+            / "repository/validation/research/sparse-sarif"
+        )
+        self.root.mkdir(parents=True)
         _create_fixture(self.root)
 
     def tearDown(self) -> None:
@@ -749,6 +1101,25 @@ class ContaminationScannerTests(unittest.TestCase):
     def test_clean_fixture_passes(self) -> None:
         self.assertEqual((), scan_research_root(self.root))
 
+    def test_all_committed_schemas_have_unique_object_keys(self) -> None:
+        schemas = Path(__file__).resolve().parent.parent / "schemas"
+
+        def reject_duplicate(
+            pairs: list[tuple[str, object]],
+        ) -> dict[str, object]:
+            value: dict[str, object] = {}
+            for key, item in pairs:
+                self.assertNotIn(key, value, f"duplicate JSON key {key!r}")
+                value[key] = item
+            return value
+
+        for schema in sorted(schemas.glob("*.schema.json")):
+            with self.subTest(schema=schema.name):
+                json.loads(
+                    schema.read_text(encoding="utf-8"),
+                    object_pairs_hook=reject_duplicate,
+                )
+
     def test_promotion_schemas_are_closed_and_exact(self) -> None:
         schemas = Path(__file__).resolve().parent.parent / "schemas"
         manifest = json.loads(
@@ -756,6 +1127,31 @@ class ContaminationScannerTests(unittest.TestCase):
         )
         audit = json.loads(
             (schemas / "projection-audit.schema.json").read_text(encoding="utf-8")
+        )
+        report = json.loads(
+            (schemas / "experiment-report.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        observations = json.loads(
+            (schemas / "experiment-observations.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        gates = json.loads(
+            (schemas / "experiment-gate-evidence.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        implementation = json.loads(
+            (schemas / "experiment-implementation-manifest.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        supporting = json.loads(
+            (schemas / "experiment-supporting-evidence.schema.json").read_text(
+                encoding="utf-8"
+            )
         )
         self.assertFalse(manifest["additionalProperties"])
         self.assertEqual(
@@ -813,6 +1209,58 @@ class ContaminationScannerTests(unittest.TestCase):
             set(audit["required"]),
         )
         self.assertFalse(audit["$defs"]["change"]["additionalProperties"])
+        self.assertEqual("2", report["properties"]["schemaVersion"]["const"])
+        self.assertFalse(report["additionalProperties"])
+        self.assertEqual(
+            "experiment-implementation-manifest.json",
+            report["properties"]["implementation"]["properties"][
+                "manifestPath"
+            ]["const"],
+        )
+        self.assertFalse(observations["additionalProperties"])
+        self.assertFalse(observations["$defs"]["family"]["additionalProperties"])
+        self.assertTrue(
+            {
+                "newFindings",
+                "resolvedFindings",
+                "ambiguousBaselineFindings",
+                "ambiguousCandidateFindings",
+            }
+            <= set(observations["$defs"]["family"]["required"])
+        )
+        self.assertFalse(gates["additionalProperties"])
+        self.assertTrue(
+            {"classification", "lifecycle"}
+            <= set(gates["$defs"]["variant"]["required"])
+        )
+        self.assertFalse(implementation["additionalProperties"])
+        self.assertFalse(supporting["additionalProperties"])
+        self.assertTrue(
+            {"implementationManifestSha256", "workflow"}
+            <= set(supporting["required"])
+        )
+        self.assertEqual(
+            [
+                "holdout-linux",
+                "holdout-windows",
+                "holdout-cross-platform",
+            ],
+            [
+                item["properties"]["name"]["const"]
+                for item in supporting["$defs"]["releaseWorkflow"]["allOf"][1][
+                    "properties"
+                ]["artifacts"]["prefixItems"]
+            ],
+        )
+        self.assertEqual(
+            list(EXPERIMENT_SUPPORTING_ARTIFACT_NAMES["resources"]),
+            [
+                item["properties"]["name"]["const"]
+                for item in supporting["$defs"]["resourceWorkflow"]["allOf"][1][
+                    "properties"
+                ]["artifacts"]["prefixItems"]
+            ],
+        )
 
     def test_manifest_capture_provenance_is_fail_closed(self) -> None:
         manifest_path = self.root / "manifest.json"
@@ -1251,6 +1699,14 @@ class ContaminationScannerTests(unittest.TestCase):
         finally:
             os.rmdir(junction)
 
+    @unittest.skipUnless(os.name == "nt", "Windows repository-handle test")
+    def test_windows_implementation_files_use_contained_repository_handles(self) -> None:
+        scanner = Scanner(self.root)
+        relative = EXPERIMENT_IMPLEMENTATION_ROOT_FILES[0]
+        payload = scanner._read_repository_implementation_file(relative)
+        self.assertIsNotNone(payload)
+        self.assertNotIn("FS009", {finding.code for finding in scanner.findings})
+
     @unittest.skipIf(os.name == "nt", "POSIX no-follow traversal test")
     def test_parent_swap_cannot_redirect_a_read(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -1683,9 +2139,20 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("EXPERIMENT010", codes)
 
     def test_complete_predeclared_experiment_matrix_is_accepted(self) -> None:
+        variants = _complete_experiment_variants()
+        for variant in variants:
+            variant["releaseEvidence"]["holdout"]["metrics"] = _metrics(
+                50,
+                0,
+                25,
+            )
+            variant["releaseEvidence"]["holdout"]["byProducer"][2][
+                "metrics"
+            ] = _metrics(0, 0, 25)
+            variant["gateProjection"]["aggregateRecall"] = 50 / 75
         report = _experiment_report(
-            _complete_experiment_variants(),
-            "agreement-only-combination",
+            variants,
+            None,
             "document-limitation",
         )
         _write_json(self.root / "expected/experiment-report.json", report)
@@ -1696,6 +2163,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertEqual(set(), experiment_codes)
 
         report["decision"] = "implement-v4"
+        report["selectedVariant"] = "agreement-only-combination"
         _write_json(self.root / "expected/experiment-report.json", report)
         _refresh(self.root)
         self.assertIn("EXPERIMENT008", _codes(self.root))
@@ -1707,16 +2175,16 @@ class ContaminationScannerTests(unittest.TestCase):
             "agreement-only-combination",
             "implement-v4",
         )
-        report["implementation"]["sha256"] = "a" * 64
         path = self.root / "expected/experiment-report.json"
         _write_json(path, report)
         _refresh(self.root)
         document = json.loads(path.read_text(encoding="utf-8"))
         document["corpusManifestSha256"] = "0" * 64
+        document["implementation"]["manifestSha256"] = "a" * 64
         _write_json(path, document)
         codes = _codes(self.root)
         self.assertIn("EXPERIMENT013", codes)
-        self.assertIn("EXPERIMENT014", codes)
+        self.assertIn("EXPERIMENT022", codes)
         self.assertIn("EXPERIMENT008", codes)
 
     def test_decision_must_use_the_exact_supported_enum(self) -> None:
@@ -1807,7 +2275,9 @@ class ContaminationScannerTests(unittest.TestCase):
         )
         _write_json(self.root / "expected/experiment-report.json", report)
         _refresh(self.root)
-        self.assertIn("EXPERIMENT011", _codes(self.root))
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT011", codes)
+        self.assertIn("EXPERIMENT026", codes)
 
     def test_resource_matrix_requires_every_size_shape_and_os_once(self) -> None:
         variants = _complete_experiment_variants()
@@ -1820,7 +2290,9 @@ class ContaminationScannerTests(unittest.TestCase):
         )
         _write_json(self.root / "expected/experiment-report.json", report)
         _refresh(self.root)
-        self.assertIn("EXPERIMENT011", _codes(self.root))
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT011", codes)
+        self.assertIn("EXPERIMENT026", codes)
 
     def test_each_variant_requires_every_scenario_once(self) -> None:
         for mutation in ("missing", "duplicate"):
@@ -1848,7 +2320,7 @@ class ContaminationScannerTests(unittest.TestCase):
     def test_swapped_root_failure_cannot_project_zero_confusion(self) -> None:
         variants = _complete_experiment_variants()
         selected = variants[-1]
-        swapped = selected["scenarios"][8]
+        swapped = selected["scenarios"][8]["families"][0]
         swapped["assertionsPassed"] = False
         swapped["preflightAccepted"] = True
         swapped["acceptedRelationships"] = 1
@@ -1871,9 +2343,11 @@ class ContaminationScannerTests(unittest.TestCase):
         production["metricsWithoutTrustedTreeHashes"] = _metrics(0, 0, 19)
         production["corpusSpecificPreflightRequired"] = True
         no_hash_mismatch = production["scenariosWithoutTrustedTreeHashes"][5]
+        no_hash_mismatch = no_hash_mismatch["families"][0]
         no_hash_mismatch["assertionsPassed"] = False
         no_hash_mismatch["preflightAccepted"] = True
         no_hash_mismatch["acceptedRelationships"] = 1
+        no_hash_mismatch["affectedEndpointMatches"] = 1
         report = _experiment_report(
             variants,
             "agreement-only-combination",
@@ -1888,6 +2362,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertNotIn("EXPERIMENT011", codes)
 
         report["decision"] = "document-limitation"
+        report["selectedVariant"] = None
         _write_json(path, report)
         _refresh(self.root)
         limitation_codes = {
@@ -1900,10 +2375,13 @@ class ContaminationScannerTests(unittest.TestCase):
         selected = variants[-1]
         selected["gateProjection"]["corpusSpecificPreflightRequired"] = True
         production = selected["productionApplicability"]
-        swapped = production["scenariosWithoutTrustedTreeHashes"][8]
+        swapped = production["scenariosWithoutTrustedTreeHashes"][8][
+            "families"
+        ][0]
         swapped["assertionsPassed"] = False
         swapped["preflightAccepted"] = True
         swapped["acceptedRelationships"] = 1
+        swapped["baselineReadsFromCandidateRoot"] = 1
         production["corpusSpecificPreflightRequired"] = True
         report = _experiment_report(
             variants,
@@ -1917,6 +2395,17 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("EXPERIMENT008", codes)
         self.assertNotIn("EXPERIMENT010", codes)
         self.assertNotIn("EXPERIMENT011", codes)
+
+    def test_no_hash_missing_file_allows_unaffected_relationships(self) -> None:
+        report = _complete_limitation_report()
+        scenario = report["variants"][0]["productionApplicability"][
+            "scenariosWithoutTrustedTreeHashes"
+        ][4]["families"][0]
+        scenario["acceptedRelationships"] = 1
+        scenario["affectedEndpointMatches"] = 0
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        self.assertNotIn("EXPERIMENT011", _codes(self.root))
 
     def test_ambiguity_universe_and_refusal_arithmetic_are_bound(self) -> None:
         variants = _complete_experiment_variants()
@@ -1967,6 +2456,17 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("EXPERIMENT011", codes)
         self.assertIn("EXPERIMENT008", codes)
 
+    def test_generic_matrix_cannot_claim_source_projection_resource_gate(self) -> None:
+        report = _complete_limitation_report()
+        source_variant = report["variants"][1]
+        self.assertFalse(
+            source_variant["resources"]["sourceContextProjectionBenchmarked"]
+        )
+        source_variant["gateProjection"]["resourceBudgetsWithinLimits"] = True
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        self.assertIn("EXPERIMENT010", _codes(self.root))
+
     def test_family_metric_universes_are_eight_and_eleven(self) -> None:
         variants = _complete_experiment_variants()
         by_family = variants[-1]["metrics"]["byFamily"]
@@ -1982,6 +2482,263 @@ class ContaminationScannerTests(unittest.TestCase):
         codes = _codes(self.root)
         self.assertIn("EXPERIMENT011", codes)
         self.assertIn("EXPERIMENT008", codes)
+
+    def test_rehashed_gate_evidence_cannot_override_report_metrics(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document["variants"][0]["metrics"]["falsePositives"] = 1
+            document["variants"][0]["metrics"]["acceptedPairs"] += 1
+
+        _forge_bound_experiment_evidence(self.root, "gates", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT024", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_rehashed_observations_require_both_scenario_families(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document["variants"][0]["scenarios"][0]["families"].pop()
+
+        _forge_bound_experiment_evidence(self.root, "observations", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT023", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_observation_algorithms_and_parameters_are_preregistered(self) -> None:
+        report = _complete_limitation_report()
+        report_path = self.root / "expected/experiment-report.json"
+        _write_json(report_path, report)
+        for mutation in ("algorithm", "parameters"):
+            with self.subTest(mutation=mutation):
+                _refresh(self.root)
+
+                def mutate(document: dict[str, object]) -> None:
+                    if mutation == "algorithm":
+                        document["variants"][0]["algorithmVersion"] = (
+                            "sarifregress/sparse-control/v2"
+                        )
+                    else:
+                        document["variants"][2]["parameters"][
+                            "maximumTokenWindowTerms"
+                        ] = 255
+
+                _forge_bound_experiment_evidence(
+                    self.root,
+                    "observations",
+                    mutate,
+                )
+                codes = _codes(self.root)
+                self.assertIn("EXPERIMENT023", codes)
+                self.assertIn("EXPERIMENT019", codes)
+
+    def test_gate_evidence_must_bind_exact_observation_bytes(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document["observationsSha256"] = "f" * 64
+
+        _forge_bound_experiment_evidence(self.root, "gates", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT024", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_rehashed_release_projection_cannot_override_report(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document["variants"][0]["value"]["holdout"]["metrics"][
+                "falsePositives"
+            ] = 1
+
+        _forge_bound_experiment_evidence(self.root, "release", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_release_role_is_semantically_validated_after_exact_projection(self) -> None:
+        report = _complete_limitation_report()
+        report["variants"][0]["releaseEvidence"]["holdout"][
+            "relationshipCount"
+        ] = 74
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT011", codes)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_typed_evidence_kind_is_not_replaceable_by_rehashed_json(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document["kind"] = EXPERIMENT_GATES_KIND
+
+        _forge_bound_experiment_evidence(self.root, "observations", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT025", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_supporting_attestation_requires_distinct_nonzero_artifacts(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            workflow = document["workflow"]
+            artifacts = workflow["artifacts"]
+            artifacts[-1]["id"] = artifacts[0]["id"]
+            artifacts[1]["digest"] = "0" * 64
+
+        _forge_bound_experiment_evidence(self.root, "release", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_supporting_attestation_binds_every_role_artifact_name(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            artifacts = document["workflow"]["artifacts"]
+            artifacts.pop()
+            artifacts[0]["name"] = "benchmark-1000-unique-windows"
+
+        _forge_bound_experiment_evidence(self.root, "resources", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_supporting_attestations_share_one_exact_source_head(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document["workflow"]["sourceHeadSha"] = "b" * 40
+
+        _forge_bound_experiment_evidence(self.root, "resources", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT027", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_implementation_manifest_contract_is_not_digest_only(self) -> None:
+        report = _complete_limitation_report()
+        report_path = self.root / "expected/experiment-report.json"
+        _write_json(report_path, report)
+        _refresh(self.root)
+        implementation_path = self.root / "experiment-implementation-manifest.json"
+        implementation = json.loads(
+            implementation_path.read_text(encoding="utf-8")
+        )
+        implementation["files"][0]["path"] = "expected/report.json"
+        _write_json(implementation_path, implementation)
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        report["implementation"]["manifestSha256"] = hashlib.sha256(
+            implementation_path.read_bytes()
+        ).hexdigest()
+        _write_json(report_path, report)
+        _refresh_expected_checksums(self.root)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT022", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_implementation_manifest_digest_must_match_repo_file_bytes(self) -> None:
+        report = _complete_limitation_report()
+        report_path = self.root / "expected/experiment-report.json"
+        _write_json(report_path, report)
+        _refresh(self.root)
+        implementation_path = self.root / "experiment-implementation-manifest.json"
+        implementation = json.loads(
+            implementation_path.read_text(encoding="utf-8")
+        )
+        implementation["files"][0]["sha256"] = "f" * 64
+        _write_json(implementation_path, implementation)
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        report["implementation"]["manifestSha256"] = hashlib.sha256(
+            implementation_path.read_bytes()
+        ).hexdigest()
+        _write_json(report_path, report)
+        _refresh_expected_checksums(self.root)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT022", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_implementation_manifest_requires_exact_discovered_source_set(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        extra = (
+            self.root.parents[2]
+            / "src/SarifRegress.Core/UnexpectedImplementation.cs"
+        )
+        extra.write_text("// unexpected admitted source\n", encoding="utf-8")
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT022", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_implementation_manifest_ignores_build_output_directories(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        generated = self.root.parents[2] / "src/SarifRegress.Core/obj/Generated.cs"
+        generated.parent.mkdir(parents=True)
+        generated.write_text("// generated build output\n", encoding="utf-8")
+        experiment_codes = {
+            code for code in _codes(self.root) if code.startswith("EXPERIMENT")
+        }
+        self.assertEqual(set(), experiment_codes)
+
+    def test_zero_accepted_pairs_use_exact_precision_convention(self) -> None:
+        report = _complete_limitation_report()
+        variant = report["variants"][0]
+        variant["metrics"]["aggregate"] = {
+            **_metrics(0, 0, 19),
+            "precision": 0.0,
+        }
+        variant["metrics"]["byFamily"] = [
+            {
+                "familyId": "pmd-clean-a",
+                **_metrics(0, 0, 8),
+            },
+            {
+                "familyId": "pmd-clean-b",
+                **_metrics(0, 0, 11),
+            },
+        ]
+        variant["classification"]["matchedRelationships"] = 0
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        self.assertIn("EXPERIMENT011", _codes(self.root))
+
+    def test_accepted_pair_denominator_cannot_be_forged(self) -> None:
+        report = _complete_limitation_report()
+        report["variants"][0]["metrics"]["aggregate"]["acceptedPairs"] = 20
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        self.assertIn("EXPERIMENT011", _codes(self.root))
+
+    def test_lifecycle_arithmetic_is_scored_not_self_asserted(self) -> None:
+        report = _complete_limitation_report()
+        lifecycle = report["variants"][0]["lifecycle"]
+        lifecycle["expectedNew"] = 3
+        lifecycle["correctNew"] = 4
+        lifecycle["incorrectNew"] = 0
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+        self.assertIn("EXPERIMENT011", _codes(self.root))
 
     def _add_ordered_relationship(
         self,

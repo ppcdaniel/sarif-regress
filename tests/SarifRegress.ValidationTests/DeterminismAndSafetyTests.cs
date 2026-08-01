@@ -367,11 +367,72 @@ public sealed class DeterminismAndSafetyTests
             StringComparison.Ordinal);
         Assert.DoesNotContain("LINUX_MODE", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("WINDOWS_MODE", workflow, StringComparison.Ordinal);
+        Assert.Contains("  sparse-experiment-linux:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("  sparse-experiment-windows:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("  sparse-experiment-compare:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("sparse-run", workflow, StringComparison.Ordinal);
+        Assert.Contains("sparse-evaluate", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "sparse-experiment-observations.json",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "sparse-experiment-gate-evidence.json",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "artifact-ids: ${{ needs.sparse-experiment-linux.outputs.artifact_id }}",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "artifact-ids: ${{ needs.sparse-experiment-windows.outputs.artifact_id }}",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains("digest-mismatch: error", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            ".workflow_run.head_sha == $source_sha",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "sparse-experiment-bootstrap",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "SPARSE_EXPERIMENT_MODE",
+            workflow,
+            StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(
             ValidationTestRepository.FindRoot(),
             ".github",
             "workflows",
             "holdout-bootstrap.yml")));
+
+        string linuxExperiment = SliceWorkflowJob(
+            workflow,
+            "sparse-experiment-linux",
+            "sparse-experiment-windows");
+        string windowsExperiment = SliceWorkflowJob(
+            workflow,
+            "sparse-experiment-windows",
+            "sparse-experiment-compare");
+        string experimentCoordinator = SliceWorkflowJob(
+            workflow,
+            "sparse-experiment-compare",
+            "linux");
+        Assert.Contains("for run_id in 1 2", linuxExperiment, StringComparison.Ordinal);
+        Assert.Contains("foreach ($runId in @(1, 2))", windowsExperiment, StringComparison.Ordinal);
+        Assert.Contains("cmp --silent", linuxExperiment, StringComparison.Ordinal);
+        Assert.Contains("Assert-ByteIdentical", windowsExperiment, StringComparison.Ordinal);
+        Assert.Contains("permissions:\n      actions: read", experimentCoordinator, StringComparison.Ordinal);
+        Assert.Contains("artifact-ids:", experimentCoordinator, StringComparison.Ordinal);
+        Assert.Contains("digest-mismatch: error", experimentCoordinator, StringComparison.Ordinal);
+        Assert.Contains("cmp --silent", experimentCoordinator, StringComparison.Ordinal);
+        Assert.DoesNotContain("if: always()", linuxExperiment, StringComparison.Ordinal);
+        Assert.DoesNotContain("if: always()", windowsExperiment, StringComparison.Ordinal);
+        Assert.DoesNotContain("if: always()", experimentCoordinator, StringComparison.Ordinal);
+        Assert.DoesNotContain("experiment-report.json", linuxExperiment, StringComparison.Ordinal);
+        Assert.DoesNotContain("experiment-report.json", windowsExperiment, StringComparison.Ordinal);
+        Assert.DoesNotContain("experiment-report.json", experimentCoordinator, StringComparison.Ordinal);
 
         string captureWorkflow = File.ReadAllText(Path.Combine(
             ValidationTestRepository.FindRoot(),
@@ -440,6 +501,20 @@ public sealed class DeterminismAndSafetyTests
             count++;
             offset = match + search.Length;
         }
+    }
+
+    private static string SliceWorkflowJob(
+        string workflow,
+        string jobName,
+        string nextJobName)
+    {
+        string startMarker = $"  {jobName}:\n";
+        string endMarker = $"  {nextJobName}:\n";
+        int start = workflow.IndexOf(startMarker, StringComparison.Ordinal);
+        int end = workflow.IndexOf(endMarker, start + startMarker.Length, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Workflow job '{jobName}' was not found.");
+        Assert.True(end > start, $"Workflow job '{nextJobName}' was not found after '{jobName}'.");
+        return workflow[start..end];
     }
 
     private static void WritePortableTree(string root)

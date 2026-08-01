@@ -7,6 +7,7 @@
   "required": [
     "schemaVersion",
     "corpusManifestSha256",
+    "evidence",
     "implementation",
     "fixedGates",
     "variants",
@@ -16,17 +17,62 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1"
+      "const": "2"
     },
     "corpusManifestSha256": {
       "$ref": "#/$defs/sha256"
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observations",
+        "gates",
+        "release",
+        "determinism",
+        "resources"
+      ],
+      "properties": {
+        "observations": {
+          "allOf": [
+            { "$ref": "#/$defs/typedEvidenceReference" },
+            { "properties": { "kind": { "const": "sparse-experiment-observations/v1" } } }
+          ]
+        },
+        "gates": {
+          "allOf": [
+            { "$ref": "#/$defs/typedEvidenceReference" },
+            { "properties": { "kind": { "const": "sparse-experiment-gates/v1" } } }
+          ]
+        },
+        "release": {
+          "allOf": [
+            { "$ref": "#/$defs/typedEvidenceReference" },
+            { "properties": { "kind": { "const": "sparse-experiment-release-evidence/v1" } } }
+          ]
+        },
+        "determinism": {
+          "allOf": [
+            { "$ref": "#/$defs/typedEvidenceReference" },
+            { "properties": { "kind": { "const": "sparse-experiment-determinism-evidence/v1" } } }
+          ]
+        },
+        "resources": {
+          "allOf": [
+            { "$ref": "#/$defs/typedEvidenceReference" },
+            { "properties": { "kind": { "const": "sparse-experiment-resource-evidence/v1" } } }
+          ]
+        }
+      }
     },
     "implementation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "name",
-        "version"
+        "version",
+        "manifestPath",
+        "manifestSha256"
       ],
       "properties": {
         "name": {
@@ -39,20 +85,12 @@
           "minLength": 1,
           "maxLength": 128
         },
-        "path": {
-          "$ref": "#/$defs/relativePath"
+        "manifestPath": {
+          "const": "experiment-implementation-manifest.json"
         },
-        "sha256": {
+        "manifestSha256": {
           "$ref": "#/$defs/sha256"
         }
-      },
-      "dependentRequired": {
-        "path": [
-          "sha256"
-        ],
-        "sha256": [
-          "path"
-        ]
       }
     },
     "fixedGates": {
@@ -178,12 +216,6 @@
       },
       "then": {
         "properties": {
-          "implementation": {
-            "required": [
-              "path",
-              "sha256"
-            ]
-          },
           "selectedVariant": {
             "type": "string"
           },
@@ -201,6 +233,11 @@
                     "pmdRecall",
                     "aggregatePrecision",
                     "aggregateRecall",
+                    "classificationMismatches",
+                    "missedNew",
+                    "incorrectNew",
+                    "missedResolved",
+                    "incorrectResolved",
                     "silentlyMatchedAmbiguity",
                     "sourceSideLeakage",
                     "containmentRegressions",
@@ -228,6 +265,21 @@
                     },
                     "aggregateRecall": {
                       "minimum": 0.9
+                    },
+                    "classificationMismatches": {
+                      "const": 0
+                    },
+                    "missedNew": {
+                      "const": 0
+                    },
+                    "incorrectNew": {
+                      "const": 0
+                    },
+                    "missedResolved": {
+                      "const": 0
+                    },
+                    "incorrectResolved": {
+                      "const": 0
                     },
                     "silentlyMatchedAmbiguity": {
                       "const": 0
@@ -279,6 +331,25 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "document-limitation"
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "properties": {
+          "selectedVariant": {
+            "type": "null"
+          }
+        }
+      }
     }
   ],
   "$defs": {
@@ -312,6 +383,28 @@
         ]
       }
     },
+    "typedEvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
     "stableId": {
       "type": "string",
       "minLength": 1,
@@ -342,6 +435,11 @@
         "maximumRootConfusions",
         "maximumUnexplainedIngestionFailures",
         "maximumStructuralFailures",
+        "maximumClassificationMismatches",
+        "maximumMissedNew",
+        "maximumIncorrectNew",
+        "maximumMissedResolved",
+        "maximumIncorrectResolved",
         "requireDevelopmentCorpusGreen",
         "requireExistingProducerNoRegression",
         "requireCrossPlatformByteIdentity",
@@ -380,6 +478,21 @@
         "maximumStructuralFailures": {
           "const": 0
         },
+        "maximumClassificationMismatches": {
+          "const": 0
+        },
+        "maximumMissedNew": {
+          "const": 0
+        },
+        "maximumIncorrectNew": {
+          "const": 0
+        },
+        "maximumMissedResolved": {
+          "const": 0
+        },
+        "maximumIncorrectResolved": {
+          "const": 0
+        },
         "requireDevelopmentCorpusGreen": {
           "const": true
         },
@@ -407,6 +520,7 @@
         "truePositives",
         "falsePositives",
         "falseNegatives",
+        "acceptedPairs",
         "precision",
         "recall",
         "f1"
@@ -419,6 +533,9 @@
           "$ref": "#/$defs/count"
         },
         "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "acceptedPairs": {
           "$ref": "#/$defs/count"
         },
         "precision": {
@@ -440,6 +557,7 @@
         "truePositives",
         "falsePositives",
         "falseNegatives",
+        "acceptedPairs",
         "precision",
         "recall",
         "f1"
@@ -457,6 +575,9 @@
         "falseNegatives": {
           "$ref": "#/$defs/count"
         },
+        "acceptedPairs": {
+          "$ref": "#/$defs/count"
+        },
         "precision": {
           "$ref": "#/$defs/rate"
         },
@@ -468,6 +589,42 @@
         }
       }
     },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matchedRelationships",
+        "classificationMismatches"
+      ],
+      "properties": {
+        "matchedRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "classificationMismatches": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedNew",
+        "correctNew",
+        "incorrectNew",
+        "expectedResolved",
+        "correctResolved",
+        "incorrectResolved"
+      ],
+      "properties": {
+        "expectedNew": { "$ref": "#/$defs/count" },
+        "correctNew": { "$ref": "#/$defs/count" },
+        "incorrectNew": { "$ref": "#/$defs/count" },
+        "expectedResolved": { "$ref": "#/$defs/count" },
+        "correctResolved": { "$ref": "#/$defs/count" },
+        "incorrectResolved": { "$ref": "#/$defs/count" }
+      }
+    },
     "gateProjection": {
       "type": "object",
       "additionalProperties": false,
@@ -476,6 +633,11 @@
         "pmdRecall",
         "aggregatePrecision",
         "aggregateRecall",
+        "classificationMismatches",
+        "missedNew",
+        "incorrectNew",
+        "missedResolved",
+        "incorrectResolved",
         "silentlyMatchedAmbiguity",
         "sourceSideLeakage",
         "containmentRegressions",
@@ -503,6 +665,21 @@
         },
         "aggregateRecall": {
           "$ref": "#/$defs/rate"
+        },
+        "classificationMismatches": {
+          "$ref": "#/$defs/count"
+        },
+        "missedNew": {
+          "$ref": "#/$defs/count"
+        },
+        "incorrectNew": {
+          "$ref": "#/$defs/count"
+        },
+        "missedResolved": {
+          "$ref": "#/$defs/count"
+        },
+        "incorrectResolved": {
+          "$ref": "#/$defs/count"
         },
         "silentlyMatchedAmbiguity": {
           "$ref": "#/$defs/count"
@@ -615,14 +792,7 @@
       "additionalProperties": false,
       "required": [
         "scenarioId",
-        "assertionsPassed",
-        "preflightAccepted",
-        "acceptedRelationships",
-        "baselineReadsFromCandidateRoot",
-        "candidateReadsFromBaselineRoot",
-        "containmentViolations",
-        "unexplainedIngestionFailures",
-        "structuralFailures"
+        "families"
       ],
       "properties": {
         "scenarioId": {
@@ -639,6 +809,33 @@
             "same-observation-different-method-file"
           ]
         },
+        "families": {
+          "$ref": "#/$defs/scenarioFamilyResults"
+        }
+      }
+    },
+    "scenarioFamilyResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "familyId",
+        "assertionsPassed",
+        "preflightAccepted",
+        "acceptedRelationships",
+        "affectedEndpointMatches",
+        "baselineReadsFromCandidateRoot",
+        "candidateReadsFromBaselineRoot",
+        "containmentViolations",
+        "unexplainedIngestionFailures",
+        "structuralFailures"
+      ],
+      "properties": {
+        "familyId": {
+          "enum": [
+            "pmd-clean-a",
+            "pmd-clean-b"
+          ]
+        },
         "assertionsPassed": {
           "type": "boolean"
         },
@@ -646,6 +843,9 @@
           "type": "boolean"
         },
         "acceptedRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "affectedEndpointMatches": {
           "$ref": "#/$defs/count"
         },
         "baselineReadsFromCandidateRoot": {
@@ -664,6 +864,26 @@
           "$ref": "#/$defs/count"
         }
       }
+    },
+    "scenarioFamilyResults": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/scenarioFamilyResult" },
+            { "properties": { "familyId": { "const": "pmd-clean-a" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/scenarioFamilyResult" },
+            { "properties": { "familyId": { "const": "pmd-clean-b" } } }
+          ]
+        }
+      ],
+      "items": false
     },
     "determinismPlatform": {
       "type": "object",
@@ -1029,6 +1249,8 @@
         "description",
         "metrics",
         "gateProjection",
+        "classification",
+        "lifecycle",
         "releaseEvidence",
         "productionApplicability",
         "scenarios",
@@ -1101,6 +1323,12 @@
         },
         "gateProjection": {
           "$ref": "#/$defs/gateProjection"
+        },
+        "classification": {
+          "$ref": "#/$defs/classification"
+        },
+        "lifecycle": {
+          "$ref": "#/$defs/lifecycle"
         },
         "releaseEvidence": {
           "$ref": "#/$defs/releaseEvidence"
@@ -1309,15 +1537,19 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "sourceSideLeakage",
-            "containmentRegressions",
+            "baselineReadsFromCandidateRoot",
+            "candidateReadsFromBaselineRoot",
+            "containmentViolations",
             "rootConfusions"
           ],
           "properties": {
-            "sourceSideLeakage": {
+            "baselineReadsFromCandidateRoot": {
               "$ref": "#/$defs/count"
             },
-            "containmentRegressions": {
+            "candidateReadsFromBaselineRoot": {
+              "$ref": "#/$defs/count"
+            },
+            "containmentViolations": {
               "$ref": "#/$defs/count"
             },
             "rootConfusions": {
@@ -1358,10 +1590,14 @@
           "additionalProperties": false,
           "required": [
             "withinDocumentedLimits",
+            "sourceContextProjectionBenchmarked",
             "cells"
           ],
           "properties": {
             "withinDocumentedLimits": {
+              "type": "boolean"
+            },
+            "sourceContextProjectionBenchmarked": {
               "type": "boolean"
             },
             "cells": {

@@ -109,6 +109,11 @@ FIXED_EXPERIMENT_GATES: Final = {
     "maximumRootConfusions": 0,
     "maximumUnexplainedIngestionFailures": 0,
     "maximumStructuralFailures": 0,
+    "maximumClassificationMismatches": 0,
+    "maximumMissedNew": 0,
+    "maximumIncorrectNew": 0,
+    "maximumMissedResolved": 0,
+    "maximumIncorrectResolved": 0,
     "requireDevelopmentCorpusGreen": True,
     "requireExistingProducerNoRegression": True,
     "requireCrossPlatformByteIdentity": True,
@@ -149,7 +154,73 @@ RESOURCE_CELL_KEYS: Final = tuple(
     for finding_count in (1_000, 10_000, 100_000)
     for dataset in ("unique", "pathological")
 )
-IMPLEMENT_V4_ROLE_VALIDATORS_AVAILABLE: Final = False
+EXPERIMENT_REPORT_SCHEMA_VERSION: Final = "2"
+EXPERIMENT_OBSERVATIONS_KIND: Final = "sparse-experiment-observations/v1"
+EXPERIMENT_GATES_KIND: Final = "sparse-experiment-gates/v1"
+EXPERIMENT_IMPLEMENTATION_KIND: Final = (
+    "sparse-experiment-implementation-manifest/v1"
+)
+EXPERIMENT_IMPLEMENTATION_ROOTS: Final = (
+    "src/SarifRegress.Cli",
+    "src/SarifRegress.Core",
+    "src/SarifRegress.Match",
+    "src/SarifRegress.Report",
+    "src/SarifRegress.Sarif",
+    "validation/tools/SarifRegress.Validation",
+)
+EXPERIMENT_IMPLEMENTATION_ROOT_FILES: Final = (
+    "Directory.Build.props",
+    "Directory.Packages.props",
+    "global.json",
+)
+EXPERIMENT_SUPPORTING_KINDS: Final = {
+    "release": "sparse-experiment-release-evidence/v1",
+    "determinism": "sparse-experiment-determinism-evidence/v1",
+    "resources": "sparse-experiment-resource-evidence/v1",
+}
+EXPERIMENT_SUPPORTING_ARTIFACT_NAMES: Final = {
+    "release": (
+        "holdout-linux",
+        "holdout-windows",
+        "holdout-cross-platform",
+    ),
+    "determinism": (
+        "determinism-linux",
+        "determinism-windows",
+        "cross-platform-determinism",
+    ),
+    "resources": (
+        "benchmark-1000-unique-linux",
+        "benchmark-1000-unique-windows",
+        "benchmark-1000-pathological-linux",
+        "benchmark-1000-pathological-windows",
+        "benchmark-10000-unique-linux",
+        "benchmark-10000-unique-windows",
+        "benchmark-10000-pathological-linux",
+        "benchmark-10000-pathological-windows",
+        "benchmark-100000-unique-linux",
+        "benchmark-100000-unique-windows",
+        "benchmark-100000-pathological-linux",
+        "benchmark-100000-pathological-windows",
+        "benchmark-cross-platform",
+    ),
+}
+LIMITATION_REQUIRED_EVIDENCE_ROLES: Final = frozenset(
+    {
+        "observations",
+        "gates",
+        "implementation-manifest",
+        "release",
+        "determinism",
+        "resources",
+    }
+)
+# A future product proposal must add a parser that independently verifies the
+# actual product implementation, CLI/configuration contract, and exact-head
+# hosted evidence. No v2 research-report artifact can satisfy this role.
+IMPLEMENT_V4_REQUIRED_EVIDENCE_ROLES: Final = (
+    LIMITATION_REQUIRED_EVIDENCE_ROLES | {"product-implementation"}
+)
 PMD_SOURCE_COMMIT: Final = "8fd38edf285a33e1164f66205ebe243441db9557"
 PMD_PROJECT_URL: Final = "https://github.com/pmd/pmd"
 PMD_RELEASE_URL: Final = (
@@ -224,6 +295,12 @@ class Scanner:
 
     def __init__(self, root: Path) -> None:
         self.root = root
+        expected_suffix = ("validation", "research", "sparse-sarif")
+        self.repository_root = (
+            root.parents[2]
+            if len(root.parts) >= 3 and root.parts[-3:] == expected_suffix
+            else root
+        )
         self.files: dict[str, Path] = {}
         self.payloads: dict[str, bytes] = {}
         self.json_documents: dict[str, object] = {}
@@ -847,7 +924,13 @@ class Scanner:
         self.payloads[relative] = payload
         return payload
 
-    def _open_anchored(self, relative: str, flags: int) -> int:
+    def _open_anchored(
+        self,
+        relative: str,
+        flags: int,
+        *,
+        root: Path | None = None,
+    ) -> int:
         """Open beneath the root without following a replaced parent directory.
 
         POSIX walks no-follow directory handles. Platforms without directory-FD
@@ -860,9 +943,10 @@ class Scanner:
             raise OSError("invalid relative path")
         nofollow = getattr(os, "O_NOFOLLOW", 0)
         directory_flag = getattr(os, "O_DIRECTORY", 0)
+        approved_root = self.root if root is None else root
         if os.open in os.supports_dir_fd and directory_flag and nofollow:
             descriptor = os.open(
-                self.root,
+                approved_root,
                 os.O_RDONLY | directory_flag | nofollow,
             )
             try:
@@ -882,7 +966,7 @@ class Scanner:
             finally:
                 os.close(descriptor)
 
-        current = self.root
+        current = approved_root
         for component in parts[:-1]:
             current /= component
             status = current.lstat()
@@ -892,9 +976,15 @@ class Scanner:
                 or self._is_reparse_point(status, self._relative(current))
             ):
                 raise OSError("unsafe parent component")
-        return os.open(self.root.joinpath(*parts), flags | nofollow)
+        return os.open(approved_root.joinpath(*parts), flags | nofollow)
 
-    def _descriptor_is_contained(self, descriptor: int, relative: str) -> bool:
+    def _descriptor_is_contained(
+        self,
+        descriptor: int,
+        relative: str,
+        *,
+        root: Path | None = None,
+    ) -> bool:
         """On Windows, bind containment to the opened handle's resolved path."""
 
         if os.name != "nt":
@@ -948,8 +1038,9 @@ class Scanner:
             # comparing it to the final file path would reject safe files.
             # FILE_FLAG_OPEN_REPARSE_POINT prevents a replaced root from being
             # followed while FILE_FLAG_BACKUP_SEMANTICS permits directory open.
+            approved_root = self.root if root is None else root
             root_handle = create_file(
-                os.fspath(os.path.abspath(self.root)),
+                os.fspath(os.path.abspath(approved_root)),
                 0,
                 0x00000001 | 0x00000002 | 0x00000004,
                 None,
@@ -2692,6 +2783,13 @@ class Scanner:
                 relative,
                 "corpus manifest SHA-256 does not match admitted manifest bytes",
             )
+        if report.get("schemaVersion") != EXPERIMENT_REPORT_SCHEMA_VERSION:
+            self._add(
+                "EXPERIMENT017",
+                relative,
+                "experiment report schema version is not the exact v2 contract",
+            )
+        validated_roles = self._scan_experiment_evidence(relative, report)
         if report.get("fixedGates") != FIXED_EXPERIMENT_GATES:
             self._add(
                 "EXPERIMENT001",
@@ -2765,13 +2863,6 @@ class Scanner:
             else:
                 selected = matches[0]
         if decision == "implement-v4":
-            implementation_bound = self._evidence_reference_bound(
-                relative,
-                "implementation",
-                report.get("implementation"),
-                "path",
-                "sha256",
-            )
             if selected is None:
                 self._add(
                     "EXPERIMENT007",
@@ -2779,22 +2870,49 @@ class Scanner:
                     "implement-v4 has no uniquely selected variant",
                 )
             else:
-                if not IMPLEMENT_V4_ROLE_VALIDATORS_AVAILABLE:
+                missing_roles = (
+                    IMPLEMENT_V4_REQUIRED_EVIDENCE_ROLES - validated_roles
+                )
+                if missing_roles:
                     self._add(
                         "EXPERIMENT016",
                         relative,
-                        "implement-v4 is disabled until role-specific evidence validators exist",
+                        "implement-v4 lacks one or more independently validated evidence roles",
                     )
                 if not self._variant_passes_gates(
                     selected,
                     relative,
-                    implementation_bound=implementation_bound,
+                    validated_roles=validated_roles,
                 ):
                     self._add(
                         "EXPERIMENT008",
                         relative,
                         "implement-v4 selected a variant that fails one or more fixed gates",
                     )
+        elif decision == "document-limitation":
+            if selected_id is not None:
+                self._add(
+                    "EXPERIMENT018",
+                    relative,
+                    "document-limitation must not select an implementation variant",
+                )
+            missing_roles = LIMITATION_REQUIRED_EVIDENCE_ROLES - validated_roles
+            if missing_roles:
+                self._add(
+                    "EXPERIMENT019",
+                    relative,
+                    "document-limitation lacks bound observations, gates, or implementation evidence",
+                )
+            if variants and all(
+                isinstance(value, dict)
+                and self._variant_projection_passes_gates(value)
+                for value in variants
+            ):
+                self._add(
+                    "EXPERIMENT020",
+                    relative,
+                    "document-limitation does not identify any derived failed safety gate",
+                )
 
     def _scan_variant_projection(
         self,
@@ -2831,7 +2949,7 @@ class Scanner:
         variant: Mapping[str, object],
         report_path: str,
         *,
-        implementation_bound: bool,
+        validated_roles: frozenset[str],
     ) -> bool:
         projection = variant.get("gateProjection")
         if not isinstance(projection, dict):
@@ -2841,17 +2959,17 @@ class Scanner:
             projection.get(key) != value for key, value in bindings.items()
         ):
             return False
-        artifacts_bound = self._variant_artifacts_bound(
-            report_path,
-            variant,
-        )
-        if not implementation_bound or not artifacts_bound:
+        if not IMPLEMENT_V4_REQUIRED_EVIDENCE_ROLES <= validated_roles:
             return False
-        if not IMPLEMENT_V4_ROLE_VALIDATORS_AVAILABLE:
-            # A digest proves bytes, not that those bytes are the claimed
-            # implementation, holdout, determinism, or resource artifact.
-            # Stay fail-closed until each evidence role has a parser and
-            # cross-reference validator tied to its producer contract.
+
+        return self._variant_projection_passes_gates(variant)
+
+    @staticmethod
+    def _variant_projection_passes_gates(
+        variant: Mapping[str, object],
+    ) -> bool:
+        projection = variant.get("gateProjection")
+        if not isinstance(projection, dict):
             return False
 
         def rate_at_least(key: str, minimum: float) -> bool:
@@ -2867,6 +2985,11 @@ class Scanner:
             and rate_at_least("pmdRecall", 0.8)
             and rate_at_least("aggregatePrecision", 0.95)
             and rate_at_least("aggregateRecall", 0.9)
+            and projection.get("classificationMismatches") == 0
+            and projection.get("missedNew") == 0
+            and projection.get("incorrectNew") == 0
+            and projection.get("missedResolved") == 0
+            and projection.get("incorrectResolved") == 0
             and projection.get("silentlyMatchedAmbiguity") == 0
             and projection.get("sourceSideLeakage") == 0
             and projection.get("containmentRegressions") == 0
@@ -2882,6 +3005,1089 @@ class Scanner:
             and projection.get("scenarioMatrixPassed") is True
             and projection.get("corpusSpecificPreflightRequired") is False
         )
+
+    def _scan_experiment_evidence(
+        self,
+        report_path: str,
+        report: Mapping[str, object],
+    ) -> frozenset[str]:
+        """Validate typed evidence and bind every report variant to evaluator bytes."""
+
+        roles: set[str] = set()
+        evidence = report.get("evidence")
+        if not isinstance(evidence, dict) or set(evidence) != {
+            "observations",
+            "gates",
+            "release",
+            "determinism",
+            "resources",
+        }:
+            self._add(
+                "EXPERIMENT021",
+                report_path,
+                "typed observations and gate evidence references are required",
+            )
+            return frozenset()
+        observations_ref = evidence.get("observations")
+        gates_ref = evidence.get("gates")
+        observations = self._read_typed_experiment_evidence(
+            report_path,
+            "observations",
+            observations_ref,
+            EXPERIMENT_OBSERVATIONS_KIND,
+        )
+        gates = self._read_typed_experiment_evidence(
+            report_path,
+            "gates",
+            gates_ref,
+            EXPERIMENT_GATES_KIND,
+        )
+        supporting: dict[str, tuple[str, Mapping[str, object]] | None] = {
+            role: self._read_typed_experiment_evidence(
+                report_path,
+                role,
+                evidence.get(role),
+                kind,
+            )
+            for role, kind in EXPERIMENT_SUPPORTING_KINDS.items()
+        }
+        manifest_payload = self._read("manifest.json")
+        manifest_sha256 = (
+            hashlib.sha256(manifest_payload).hexdigest()
+            if manifest_payload is not None
+            else None
+        )
+        implementation = report.get("implementation")
+        implementation_manifest_sha256: str | None = None
+        if isinstance(implementation, dict):
+            implementation_path = implementation.get("manifestPath")
+            implementation_digest = implementation.get("manifestSha256")
+            if (
+                implementation_path == "experiment-implementation-manifest.json"
+                and isinstance(implementation_digest, str)
+                and re.fullmatch(r"[0-9a-f]{64}", implementation_digest)
+                is not None
+            ):
+                assert isinstance(implementation_path, str)
+                payload = self._read(implementation_path)
+                document = self.json_documents.get(implementation_path)
+                if (
+                    payload is not None
+                    and hashlib.sha256(payload).hexdigest()
+                    == implementation_digest
+                    and isinstance(document, dict)
+                    and self._implementation_manifest_is_valid(document)
+                ):
+                    roles.add("implementation-manifest")
+                    implementation_manifest_sha256 = implementation_digest
+        if "implementation-manifest" not in roles:
+            self._add(
+                "EXPERIMENT022",
+                report_path,
+                "implementation manifest is missing, hash-invalid, or has the wrong typed contract",
+            )
+
+        observation_sha256 = None
+        if observations is not None:
+            observation_path, observation_document = observations
+            observation_payload = self._read(observation_path)
+            observation_sha256 = (
+                hashlib.sha256(observation_payload).hexdigest()
+                if observation_payload is not None
+                else None
+            )
+            observation_variants = observation_document.get("variants")
+            if (
+                observation_document.get("schemaVersion") == "1"
+                and observation_document.get("corpusManifestSha256")
+                == manifest_sha256
+                and observation_document.get("implementationManifestSha256")
+                == implementation_manifest_sha256
+                and self._observation_variants_have_fixed_topology(
+                    observation_variants
+                )
+            ):
+                roles.add("observations")
+            else:
+                self._add(
+                    "EXPERIMENT023",
+                    report_path,
+                    "observations do not bind the admitted corpus, implementation, variants, and scenarios",
+                )
+
+        report_variants = report.get("variants")
+        if gates is not None:
+            _, gates_document = gates
+            scored_variants = gates_document.get("variants")
+            expected_scored_variants = (
+                [
+                    self._scored_variant_projection(value)
+                    for value in report_variants
+                    if isinstance(value, dict)
+                ]
+                if isinstance(report_variants, list)
+                else []
+            )
+            if (
+                gates_document.get("schemaVersion") == "1"
+                and gates_document.get("corpusManifestSha256") == manifest_sha256
+                and gates_document.get("observationsSha256") == observation_sha256
+                and scored_variants == expected_scored_variants
+                and [item.get("id") for item in expected_scored_variants]
+                == list(EXPERIMENT_VARIANT_IDS)
+            ):
+                roles.add("gates")
+            else:
+                self._add(
+                    "EXPERIMENT024",
+                    report_path,
+                    "independently scored gate evidence disagrees with the report",
+                )
+        supporting_keys = {
+            "release": "releaseEvidence",
+            "determinism": "determinism",
+            "resources": "resources",
+        }
+        supporting_source_heads: list[str] = []
+        for role, evidence_value in supporting.items():
+            if evidence_value is None:
+                continue
+            _, document = evidence_value
+            expected_values = (
+                [
+                    {
+                        "id": value.get("id"),
+                        "value": value.get(supporting_keys[role]),
+                    }
+                    for value in report_variants
+                    if isinstance(value, dict)
+                ]
+                if isinstance(report_variants, list)
+                else []
+            )
+            if (
+                set(document)
+                == {
+                    "schemaVersion",
+                    "kind",
+                    "corpusManifestSha256",
+                    "implementationManifestSha256",
+                    "workflow",
+                    "variants",
+                }
+                and document.get("schemaVersion") == "1"
+                and document.get("corpusManifestSha256") == manifest_sha256
+                and document.get("implementationManifestSha256")
+                == implementation_manifest_sha256
+                and self._supporting_workflow_is_valid(
+                    role,
+                    document.get("workflow"),
+                )
+                and document.get("variants") == expected_values
+                and self._supporting_artifact_references_are_valid(
+                    report_path,
+                    role,
+                    [item["value"] for item in expected_values],
+                )
+                and self._supporting_values_are_semantically_valid(
+                    role,
+                    [item["value"] for item in expected_values],
+                )
+                and [item.get("id") for item in expected_values]
+                == list(EXPERIMENT_VARIANT_IDS)
+            ):
+                roles.add(role)
+                workflow = document["workflow"]
+                assert isinstance(workflow, dict)
+                source_head = workflow["sourceHeadSha"]
+                assert isinstance(source_head, str)
+                supporting_source_heads.append(source_head)
+            else:
+                self._add(
+                    "EXPERIMENT026",
+                    report_path,
+                    f"{role} evidence disagrees with its report projection",
+                )
+        if len(set(supporting_source_heads)) > 1:
+            roles.difference_update(EXPERIMENT_SUPPORTING_KINDS)
+            self._add(
+                "EXPERIMENT027",
+                report_path,
+                "supporting attestations do not share one exact experiment source head",
+            )
+        return frozenset(roles)
+
+    @staticmethod
+    def _supporting_workflow_is_valid(role: str, value: object) -> bool:
+        if not isinstance(value, dict) or set(value) != {
+            "runId",
+            "sourceHeadSha",
+            "artifacts",
+        }:
+            return False
+        if (
+            type(value.get("runId")) is not int
+            or value["runId"] <= 0
+            or not isinstance(value.get("sourceHeadSha"), str)
+            or re.fullmatch(r"[0-9a-f]{40}", value["sourceHeadSha"]) is None
+            or value["sourceHeadSha"] == "0" * 40
+        ):
+            return False
+        artifacts = value["artifacts"]
+        expected_names = EXPERIMENT_SUPPORTING_ARTIFACT_NAMES.get(role)
+        if (
+            not isinstance(artifacts, list)
+            or expected_names is None
+            or len(artifacts) != len(expected_names)
+            or tuple(
+                artifact.get("name") if isinstance(artifact, dict) else None
+                for artifact in artifacts
+            )
+            != expected_names
+        ):
+            return False
+        if any(
+            not isinstance(artifact, dict)
+            or set(artifact) != {"name", "id", "digest"}
+            or type(artifact.get("id")) is not int
+            or artifact["id"] <= 0
+            or not isinstance(artifact.get("digest"), str)
+            or re.fullmatch(r"[0-9a-f]{64}", artifact["digest"]) is None
+            or artifact["digest"] == "0" * 64
+            for artifact in artifacts
+        ):
+            return False
+        return (
+            len({artifact["name"] for artifact in artifacts}) == len(artifacts)
+            and len({artifact["id"] for artifact in artifacts}) == len(artifacts)
+        )
+
+    @staticmethod
+    def _supporting_values_are_semantically_valid(
+        role: str,
+        values: list[object],
+    ) -> bool:
+        if role == "release":
+            return all(Scanner._release_evidence_is_valid(value) for value in values)
+        if role == "determinism":
+            return all(
+                isinstance(value, dict)
+                and Scanner._determinism_evidence(value) is not None
+                for value in values
+            )
+        if role == "resources":
+            return all(
+                isinstance(value, dict)
+                and Scanner._resource_matrix_passes(value) is not None
+                and value.get("withinDocumentedLimits")
+                is Scanner._resource_matrix_passes(value)
+                for value in values
+            )
+        return False
+
+    @staticmethod
+    def _release_evidence_is_valid(value: object) -> bool:
+        if not isinstance(value, dict) or set(value) != {
+            "holdout",
+            "developmentCorpus",
+        }:
+            return False
+        holdout = value.get("holdout")
+        development = value.get("developmentCorpus")
+        if not isinstance(holdout, dict) or not isinstance(development, dict):
+            return False
+        allowed_holdout = {
+            "relationshipCount",
+            "metrics",
+            "byProducer",
+            "ingestionFailures",
+            "structuralFailures",
+            "reportPath",
+            "reportSha256",
+        }
+        allowed_development = {
+            "passed",
+            "regressions",
+            "silentlyMatchedAmbiguity",
+            "reportPath",
+            "reportSha256",
+        }
+        metrics = holdout.get("metrics")
+        producers = holdout.get("byProducer")
+        if (
+            not set(holdout) <= allowed_holdout
+            or {
+                "relationshipCount",
+                "metrics",
+                "byProducer",
+                "ingestionFailures",
+                "structuralFailures",
+            }
+            - set(holdout)
+            or not set(development) <= allowed_development
+            or {"passed", "regressions", "silentlyMatchedAmbiguity"}
+            - set(development)
+            or holdout.get("relationshipCount") != 75
+            or not isinstance(metrics, dict)
+            or not Scanner._metrics_are_consistent(
+                metrics,
+                expected_relationships=75,
+            )
+            or not isinstance(producers, list)
+            or len(producers) != 3
+            or type(holdout.get("ingestionFailures")) is not int
+            or holdout["ingestionFailures"] < 0
+            or type(holdout.get("structuralFailures")) is not int
+            or holdout["structuralFailures"] < 0
+            or type(development.get("passed")) is not bool
+            or type(development.get("regressions")) is not int
+            or development["regressions"] < 0
+            or type(development.get("silentlyMatchedAmbiguity")) is not int
+            or development["silentlyMatchedAmbiguity"] < 0
+        ):
+            return False
+        expected_producers = ("semgrep", "gitleaks", "pmd")
+        counts = {key: 0 for key in ("acceptedPairs", "truePositives", "falsePositives", "falseNegatives")}
+        for expected, producer in zip(expected_producers, producers, strict=True):
+            if not isinstance(producer, dict) or set(producer) != {
+                "producerFamily",
+                "metrics",
+                "regressions",
+            }:
+                return False
+            producer_metrics = producer.get("metrics")
+            if (
+                producer.get("producerFamily") != expected
+                or not isinstance(producer_metrics, dict)
+                or not Scanner._metrics_are_consistent(
+                    producer_metrics,
+                    expected_relationships=25,
+                )
+                or type(producer.get("regressions")) is not int
+                or producer["regressions"] < 0
+            ):
+                return False
+            for key in counts:
+                counts[key] += producer_metrics[key]
+        return all(metrics[key] == total for key, total in counts.items())
+
+    def _supporting_artifact_references_are_valid(
+        self,
+        report_path: str,
+        role: str,
+        values: list[object],
+    ) -> bool:
+        references: list[tuple[str, object, str, str]] = []
+        for index, value in enumerate(values):
+            if not isinstance(value, dict):
+                return False
+            if role == "release":
+                references.extend(
+                    (
+                        f"release variant {index} {name}",
+                        value.get(name),
+                        "reportPath",
+                        "reportSha256",
+                    )
+                    for name in ("holdout", "developmentCorpus")
+                )
+            elif role == "determinism":
+                references.extend(
+                    (
+                        f"determinism variant {index} {name}",
+                        value.get(name),
+                        "artifactPath",
+                        "artifactSha256",
+                    )
+                    for name in ("linux", "windows", "comparison")
+                )
+            elif role == "resources":
+                references.append(
+                    (
+                        f"resource variant {index} coordinator",
+                        value,
+                        "evidencePath",
+                        "evidenceSha256",
+                    )
+                )
+                cells = value.get("cells")
+                if isinstance(cells, list):
+                    references.extend(
+                        (
+                            f"resource variant {index} cell {cell_index}",
+                            cell,
+                            "artifactPath",
+                            "artifactSha256",
+                        )
+                        for cell_index, cell in enumerate(cells)
+                    )
+        return all(
+            self._optional_experiment_reference_is_valid(
+                report_path,
+                owner,
+                value,
+                path_key,
+                hash_key,
+            )
+            for owner, value, path_key, hash_key in references
+        )
+
+    def _optional_experiment_reference_is_valid(
+        self,
+        report_path: str,
+        owner: str,
+        value: object,
+        path_key: str,
+        hash_key: str,
+    ) -> bool:
+        if not isinstance(value, dict):
+            return False
+        if value.get(path_key) is None and value.get(hash_key) is None:
+            return True
+        return self._evidence_reference_bound(
+            report_path,
+            owner,
+            value,
+            path_key,
+            hash_key,
+        )
+
+    def _implementation_manifest_is_valid(self, value: Mapping[str, object]) -> bool:
+        if set(value) != {"schemaVersion", "kind", "algorithm", "files"}:
+            return False
+        files = value.get("files")
+        if (
+            value.get("schemaVersion") != "1"
+            or value.get("kind") != EXPERIMENT_IMPLEMENTATION_KIND
+            or value.get("algorithm") != "sha256"
+            or not isinstance(files, list)
+            or not 1 <= len(files) <= 256
+            or any(not isinstance(item, dict) for item in files)
+        ):
+            return False
+        records = [item for item in files if isinstance(item, dict)]
+        paths = [item.get("path") for item in records]
+        expected_paths = self._expected_implementation_paths()
+        if expected_paths is None or paths != expected_paths:
+            return False
+        for item in records:
+            path = item.get("path")
+            digest = item.get("sha256")
+            if (
+                set(item) != {"path", "sha256"}
+                or not isinstance(path, str)
+                or not isinstance(digest, str)
+                or re.fullmatch(r"[0-9a-f]{64}", digest) is None
+            ):
+                return False
+            payload = self._read_repository_implementation_file(path)
+            if payload is None or hashlib.sha256(payload).hexdigest() != digest:
+                return False
+        return True
+
+    def _expected_implementation_paths(self) -> list[str] | None:
+        paths = list(EXPERIMENT_IMPLEMENTATION_ROOT_FILES)
+        for relative_root in EXPERIMENT_IMPLEMENTATION_ROOTS:
+            root = self.repository_root / relative_root
+            try:
+                root_status = root.lstat()
+                if (
+                    stat.S_ISLNK(root_status.st_mode)
+                    or not stat.S_ISDIR(root_status.st_mode)
+                    or self._repository_path_is_junction_or_reparse(
+                        root,
+                        root_status,
+                        relative_root,
+                    )
+                ):
+                    return None
+                for directory, names, filenames in os.walk(
+                    root,
+                    topdown=True,
+                    followlinks=False,
+                ):
+                    directory_path = Path(directory)
+                    for name in names:
+                        child = directory_path / name
+                        child_status = child.lstat()
+                        if (
+                            stat.S_ISLNK(child_status.st_mode)
+                            or not stat.S_ISDIR(child_status.st_mode)
+                            or self._repository_path_is_junction_or_reparse(
+                                child,
+                                child_status,
+                                child.relative_to(self.repository_root).as_posix(),
+                            )
+                        ):
+                            return None
+                    names[:] = [name for name in names if name not in {"bin", "obj"}]
+                    for name in filenames:
+                        path = directory_path / name
+                        file_status = path.lstat()
+                        if (
+                            stat.S_ISLNK(file_status.st_mode)
+                            or not stat.S_ISREG(file_status.st_mode)
+                            or self._repository_path_is_junction_or_reparse(
+                                path,
+                                file_status,
+                                path.relative_to(self.repository_root).as_posix(),
+                            )
+                        ):
+                            return None
+                        if not (
+                            name.endswith(".cs")
+                            or name.endswith(".csproj")
+                            or name == "packages.lock.json"
+                        ):
+                            continue
+                        paths.append(path.relative_to(self.repository_root).as_posix())
+            except OSError:
+                return None
+        for relative in EXPERIMENT_IMPLEMENTATION_ROOT_FILES:
+            path = self.repository_root / relative
+            try:
+                file_status = path.lstat()
+                if (
+                    stat.S_ISLNK(file_status.st_mode)
+                    or not stat.S_ISREG(file_status.st_mode)
+                    or self._repository_path_is_junction_or_reparse(
+                        path,
+                        file_status,
+                        relative,
+                    )
+                ):
+                    return None
+            except OSError:
+                return None
+        paths.sort()
+        if len(paths) > 256 or len(paths) != len(set(paths)):
+            return None
+        return paths
+
+    def _repository_path_is_junction_or_reparse(
+        self,
+        path: Path,
+        status: os.stat_result,
+        relative: str,
+    ) -> bool:
+        junction_probe = getattr(path, "is_junction", None)
+        return bool(callable(junction_probe) and junction_probe()) or (
+            self._is_reparse_point(status, relative)
+        )
+
+    def _read_repository_implementation_file(self, relative: str) -> bytes | None:
+        if not (
+            relative in EXPERIMENT_IMPLEMENTATION_ROOT_FILES
+            or any(
+                relative.startswith(root + "/")
+                for root in EXPERIMENT_IMPLEMENTATION_ROOTS
+            )
+        ):
+            return None
+        descriptor: int | None = None
+        try:
+            descriptor = self._open_anchored(
+                relative,
+                os.O_RDONLY | getattr(os, "O_BINARY", 0),
+                root=self.repository_root,
+            )
+            before = os.fstat(descriptor)
+            if (
+                not stat.S_ISREG(before.st_mode)
+                or self._is_reparse_point(before, relative)
+                or not self._descriptor_is_contained(
+                    descriptor,
+                    relative,
+                    root=self.repository_root,
+                )
+                or before.st_size > 4 * 1024 * 1024
+            ):
+                return None
+            chunks: list[bytes] = []
+            remaining = before.st_size
+            while remaining:
+                chunk = os.read(descriptor, min(remaining, 64 * 1024))
+                if not chunk:
+                    return None
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            if os.read(descriptor, 1):
+                return None
+            after = os.fstat(descriptor)
+            if (
+                before.st_dev,
+                before.st_ino,
+                before.st_size,
+                before.st_mtime_ns,
+            ) != (
+                after.st_dev,
+                after.st_ino,
+                after.st_size,
+                after.st_mtime_ns,
+            ):
+                return None
+            return b"".join(chunks)
+        except (OSError, ValueError):
+            return None
+        finally:
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+
+    def _read_typed_experiment_evidence(
+        self,
+        report_path: str,
+        owner: str,
+        value: object,
+        expected_kind: str,
+    ) -> tuple[str, Mapping[str, object]] | None:
+        if not isinstance(value, dict) or set(value) != {
+            "kind",
+            "path",
+            "sha256",
+        }:
+            self._add(
+                "EXPERIMENT025",
+                report_path,
+                f"{owner} evidence reference is not the exact typed contract",
+            )
+            return None
+        path = value.get("path")
+        digest = value.get("sha256")
+        if (
+            value.get("kind") != expected_kind
+            or not _is_canonical_relative_path(path)
+            or not isinstance(digest, str)
+            or re.fullmatch(r"[0-9a-f]{64}", digest) is None
+        ):
+            self._add(
+                "EXPERIMENT025",
+                report_path,
+                f"{owner} evidence kind, path, or digest is invalid",
+            )
+            return None
+        assert isinstance(path, str)
+        payload = self._read(path)
+        document = self.json_documents.get(path)
+        if (
+            payload is None
+            or hashlib.sha256(payload).hexdigest() != digest
+            or not isinstance(document, dict)
+            or document.get("kind") != expected_kind
+        ):
+            self._add(
+                "EXPERIMENT025",
+                report_path,
+                f"{owner} evidence bytes do not satisfy their typed reference",
+            )
+            return None
+        return path, document
+
+    @staticmethod
+    def _observation_variants_have_fixed_topology(value: object) -> bool:
+        if not isinstance(value, list) or len(value) != len(EXPERIMENT_VARIANT_IDS):
+            return False
+        if any(not isinstance(item, dict) for item in value):
+            return False
+        records = [item for item in value if isinstance(item, dict)]
+        if [item.get("id") for item in records] != list(EXPERIMENT_VARIANT_IDS):
+            return False
+        algorithm_versions = {
+            "sarif-only-control": "sarifregress/sparse-control/v1",
+            "exact-region-snippet": "exact-region-snippet/v1",
+            "token-window": "token-window/v1",
+            "relative-context": "relative-context/v1",
+            "agreement-only-combination": "agreement-only-combination/v1",
+        }
+        for item in records:
+            if set(item) != {
+                "id",
+                "algorithmVersion",
+                "parameters",
+                "families",
+                "scenarios",
+                "ingestion",
+                "security",
+                "productionApplicability",
+            }:
+                return False
+            algorithm_version = item.get("algorithmVersion")
+            parameters = item.get("parameters")
+            if (
+                algorithm_version != algorithm_versions[item["id"]]
+                or not Scanner._observation_parameters_are_valid(
+                    parameters,
+                    variant_id=str(item["id"]),
+                )
+                or not Scanner._observation_families_are_valid(
+                    item.get("families")
+                )
+                or not Scanner._observation_scenarios_are_valid(
+                    item.get("scenarios")
+                )
+                or not Scanner._observation_ingestion_is_valid(
+                    item.get("ingestion")
+                )
+                or not Scanner._observation_security_is_valid(
+                    item.get("security")
+                )
+            ):
+                return False
+            scenarios = item.get("scenarios")
+            production = item.get("productionApplicability")
+            if (
+                not isinstance(production, dict)
+                or set(production) != {
+                    "trustedTreeHashPreflightEnabled",
+                    "families",
+                    "scenariosWithoutTrustedTreeHashes",
+                    "ingestion",
+                    "security",
+                }
+                or production.get("trustedTreeHashPreflightEnabled") is not False
+                or not Scanner._observation_families_are_valid(
+                    production.get("families")
+                )
+                or not Scanner._observation_scenarios_are_valid(
+                    production.get("scenariosWithoutTrustedTreeHashes")
+                )
+                or not Scanner._observation_ingestion_is_valid(
+                    production.get("ingestion")
+                )
+                or not Scanner._observation_security_is_valid(
+                    production.get("security")
+                )
+            ):
+                return False
+        return True
+
+    @staticmethod
+    def _observation_parameters_are_valid(
+        value: object,
+        *,
+        variant_id: str,
+    ) -> bool:
+        if not isinstance(value, dict) or set(value) != {
+            "snippetLineRadius",
+            "maximumTokenWindowTerms",
+            "maximumRelativeSurroundingTerms",
+            "maximumRelativeRegionTerms",
+            "endColumnIsExclusive",
+            "relativeContextParts",
+            "sourceTextNormalization",
+            "requireUniqueOnBothSides",
+            "agreementOnly",
+        }:
+            return False
+        return (
+            value.get("snippetLineRadius") == 20
+            and value.get("maximumTokenWindowTerms") == 256
+            and value.get("maximumRelativeSurroundingTerms") == 32
+            and value.get("maximumRelativeRegionTerms") == 256
+            and value.get("endColumnIsExclusive") is True
+            and value.get("relativeContextParts")
+            == (
+                "before:nearest-32-within-20-lines,region:256,"
+                "after:nearest-32-within-20-lines"
+            )
+            and value.get("sourceTextNormalization") == "utf8-bom-lf-nfc/v1"
+            and value.get("requireUniqueOnBothSides")
+            is (variant_id != "sarif-only-control")
+            and value.get("agreementOnly")
+            is (variant_id == "agreement-only-combination")
+        )
+
+    @staticmethod
+    def _observation_families_are_valid(value: object) -> bool:
+        if not isinstance(value, list) or len(value) != 2:
+            return False
+        if any(not isinstance(item, dict) for item in value):
+            return False
+        records = [item for item in value if isinstance(item, dict)]
+        if [item.get("familyId") for item in records] != [
+            "pmd-clean-a",
+            "pmd-clean-b",
+        ]:
+            return False
+        expected_keys = {
+            "familyId",
+            "baselineSarifSha256",
+            "candidateSarifSha256",
+            "baselineSourceTreeSha256",
+            "candidateSourceTreeSha256",
+            "acceptedPairs",
+            "newFindings",
+            "resolvedFindings",
+            "ambiguousBaselineFindings",
+            "ambiguousCandidateFindings",
+            "diagnosticCodes",
+            "operationCounts",
+            "ingestionFailures",
+            "structuralFailures",
+        }
+        for item in records:
+            digests = (
+                item.get("baselineSarifSha256"),
+                item.get("candidateSarifSha256"),
+                item.get("baselineSourceTreeSha256"),
+                item.get("candidateSourceTreeSha256"),
+            )
+            diagnostics = item.get("diagnosticCodes")
+            operation_counts = item.get("operationCounts")
+            if (
+                set(item) != expected_keys
+                or any(
+                    not isinstance(digest, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", digest) is None
+                    for digest in digests
+                )
+                or not Scanner._observation_accepted_pairs_are_valid(
+                    item.get("acceptedPairs")
+                )
+                or any(
+                    not Scanner._observation_selectors_are_valid(item.get(key))
+                    for key in (
+                        "newFindings",
+                        "resolvedFindings",
+                        "ambiguousBaselineFindings",
+                        "ambiguousCandidateFindings",
+                    )
+                )
+                or not isinstance(diagnostics, list)
+                or diagnostics != sorted(set(diagnostics))
+                or any(
+                    not isinstance(code, str)
+                    or re.fullmatch(r"[A-Z][A-Z0-9]{1,31}", code) is None
+                    for code in diagnostics
+                )
+                or not isinstance(operation_counts, dict)
+                or set(operation_counts)
+                != {
+                    "sourceFindingsIndexed",
+                    "sourceAtomsIndexed",
+                    "sourceIndexLookups",
+                    "candidateEdges",
+                    "components",
+                    "ambiguousComponents",
+                }
+                or any(
+                    type(operation_counts.get(key)) is not int
+                    or operation_counts[key] < 0
+                    for key in operation_counts
+                )
+                or any(
+                    type(item.get(key)) is not int or item[key] < 0
+                    for key in ("ingestionFailures", "structuralFailures")
+                )
+            ):
+                return False
+        return True
+
+    @staticmethod
+    def _observation_scenarios_are_valid(value: object) -> bool:
+        if not isinstance(value, list) or len(value) != len(EXPERIMENT_SCENARIO_IDS):
+            return False
+        if any(not isinstance(item, dict) for item in value):
+            return False
+        records = [item for item in value if isinstance(item, dict)]
+        if [item.get("scenarioId") for item in records] != list(
+            EXPERIMENT_SCENARIO_IDS
+        ):
+            return False
+        family_keys = {
+            "familyId",
+            "preflightAccepted",
+            "acceptedPairs",
+            "affectedBaselineFindings",
+            "affectedCandidateFindings",
+            "baselineReadsFromCandidateRoot",
+            "candidateReadsFromBaselineRoot",
+            "containmentViolations",
+            "ingestionFailures",
+            "structuralFailures",
+        }
+        for item in records:
+            families = item.get("families")
+            if set(item) != {"scenarioId", "families"} or not isinstance(
+                families, list
+            ):
+                return False
+            if (
+                len(families) != 2
+                or any(not isinstance(family, dict) for family in families)
+                or [
+                    family.get("familyId")
+                    for family in families
+                    if isinstance(family, dict)
+                ]
+                != ["pmd-clean-a", "pmd-clean-b"]
+            ):
+                return False
+            for family in families:
+                assert isinstance(family, dict)
+                if (
+                    set(family) != family_keys
+                    or type(family.get("preflightAccepted")) is not bool
+                    or not Scanner._observation_accepted_pairs_are_valid(
+                        family.get("acceptedPairs")
+                    )
+                    or not Scanner._observation_selectors_are_valid(
+                        family.get("affectedBaselineFindings")
+                    )
+                    or not Scanner._observation_selectors_are_valid(
+                        family.get("affectedCandidateFindings")
+                    )
+                    or any(
+                        type(family.get(key)) is not int or family[key] < 0
+                        for key in (
+                            "baselineReadsFromCandidateRoot",
+                            "candidateReadsFromBaselineRoot",
+                            "containmentViolations",
+                            "ingestionFailures",
+                            "structuralFailures",
+                        )
+                    )
+                ):
+                    return False
+        return True
+
+    @staticmethod
+    def _observation_accepted_pairs_are_valid(value: object) -> bool:
+        if not isinstance(value, list) or len(value) > 10_000:
+            return False
+        encoded: list[str] = []
+        for item in value:
+            if not isinstance(item, dict) or set(item) != {
+                "baseline",
+                "candidate",
+                "classification",
+                "precedenceTier",
+            }:
+                return False
+            if (
+                not Scanner._observation_selector_is_valid(item.get("baseline"))
+                or not Scanner._observation_selector_is_valid(item.get("candidate"))
+                or item.get("classification")
+                not in {"unchanged", "moved", "modified"}
+                or item.get("precedenceTier")
+                not in {
+                    "weak-contextual",
+                    "path-problem",
+                    "strong-moved",
+                    "exact-canonical",
+                    "exact-producer",
+                    "override",
+                }
+            ):
+                return False
+            encoded.append(
+                json.dumps(item, sort_keys=True, separators=(",", ":"))
+            )
+        return len(encoded) == len(set(encoded))
+
+    @staticmethod
+    def _observation_selectors_are_valid(value: object) -> bool:
+        if not isinstance(value, list) or len(value) > 10_000:
+            return False
+        if any(not Scanner._observation_selector_is_valid(item) for item in value):
+            return False
+        encoded = [
+            json.dumps(item, sort_keys=True, separators=(",", ":"))
+            for item in value
+        ]
+        return len(encoded) == len(set(encoded))
+
+    @staticmethod
+    def _observation_selector_is_valid(value: object) -> bool:
+        if not isinstance(value, dict) or set(value) != {
+            "ruleId",
+            "artifactUri",
+            "region",
+            "message",
+        }:
+            return False
+        region = value.get("region")
+        return (
+            isinstance(value.get("ruleId"), str)
+            and 1 <= len(value["ruleId"]) <= 512
+            and isinstance(value.get("artifactUri"), str)
+            and _is_canonical_relative_path(value["artifactUri"])
+            and isinstance(value.get("message"), str)
+            and 1 <= len(value["message"]) <= 4_096
+            and isinstance(region, dict)
+            and set(region) == {
+                "startLine",
+                "startColumn",
+                "endLine",
+                "endColumn",
+            }
+            and all(
+                type(region.get(key)) is int and region[key] >= 1
+                for key in region
+            )
+        )
+
+    @staticmethod
+    def _observation_ingestion_is_valid(value: object) -> bool:
+        return (
+            isinstance(value, dict)
+            and set(value) == {"casesEvaluated", "failures", "structuralFailures"}
+            and all(type(value.get(key)) is int and value[key] >= 0 for key in value)
+            and value["casesEvaluated"] == 4
+            and value["failures"] <= value["casesEvaluated"]
+            and value["structuralFailures"] <= value["casesEvaluated"]
+        )
+
+    @staticmethod
+    def _observation_security_is_valid(value: object) -> bool:
+        return (
+            isinstance(value, dict)
+            and set(value)
+            == {
+                "baselineReadsFromCandidateRoot",
+                "candidateReadsFromBaselineRoot",
+                "containmentViolations",
+                "rootConfusions",
+            }
+            and all(type(value.get(key)) is int and value[key] >= 0 for key in value)
+        )
+
+    @staticmethod
+    def _scored_variant_projection(
+        variant: Mapping[str, object],
+    ) -> dict[str, object]:
+        metrics = variant.get("metrics")
+        aggregate = metrics.get("aggregate") if isinstance(metrics, dict) else None
+        by_family = metrics.get("byFamily") if isinstance(metrics, dict) else None
+        scored_families = []
+        if isinstance(by_family, list):
+            for value in by_family:
+                if not isinstance(value, dict):
+                    continue
+                scored_families.append(
+                    {
+                        "familyId": value.get("familyId"),
+                        "metrics": {
+                            key: item
+                            for key, item in value.items()
+                            if key != "familyId"
+                        },
+                    }
+                )
+        return {
+            "id": variant.get("id"),
+            "metrics": aggregate,
+            "byFamily": scored_families,
+            "classification": variant.get("classification"),
+            "lifecycle": variant.get("lifecycle"),
+            "ambiguity": variant.get("ambiguity"),
+            "ingestion": variant.get("ingestion"),
+            "security": variant.get("security"),
+            "productionApplicability": variant.get("productionApplicability"),
+            "scenarios": variant.get("scenarios"),
+        }
 
     def _evidence_reference_bound(
         self,
@@ -3003,6 +4209,8 @@ class Scanner:
         pmd = metrics.get("aggregate") if isinstance(metrics, dict) else None
         families = metrics.get("byFamily") if isinstance(metrics, dict) else None
         ambiguity = variant.get("ambiguity")
+        classification = variant.get("classification")
+        lifecycle = variant.get("lifecycle")
         ingestion = variant.get("ingestion")
         security = variant.get("security")
         determinism = variant.get("determinism")
@@ -3019,6 +4227,8 @@ class Scanner:
         required_objects = (
             pmd,
             ambiguity,
+            classification,
+            lifecycle,
             ingestion,
             security,
             determinism,
@@ -3037,7 +4247,10 @@ class Scanner:
         ):
             return None
         no_hash_scenarios = production.get("scenariosWithoutTrustedTreeHashes")
-        no_hash_evidence = Scanner._scenario_evidence(no_hash_scenarios)
+        no_hash_evidence = Scanner._scenario_evidence(
+            no_hash_scenarios,
+            trusted_tree_hash_preflight=False,
+        )
         if (
             production.get("trustedTreeHashPreflightEnabled") is not False
             or no_hash_evidence is None
@@ -3062,7 +4275,10 @@ class Scanner:
             or not isinstance(scenarios, list)
         ):
             return None
-        scenario_evidence = Scanner._scenario_evidence(scenarios)
+        scenario_evidence = Scanner._scenario_evidence(
+            scenarios,
+            trusted_tree_hash_preflight=True,
+        )
         if scenario_evidence is None:
             return None
         ambiguity_counts = (
@@ -3075,6 +4291,39 @@ class Scanner:
             or ambiguity["labelledUnits"] != 3
             or ambiguity["correctRefusals"] + ambiguity["incorrectAutoMatches"]
             != ambiguity["labelledUnits"]
+        ):
+            return None
+        assert isinstance(classification, dict)
+        assert isinstance(lifecycle, dict)
+        if (
+            set(classification)
+            != {"matchedRelationships", "classificationMismatches"}
+            or any(
+                type(classification.get(key)) is not int
+                or classification[key] < 0
+                for key in classification
+            )
+            or classification["matchedRelationships"]
+            != pmd.get("truePositives")
+            or classification["classificationMismatches"]
+            > classification["matchedRelationships"]
+            or set(lifecycle)
+            != {
+                "expectedNew",
+                "correctNew",
+                "incorrectNew",
+                "expectedResolved",
+                "correctResolved",
+                "incorrectResolved",
+            }
+            or any(
+                type(lifecycle.get(key)) is not int or lifecycle[key] < 0
+                for key in lifecycle
+            )
+            or lifecycle["expectedNew"] != 3
+            or lifecycle["correctNew"] > lifecycle["expectedNew"]
+            or lifecycle["expectedResolved"] != 3
+            or lifecycle["correctResolved"] > lifecycle["expectedResolved"]
         ):
             return None
         ingestion_counts = (
@@ -3093,6 +4342,15 @@ class Scanner:
         determinism_evidence = Scanner._determinism_evidence(determinism)
         if resource_limits_passed is None or determinism_evidence is None:
             return None
+        source_projection_benchmarked = resources.get(
+            "sourceContextProjectionBenchmarked"
+        )
+        if type(source_projection_benchmarked) is not bool:
+            return None
+        resource_gate_passed = resource_limits_passed and (
+            variant.get("id") == "sarif-only-control"
+            or source_projection_benchmarked is True
+        )
         if not Scanner._metrics_are_consistent(pmd, expected_relationships=19):
             return None
         family_metrics = [
@@ -3106,13 +4364,22 @@ class Scanner:
         family_relationships = {"pmd-clean-a": 8, "pmd-clean-b": 11}
         if any(
             not Scanner._metrics_are_consistent(
-                value,
+                {
+                    key: item
+                    for key, item in value.items()
+                    if key != "familyId"
+                },
                 expected_relationships=family_relationships[str(value["familyId"])],
             )
             for value in family_metrics
         ):
             return None
-        for count_key in ("truePositives", "falsePositives", "falseNegatives"):
+        for count_key in (
+            "acceptedPairs",
+            "truePositives",
+            "falsePositives",
+            "falseNegatives",
+        ):
             if pmd.get(count_key) != sum(
                 int(value[count_key]) for value in family_metrics
             ):
@@ -3174,8 +4441,9 @@ class Scanner:
             ambiguity.get("incorrectAutoMatches"),
             ingestion.get("failures"),
             ingestion.get("structuralFailures"),
-            security.get("sourceSideLeakage"),
-            security.get("containmentRegressions"),
+            security.get("baselineReadsFromCandidateRoot"),
+            security.get("candidateReadsFromBaselineRoot"),
+            security.get("containmentViolations"),
             security.get("rootConfusions"),
             holdout.get("ingestionFailures"),
             holdout.get("structuralFailures"),
@@ -3193,8 +4461,11 @@ class Scanner:
         if any(type(value) is not bool for value in boolean_evidence):
             return None
         if (
-            security.get("sourceSideLeakage") != scenario_evidence["sourceSideLeakage"]
-            or security.get("containmentRegressions")
+            security.get("baselineReadsFromCandidateRoot")
+            != scenario_evidence["baselineReadsFromCandidateRoot"]
+            or security.get("candidateReadsFromBaselineRoot")
+            != scenario_evidence["candidateReadsFromBaselineRoot"]
+            or security.get("containmentViolations")
             != scenario_evidence["containmentViolations"]
             or security.get("rootConfusions") != scenario_evidence["rootConfusions"]
         ):
@@ -3204,9 +4475,21 @@ class Scanner:
             "pmdRecall": pmd.get("recall"),
             "aggregatePrecision": holdout_metrics.get("precision"),
             "aggregateRecall": holdout_metrics.get("recall"),
+            "classificationMismatches": classification.get(
+                "classificationMismatches"
+            ),
+            "missedNew": lifecycle["expectedNew"] - lifecycle["correctNew"],
+            "incorrectNew": lifecycle.get("incorrectNew"),
+            "missedResolved": (
+                lifecycle["expectedResolved"] - lifecycle["correctResolved"]
+            ),
+            "incorrectResolved": lifecycle.get("incorrectResolved"),
             "silentlyMatchedAmbiguity": ambiguity.get("incorrectAutoMatches"),
-            "sourceSideLeakage": security.get("sourceSideLeakage"),
-            "containmentRegressions": security.get("containmentRegressions"),
+            "sourceSideLeakage": (
+                security["baselineReadsFromCandidateRoot"]
+                + security["candidateReadsFromBaselineRoot"]
+            ),
+            "containmentRegressions": security.get("containmentViolations"),
             "rootConfusions": security.get("rootConfusions"),
             "unexplainedIngestionFailures": (
                 ingestion["failures"]
@@ -3231,22 +4514,53 @@ class Scanner:
             "crossPlatformByteIdentical": determinism_evidence[
                 "linuxWindowsByteIdentical"
             ],
-            "resourceBudgetsWithinLimits": resource_limits_passed,
+            "resourceBudgetsWithinLimits": resource_gate_passed,
             "scenarioMatrixPassed": scenario_evidence["passed"],
             "corpusSpecificPreflightRequired": corpus_specific_preflight_required,
         }
 
     @staticmethod
-    def _scenario_evidence(value: object) -> dict[str, object] | None:
+    def _scenario_evidence(
+        value: object,
+        *,
+        trusted_tree_hash_preflight: bool,
+    ) -> dict[str, object] | None:
         if not isinstance(value, list) or len(value) != len(EXPERIMENT_SCENARIO_IDS):
             return None
         if any(not isinstance(item, dict) for item in value):
             return None
-        records = [item for item in value if isinstance(item, dict)]
-        if [item.get("scenarioId") for item in records] != list(EXPERIMENT_SCENARIO_IDS):
+        scenarios = [item for item in value if isinstance(item, dict)]
+        if [item.get("scenarioId") for item in scenarios] != list(
+            EXPERIMENT_SCENARIO_IDS
+        ):
             return None
+        records: list[dict[str, object]] = []
+        for scenario in scenarios:
+            families = scenario.get("families")
+            if (
+                set(scenario) != {"scenarioId", "families"}
+                or not isinstance(families, list)
+                or len(families) != 2
+                or any(not isinstance(item, dict) for item in families)
+                or [
+                    item.get("familyId")
+                    for item in families
+                    if isinstance(item, dict)
+                ]
+                != ["pmd-clean-a", "pmd-clean-b"]
+            ):
+                return None
+            for family in families:
+                assert isinstance(family, dict)
+                records.append(
+                    {
+                        "scenarioId": scenario["scenarioId"],
+                        **family,
+                    }
+                )
         count_keys = (
             "acceptedRelationships",
+            "affectedEndpointMatches",
             "baselineReadsFromCandidateRoot",
             "candidateReadsFromBaselineRoot",
             "containmentViolations",
@@ -3261,6 +4575,22 @@ class Scanner:
             type(item.get(key)) is not bool
             for item in records
             for key in ("assertionsPassed", "preflightAccepted")
+        ) or any(
+            set(item)
+            != {
+                "scenarioId",
+                "familyId",
+                "assertionsPassed",
+                "preflightAccepted",
+                "acceptedRelationships",
+                "affectedEndpointMatches",
+                "baselineReadsFromCandidateRoot",
+                "candidateReadsFromBaselineRoot",
+                "containmentViolations",
+                "unexplainedIngestionFailures",
+                "structuralFailures",
+            }
+            for item in records
         ):
             return None
         totals = {
@@ -3272,11 +4602,16 @@ class Scanner:
             and item["baselineReadsFromCandidateRoot"] == 0
             and item["candidateReadsFromBaselineRoot"] == 0
             and item["containmentViolations"] == 0
+            and item["affectedEndpointMatches"] == 0
             and (
                 (
                     item["scenarioId"] in FAIL_CLOSED_SCENARIOS
-                    and item["preflightAccepted"] is False
-                    and item["acceptedRelationships"] == 0
+                    and item["preflightAccepted"]
+                    is (not trusted_tree_hash_preflight)
+                    and (
+                        not trusted_tree_hash_preflight
+                        or item["acceptedRelationships"] == 0
+                    )
                 )
                 or (
                     item["scenarioId"] not in FAIL_CLOSED_SCENARIOS
@@ -3288,17 +4623,28 @@ class Scanner:
         swapped = set(EXPERIMENT_SCENARIO_IDS[6:9])
         root_confusions = sum(
             1
-            for item in records
-            if item["scenarioId"] in swapped
+            for scenario in scenarios
+            if scenario["scenarioId"] in swapped
             and (
-                item["preflightAccepted"] is True
-                or item["acceptedRelationships"] > 0
-                or item["baselineReadsFromCandidateRoot"] > 0
-                or item["candidateReadsFromBaselineRoot"] > 0
+                any(
+                    (
+                        trusted_tree_hash_preflight
+                        and family["preflightAccepted"] is True
+                    )
+                    or family["baselineReadsFromCandidateRoot"] > 0
+                    or family["candidateReadsFromBaselineRoot"] > 0
+                    for family in scenario["families"]
+                )
             )
         )
         return {
             "passed": passed,
+            "baselineReadsFromCandidateRoot": totals[
+                "baselineReadsFromCandidateRoot"
+            ],
+            "candidateReadsFromBaselineRoot": totals[
+                "candidateReadsFromBaselineRoot"
+            ],
             "sourceSideLeakage": (
                 totals["baselineReadsFromCandidateRoot"]
                 + totals["candidateReadsFromBaselineRoot"]
@@ -3313,6 +4659,14 @@ class Scanner:
 
     @staticmethod
     def _determinism_evidence(value: Mapping[str, object]) -> dict[str, bool] | None:
+        if set(value) != {
+            "repeatedRunByteIdentical",
+            "linuxWindowsByteIdentical",
+            "linux",
+            "windows",
+            "comparison",
+        }:
+            return None
         linux = value.get("linux")
         windows = value.get("windows")
         comparison = value.get("comparison")
@@ -3321,6 +4675,18 @@ class Scanner:
         assert isinstance(linux, dict)
         assert isinstance(windows, dict)
         assert isinstance(comparison, dict)
+        platform_required = {"firstOutputSha256", "secondOutputSha256"}
+        platform_allowed = platform_required | {"artifactPath", "artifactSha256"}
+        comparison_required = {"byteIdentical"}
+        comparison_allowed = comparison_required | {"artifactPath", "artifactSha256"}
+        if (
+            any(
+                not platform_required <= set(item) <= platform_allowed
+                for item in (linux, windows)
+            )
+            or not comparison_required <= set(comparison) <= comparison_allowed
+        ):
+            return None
         digests = (
             linux.get("firstOutputSha256"),
             linux.get("secondOutputSha256"),
@@ -3346,6 +4712,20 @@ class Scanner:
 
     @staticmethod
     def _resource_matrix_passes(value: Mapping[str, object]) -> bool | None:
+        if not {
+            "withinDocumentedLimits",
+            "sourceContextProjectionBenchmarked",
+            "cells",
+        } <= set(value) <= {
+            "withinDocumentedLimits",
+            "sourceContextProjectionBenchmarked",
+            "cells",
+            "evidencePath",
+            "evidenceSha256",
+        }:
+            return None
+        if type(value.get("sourceContextProjectionBenchmarked")) is not bool:
+            return None
         cells = value.get("cells")
         if not isinstance(cells, list) or len(cells) != len(RESOURCE_CELL_KEYS):
             return None
@@ -3364,6 +4744,25 @@ class Scanner:
             return None
         cell_results: list[bool] = []
         for cell in records:
+            required_cell_keys = {
+                "operatingSystem",
+                "findingCount",
+                "dataset",
+                "candidateEdges",
+                "maximumComponentSize",
+                "elapsedMilliseconds",
+                "peakWorkingSetBytes",
+                "configuredCandidatePairLimit",
+                "configuredAssignmentComponentLimit",
+                "boundedRefusalObserved",
+                "runtimeBudgetEnforced",
+                "withinDocumentedLimits",
+            }
+            if not required_cell_keys <= set(cell) <= required_cell_keys | {
+                "artifactPath",
+                "artifactSha256",
+            }:
+                return None
             size = cell["findingCount"]
             assert isinstance(size, int)
             numeric_keys = (
@@ -3420,10 +4819,21 @@ class Scanner:
         *,
         expected_relationships: int | None = None,
     ) -> bool:
+        if set(metrics) != {
+            "acceptedPairs",
+            "truePositives",
+            "falsePositives",
+            "falseNegatives",
+            "precision",
+            "recall",
+            "f1",
+        }:
+            return False
         counts = [
             metrics.get("truePositives"),
             metrics.get("falsePositives"),
             metrics.get("falseNegatives"),
+            metrics.get("acceptedPairs"),
         ]
         rates = [metrics.get("precision"), metrics.get("recall"), metrics.get("f1")]
         if any(type(value) is not int or value < 0 for value in counts):
@@ -3435,18 +4845,25 @@ class Scanner:
             for value in rates
         ):
             return False
-        true_positives, false_positives, false_negatives = counts
+        (
+            true_positives,
+            false_positives,
+            false_negatives,
+            accepted_pairs,
+        ) = counts
         if (
+            accepted_pairs != true_positives + false_positives
+            or
             expected_relationships is not None
             and true_positives + false_negatives != expected_relationships
         ):
             return False
-        precision_denominator = true_positives + false_positives
+        precision_denominator = accepted_pairs
         recall_denominator = true_positives + false_negatives
         expected_precision = (
             true_positives / precision_denominator
             if precision_denominator
-            else float(metrics["precision"])
+            else 1.0
         )
         expected_recall = (
             true_positives / recall_denominator if recall_denominator else 0.0

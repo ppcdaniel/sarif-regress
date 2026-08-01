@@ -1,0 +1,371 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/research/sparse-sarif/schemas/experiment-observations.schema.json",
+  "title": "Label-neutral sparse-SARIF experiment observations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "corpusManifestSha256",
+    "implementationManifestSha256",
+    "variants"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": { "const": "sparse-experiment-observations/v1" },
+    "corpusManifestSha256": { "$ref": "#/$defs/sha256" },
+    "implementationManifestSha256": { "$ref": "#/$defs/sha256" },
+    "variants": { "$ref": "#/$defs/variants" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*(?:[-/.][a-z0-9]+)*$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000000
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startLine", "startColumn", "endLine", "endColumn"],
+      "properties": {
+        "startLine": { "type": "integer", "minimum": 1 },
+        "startColumn": { "type": "integer", "minimum": 1 },
+        "endLine": { "type": "integer", "minimum": 1 },
+        "endColumn": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "artifactUri", "region", "message"],
+      "properties": {
+        "ruleId": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "artifactUri": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+        },
+        "region": { "$ref": "#/$defs/region" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    },
+    "acceptedPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline", "candidate", "classification", "precedenceTier"],
+      "properties": {
+        "baseline": { "$ref": "#/$defs/selector" },
+        "candidate": { "$ref": "#/$defs/selector" },
+        "classification": { "enum": ["unchanged", "moved", "modified"] },
+        "precedenceTier": {
+          "enum": [
+            "weak-contextual",
+            "path-problem",
+            "strong-moved",
+            "exact-canonical",
+            "exact-producer",
+            "override"
+          ]
+        }
+      }
+    },
+    "acceptedPairs": {
+      "type": "array",
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/acceptedPair" }
+    },
+    "selectors": {
+      "type": "array",
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/selector" }
+    },
+    "operationCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceFindingsIndexed", "sourceAtomsIndexed", "sourceIndexLookups", "candidateEdges", "components", "ambiguousComponents"],
+      "properties": {
+        "sourceFindingsIndexed": { "$ref": "#/$defs/count" },
+        "sourceAtomsIndexed": { "$ref": "#/$defs/count" },
+        "sourceIndexLookups": { "$ref": "#/$defs/count" },
+        "candidateEdges": { "$ref": "#/$defs/count" },
+        "components": { "$ref": "#/$defs/count" },
+        "ambiguousComponents": { "$ref": "#/$defs/count" }
+      }
+    },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "familyId",
+        "baselineSarifSha256",
+        "candidateSarifSha256",
+        "baselineSourceTreeSha256",
+        "candidateSourceTreeSha256",
+        "acceptedPairs",
+        "newFindings",
+        "resolvedFindings",
+        "ambiguousBaselineFindings",
+        "ambiguousCandidateFindings",
+        "diagnosticCodes",
+        "operationCounts",
+        "ingestionFailures",
+        "structuralFailures"
+      ],
+      "properties": {
+        "familyId": { "enum": ["pmd-clean-a", "pmd-clean-b"] },
+        "baselineSarifSha256": { "$ref": "#/$defs/sha256" },
+        "candidateSarifSha256": { "$ref": "#/$defs/sha256" },
+        "baselineSourceTreeSha256": { "$ref": "#/$defs/sha256" },
+        "candidateSourceTreeSha256": { "$ref": "#/$defs/sha256" },
+        "acceptedPairs": { "$ref": "#/$defs/acceptedPairs" },
+        "newFindings": { "$ref": "#/$defs/selectors" },
+        "resolvedFindings": { "$ref": "#/$defs/selectors" },
+        "ambiguousBaselineFindings": { "$ref": "#/$defs/selectors" },
+        "ambiguousCandidateFindings": { "$ref": "#/$defs/selectors" },
+        "diagnosticCodes": {
+          "type": "array",
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Z][A-Z0-9]{1,31}$"
+          }
+        },
+        "operationCounts": { "$ref": "#/$defs/operationCounts" },
+        "ingestionFailures": { "$ref": "#/$defs/count" },
+        "structuralFailures": { "$ref": "#/$defs/count" }
+      }
+    },
+    "families": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/family" },
+            { "properties": { "familyId": { "const": "pmd-clean-a" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/family" },
+            { "properties": { "familyId": { "const": "pmd-clean-b" } } }
+          ]
+        }
+      ],
+      "items": false
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarioId", "families"],
+      "properties": {
+        "scenarioId": { "$ref": "#/$defs/scenarioId" },
+        "families": { "$ref": "#/$defs/scenarioFamilies" }
+      }
+    },
+    "familyScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "familyId",
+        "preflightAccepted",
+        "acceptedPairs",
+        "affectedBaselineFindings",
+        "affectedCandidateFindings",
+        "baselineReadsFromCandidateRoot",
+        "candidateReadsFromBaselineRoot",
+        "containmentViolations",
+        "ingestionFailures",
+        "structuralFailures"
+      ],
+      "properties": {
+        "familyId": { "enum": ["pmd-clean-a", "pmd-clean-b"] },
+        "preflightAccepted": { "type": "boolean" },
+        "acceptedPairs": { "$ref": "#/$defs/acceptedPairs" },
+        "affectedBaselineFindings": { "$ref": "#/$defs/selectors" },
+        "affectedCandidateFindings": { "$ref": "#/$defs/selectors" },
+        "baselineReadsFromCandidateRoot": { "$ref": "#/$defs/count" },
+        "candidateReadsFromBaselineRoot": { "$ref": "#/$defs/count" },
+        "containmentViolations": { "$ref": "#/$defs/count" },
+        "ingestionFailures": { "$ref": "#/$defs/count" },
+        "structuralFailures": { "$ref": "#/$defs/count" }
+      }
+    },
+    "scenarioFamilies": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "allOf": [{ "$ref": "#/$defs/familyScenario" }, { "properties": { "familyId": { "const": "pmd-clean-a" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/familyScenario" }, { "properties": { "familyId": { "const": "pmd-clean-b" } } }] }
+      ],
+      "items": false
+    },
+    "scenarioId": {
+      "enum": [
+        "exact-unchanged-source-location",
+        "region-drift-equivalent-token-context",
+        "file-method-movement-equivalent-token-context",
+        "repeated-context-ambiguity",
+        "missing-source-file",
+        "mismatched-source-snapshot",
+        "baseline-root-bound-to-candidate",
+        "candidate-root-bound-to-baseline",
+        "both-roots-swapped",
+        "same-observation-different-method-file"
+      ]
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "prefixItems": [
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "exact-unchanged-source-location" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "region-drift-equivalent-token-context" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "file-method-movement-equivalent-token-context" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "repeated-context-ambiguity" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "missing-source-file" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "mismatched-source-snapshot" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "baseline-root-bound-to-candidate" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "candidate-root-bound-to-baseline" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "both-roots-swapped" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/scenario" }, { "properties": { "scenarioId": { "const": "same-observation-different-method-file" } } }] }
+      ],
+      "items": false
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snippetLineRadius",
+        "maximumTokenWindowTerms",
+        "maximumRelativeSurroundingTerms",
+        "maximumRelativeRegionTerms",
+        "endColumnIsExclusive",
+        "relativeContextParts",
+        "sourceTextNormalization",
+        "requireUniqueOnBothSides",
+        "agreementOnly"
+      ],
+      "properties": {
+        "snippetLineRadius": { "const": 20 },
+        "maximumTokenWindowTerms": { "const": 256 },
+        "maximumRelativeSurroundingTerms": { "const": 32 },
+        "maximumRelativeRegionTerms": { "const": 256 },
+        "endColumnIsExclusive": { "const": true },
+        "relativeContextParts": { "const": "before:nearest-32-within-20-lines,region:256,after:nearest-32-within-20-lines" },
+        "sourceTextNormalization": { "const": "utf8-bom-lf-nfc/v1" },
+        "requireUniqueOnBothSides": { "type": "boolean" },
+        "agreementOnly": { "type": "boolean" }
+      }
+    },
+    "ingestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["casesEvaluated", "failures", "structuralFailures"],
+      "properties": {
+        "casesEvaluated": { "const": 4 },
+        "failures": { "$ref": "#/$defs/count" },
+        "structuralFailures": { "$ref": "#/$defs/count" }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineReadsFromCandidateRoot",
+        "candidateReadsFromBaselineRoot",
+        "containmentViolations",
+        "rootConfusions"
+      ],
+      "properties": {
+        "baselineReadsFromCandidateRoot": { "$ref": "#/$defs/count" },
+        "candidateReadsFromBaselineRoot": { "$ref": "#/$defs/count" },
+        "containmentViolations": { "$ref": "#/$defs/count" },
+        "rootConfusions": { "$ref": "#/$defs/count" }
+      }
+    },
+    "productionApplicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trustedTreeHashPreflightEnabled",
+        "families",
+        "scenariosWithoutTrustedTreeHashes",
+        "ingestion",
+        "security"
+      ],
+      "properties": {
+        "trustedTreeHashPreflightEnabled": { "const": false },
+        "families": { "$ref": "#/$defs/families" },
+        "scenariosWithoutTrustedTreeHashes": { "$ref": "#/$defs/scenarios" },
+        "ingestion": { "$ref": "#/$defs/ingestion" },
+        "security": { "$ref": "#/$defs/security" }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "algorithmVersion",
+        "parameters",
+        "families",
+        "scenarios",
+        "ingestion",
+        "security",
+        "productionApplicability"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/variantId" },
+        "algorithmVersion": { "$ref": "#/$defs/stableId" },
+        "parameters": { "$ref": "#/$defs/parameters" },
+        "families": { "$ref": "#/$defs/families" },
+        "scenarios": { "$ref": "#/$defs/scenarios" },
+        "ingestion": { "$ref": "#/$defs/ingestion" },
+        "security": { "$ref": "#/$defs/security" },
+        "productionApplicability": { "$ref": "#/$defs/productionApplicability" }
+      }
+    },
+    "variantId": {
+      "enum": [
+        "sarif-only-control",
+        "exact-region-snippet",
+        "token-window",
+        "relative-context",
+        "agreement-only-combination"
+      ]
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "prefixItems": [
+        { "allOf": [{ "$ref": "#/$defs/variant" }, { "properties": { "id": { "const": "sarif-only-control" }, "algorithmVersion": { "const": "sarifregress/sparse-control/v1" }, "parameters": { "properties": { "requireUniqueOnBothSides": { "const": false }, "agreementOnly": { "const": false } } } } }] },
+        { "allOf": [{ "$ref": "#/$defs/variant" }, { "properties": { "id": { "const": "exact-region-snippet" }, "algorithmVersion": { "const": "exact-region-snippet/v1" }, "parameters": { "properties": { "requireUniqueOnBothSides": { "const": true }, "agreementOnly": { "const": false } } } } }] },
+        { "allOf": [{ "$ref": "#/$defs/variant" }, { "properties": { "id": { "const": "token-window" }, "algorithmVersion": { "const": "token-window/v1" }, "parameters": { "properties": { "requireUniqueOnBothSides": { "const": true }, "agreementOnly": { "const": false } } } } }] },
+        { "allOf": [{ "$ref": "#/$defs/variant" }, { "properties": { "id": { "const": "relative-context" }, "algorithmVersion": { "const": "relative-context/v1" }, "parameters": { "properties": { "requireUniqueOnBothSides": { "const": true }, "agreementOnly": { "const": false } } } } }] },
+        { "allOf": [{ "$ref": "#/$defs/variant" }, { "properties": { "id": { "const": "agreement-only-combination" }, "algorithmVersion": { "const": "agreement-only-combination/v1" }, "parameters": { "properties": { "requireUniqueOnBothSides": { "const": true }, "agreementOnly": { "const": true } } } } }] }
+      ],
+      "items": false
+    }
+  }
+}

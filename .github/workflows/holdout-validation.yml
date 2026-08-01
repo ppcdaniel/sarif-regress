@@ -350,6 +350,646 @@ jobs:
           test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
+  sparse-experiment-linux:
+    name: Generate sparse-SARIF experiment candidate (Linux)
+    needs: sparse-admission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      artifact_id: ${{ steps.upload-sparse-experiment-linux.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-sparse-experiment-linux.outputs.artifact-digest }}
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore and build validation harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly validation_project='validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          dotnet restore "${validation_project}" --locked-mode
+          dotnet build \
+            "${validation_project}" \
+            --configuration Release \
+            --no-restore
+
+      - name: Generate two byte-identical sparse experiment candidates
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SPARSE_CANDIDATE_ROOT: ${{ runner.temp }}/sparse-experiment-linux-candidate
+          SPARSE_WORK_ROOT: ${{ runner.temp }}/sparse-experiment-linux-work
+        run: |
+          set -euo pipefail
+          readonly validation_project='validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          readonly observations_name='sparse-experiment-observations.json'
+          readonly gate_evidence_name='sparse-experiment-gate-evidence.json'
+
+          create_empty_root() {
+            local root="$1"
+            test ! -e "${root}"
+            mkdir -p -- "${root}"
+            test -d "${root}"
+            test ! -L "${root}"
+            test -z "$(find "${root}" -mindepth 1 -maxdepth 1 -print -quit)"
+          }
+
+          assert_only_file() {
+            local root="$1"
+            local expected_name="$2"
+            mapfile -t entries < <(
+              find "${root}" -mindepth 1 -maxdepth 1 -printf '%f\n' |
+                LC_ALL=C sort
+            )
+            if [[ "${#entries[@]}" -ne 1 || "${entries[0]}" != "${expected_name}" ]]; then
+              echo "Unexpected output below ${root}." >&2
+              exit 1
+            fi
+            test -f "${root}/${expected_name}"
+            test ! -L "${root}/${expected_name}"
+            test -s "${root}/${expected_name}"
+          }
+
+          test ! -e "${SPARSE_WORK_ROOT}"
+          mkdir -p -- "${SPARSE_WORK_ROOT}"
+          for run_id in 1 2; do
+            observations_root="${SPARSE_WORK_ROOT}/run-${run_id}-observations"
+            evaluation_root="${SPARSE_WORK_ROOT}/run-${run_id}-evaluation"
+            create_empty_root "${observations_root}"
+            create_empty_root "${evaluation_root}"
+
+            dotnet run \
+              --project "${validation_project}" \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              sparse-run \
+              --repository-root "${GITHUB_WORKSPACE}" \
+              --output-root "${observations_root}"
+            assert_only_file "${observations_root}" "${observations_name}"
+
+            dotnet run \
+              --project "${validation_project}" \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              sparse-evaluate \
+              --repository-root "${GITHUB_WORKSPACE}" \
+              --output-root "${evaluation_root}" \
+              --observations "${observations_root}/${observations_name}"
+            assert_only_file "${evaluation_root}" "${gate_evidence_name}"
+          done
+
+          cmp --silent -- \
+            "${SPARSE_WORK_ROOT}/run-1-observations/${observations_name}" \
+            "${SPARSE_WORK_ROOT}/run-2-observations/${observations_name}"
+          cmp --silent -- \
+            "${SPARSE_WORK_ROOT}/run-1-evaluation/${gate_evidence_name}" \
+            "${SPARSE_WORK_ROOT}/run-2-evaluation/${gate_evidence_name}"
+
+          create_empty_root "${SPARSE_CANDIDATE_ROOT}"
+          cp -- \
+            "${SPARSE_WORK_ROOT}/run-1-observations/${observations_name}" \
+            "${SPARSE_CANDIDATE_ROOT}/${observations_name}"
+          cp -- \
+            "${SPARSE_WORK_ROOT}/run-1-evaluation/${gate_evidence_name}" \
+            "${SPARSE_CANDIDATE_ROOT}/${gate_evidence_name}"
+          mapfile -t candidate_files < <(
+            find "${SPARSE_CANDIDATE_ROOT}" \
+              -mindepth 1 \
+              -maxdepth 1 \
+              -printf '%f\n' |
+              LC_ALL=C sort
+          )
+          expected_files=("${gate_evidence_name}" "${observations_name}")
+          test "${#candidate_files[@]}" -eq 2
+          test "${candidate_files[*]}" = "${expected_files[*]}"
+          for name in "${expected_files[@]}"; do
+            test -f "${SPARSE_CANDIDATE_ROOT}/${name}"
+            test ! -L "${SPARSE_CANDIDATE_ROOT}/${name}"
+            test -s "${SPARSE_CANDIDATE_ROOT}/${name}"
+          done
+
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Upload Linux sparse experiment candidate
+        id: upload-sparse-experiment-linux
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-experiment-linux-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/sparse-experiment-linux-candidate
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+  sparse-experiment-windows:
+    name: Generate sparse-SARIF experiment candidate (Windows)
+    needs: sparse-admission
+    runs-on: windows-2025
+    timeout-minutes: 30
+    outputs:
+      artifact_id: ${{ steps.upload-sparse-experiment-windows.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-sparse-experiment-windows.outputs.artifact-digest }}
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore and build validation harness
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $validationProject = 'validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          & dotnet restore $validationProject --locked-mode
+          if ($LASTEXITCODE -ne 0) {
+            throw "Locked validation restore failed with exit code $LASTEXITCODE."
+          }
+          & dotnet build `
+            $validationProject `
+            --configuration Release `
+            --no-restore
+          if ($LASTEXITCODE -ne 0) {
+            throw "Validation build failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Generate two byte-identical sparse experiment candidates
+        shell: pwsh
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SPARSE_CANDIDATE_ROOT: ${{ runner.temp }}/sparse-experiment-windows-candidate
+          SPARSE_WORK_ROOT: ${{ runner.temp }}/sparse-experiment-windows-work
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $validationProject = 'validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          $observationsName = 'sparse-experiment-observations.json'
+          $gateEvidenceName = 'sparse-experiment-gate-evidence.json'
+
+          function New-EmptyExperimentDirectory {
+            param([Parameter(Mandatory = $true)][string] $Path)
+
+            if (Test-Path -LiteralPath $Path) {
+              throw "Experiment output path already exists: $Path"
+            }
+            $directory = [System.IO.Directory]::CreateDirectory($Path)
+            if (($directory.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+              throw "Experiment output path is a reparse point: $Path"
+            }
+            if ([System.IO.Directory]::EnumerateFileSystemEntries($Path).GetEnumerator().MoveNext()) {
+              throw "Experiment output path is not empty: $Path"
+            }
+          }
+
+          function Assert-OnlyExperimentFile {
+            param(
+              [Parameter(Mandatory = $true)][string] $Root,
+              [Parameter(Mandatory = $true)][string] $ExpectedName
+            )
+
+            $entries = @([System.IO.Directory]::EnumerateFileSystemEntries($Root))
+            if ($entries.Count -ne 1) {
+              throw "Unexpected output count below $Root."
+            }
+            $entry = Get-Item -LiteralPath $entries[0] -Force
+            if (
+              $entry.Name -cne $ExpectedName -or
+              $entry.PSIsContainer -or
+              ($entry.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 -or
+              $entry.Length -le 0
+            ) {
+              throw "Unexpected output below $Root."
+            }
+          }
+
+          function Invoke-ValidationHarness {
+            param([Parameter(Mandatory = $true)][string[]] $CommandArguments)
+
+            & dotnet @CommandArguments
+            if ($LASTEXITCODE -ne 0) {
+              throw "Validation harness failed with exit code $LASTEXITCODE."
+            }
+          }
+
+          function Assert-ByteIdentical {
+            param(
+              [Parameter(Mandatory = $true)][string] $Left,
+              [Parameter(Mandatory = $true)][string] $Right
+            )
+
+            $leftBytes = [System.IO.File]::ReadAllBytes($Left)
+            $rightBytes = [System.IO.File]::ReadAllBytes($Right)
+            if ($leftBytes.Length -ne $rightBytes.Length) {
+              throw "Experiment outputs differ in length."
+            }
+            for ($index = 0; $index -lt $leftBytes.Length; $index++) {
+              if ($leftBytes[$index] -ne $rightBytes[$index]) {
+                throw "Experiment outputs differ at byte $index."
+              }
+            }
+          }
+
+          if (Test-Path -LiteralPath $env:SPARSE_WORK_ROOT) {
+            throw "Experiment work root already exists."
+          }
+          [System.IO.Directory]::CreateDirectory($env:SPARSE_WORK_ROOT) | Out-Null
+          foreach ($runId in @(1, 2)) {
+            $observationsRoot = Join-Path `
+              $env:SPARSE_WORK_ROOT `
+              "run-$runId-observations"
+            $evaluationRoot = Join-Path `
+              $env:SPARSE_WORK_ROOT `
+              "run-$runId-evaluation"
+            New-EmptyExperimentDirectory -Path $observationsRoot
+            New-EmptyExperimentDirectory -Path $evaluationRoot
+
+            Invoke-ValidationHarness -CommandArguments @(
+              'run',
+              '--project', $validationProject,
+              '--configuration', 'Release',
+              '--no-build',
+              '--no-restore',
+              '--',
+              'sparse-run',
+              '--repository-root', $env:GITHUB_WORKSPACE,
+              '--output-root', $observationsRoot
+            )
+            Assert-OnlyExperimentFile `
+              -Root $observationsRoot `
+              -ExpectedName $observationsName
+
+            Invoke-ValidationHarness -CommandArguments @(
+              'run',
+              '--project', $validationProject,
+              '--configuration', 'Release',
+              '--no-build',
+              '--no-restore',
+              '--',
+              'sparse-evaluate',
+              '--repository-root', $env:GITHUB_WORKSPACE,
+              '--output-root', $evaluationRoot,
+              '--observations', (Join-Path $observationsRoot $observationsName)
+            )
+            Assert-OnlyExperimentFile `
+              -Root $evaluationRoot `
+              -ExpectedName $gateEvidenceName
+          }
+
+          Assert-ByteIdentical `
+            -Left (Join-Path $env:SPARSE_WORK_ROOT "run-1-observations/$observationsName") `
+            -Right (Join-Path $env:SPARSE_WORK_ROOT "run-2-observations/$observationsName")
+          Assert-ByteIdentical `
+            -Left (Join-Path $env:SPARSE_WORK_ROOT "run-1-evaluation/$gateEvidenceName") `
+            -Right (Join-Path $env:SPARSE_WORK_ROOT "run-2-evaluation/$gateEvidenceName")
+
+          New-EmptyExperimentDirectory -Path $env:SPARSE_CANDIDATE_ROOT
+          Copy-Item `
+            -LiteralPath (Join-Path $env:SPARSE_WORK_ROOT "run-1-observations/$observationsName") `
+            -Destination (Join-Path $env:SPARSE_CANDIDATE_ROOT $observationsName)
+          Copy-Item `
+            -LiteralPath (Join-Path $env:SPARSE_WORK_ROOT "run-1-evaluation/$gateEvidenceName") `
+            -Destination (Join-Path $env:SPARSE_CANDIDATE_ROOT $gateEvidenceName)
+          $candidateEntries = @(
+            Get-ChildItem -LiteralPath $env:SPARSE_CANDIDATE_ROOT -Force |
+              Sort-Object -Property Name -CaseSensitive
+          )
+          $expectedNames = @($gateEvidenceName, $observationsName)
+          if ($candidateEntries.Count -ne $expectedNames.Count) {
+            throw 'Sparse experiment candidate does not contain exactly two files.'
+          }
+          for ($index = 0; $index -lt $expectedNames.Count; $index++) {
+            $entry = $candidateEntries[$index]
+            if (
+              $entry.Name -cne $expectedNames[$index] -or
+              $entry.PSIsContainer -or
+              ($entry.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 -or
+              $entry.Length -le 0
+            ) {
+              throw 'Sparse experiment candidate contains an unexpected entry.'
+            }
+          }
+
+          $actualSourceSha = (& git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $actualSourceSha -cne $env:EXPECTED_SOURCE_SHA) {
+            throw 'Exact source commit changed during sparse experiment generation.'
+          }
+          $status = & git status --porcelain=v1 --untracked-files=all
+          if ($LASTEXITCODE -ne 0 -or $status) {
+            throw 'Sparse experiment generation modified the worktree.'
+          }
+
+      - name: Upload Windows sparse experiment candidate
+        id: upload-sparse-experiment-windows
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-experiment-windows-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/sparse-experiment-windows-candidate
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+  sparse-experiment-compare:
+    name: Authenticate and compare sparse experiment candidates
+    needs:
+      - sparse-experiment-linux
+      - sparse-experiment-windows
+      - recapture-attestation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact provenance serializer runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Download exact Linux candidate by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.sparse-experiment-linux.outputs.artifact_id }}
+          path: ${{ runner.temp }}/sparse-experiment-download/linux
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Download exact Windows candidate by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.sparse-experiment-windows.outputs.artifact_id }}
+          path: ${{ runner.temp }}/sparse-experiment-download/windows
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Authenticate artifacts and compare exact bytes
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          LINUX_ARTIFACT_DIGEST: ${{ needs.sparse-experiment-linux.outputs.artifact_digest }}
+          LINUX_ARTIFACT_ID: ${{ needs.sparse-experiment-linux.outputs.artifact_id }}
+          SPARSE_DOWNLOAD_ROOT: ${{ runner.temp }}/sparse-experiment-download
+          SPARSE_VERIFIED_ROOT: ${{ runner.temp }}/sparse-experiment-verified
+          WINDOWS_ARTIFACT_DIGEST: ${{ needs.sparse-experiment-windows.outputs.artifact_digest }}
+          WINDOWS_ARTIFACT_ID: ${{ needs.sparse-experiment-windows.outputs.artifact_id }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${LINUX_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${WINDOWS_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${LINUX_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          [[ "${WINDOWS_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          test "${LINUX_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${WINDOWS_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${LINUX_ARTIFACT_ID}" != "${WINDOWS_ARTIFACT_ID}"
+
+          authenticate_artifact() {
+            local label="$1"
+            local artifact_id="$2"
+            local artifact_digest="$3"
+            local artifact_name="sparse-experiment-${label}-${EXPECTED_SOURCE_SHA}"
+            local metadata_path="${RUNNER_TEMP}/sparse-experiment-${label}-artifact.json"
+            curl \
+              --disable \
+              --fail-with-body \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              --location \
+              --proto '=https' \
+              --show-error \
+              --silent \
+              --tlsv1.2 \
+              --output "${metadata_path}" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
+            jq -e \
+              --arg artifact_id "${artifact_id}" \
+              --arg artifact_name "${artifact_name}" \
+              --arg artifact_digest "sha256:${artifact_digest}" \
+              --arg run_id "${GITHUB_RUN_ID}" \
+              --arg source_sha "${EXPECTED_SOURCE_SHA}" \
+              '(.id | tostring) == $artifact_id and
+               .name == $artifact_name and
+               .digest == $artifact_digest and
+               .expired == false and
+               (.workflow_run.id | tostring) == $run_id and
+               .workflow_run.head_sha == $source_sha' \
+              "${metadata_path}" >/dev/null
+          }
+
+          assert_candidate_root() {
+            local root="$1"
+            mapfile -t entries < <(
+              find "${root}" -mindepth 1 -maxdepth 1 -printf '%f\n' |
+                LC_ALL=C sort
+            )
+            expected=(
+              'sparse-experiment-gate-evidence.json'
+              'sparse-experiment-observations.json'
+            )
+            test "${#entries[@]}" -eq 2
+            test "${entries[*]}" = "${expected[*]}"
+            for name in "${expected[@]}"; do
+              test -f "${root}/${name}"
+              test ! -L "${root}/${name}"
+              test -s "${root}/${name}"
+            done
+          }
+
+          authenticate_artifact \
+            linux \
+            "${LINUX_ARTIFACT_ID}" \
+            "${LINUX_ARTIFACT_DIGEST}"
+          authenticate_artifact \
+            windows \
+            "${WINDOWS_ARTIFACT_ID}" \
+            "${WINDOWS_ARTIFACT_DIGEST}"
+
+          readonly linux_root="${SPARSE_DOWNLOAD_ROOT}/linux"
+          readonly windows_root="${SPARSE_DOWNLOAD_ROOT}/windows"
+          assert_candidate_root "${linux_root}"
+          assert_candidate_root "${windows_root}"
+          readonly candidate_root="${SPARSE_VERIFIED_ROOT}/candidate"
+          test ! -e "${SPARSE_VERIFIED_ROOT}"
+          mkdir -p -- "${candidate_root}"
+          for name in \
+            sparse-experiment-gate-evidence.json \
+            sparse-experiment-observations.json
+          do
+            cmp --silent -- "${linux_root}/${name}" "${windows_root}/${name}"
+            cp -- "${linux_root}/${name}" "${candidate_root}/${name}"
+          done
+          assert_candidate_root "${candidate_root}"
+
+          export EXPECTED_SOURCE_SHA
+          export LINUX_ARTIFACT_DIGEST
+          export LINUX_ARTIFACT_ID
+          export SPARSE_VERIFIED_ROOT
+          export WINDOWS_ARTIFACT_DIGEST
+          export WINDOWS_ARTIFACT_ID
+          export PYTHONDONTWRITEBYTECODE='1'
+          export PYTHONNOUSERSITE='1'
+          unset PYTHONPATH || true
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+
+          positive_decimal = re.compile(r"[1-9][0-9]*")
+          sha256 = re.compile(r"[0-9a-f]{64}")
+          commit = re.compile(r"[0-9a-f]{40}")
+
+          def required_decimal(name, maximum=9_007_199_254_740_991):
+              value = os.environ[name]
+              if positive_decimal.fullmatch(value) is None:
+                  raise SystemExit(f"{name} is not a positive decimal integer.")
+              parsed = int(value)
+              if parsed > maximum:
+                  raise SystemExit(f"{name} exceeds its permitted range.")
+              return parsed
+
+          def required_sha256(name):
+              value = os.environ[name]
+              if sha256.fullmatch(value) is None or set(value) == {"0"}:
+                  raise SystemExit(f"{name} is not a nonzero lowercase SHA-256.")
+              return value
+
+          head = os.environ["EXPECTED_SOURCE_SHA"]
+          if commit.fullmatch(head) is None:
+              raise SystemExit("EXPECTED_SOURCE_SHA is not a lowercase commit SHA.")
+          run_id = required_decimal("GITHUB_RUN_ID")
+          run_attempt = required_decimal("GITHUB_RUN_ATTEMPT", maximum=1000)
+          linux_id = required_decimal("LINUX_ARTIFACT_ID")
+          windows_id = required_decimal("WINDOWS_ARTIFACT_ID")
+          if linux_id == windows_id:
+              raise SystemExit("Linux and Windows evidence reused one artifact ID.")
+
+          root = pathlib.Path(os.environ["SPARSE_VERIFIED_ROOT"])
+          candidate = root / "candidate"
+          outputs = {}
+          for name in (
+              "sparse-experiment-gate-evidence.json",
+              "sparse-experiment-observations.json",
+          ):
+              payload = (candidate / name).read_bytes()
+              if not payload or len(payload) > 64 * 1024 * 1024:
+                  raise SystemExit(f"Candidate output {name!r} has an invalid size.")
+              outputs[name] = hashlib.sha256(payload).hexdigest()
+
+          provenance = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-workflow-provenance/v1",
+              "repository": "ppcdaniel/sarif-regress",
+              "workflowPath": ".github/workflows/holdout-validation.yml",
+              "workflowRunId": run_id,
+              "workflowRunAttempt": run_attempt,
+              "workflowHeadSha": head,
+              "artifacts": {
+                  "linux": {
+                      "name": f"sparse-experiment-linux-{head}",
+                      "artifactId": linux_id,
+                      "archiveSha256": required_sha256("LINUX_ARTIFACT_DIGEST"),
+                  },
+                  "windows": {
+                      "name": f"sparse-experiment-windows-{head}",
+                      "artifactId": windows_id,
+                      "archiveSha256": required_sha256("WINDOWS_ARTIFACT_DIGEST"),
+                  },
+              },
+              "outputs": outputs,
+              "repeatedRunByteIdentical": True,
+              "linuxWindowsByteIdentical": True,
+          }
+          (root / "sparse-experiment-workflow-provenance.json").write_bytes(
+              (json.dumps(provenance, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+          )
+          PY
+
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Upload authenticated sparse experiment candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-experiment-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/sparse-experiment-verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
   linux:
     name: Evaluate committed holdout (Linux)
     runs-on: ubuntu-latest

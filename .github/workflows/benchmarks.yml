@@ -33,6 +33,7 @@ jobs:
           - label: windows
             runner: windows-latest
         size:
+          - 1000
           - 10000
           - 100000
         dataset:
@@ -147,7 +148,6 @@ jobs:
             $utf8WithoutBom)
 
       - name: Upload benchmark evidence
-        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmark-${{ matrix.size }}-${{ matrix.dataset }}-${{ matrix.platform.label }}
@@ -157,7 +157,6 @@ jobs:
 
   compare:
     name: Compare extended cross-platform hashes
-    if: always()
     needs: measure
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -174,7 +173,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/verified
-          for size in 10000 100000; do
+          for size in 1000 10000 100000; do
             for dataset in unique pathological; do
               linux_report="artifacts/download/benchmark-${size}-${dataset}-linux/deterministic.json"
               windows_report="artifacts/download/benchmark-${size}-${dataset}-windows/deterministic.json"

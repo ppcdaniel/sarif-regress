@@ -148,7 +148,7 @@
   ],
   "contamination": {
     "scannerPath": "tools/scan_contamination.py",
-    "scannerSha256": "0136736af966e639162b445dc5953af4f25c83760d6c0672811be5ee8bf99cc2",
+    "scannerSha256": "e6474db89f0f90ebad62cbd6945aaa78f887270bc65f508891c3e704301f3d52",
     "policyVersion": "sparse-sarif-contamination/v1"
   },
   "integrity": {
@@ -347,8 +347,28 @@
         "sha256": "5ae035eacba3690c93be9771d4b87a042a1b19e6ac0465c1e575e11212bf6930"
       },
       {
+        "path": "experiment-implementation-manifest.json",
+        "sha256": "015bdd454006a62f5a61fa44a167dee7792427ae0ba6e72111eff8e1984b7745"
+      },
+      {
+        "path": "schemas/experiment-gate-evidence.schema.json",
+        "sha256": "ff99abb788d47fde52b6f4bc2b65d91211e8e4898dc423291da2348dc5af838e"
+      },
+      {
+        "path": "schemas/experiment-implementation-manifest.schema.json",
+        "sha256": "da3943bc02e86dbee2dbb1dca74f2a16f768b2f6ecbec4b0cb83ada21c3f47e0"
+      },
+      {
+        "path": "schemas/experiment-observations.schema.json",
+        "sha256": "cc9c555fe3e42f361e155c031c832c154256d208b95b116d2d775f98b0859b4a"
+      },
+      {
         "path": "schemas/experiment-report.schema.json",
-        "sha256": "3f8eba56ab6cfc66b5aa46455401824ac7720f5c2e712007c00a228406060c22"
+        "sha256": "e8fae76a7a43c3d6afb4986d4055eec54d2f8a42cd34e4dc7e9a65e28be3b5e1"
+      },
+      {
+        "path": "schemas/experiment-supporting-evidence.schema.json",
+        "sha256": "69943ec2276da1d0e24bee554f0c54d9dceae2a13b99b14931762b773ecec5f9"
       },
       {
         "path": "schemas/labels.schema.json",
@@ -372,7 +392,7 @@
       },
       {
         "path": "tools/scan_contamination.py",
-        "sha256": "0136736af966e639162b445dc5953af4f25c83760d6c0672811be5ee8bf99cc2"
+        "sha256": "e6474db89f0f90ebad62cbd6945aaa78f887270bc65f508891c3e704301f3d52"
       },
       {
         "path": "tools/test_pmd_capture_tools.py",
@@ -380,7 +400,7 @@
       },
       {
         "path": "tools/test_scan_contamination.py",
-        "sha256": "cbe9d31dd2cadfb9dbee1f24af8941e5582b969b9a3c7d46202aefcb7ba73b1b"
+        "sha256": "941fc7440b01b186d161abdef361f33e6d31ac065a461b974e9b91b1350d1a8b"
       },
       {
         "path": "tools/verify_pmd_capture.py",
