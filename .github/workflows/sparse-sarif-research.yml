@@ -7,7 +7,7 @@ name: Sparse SARIF PMD research capture
 # exact-head attested because source SHA and runner image version vary per run.
 
 on:
-  workflow_call: {}
+  workflow_call:
 
 permissions:
   contents: read
