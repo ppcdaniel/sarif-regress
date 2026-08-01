@@ -1,0 +1,51 @@
+{
+  "historySchemaVersion": "1",
+  "record": "frozen-independent-holdout-evaluation",
+  "baseImplementationCommit": "df45e021bc4d2b3c2fd0155bf75ae3967ee80b0d",
+  "validationHeadCommit": "0231d6fe779203a92469099b90d446fafe67b064",
+  "matcherAlgorithmVersion": "sarifregress/matcher/v2",
+  "fingerprintAlgorithmVersions": [
+    {
+      "name": "derived-fingerprint",
+      "version": "rule-path-context/v2"
+    },
+    {
+      "name": "derived-fingerprint-compare",
+      "version": "sarifregress/derived-fingerprint-compare/v1"
+    },
+    {
+      "name": "embedded-snippet",
+      "version": "embedded-snippet/v1"
+    },
+    {
+      "name": "producer-fingerprint-common",
+      "version": "sarifregress/producer-fingerprint-common-version/v1"
+    }
+  ],
+  "configurationSchemaVersion": "1",
+  "outputSchemaVersion": "1",
+  "dotnetSdkVersion": "10.0.302",
+  "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
+  "metrics": {
+    "truePositives": 0,
+    "falsePositives": 0,
+    "falseNegatives": 75,
+    "precision": 1.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "ingestionFailures": 2
+  },
+  "releaseRecommendation": "blocked",
+  "originalCaseConfiguration": "semgrep-config.json",
+  "links": {
+    "validationPullRequest": "https://github.com/ppcdaniel/sarif-regress/pull/8",
+    "externalUriBaseIssue": "https://github.com/ppcdaniel/sarif-regress/issues/9",
+    "contextCollisionIssue": "https://github.com/ppcdaniel/sarif-regress/issues/10",
+    "sparseSarifIssue": "https://github.com/ppcdaniel/sarif-regress/issues/11"
+  },
+  "immutability": {
+    "holdoutLabelsChanged": false,
+    "qualityThresholdsChanged": false,
+    "difficultCasesRemoved": false
+  }
+}
