@@ -80,6 +80,7 @@ jobs:
         shell: bash
         env:
           EXPECTED_PYTHON_VERSION: ${{ matrix.python }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PYTHONDONTWRITEBYTECODE: '1'
           PYTHONNOUSERSITE: '1'
         run: |
