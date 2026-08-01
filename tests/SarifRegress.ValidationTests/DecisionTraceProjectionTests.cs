@@ -252,30 +252,30 @@ public sealed class DecisionTraceProjectionTests
         string classification,
         string? baselineKey,
         string? candidateKey) => new()
-    {
-        ["classification"] = classification,
-        ["baseline"] = baselineKey is null
-            ? null
-            : new JsonObject { ["findingKey"] = baselineKey },
-        ["candidate"] = candidateKey is null
-            ? null
-            : new JsonObject { ["findingKey"] = candidateKey },
-        ["decision"] = new JsonObject
         {
-            ["precedenceTier"] = classification == "ambiguous"
-                ? "refuse"
-                : "exact-canonical",
-            ["displayConfidence"] = classification == "ambiguous"
-                ? "low"
-                : "high",
-            ["ambiguous"] = classification == "ambiguous",
-            ["matcherAlgorithmVersion"] = "sarifregress/matcher/v3",
-        },
-        ["evidence"] = new JsonArray(),
-        ["rejectedAlternatives"] = new JsonArray(),
-        ["transforms"] = new JsonArray(),
-        ["diagnostics"] = new JsonArray(),
-    };
+            ["classification"] = classification,
+            ["baseline"] = baselineKey is null
+                ? null
+                : new JsonObject { ["findingKey"] = baselineKey },
+            ["candidate"] = candidateKey is null
+                ? null
+                : new JsonObject { ["findingKey"] = candidateKey },
+            ["decision"] = new JsonObject
+            {
+                ["precedenceTier"] = classification == "ambiguous"
+                    ? "refuse"
+                    : "exact-canonical",
+                ["displayConfidence"] = classification == "ambiguous"
+                    ? "low"
+                    : "high",
+                ["ambiguous"] = classification == "ambiguous",
+                ["matcherAlgorithmVersion"] = "sarifregress/matcher/v3",
+            },
+            ["evidence"] = new JsonArray(),
+            ["rejectedAlternatives"] = new JsonArray(),
+            ["transforms"] = new JsonArray(),
+            ["diagnostics"] = new JsonArray(),
+        };
 
     private static JsonObject Evidence(
         string kind,
@@ -285,28 +285,28 @@ public sealed class DecisionTraceProjectionTests
         string precedenceTier,
         bool lossy,
         string algorithmVersion) => new()
-    {
-        ["kind"] = kind,
-        ["baselineValue"] = baselineValue,
-        ["candidateValue"] = candidateValue,
-        ["origin"] = origin,
-        ["precedenceTier"] = precedenceTier,
-        ["lossy"] = lossy,
-        ["algorithmVersion"] = algorithmVersion,
-    };
+        {
+            ["kind"] = kind,
+            ["baselineValue"] = baselineValue,
+            ["candidateValue"] = candidateValue,
+            ["origin"] = origin,
+            ["precedenceTier"] = precedenceTier,
+            ["lossy"] = lossy,
+            ["algorithmVersion"] = algorithmVersion,
+        };
 
     private static JsonObject Transformation(
         string kind,
         string originalValue,
         string transformedValue,
         string algorithmVersion) => new()
-    {
-        ["kind"] = kind,
-        ["originalValue"] = originalValue,
-        ["transformedValue"] = transformedValue,
-        ["lossy"] = false,
-        ["algorithmVersion"] = algorithmVersion,
-    };
+        {
+            ["kind"] = kind,
+            ["originalValue"] = originalValue,
+            ["transformedValue"] = transformedValue,
+            ["lossy"] = false,
+            ["algorithmVersion"] = algorithmVersion,
+        };
 
     private static JsonObject Rejected(string findingKey, string reason) => new()
     {

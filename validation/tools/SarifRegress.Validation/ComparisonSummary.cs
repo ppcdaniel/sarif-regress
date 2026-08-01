@@ -557,16 +557,16 @@ public static class ComparisonSummaryBuilder
         value.Precision,
         value.Recall,
         value.F1)
-        {
-            ExpectedNewClassifications = value.ExpectedNewClassifications,
-            CorrectNewClassifications = value.CorrectNewClassifications,
-            IncorrectNewClassifications = value.IncorrectNewClassifications,
-            NewClassificationAccuracy = value.NewClassificationAccuracy,
-            ExpectedResolvedClassifications = value.ExpectedResolvedClassifications,
-            CorrectResolvedClassifications = value.CorrectResolvedClassifications,
-            IncorrectResolvedClassifications = value.IncorrectResolvedClassifications,
-            ResolvedClassificationAccuracy = value.ResolvedClassificationAccuracy,
-        };
+    {
+        ExpectedNewClassifications = value.ExpectedNewClassifications,
+        CorrectNewClassifications = value.CorrectNewClassifications,
+        IncorrectNewClassifications = value.IncorrectNewClassifications,
+        NewClassificationAccuracy = value.NewClassificationAccuracy,
+        ExpectedResolvedClassifications = value.ExpectedResolvedClassifications,
+        CorrectResolvedClassifications = value.CorrectResolvedClassifications,
+        IncorrectResolvedClassifications = value.IncorrectResolvedClassifications,
+        ResolvedClassificationAccuracy = value.ResolvedClassificationAccuracy,
+    };
 
     private static MultitoolComparisonMetrics Project(MultitoolMetrics value) => new(
         value.GroundTruthUnits,
