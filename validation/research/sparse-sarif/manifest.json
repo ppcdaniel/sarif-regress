@@ -1,0 +1,391 @@
+{
+  "schemaVersion": "1",
+  "corpusId": "pmd-sparse-research",
+  "producer": {
+    "family": "pmd",
+    "name": "PMD",
+    "version": "7.26.0",
+    "sourceCommit": "8fd38edf285a33e1164f66205ebe243441db9557",
+    "projectUrl": "https://github.com/pmd/pmd",
+    "releaseUrl": "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0",
+    "license": {
+      "identifier": "LicenseRef-PMD-BSD-Style",
+      "name": "PMD BSD-style license",
+      "url": "https://github.com/pmd/pmd/blob/8fd38edf285a33e1164f66205ebe243441db9557/LICENSE"
+    },
+    "archive": {
+      "url": "https://github.com/pmd/pmd/releases/download/pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip",
+      "sizeBytes": 73646044,
+      "sha256": "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
+    },
+    "helpSha256": "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91",
+    "capture": {
+      "sourceHeadSha": "3a398396213cac416f1b1237c605dd2d119d572f",
+      "workflow": {
+        "runId": 30717611507,
+        "artifactId": 8823830998,
+        "artifactName": "sparse-sarif-pmd-bootstrap-3a398396213cac416f1b1237c605dd2d119d572f",
+        "artifactDigest": "1f96943d599c4c0a9e68387131d873e23281d248e4a462e79829f0140274e0e4"
+      },
+      "runner": {
+        "label": "ubuntu-24.04",
+        "imageOS": "ubuntu24",
+        "imageVersion": "20260720.247.2",
+        "operatingSystem": "Linux",
+        "architecture": "x86_64"
+      },
+      "runtime": {
+        "pythonVersion": "3.12.13",
+        "javaDistribution": "Eclipse Temurin",
+        "javaVendor": "Eclipse Adoptium",
+        "javaVersion": "17.0.19+10"
+      },
+      "contract": {
+        "version": "pmd-authentic-sparse-capture/v1",
+        "sha256": "3f01bf4ecf7c39138b4d67e4547b43140002e964ce0b05a2084adebec9e21526"
+      },
+      "captureCommand": [
+        "pmd",
+        "check",
+        "--dir",
+        ".",
+        "--format",
+        "sarif",
+        "--no-cache",
+        "--no-fail-on-violation",
+        "--no-progress",
+        "--relativize-paths-with",
+        "<side-source-root>",
+        "--report-file",
+        "<raw-capture>",
+        "--rulesets",
+        "<family-ruleset>",
+        "--threads",
+        "0",
+        "--use-version",
+        "java-17"
+      ],
+      "downloadCommand": [
+        "curl",
+        "--disable",
+        "--fail",
+        "--location",
+        "--max-filesize",
+        "<archive-bytes>",
+        "--proto",
+        "=https",
+        "--retry",
+        "3",
+        "--retry-all-errors",
+        "--show-error",
+        "--silent",
+        "--tlsv1.2",
+        "--output",
+        "<archive-destination>",
+        "<archive-url>"
+      ]
+    }
+  },
+  "families": [
+    {
+      "id": "pmd-clean-a",
+      "labelsPath": "cases/pmd-clean-a/labels.json",
+      "rulesetPath": "cases/pmd-clean-a/pmd-ruleset.xml",
+      "baseline": {
+        "sourceRoot": "cases/pmd-clean-a/baseline/source",
+        "sarifPath": "cases/pmd-clean-a/baseline.sarif",
+        "projectionAuditPath": "capture-evidence/projection-audits/pmd-clean-a/baseline.json",
+        "sourceTreeSha256": "162b54faadd90500b9c8e5b3f5d6fc9c9ee0dff7a5d4e5f0fca3b51ab1c0f06b",
+        "rawCaptureSha256": "8addcfcb07081bb619d1984ae04efb8746881c70537516bd8767f911ea14611a",
+        "rawCaptureBytes": 9193,
+        "projectedSarifSha256": "4d5ae757d19291f758da10cef49e5ff53c689809ff18398192a26b3a0b1efdb6",
+        "projectedSarifBytes": 7993,
+        "projectionAuditSha256": "f1d70c4e1464ce53f4838966603cc8a3dcb564840eff80efdda9d6330298c19d",
+        "resultCount": 10
+      },
+      "candidate": {
+        "sourceRoot": "cases/pmd-clean-a/candidate/source",
+        "sarifPath": "cases/pmd-clean-a/candidate.sarif",
+        "projectionAuditPath": "capture-evidence/projection-audits/pmd-clean-a/candidate.json",
+        "sourceTreeSha256": "ec0b96941f9ca1385e4314342f8c5bc25515bd43c5d963e1ed67d07e9f808aa5",
+        "rawCaptureSha256": "3c8764742f9c027e7871ab504b8f4ff3fc735cf9b7cfbf681d51aa186c7ec416",
+        "rawCaptureBytes": 9985,
+        "projectedSarifSha256": "63ec0f5811039d343a4367ac62e44e0ab0794610ae614f9a6e40c581658b92cb",
+        "projectedSarifBytes": 8654,
+        "projectionAuditSha256": "ee6447c9124d4c76dc2a62ada33f09c9d1c5e816f124c84864eb833bc3bcbe1b",
+        "resultCount": 11
+      }
+    },
+    {
+      "id": "pmd-clean-b",
+      "labelsPath": "cases/pmd-clean-b/labels.json",
+      "rulesetPath": "cases/pmd-clean-b/pmd-ruleset.xml",
+      "baseline": {
+        "sourceRoot": "cases/pmd-clean-b/baseline/source",
+        "sarifPath": "cases/pmd-clean-b/baseline.sarif",
+        "projectionAuditPath": "capture-evidence/projection-audits/pmd-clean-b/baseline.json",
+        "sourceTreeSha256": "1f264450ef9b69b8b6c9bd5fed19b7e3f917e3e88976514dcb726805e3dfe50e",
+        "rawCaptureSha256": "0958bd9310e01e0eb4efa4b2b114d81c9e0e84ded88d85898dff23eb398b4986",
+        "rawCaptureBytes": 13543,
+        "projectedSarifSha256": "6ec0644dcf717977c061cbfe009c76cd208fbedd32257c600bc8857dc1289a39",
+        "projectedSarifBytes": 11623,
+        "projectionAuditSha256": "6d2d4de9f778fd11e1ffb328258c9e5434e5976462544128d3fa523f4a267693",
+        "resultCount": 16
+      },
+      "candidate": {
+        "sourceRoot": "cases/pmd-clean-b/candidate/source",
+        "sarifPath": "cases/pmd-clean-b/candidate.sarif",
+        "projectionAuditPath": "capture-evidence/projection-audits/pmd-clean-b/candidate.json",
+        "sourceTreeSha256": "8f97c6f270ffed2c300a9cdc9b9cd2d8d78e45a37636b41c9702ee7856ea1538",
+        "rawCaptureSha256": "0cf79aacad8d5d679a44041c46760be21aca8ac2840c926a3b5c5a23bbecaa0a",
+        "rawCaptureBytes": 13564,
+        "projectedSarifSha256": "c07878e4fa2046fa2dc67a261f109b9f8d8f171f6ecb0535baa9f94cf65f72c6",
+        "projectedSarifBytes": 11628,
+        "projectionAuditSha256": "2d87f4955ee1953242d965b84b41587f1caa995926c3bd195ddf4c454503fd84",
+        "resultCount": 16
+      }
+    }
+  ],
+  "contamination": {
+    "scannerPath": "tools/scan_contamination.py",
+    "scannerSha256": "0136736af966e639162b445dc5953af4f25c83760d6c0672811be5ee8bf99cc2",
+    "policyVersion": "sparse-sarif-contamination/v1"
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "files": [
+      {
+        "path": "README.md",
+        "sha256": "25d88eb07dfe15a8c2f4ab9956548aa16f2a7e7da0cab488e51d993020069ea5"
+      },
+      {
+        "path": "capture-evidence/projection-audits/pmd-clean-a/baseline.json",
+        "sha256": "f1d70c4e1464ce53f4838966603cc8a3dcb564840eff80efdda9d6330298c19d"
+      },
+      {
+        "path": "capture-evidence/projection-audits/pmd-clean-a/candidate.json",
+        "sha256": "ee6447c9124d4c76dc2a62ada33f09c9d1c5e816f124c84864eb833bc3bcbe1b"
+      },
+      {
+        "path": "capture-evidence/projection-audits/pmd-clean-b/baseline.json",
+        "sha256": "6d2d4de9f778fd11e1ffb328258c9e5434e5976462544128d3fa523f4a267693"
+      },
+      {
+        "path": "capture-evidence/projection-audits/pmd-clean-b/candidate.json",
+        "sha256": "2d87f4955ee1953242d965b84b41587f1caa995926c3bd195ddf4c454503fd84"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline.sarif",
+        "sha256": "4d5ae757d19291f758da10cef49e5ff53c689809ff18398192a26b3a0b1efdb6"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/cache/CacheRefresher.java",
+        "sha256": "89a223b9404bbce4fbce37b6c07916dacc77819046fc4dd37d925a62443aa85a"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/dispatch/RequestDispatcher.java",
+        "sha256": "334450dad4172f00d58fba3957f2783803d2ce9f40dd84801deb93520e7f9178"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/health/ConnectionHealth.java",
+        "sha256": "97686ea913db3dc601a0eb7d407abbe08bd88349591ca3132410a1aab02df12f"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/imports/InvoiceImporter.java",
+        "sha256": "e26216aca51c01766e0049356a624adfbe41a2b4abf9341bac71171d74702ff6"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/jobs/ArchiveWorker.java",
+        "sha256": "3980f666e7ce55f51c5526a55468899b68ed97ce81bde45c53c9baf94cc696f8"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/ledger/LedgerService.java",
+        "sha256": "304b87c73477a0621a92fbcaa4c88d68c90a8a85b06d190ffbf6f694d92741c2"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "sha256": "bf643f6da1648aae6e6e1faaca984e106b6b91567f5fc215de716d76c219be75"
+      },
+      {
+        "path": "cases/pmd-clean-a/baseline/source/com/riverton/routing/NotificationRouter.java",
+        "sha256": "032a8bb491f78482c871f872cc299ecc462ea9956cf14d7157c30a9a4def2354"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate.sarif",
+        "sha256": "63ec0f5811039d343a4367ac62e44e0ab0794610ae614f9a6e40c581658b92cb"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/access/LeaseMonitor.java",
+        "sha256": "38ada614264c29daa84d5f957275393f4d23c00287f9bb8c4c2c94b3fdbe3f5e"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/archive/ArchiveWorker.java",
+        "sha256": "3980f666e7ce55f51c5526a55468899b68ed97ce81bde45c53c9baf94cc696f8"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/cache/CacheRefresher.java",
+        "sha256": "7a6db5e358032175df31a72c5f4e6b80331055c7321b77d2069a54fc5d883c7f"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/dispatch/RequestDispatcher.java",
+        "sha256": "334450dad4172f00d58fba3957f2783803d2ce9f40dd84801deb93520e7f9178"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/health/ConnectionHealth.java",
+        "sha256": "97686ea913db3dc601a0eb7d407abbe08bd88349591ca3132410a1aab02df12f"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/imports/InvoiceImporter.java",
+        "sha256": "ef8c1f99e3f8776a9d2b0ff81980275e5448850882339ab67fea2f35feed3f91"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/ledger/LedgerService.java",
+        "sha256": "e244a0914e480ae93c4642bfbd50a287847edf595285f8e1a52ca6600033e591"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "sha256": "5615030852b8a02539094eadeb2a885dd3d9817dc64fe82c81e4fd71e8d93f31"
+      },
+      {
+        "path": "cases/pmd-clean-a/candidate/source/com/riverton/routing/NotificationRouter.java",
+        "sha256": "ce235e40e8819a0a71a5626cac38f8e7286f93809e42780adb70f68c53d4ac99"
+      },
+      {
+        "path": "cases/pmd-clean-a/labels.json",
+        "sha256": "201527c4baa94fd780dbe3782520c1a70d1dffc072e8e96f8e87891efccafb52"
+      },
+      {
+        "path": "cases/pmd-clean-a/pmd-ruleset.xml",
+        "sha256": "3b9c4972c53f6288c84642296c1667d41c3d3904cd8b3c008aee9927763d1ab2"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline.sarif",
+        "sha256": "6ec0644dcf717977c061cbfe009c76cd208fbedd32257c600bc8857dc1289a39"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/app/JobProcessor.java",
+        "sha256": "2a6f768ef2cfd017b0c32ec527466dd4eeb5816e02cc881bec58f38d4b03baff"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/archive/ImportTask.java",
+        "sha256": "1c452358866b8e1ce60cd18638ba06143ffc10bc4d2d2b1890897951b4ec5106"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/cache/CacheLoader.java",
+        "sha256": "1f19a77250668ef05a4a9ae07d43ca7af5e25510ef1251213d39c44e4012667c"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/io/BatchReader.java",
+        "sha256": "8dc0185b1fd98a5600b526f819154913f2199137f89dd783119c684bc5319d27"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/metrics/MetricsWriter.java",
+        "sha256": "b68cf775f096bbef776b800d846f2520bd72ae2d06fba38271a5576c5259d26f"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/queue/QueueWorker.java",
+        "sha256": "10e3f9ffd298f6850fb011e67ab797bc10e894e707ed85915073bbdff80d08c9"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/service/ReportService.java",
+        "sha256": "9023e2fe76548a0596c8a39237a835b42b79efb77c4764f8a743111bc9bace0f"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/sync/RetryHandler.java",
+        "sha256": "d05ee1c3344a6d9b625477c046da8b0caa75d5c680c5e8e63580170fbb361cde"
+      },
+      {
+        "path": "cases/pmd-clean-b/baseline/source/workflow/TaskRunner.java",
+        "sha256": "f2d71b423254519666fb554724725fcd028fa21850c50e8c02bd7f9121145156"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate.sarif",
+        "sha256": "c07878e4fa2046fa2dc67a261f109b9f8d8f171f6ecb0535baa9f94cf65f72c6"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/app/JobProcessor.java",
+        "sha256": "9547c3be7c79b2d46ba48e03fe2e36c482ce48bd71d9523030647a93e29aabec"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/audit/AuditTrail.java",
+        "sha256": "ece6e0535ed6bd71cccd3ae49d58f270c3014ce082dd60751b61f23da00ec1ca"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/cache/CacheLoader.java",
+        "sha256": "52fc9ca7d06b191892ad8deedd4241f4f7746e407a03b65cf7abc9df061fc2c1"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/delivery/ReportService.java",
+        "sha256": "fb1d7da8c09fca234fa04e673c335a38dc4fc9e2adf4358ab17e0e8f964fa3b5"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/io/BatchReader.java",
+        "sha256": "55f0eee2c2a585afffcc8dc4437875d53cdeee2ec02330a0ec03dcf049b9ca63"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/metrics/MetricsWriter.java",
+        "sha256": "b68cf775f096bbef776b800d846f2520bd72ae2d06fba38271a5576c5259d26f"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/monitor/HealthCheck.java",
+        "sha256": "5fc08b1f5ac155952dc969588ecd494e7e7bbba1cd8b1376b0323073d9833aba"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/queue/QueueWorker.java",
+        "sha256": "696043b00b0c27160a7865e354a00a0129e42cdbbda6b0b0c9915252898f8f10"
+      },
+      {
+        "path": "cases/pmd-clean-b/candidate/source/sync/RetryHandler.java",
+        "sha256": "c8cd14c4d663a97ca34c490136b022c044a9cdc16c6e825285b96208793e9493"
+      },
+      {
+        "path": "cases/pmd-clean-b/labels.json",
+        "sha256": "fcfdde6178f37b469618aed6bd1e43d07c3a4cfba1ec187a273cfb89d28561d2"
+      },
+      {
+        "path": "cases/pmd-clean-b/pmd-ruleset.xml",
+        "sha256": "5ae035eacba3690c93be9771d4b87a042a1b19e6ac0465c1e575e11212bf6930"
+      },
+      {
+        "path": "schemas/experiment-report.schema.json",
+        "sha256": "3f8eba56ab6cfc66b5aa46455401824ac7720f5c2e712007c00a228406060c22"
+      },
+      {
+        "path": "schemas/labels.schema.json",
+        "sha256": "802e2e9e98e4a3dcac3f4f3d3b06aa4668fcdb3f62b7a5dcd3f4a9b80af8b94e"
+      },
+      {
+        "path": "schemas/manifest.schema.json",
+        "sha256": "b734f02da05352cbbd5795f1fae2cb24cfc5d65bd4681c2bb75045763791f438"
+      },
+      {
+        "path": "schemas/projection-audit.schema.json",
+        "sha256": "5a45d52d4e9592abf2dfb2c2c42553532c7f0a37e77d8dae8356c70bb94706a8"
+      },
+      {
+        "path": "tools/capture_pmd.sh",
+        "sha256": "0301931849443923b1376675ccda6ad44c49b7dfe92415aff9729098eee7d07e"
+      },
+      {
+        "path": "tools/project_pmd_sarif.py",
+        "sha256": "110ada3813afc6b065ea2a72d5b681815ce453c5b604232698aa51144244b351"
+      },
+      {
+        "path": "tools/scan_contamination.py",
+        "sha256": "0136736af966e639162b445dc5953af4f25c83760d6c0672811be5ee8bf99cc2"
+      },
+      {
+        "path": "tools/test_pmd_capture_tools.py",
+        "sha256": "2dfada0b9b30aa31ff22a1aacdc682c744d12168dd86868b01f2f722a17a1156"
+      },
+      {
+        "path": "tools/test_scan_contamination.py",
+        "sha256": "cbe9d31dd2cadfb9dbee1f24af8941e5582b969b9a3c7d46202aefcb7ba73b1b"
+      },
+      {
+        "path": "tools/verify_pmd_capture.py",
+        "sha256": "a7c1d53a98e612599a9091dad0df02aa68b1b80850fe90e4f507864963538ac8"
+      }
+    ]
+  }
+}

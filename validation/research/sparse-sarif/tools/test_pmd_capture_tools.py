@@ -19,6 +19,7 @@ from project_pmd_sarif import (
     project_capture,
     project_document,
     read_strict_json,
+    sha256_bytes,
     stable_json_bytes,
 )
 from verify_pmd_capture import (
@@ -52,6 +53,7 @@ from verify_pmd_capture import (
     verify_capture,
     verify_download_command,
     verify_family_labels,
+    verify_promotion,
 )
 
 
@@ -599,6 +601,350 @@ class CaptureContractTests(unittest.TestCase):
                 "FABRICATED",
                 CONTRACT_SHA256,
             )
+
+
+class PromotionVerificationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        self.research_root = self.root / "research"
+        self.capture_root = self.root / "capture"
+        self.research_root.mkdir()
+        self.capture_root.mkdir()
+        self.family_ids = ("pmd-family-a", "pmd-family-b")
+        families: list[dict[str, object]] = []
+        for family_id in self.family_ids:
+            case_root = self.research_root / "cases" / family_id
+            case_root.mkdir(parents=True)
+            _write_json(case_root / "labels.json", {"familyId": family_id})
+            (case_root / "pmd-ruleset.xml").write_text(
+                "<ruleset name=\"test\"/>\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+            family: dict[str, object] = {
+                "id": family_id,
+                "labelsPath": f"cases/{family_id}/labels.json",
+                "rulesetPath": f"cases/{family_id}/pmd-ruleset.xml",
+            }
+            for side in ("baseline", "candidate"):
+                source_root = case_root / side / "source"
+                source_root.mkdir(parents=True)
+                projected = stable_json_bytes(
+                    _document([_result("pkg/Worker.java")]),
+                    sort_keys=False,
+                )
+                raw = stable_json_bytes(
+                    _document([_result(f"file:///hosted/{family_id}/{side}/Worker.java")]),
+                    sort_keys=False,
+                )
+                audit = {
+                    "schemaVersion": "1",
+                    "algorithmVersion": ALGORITHM_VERSION,
+                    "captureContractSha256": CONTRACT_SHA256,
+                    "familyId": family_id,
+                    "side": side,
+                    "logicalSourceRoot": f"cases/{family_id}/{side}/source",
+                    "rawSarif": {
+                        "bytes": len(raw),
+                        "sha256": sha256_bytes(raw),
+                    },
+                    "projectedSarif": {
+                        "bytes": len(projected),
+                        "sha256": sha256_bytes(projected),
+                        "resultCount": 1,
+                    },
+                    "changes": [],
+                }
+                audit_payload = stable_json_bytes(audit, sort_keys=True)
+                stage_root = self.capture_root / "cases" / family_id
+                stage_root.mkdir(parents=True, exist_ok=True)
+                (stage_root / f"{side}.raw.sarif").write_bytes(raw)
+                (stage_root / f"{side}.sarif").write_bytes(projected)
+                (stage_root / f"{side}.projection-audit.json").write_bytes(
+                    audit_payload
+                )
+                (case_root / f"{side}.sarif").write_bytes(projected)
+                committed_audit = (
+                    self.research_root
+                    / "capture-evidence"
+                    / "projection-audits"
+                    / family_id
+                    / f"{side}.json"
+                )
+                committed_audit.parent.mkdir(parents=True, exist_ok=True)
+                committed_audit.write_bytes(audit_payload)
+                family[side] = {
+                    "sourceRoot": f"cases/{family_id}/{side}/source",
+                    "sarifPath": f"cases/{family_id}/{side}.sarif",
+                    "projectionAuditPath": (
+                        f"capture-evidence/projection-audits/{family_id}/{side}.json"
+                    ),
+                    "sourceTreeSha256": "0" * 64,
+                    "rawCaptureSha256": sha256_bytes(raw),
+                    "rawCaptureBytes": len(raw),
+                    "projectedSarifSha256": sha256_bytes(projected),
+                    "projectedSarifBytes": len(projected),
+                    "projectionAuditSha256": sha256_bytes(audit_payload),
+                    "resultCount": 1,
+                }
+            families.append(family)
+        self.manifest = {
+            "producer": {
+                "capture": {
+                    "contract": {
+                        "version": "pmd-authentic-sparse-capture/v1",
+                        "sha256": CONTRACT_SHA256,
+                    }
+                }
+            },
+            "families": families,
+        }
+        self.environment = {
+            "captureContract": {
+                "version": "pmd-authentic-sparse-capture/v1",
+                "sha256": CONTRACT_SHA256,
+            }
+        }
+        self._write_manifest()
+        _write_json(
+            self.capture_root / "capture-environment.json",
+            self.environment,
+            sort_keys=True,
+        )
+        self._write_checksums()
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    @property
+    def side(self) -> dict[str, object]:
+        return self.manifest["families"][0]["baseline"]
+
+    def _write_manifest(self) -> None:
+        _write_json(self.research_root / "manifest.json", self.manifest, sort_keys=True)
+
+    def _write_checksums(self) -> None:
+        checksum_path = self.capture_root / "checksums.sha256"
+        if checksum_path.exists():
+            checksum_path.unlink()
+        entries = []
+        for path in sorted(item for item in self.capture_root.rglob("*") if item.is_file()):
+            relative = path.relative_to(self.capture_root).as_posix()
+            entries.append(f"{sha256_bytes(path.read_bytes())}  {relative}\n")
+        checksum_path.write_text("".join(entries), encoding="ascii", newline="\n")
+
+    def _audit_paths(self) -> tuple[Path, Path]:
+        staged = (
+            self.capture_root
+            / "cases/pmd-family-a/baseline.projection-audit.json"
+        )
+        committed = (
+            self.research_root
+            / "capture-evidence/projection-audits/pmd-family-a/baseline.json"
+        )
+        return staged, committed
+
+    def _mutate_audit(self, mutation: object) -> None:
+        staged, committed = self._audit_paths()
+        audit, _ = read_strict_json(staged)
+        self.assertIsInstance(audit, dict)
+        mutation(audit)
+        payload = stable_json_bytes(audit, sort_keys=True)
+        staged.write_bytes(payload)
+        committed.write_bytes(payload)
+        self.side["projectionAuditSha256"] = sha256_bytes(payload)
+        self._write_manifest()
+        self._write_checksums()
+
+    def test_authentic_promotion_contract_passes_without_reprojection(self) -> None:
+        verify_promotion(self.research_root, self.capture_root)
+
+    def test_verify_promotion_cli_dispatches_the_strict_checker(self) -> None:
+        script = Path(__file__).with_name("verify_pmd_capture.py").resolve()
+        environment = os.environ.copy()
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(script),
+                "verify-promotion",
+                "--research-root",
+                str(self.research_root),
+                "--capture-root",
+                str(self.capture_root),
+            ],
+            cwd=self.root,
+            env=environment,
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_manifest_family_and_path_topology_mutations_are_rejected(self) -> None:
+        path_mutations = (
+            ("labelsPath", "cases/other/labels.json"),
+            ("rulesetPath", "cases/other/pmd-ruleset.xml"),
+        )
+        side_path_mutations = (
+            ("sourceRoot", "cases/pmd-family-a/candidate/source"),
+            ("sarifPath", "cases/pmd-family-a/candidate.sarif"),
+            (
+                "projectionAuditPath",
+                "capture-evidence/projection-audits/pmd-family-a/candidate.json",
+            ),
+        )
+        mutations = {
+            "family-order": lambda: self.manifest["families"].reverse(),
+            "missing-family": lambda: self.manifest["families"].pop(),
+            "duplicate-family": lambda: self.manifest["families"].__setitem__(
+                1, copy.deepcopy(self.manifest["families"][0])
+            ),
+            **{
+                f"family-{field}": (
+                    lambda field=field, value=value: self.manifest["families"][0].__setitem__(
+                        field, value
+                    )
+                )
+                for field, value in path_mutations
+            },
+            **{
+                f"side-{field}": (
+                    lambda field=field, value=value: self.side.__setitem__(field, value)
+                )
+                for field, value in side_path_mutations
+            },
+            "extra-side-field": lambda: self.side.__setitem__("rawCapturePath", "raw"),
+        }
+        for name, mutation in mutations.items():
+            with self.subTest(mutation=name):
+                original = copy.deepcopy(self.manifest)
+                mutation()
+                self._write_manifest()
+                with self.assertRaises(VerificationError):
+                    verify_promotion(self.research_root, self.capture_root)
+                self.manifest = original
+                self._write_manifest()
+
+    def test_staged_and_committed_byte_mutations_are_rejected(self) -> None:
+        committed_projected = self.research_root / "cases/pmd-family-a/baseline.sarif"
+        committed_audit = self._audit_paths()[1]
+        raw_committed = self.research_root / "cases/pmd-family-a/baseline.raw.sarif"
+        extra_staged = self.capture_root / "unexpected.txt"
+        mutations = {
+            "projected-byte": lambda: committed_projected.write_bytes(b"{}\n"),
+            "audit-byte": lambda: committed_audit.write_bytes(b"{}\n"),
+            "raw-committed": lambda: raw_committed.write_bytes(b"raw\n"),
+            "extra-staged": lambda: extra_staged.write_bytes(b"extra\n"),
+        }
+        for name, mutation in mutations.items():
+            with self.subTest(mutation=name):
+                original_projected = committed_projected.read_bytes()
+                original_audit = committed_audit.read_bytes()
+                mutation()
+                with self.assertRaises(VerificationError):
+                    verify_promotion(self.research_root, self.capture_root)
+                committed_projected.write_bytes(original_projected)
+                committed_audit.write_bytes(original_audit)
+                for created in (raw_committed, extra_staged):
+                    if created.exists():
+                        created.unlink()
+
+    def test_manifest_hash_size_and_count_mutations_are_rejected(self) -> None:
+        mutations = {
+            "raw-hash": ("rawCaptureSha256", "1" * 64),
+            "raw-bytes": ("rawCaptureBytes", self.side["rawCaptureBytes"] + 1),
+            "projected-hash": ("projectedSarifSha256", "1" * 64),
+            "projected-bytes": (
+                "projectedSarifBytes",
+                self.side["projectedSarifBytes"] + 1,
+            ),
+            "audit-hash": ("projectionAuditSha256", "1" * 64),
+            "result-count": ("resultCount", 2),
+        }
+        for name, (field, value) in mutations.items():
+            with self.subTest(mutation=name):
+                original = self.side[field]
+                self.side[field] = value
+                self._write_manifest()
+                with self.assertRaises(VerificationError):
+                    verify_promotion(self.research_root, self.capture_root)
+                self.side[field] = original
+                self._write_manifest()
+
+    def test_audit_hash_size_count_and_identity_mutations_are_rejected(self) -> None:
+        mutations = {
+            "raw-hash": lambda audit: audit["rawSarif"].__setitem__("sha256", "1" * 64),
+            "raw-bytes": lambda audit: audit["rawSarif"].__setitem__(
+                "bytes", audit["rawSarif"]["bytes"] + 1
+            ),
+            "projected-hash": lambda audit: audit["projectedSarif"].__setitem__(
+                "sha256", "1" * 64
+            ),
+            "projected-bytes": lambda audit: audit["projectedSarif"].__setitem__(
+                "bytes", audit["projectedSarif"]["bytes"] + 1
+            ),
+            "result-count": lambda audit: audit["projectedSarif"].__setitem__(
+                "resultCount", 2
+            ),
+            "family": lambda audit: audit.__setitem__("familyId", "pmd-family-b"),
+            "side": lambda audit: audit.__setitem__("side", "candidate"),
+            "source-root": lambda audit: audit.__setitem__(
+                "logicalSourceRoot", "cases/pmd-family-a/candidate/source"
+            ),
+            "contract": lambda audit: audit.__setitem__(
+                "captureContractSha256", "1" * 64
+            ),
+            "algorithm": lambda audit: audit.__setitem__(
+                "algorithmVersion", "projection/v2"
+            ),
+        }
+        for name, mutation in mutations.items():
+            with self.subTest(mutation=name):
+                original_manifest = copy.deepcopy(self.manifest)
+                staged, committed = self._audit_paths()
+                original_audit = staged.read_bytes()
+                self._mutate_audit(mutation)
+                with self.assertRaises(VerificationError):
+                    verify_promotion(self.research_root, self.capture_root)
+                staged.write_bytes(original_audit)
+                committed.write_bytes(original_audit)
+                self.manifest = original_manifest
+                self._write_manifest()
+                self._write_checksums()
+
+    def test_capture_contract_and_raw_artifact_mutations_are_rejected(self) -> None:
+        stage_raw = self.capture_root / "cases/pmd-family-a/baseline.raw.sarif"
+        environment_path = self.capture_root / "capture-environment.json"
+        original_raw = stage_raw.read_bytes()
+        original_environment = environment_path.read_bytes()
+        mutations = {
+            "raw-artifact": lambda: stage_raw.write_bytes(original_raw + b" "),
+            "environment-contract": lambda: _write_json(
+                environment_path,
+                {"captureContract": {"sha256": "1" * 64}},
+                sort_keys=True,
+            ),
+            "manifest-contract": lambda: self.manifest["producer"]["capture"][
+                "contract"
+            ].__setitem__("sha256", "1" * 64),
+        }
+        for name, mutation in mutations.items():
+            with self.subTest(mutation=name):
+                mutation()
+                self._write_manifest()
+                self._write_checksums()
+                with self.assertRaises(VerificationError):
+                    verify_promotion(self.research_root, self.capture_root)
+                stage_raw.write_bytes(original_raw)
+                environment_path.write_bytes(original_environment)
+                self.manifest["producer"]["capture"]["contract"]["sha256"] = (
+                    CONTRACT_SHA256
+                )
+                self._write_manifest()
+                self._write_checksums()
 
 
 class LabelVerificationTests(unittest.TestCase):

@@ -150,6 +150,57 @@ RESOURCE_CELL_KEYS: Final = tuple(
     for dataset in ("unique", "pathological")
 )
 IMPLEMENT_V4_ROLE_VALIDATORS_AVAILABLE: Final = False
+PMD_SOURCE_COMMIT: Final = "8fd38edf285a33e1164f66205ebe243441db9557"
+PMD_PROJECT_URL: Final = "https://github.com/pmd/pmd"
+PMD_RELEASE_URL: Final = (
+    "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0"
+)
+PMD_LICENSE_URL: Final = (
+    "https://github.com/pmd/pmd/blob/"
+    f"{PMD_SOURCE_COMMIT}/LICENSE"
+)
+CAPTURE_CONTRACT_VERSION: Final = "pmd-authentic-sparse-capture/v1"
+PROJECTION_ALGORITHM_VERSION: Final = "pmd-file-uri-prefix-projection/v1"
+CAPTURE_COMMAND: Final = (
+    "pmd",
+    "check",
+    "--dir",
+    ".",
+    "--format",
+    "sarif",
+    "--no-cache",
+    "--no-fail-on-violation",
+    "--no-progress",
+    "--relativize-paths-with",
+    "<side-source-root>",
+    "--report-file",
+    "<raw-capture>",
+    "--rulesets",
+    "<family-ruleset>",
+    "--threads",
+    "0",
+    "--use-version",
+    "java-17",
+)
+DOWNLOAD_COMMAND: Final = (
+    "curl",
+    "--disable",
+    "--fail",
+    "--location",
+    "--max-filesize",
+    "<archive-bytes>",
+    "--proto",
+    "=https",
+    "--retry",
+    "3",
+    "--retry-all-errors",
+    "--show-error",
+    "--silent",
+    "--tlsv1.2",
+    "--output",
+    "<archive-destination>",
+    "<archive-url>",
+)
 
 
 @dataclass(frozen=True, order=True)
@@ -879,7 +930,10 @@ class Scanner:
 
             def resolved_handle_path(handle: int) -> str:
                 buffer = ctypes.create_unicode_buffer(32768)
-                copied = final_path(handle, buffer, len(buffer), 0)
+                # VOLUME_NAME_NT avoids drive-letter aliases. Preserve the
+                # kernel-returned case because Windows directories may opt in
+                # to case-sensitive name lookup.
+                copied = final_path(handle, buffer, len(buffer), 0x00000002)
                 if copied == 0 or copied >= len(buffer):
                     raise OSError("GetFinalPathNameByHandleW failed")
                 value = buffer.value
@@ -887,7 +941,7 @@ class Scanner:
                     value = "\\\\" + value[8:]
                 elif value.startswith("\\\\?\\"):
                     value = value[4:]
-                return os.path.normcase(os.path.abspath(value))
+                return os.path.normpath(value)
 
             # Compare two kernel-resolved handles. A lexical root can differ
             # from a file handle on hosted runners that use drive mappings;
@@ -912,7 +966,7 @@ class Scanner:
                 if not close_handle(root_handle):
                     raise OSError("CloseHandle failed for research root")
             target = resolved_handle_path(msvcrt.get_osfhandle(descriptor))
-            return os.path.commonpath((root, target)) == root
+            return self._windows_handle_target_is_descendant(root, target)
         except (AttributeError, ImportError, OSError, ValueError):
             self._add(
                 "FS009",
@@ -920,6 +974,13 @@ class Scanner:
                 "opened-handle containment could not be established",
             )
             return False
+
+    @staticmethod
+    def _windows_handle_target_is_descendant(root: str, target: str) -> bool:
+        """Compare normalized NT handle paths without case folding."""
+
+        root_with_boundary = root.rstrip("\\") + "\\"
+        return target.startswith(root_with_boundary)
 
     def _decode_text(self, relative: str, payload: bytes) -> str | None:
         if payload.startswith(b"\xef\xbb\xbf"):
@@ -1179,7 +1240,268 @@ class Scanner:
             if hashlib.sha256(file_payload).hexdigest() != observed[nested]:
                 self._add("EXPECTED008", relative, "expected-output checksum does not match")
 
+    def _validate_manifest_contract(self, manifest: Mapping[str, object]) -> None:
+        """Mirror the closed manifest schema without a runtime dependency."""
+
+        valid = set(manifest) == {
+            "schemaVersion",
+            "corpusId",
+            "producer",
+            "families",
+            "contamination",
+            "integrity",
+        }
+        valid &= (
+            manifest.get("schemaVersion") == "1"
+            and manifest.get("corpusId") == "pmd-sparse-research"
+        )
+
+        producer = manifest.get("producer")
+        producer_keys = {
+            "family",
+            "name",
+            "version",
+            "sourceCommit",
+            "projectUrl",
+            "releaseUrl",
+            "license",
+            "archive",
+            "helpSha256",
+            "capture",
+        }
+        valid &= isinstance(producer, dict) and set(producer) == producer_keys
+        if isinstance(producer, dict):
+            valid &= producer.get("family") == "pmd"
+            valid &= producer.get("name") == "PMD"
+            valid &= producer.get("version") == "7.26.0"
+            valid &= producer.get("sourceCommit") == PMD_SOURCE_COMMIT
+            valid &= producer.get("projectUrl") == PMD_PROJECT_URL
+            valid &= producer.get("releaseUrl") == PMD_RELEASE_URL
+            valid &= producer.get("helpSha256") == (
+                "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91"
+            )
+            valid &= producer.get("license") == {
+                "identifier": "LicenseRef-PMD-BSD-Style",
+                "name": "PMD BSD-style license",
+                "url": PMD_LICENSE_URL,
+            }
+            valid &= producer.get("archive") == {
+                "url": (
+                    "https://github.com/pmd/pmd/releases/download/"
+                    "pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip"
+                ),
+                "sizeBytes": 73_646_044,
+                "sha256": (
+                    "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
+                ),
+            }
+            capture = producer.get("capture")
+            capture_keys = {
+                "sourceHeadSha",
+                "workflow",
+                "runner",
+                "runtime",
+                "contract",
+                "captureCommand",
+                "downloadCommand",
+            }
+            valid &= isinstance(capture, dict) and set(capture) == capture_keys
+            if isinstance(capture, dict):
+                source_head = capture.get("sourceHeadSha")
+                valid &= (
+                    isinstance(source_head, str)
+                    and re.fullmatch(r"[0-9a-f]{40}", source_head) is not None
+                )
+                workflow = capture.get("workflow")
+                valid &= isinstance(workflow, dict) and set(workflow) == {
+                    "runId",
+                    "artifactId",
+                    "artifactName",
+                    "artifactDigest",
+                }
+                if isinstance(workflow, dict):
+                    valid &= all(
+                        type(workflow.get(key)) is int
+                        and 1 <= workflow[key] <= 9_007_199_254_740_991
+                        for key in ("runId", "artifactId")
+                    )
+                    artifact_name = workflow.get("artifactName")
+                    valid &= (
+                        isinstance(artifact_name, str)
+                        and re.fullmatch(
+                            r"sparse-sarif-pmd-(?:bootstrap|capture)-[0-9a-f]{40}",
+                            artifact_name,
+                        )
+                        is not None
+                        and isinstance(source_head, str)
+                        and artifact_name.endswith(source_head)
+                    )
+                    valid &= (
+                        isinstance(workflow.get("artifactDigest"), str)
+                        and re.fullmatch(
+                            r"[0-9a-f]{64}",
+                            workflow["artifactDigest"],
+                        )
+                        is not None
+                    )
+                valid &= capture.get("runner") == {
+                    "label": "ubuntu-24.04",
+                    "imageOS": "ubuntu24",
+                    "imageVersion": (
+                        capture.get("runner", {}).get("imageVersion")
+                        if isinstance(capture.get("runner"), dict)
+                        else None
+                    ),
+                    "operatingSystem": "Linux",
+                    "architecture": "x86_64",
+                }
+                runner = capture.get("runner")
+                valid &= (
+                    isinstance(runner, dict)
+                    and isinstance(runner.get("imageVersion"), str)
+                    and re.fullmatch(
+                        r"[0-9]{8}\.[0-9]+\.[0-9]+",
+                        runner["imageVersion"],
+                    )
+                    is not None
+                )
+                valid &= capture.get("runtime") == {
+                    "pythonVersion": "3.12.13",
+                    "javaDistribution": "Eclipse Temurin",
+                    "javaVendor": "Eclipse Adoptium",
+                    "javaVersion": "17.0.19+10",
+                }
+                contract = capture.get("contract")
+                valid &= (
+                    isinstance(contract, dict)
+                    and set(contract) == {"version", "sha256"}
+                    and contract.get("version") == CAPTURE_CONTRACT_VERSION
+                    and isinstance(contract.get("sha256"), str)
+                    and re.fullmatch(r"[0-9a-f]{64}", contract["sha256"])
+                    is not None
+                )
+                valid &= capture.get("captureCommand") == list(CAPTURE_COMMAND)
+                valid &= capture.get("downloadCommand") == list(DOWNLOAD_COMMAND)
+
+        families = manifest.get("families")
+        valid &= isinstance(families, list) and 2 <= len(families) <= 16
+        family_ids: list[str] = []
+        if isinstance(families, list):
+            for family in families:
+                if not isinstance(family, dict) or set(family) != {
+                    "id",
+                    "labelsPath",
+                    "rulesetPath",
+                    "baseline",
+                    "candidate",
+                }:
+                    valid = False
+                    continue
+                family_id = family.get("id")
+                if not isinstance(family_id, str):
+                    valid = False
+                    continue
+                family_ids.append(family_id)
+                valid &= re.fullmatch(
+                    r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*",
+                    family_id,
+                ) is not None
+                valid &= family.get("labelsPath") == f"cases/{family_id}/labels.json"
+                valid &= family.get("rulesetPath") == f"cases/{family_id}/pmd-ruleset.xml"
+                for side_name in ("baseline", "candidate"):
+                    side = family.get(side_name)
+                    valid &= isinstance(side, dict) and set(side) == {
+                        "sourceRoot",
+                        "sarifPath",
+                        "projectionAuditPath",
+                        "sourceTreeSha256",
+                        "rawCaptureSha256",
+                        "rawCaptureBytes",
+                        "projectedSarifSha256",
+                        "projectedSarifBytes",
+                        "projectionAuditSha256",
+                        "resultCount",
+                    }
+                    if not isinstance(side, dict):
+                        continue
+                    valid &= side.get("sourceRoot") == (
+                        f"cases/{family_id}/{side_name}/source"
+                    )
+                    valid &= side.get("sarifPath") == (
+                        f"cases/{family_id}/{side_name}.sarif"
+                    )
+                    valid &= side.get("projectionAuditPath") == (
+                        "capture-evidence/projection-audits/"
+                        f"{family_id}/{side_name}.json"
+                    )
+                    valid &= all(
+                        isinstance(side.get(key), str)
+                        and re.fullmatch(r"[0-9a-f]{64}", side[key]) is not None
+                        for key in (
+                            "sourceTreeSha256",
+                            "rawCaptureSha256",
+                            "projectedSarifSha256",
+                            "projectionAuditSha256",
+                        )
+                    )
+                    valid &= all(
+                        type(side.get(key)) is int
+                        and 1 <= side[key] <= 16 * 1024 * 1024
+                        for key in ("rawCaptureBytes", "projectedSarifBytes")
+                    )
+                    valid &= (
+                        type(side.get("resultCount")) is int
+                        and 1 <= side["resultCount"] <= MAX_RESULTS
+                    )
+        valid &= family_ids == sorted(set(family_ids))
+
+        contamination = manifest.get("contamination")
+        valid &= isinstance(contamination, dict) and set(contamination) == {
+            "scannerPath",
+            "scannerSha256",
+            "policyVersion",
+        }
+        if isinstance(contamination, dict):
+            valid &= contamination.get("scannerPath") == "tools/scan_contamination.py"
+            valid &= contamination.get("policyVersion") == POLICY_VERSION
+            valid &= (
+                isinstance(contamination.get("scannerSha256"), str)
+                and re.fullmatch(
+                    r"[0-9a-f]{64}",
+                    contamination["scannerSha256"],
+                )
+                is not None
+            )
+        integrity = manifest.get("integrity")
+        valid &= isinstance(integrity, dict) and set(integrity) == {
+            "algorithm",
+            "files",
+        }
+        if isinstance(integrity, dict):
+            valid &= integrity.get("algorithm") == "sha256"
+            entries = integrity.get("files")
+            valid &= isinstance(entries, list) and 1 <= len(entries) <= MAX_FILES
+            if isinstance(entries, list):
+                valid &= all(
+                    isinstance(entry, dict)
+                    and set(entry) == {"path", "sha256"}
+                    and _is_canonical_relative_path(entry.get("path"))
+                    and entry.get("path") != "manifest.json"
+                    and not str(entry.get("path")).startswith("expected/")
+                    and isinstance(entry.get("sha256"), str)
+                    and re.fullmatch(r"[0-9a-f]{64}", entry["sha256"])
+                    is not None
+                    for entry in entries
+                )
+        if not valid:
+            self._add(
+                "MANIFEST010",
+                "manifest.json",
+                "manifest does not satisfy the exact sparse-SARIF schema contract",
+            )
+
     def _scan_manifest(self, manifest: Mapping[str, object]) -> None:
+        self._validate_manifest_contract(manifest)
         contamination = manifest.get("contamination")
         if not isinstance(contamination, dict) or contamination.get("policyVersion") != POLICY_VERSION:
             self._add("POLICY001", "manifest.json", "contamination policy version is not fixed")
@@ -1221,6 +1543,11 @@ class Scanner:
         producer = manifest.get("producer")
         if not isinstance(producer, dict) or producer.get("family") != "pmd":
             self._add("MANIFEST002", "manifest.json", "producer family must be pmd")
+        capture = producer.get("capture") if isinstance(producer, dict) else None
+        contract = capture.get("contract") if isinstance(capture, dict) else None
+        capture_contract_sha256 = (
+            contract.get("sha256") if isinstance(contract, dict) else None
+        )
         families = manifest.get("families")
         if not isinstance(families, list) or not 2 <= len(families) <= 16:
             self._add("MANIFEST003", "manifest.json", "families must contain 2 through 16 entries")
@@ -1257,7 +1584,13 @@ class Scanner:
             self._add("LIMIT006", "manifest.json", f"label tokens exceed {MAX_LABEL_TOKENS}")
             all_label_tokens = set(sorted(all_label_tokens)[:MAX_LABEL_TOKENS])
         for family, labels, labels_path in family_records:
-            self._scan_family(family, labels, labels_path, all_label_tokens)
+            self._scan_family(
+                family,
+                labels,
+                labels_path,
+                all_label_tokens,
+                capture_contract_sha256,
+            )
 
         expected_prefix = "expected/"
         for relative, document in sorted(self.json_documents.items()):
@@ -1551,12 +1884,234 @@ class Scanner:
             elif isinstance(current, str) and RESULT_INDEX_VALUE_PATTERN.search(current):
                 self._add("LABEL008", labels_path, "result-index ground truth value is prohibited")
 
+    def _scan_projection_audit(
+        self,
+        family_id: str,
+        side_name: str,
+        side: Mapping[str, object],
+        source_root: str,
+        sarif_path: str,
+        sarif: object,
+        results: Sequence[object],
+        capture_contract_sha256: object,
+    ) -> None:
+        """Validate and cross-bind one committed URI-projection audit."""
+
+        expected_path = (
+            "capture-evidence/projection-audits/"
+            f"{family_id}/{side_name}.json"
+        )
+        audit_path = self._safe_relative(
+            side.get("projectionAuditPath"),
+            "manifest.json",
+        )
+        if audit_path != expected_path:
+            self._add(
+                "AUDIT002",
+                "manifest.json",
+                f"{family_id}/{side_name} projection audit path is not canonical",
+            )
+        if audit_path is None:
+            return
+        audit_payload = self._read(audit_path)
+        if audit_payload is None:
+            return
+        if (
+            not isinstance(side.get("projectionAuditSha256"), str)
+            or hashlib.sha256(audit_payload).hexdigest()
+            != side.get("projectionAuditSha256")
+        ):
+            self._add("AUDIT002", audit_path, "projection audit SHA-256 differs")
+        audit = self.json_documents.get(audit_path)
+        if not isinstance(audit, dict):
+            self._add("AUDIT001", audit_path, "projection audit is not an object")
+            return
+        self._scan_environmental_json(audit_path, audit)
+        self._scan_sarif_ground_truth(audit_path, audit)
+
+        raw = audit.get("rawSarif")
+        projected = audit.get("projectedSarif")
+        changes = audit.get("changes")
+        shape_is_valid = (
+            set(audit)
+            == {
+                "schemaVersion",
+                "algorithmVersion",
+                "captureContractSha256",
+                "familyId",
+                "side",
+                "logicalSourceRoot",
+                "rawSarif",
+                "projectedSarif",
+                "changes",
+            }
+            and audit.get("schemaVersion") == "1"
+            and audit.get("algorithmVersion") == PROJECTION_ALGORITHM_VERSION
+            and isinstance(audit.get("captureContractSha256"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", audit["captureContractSha256"])
+            is not None
+            and isinstance(audit.get("familyId"), str)
+            and isinstance(audit.get("side"), str)
+            and _is_canonical_relative_path(audit.get("logicalSourceRoot"))
+            and isinstance(raw, dict)
+            and set(raw) == {"bytes", "sha256"}
+            and type(raw.get("bytes")) is int
+            and 1 <= raw["bytes"] <= 16 * 1024 * 1024
+            and isinstance(raw.get("sha256"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", raw["sha256"]) is not None
+            and isinstance(projected, dict)
+            and set(projected) == {"bytes", "sha256", "resultCount"}
+            and type(projected.get("bytes")) is int
+            and 1 <= projected["bytes"] <= 16 * 1024 * 1024
+            and isinstance(projected.get("sha256"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", projected["sha256"])
+            is not None
+            and type(projected.get("resultCount")) is int
+            and 1 <= projected["resultCount"] <= MAX_RESULTS
+            and isinstance(changes, list)
+            and 1 <= len(changes) <= MAX_RESULTS
+        )
+        if isinstance(changes, list):
+            for change in changes:
+                shape_is_valid &= (
+                    isinstance(change, dict)
+                    and set(change)
+                    == {
+                        "kind",
+                        "pointer",
+                        "originalValueSha256",
+                        "projectedValue",
+                    }
+                    and change.get("kind")
+                    == "checkout-file-uri-prefix-removal"
+                    and isinstance(change.get("pointer"), str)
+                    and re.fullmatch(
+                        r"/runs/0/results/(?:0|[1-9][0-9]*)/locations/0/"
+                        r"physicalLocation/artifactLocation/uri",
+                        change["pointer"],
+                    )
+                    is not None
+                    and isinstance(change.get("originalValueSha256"), str)
+                    and re.fullmatch(
+                        r"[0-9a-f]{64}",
+                        change["originalValueSha256"],
+                    )
+                    is not None
+                    and _is_canonical_relative_path(change.get("projectedValue"))
+                )
+        if not shape_is_valid:
+            self._add(
+                "AUDIT001",
+                audit_path,
+                "projection audit does not satisfy its exact schema contract",
+            )
+
+        if (
+            audit.get("familyId") != family_id
+            or audit.get("side") != side_name
+            or audit.get("logicalSourceRoot") != source_root
+        ):
+            self._add(
+                "AUDIT003",
+                audit_path,
+                "projection audit family, side, or logical root differs",
+            )
+        if audit.get("captureContractSha256") != capture_contract_sha256:
+            self._add(
+                "AUDIT004",
+                audit_path,
+                "projection audit capture contract differs from manifest",
+            )
+        if not isinstance(raw, dict) or (
+            raw.get("sha256") != side.get("rawCaptureSha256")
+            or raw.get("bytes") != side.get("rawCaptureBytes")
+        ):
+            self._add(
+                "AUDIT005",
+                audit_path,
+                "projection audit raw evidence differs from manifest",
+            )
+
+        sarif_payload = self._read(sarif_path)
+        actual_projected_sha256 = (
+            hashlib.sha256(sarif_payload).hexdigest()
+            if sarif_payload is not None
+            else None
+        )
+        if not isinstance(projected, dict) or (
+            projected.get("sha256") != side.get("projectedSarifSha256")
+            or projected.get("sha256") != actual_projected_sha256
+            or projected.get("bytes") != side.get("projectedSarifBytes")
+            or sarif_payload is None
+            or projected.get("bytes") != len(sarif_payload)
+            or projected.get("resultCount") != side.get("resultCount")
+            or projected.get("resultCount") != len(results)
+        ):
+            self._add(
+                "AUDIT006",
+                audit_path,
+                "projection audit projected evidence differs from manifest or SARIF",
+            )
+
+        expected_pointers = [
+            f"/runs/0/results/{index}/locations/0/physicalLocation/"
+            "artifactLocation/uri"
+            for index in range(len(results))
+        ]
+        observed_pointers: list[object] = []
+        observed_values: list[object] = []
+        if isinstance(changes, list):
+            observed_pointers = [
+                change.get("pointer") if isinstance(change, dict) else None
+                for change in changes
+            ]
+            observed_values = [
+                change.get("projectedValue") if isinstance(change, dict) else None
+                for change in changes
+            ]
+        projected_values: list[object] = []
+        runs = sarif.get("runs") if isinstance(sarif, dict) else None
+        run_results: object = None
+        if isinstance(runs, list) and len(runs) == 1 and isinstance(runs[0], dict):
+            run_results = runs[0].get("results")
+        if isinstance(run_results, list):
+            for result in run_results:
+                try:
+                    projected_values.append(
+                        result["locations"][0]["physicalLocation"]
+                        ["artifactLocation"]["uri"]
+                    )
+                except (KeyError, IndexError, TypeError):
+                    projected_values.append(None)
+        pointers_are_exact = (
+            isinstance(changes, list)
+            and len(changes) == len(results)
+            and observed_pointers == expected_pointers
+            and len(set(observed_pointers)) == len(observed_pointers)
+            and isinstance(run_results, list)
+            and len(run_results) == len(results)
+            and observed_values == projected_values
+            and all(
+                isinstance(result, dict)
+                and isinstance(result.get("locations"), list)
+                and len(result["locations"]) == 1
+                for result in run_results
+            )
+        )
+        if not pointers_are_exact:
+            self._add(
+                "AUDIT007",
+                audit_path,
+                "projection changes do not exactly cover ordered primary artifact URIs",
+            )
+
     def _scan_family(
         self,
         family: Mapping[str, object],
         labels: Mapping[str, object],
         labels_path: str,
         label_tokens: set[str],
+        capture_contract_sha256: object,
     ) -> None:
         sides: dict[str, tuple[Mapping[str, object], str, str, object]] = {}
         family_id = family.get("id")
@@ -1604,6 +2159,17 @@ class Scanner:
             self._scan_sparse_results(sarif_path, results)
             self._scan_sarif_ground_truth(sarif_path, sarif)
             self._scan_environmental_json(sarif_path, sarif)
+            if isinstance(family_id, str):
+                self._scan_projection_audit(
+                    family_id,
+                    side_name,
+                    side,
+                    source_root,
+                    sarif_path,
+                    sarif,
+                    results,
+                    capture_contract_sha256,
+                )
             sides[side_name] = (side, source_root, sarif_path, results)
 
         baseline_side = family.get("baseline")
@@ -1895,9 +2461,14 @@ class Scanner:
             actual_sarif = hashlib.sha256(payload).hexdigest()
             if side.get("projectedSarifSha256") != actual_sarif:
                 self._add("HASH002", sarif_path, "projected SARIF SHA-256 does not match")
+            if side.get("projectedSarifBytes") != len(payload):
+                self._add("HASH004", sarif_path, "projected SARIF byte count does not match")
         raw_hash = side.get("rawCaptureSha256")
         if not isinstance(raw_hash, str) or re.fullmatch(r"[0-9a-f]{64}", raw_hash) is None:
             self._add("HASH003", "manifest.json", "raw capture SHA-256 is not fixed")
+        raw_bytes = side.get("rawCaptureBytes")
+        if type(raw_bytes) is not int or not 1 <= raw_bytes <= MAX_JSON_BYTES:
+            self._add("HASH005", "manifest.json", "raw capture byte count is not fixed")
 
     def _scan_source(self, relative: str, label_tokens: set[str]) -> None:
         payload = self._read(relative)
@@ -2075,8 +2646,20 @@ class Scanner:
             elif isinstance(value, str):
                 normalized_key = re.sub(r"[-_]", "", key or "").casefold()
                 is_typed_pointer = (
-                    normalized_key == "jsonpointer"
-                    and re.fullmatch(r"(?:/(?:[^~/]|~[01])*)*", value) is not None
+                    (
+                        normalized_key == "jsonpointer"
+                        and re.fullmatch(r"(?:/(?:[^~/]|~[01])*)*", value)
+                        is not None
+                    )
+                    or (
+                        normalized_key == "pointer"
+                        and re.fullmatch(
+                            r"/runs/0/results/(?:0|[1-9][0-9]*)/locations/0/"
+                            r"physicalLocation/artifactLocation/uri",
+                            value,
+                        )
+                        is not None
+                    )
                 )
                 if (
                     not is_typed_pointer

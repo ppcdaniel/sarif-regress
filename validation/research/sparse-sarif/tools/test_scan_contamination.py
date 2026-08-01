@@ -15,10 +15,18 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from scan_contamination import (
+    CAPTURE_COMMAND,
+    CAPTURE_CONTRACT_VERSION,
+    DOWNLOAD_COMMAND,
     EXPERIMENT_SCENARIO_IDS,
     EXPERIMENT_VARIANT_IDS,
     FAIL_CLOSED_SCENARIOS,
     FIXED_EXPERIMENT_GATES,
+    PMD_LICENSE_URL,
+    PMD_PROJECT_URL,
+    PMD_RELEASE_URL,
+    PMD_SOURCE_COMMIT,
+    PROJECTION_ALGORITHM_VERSION,
     RESOURCE_CELL_KEYS,
     Scanner,
     scan_research_root,
@@ -358,10 +366,63 @@ def _tree_hash(root: Path, source_root: str) -> str:
     return hashlib.sha256("".join(lines).encode("ascii")).hexdigest()
 
 
+def _write_projection_audit(
+    root: Path,
+    family_id: str,
+    side_name: str,
+    side: dict[str, object],
+    capture_contract_sha256: str,
+) -> None:
+    sarif_path = root / str(side["sarifPath"])
+    payload = sarif_path.read_bytes()
+    document = json.loads(payload)
+    results = document["runs"][0]["results"]
+    changes = []
+    for index, result in enumerate(results):
+        uri = result["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+        original = f"file:///capture/{family_id}/{side_name}/{uri}"
+        changes.append(
+            {
+                "kind": "checkout-file-uri-prefix-removal",
+                "pointer": (
+                    f"/runs/0/results/{index}/locations/0/physicalLocation/"
+                    "artifactLocation/uri"
+                ),
+                "originalValueSha256": hashlib.sha256(
+                    original.encode("utf-8")
+                ).hexdigest(),
+                "projectedValue": uri,
+            }
+        )
+    audit = {
+        "schemaVersion": "1",
+        "algorithmVersion": PROJECTION_ALGORITHM_VERSION,
+        "captureContractSha256": capture_contract_sha256,
+        "familyId": family_id,
+        "side": side_name,
+        "logicalSourceRoot": side["sourceRoot"],
+        "rawSarif": {
+            "bytes": side["rawCaptureBytes"],
+            "sha256": side["rawCaptureSha256"],
+        },
+        "projectedSarif": {
+            "bytes": len(payload),
+            "sha256": hashlib.sha256(payload).hexdigest(),
+            "resultCount": len(results),
+        },
+        "changes": changes,
+    }
+    audit_path = root / str(side["projectionAuditPath"])
+    _write_json(audit_path, audit)
+    side["projectionAuditSha256"] = hashlib.sha256(
+        audit_path.read_bytes()
+    ).hexdigest()
+
+
 def _family(root: Path, family_id: str) -> dict[str, object]:
     family_root = f"cases/{family_id}"
-    baseline_source = f"{family_root}/baseline/src/Worker.java"
-    candidate_source = f"{family_root}/candidate/src/Worker.java"
+    baseline_source = f"{family_root}/baseline/source/Worker.java"
+    candidate_source = f"{family_root}/candidate/source/Worker.java"
     for relative in (baseline_source, candidate_source):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -369,11 +430,11 @@ def _family(root: Path, family_id: str) -> dict[str, object]:
 
     baseline_sarif = f"{family_root}/baseline.sarif"
     candidate_sarif = f"{family_root}/candidate.sarif"
-    shared = _selector("src/Worker.java")
-    collision = _selector("src/Worker.java", line=8)
-    ambiguity_baseline = _selector("src/Worker.java", line=12)
-    ambiguity_candidate_first = _selector("src/Worker.java", line=16)
-    ambiguity_candidate_second = _selector("src/Worker.java", line=12)
+    shared = _selector("Worker.java")
+    collision = _selector("Worker.java", line=8)
+    ambiguity_baseline = _selector("Worker.java", line=12)
+    ambiguity_candidate_first = _selector("Worker.java", line=16)
+    ambiguity_candidate_second = _selector("Worker.java", line=12)
     _write_json(
         root / baseline_sarif,
         _sarif([_result(shared), _result(collision), _result(ambiguity_baseline)]),
@@ -454,7 +515,7 @@ def _family(root: Path, family_id: str) -> dict[str, object]:
         ],
     }
     _write_json(root / labels_path, labels)
-    ruleset_path = f"{family_root}/ruleset.xml"
+    ruleset_path = f"{family_root}/pmd-ruleset.xml"
     (root / ruleset_path).write_text(
         "<ruleset name=\"sparse\"><rule ref=\"category/java/errorprone.xml/AvoidPrintStackTrace\"/></ruleset>\n",
         encoding="utf-8",
@@ -465,19 +526,33 @@ def _family(root: Path, family_id: str) -> dict[str, object]:
         "labelsPath": labels_path,
         "rulesetPath": ruleset_path,
         "baseline": {
-            "sourceRoot": f"{family_root}/baseline",
+            "sourceRoot": f"{family_root}/baseline/source",
             "sarifPath": baseline_sarif,
+            "projectionAuditPath": (
+                "capture-evidence/projection-audits/"
+                f"{family_id}/baseline.json"
+            ),
             "sourceTreeSha256": "0" * 64,
             "rawCaptureSha256": "a" * 64,
+            "rawCaptureBytes": 4096,
             "projectedSarifSha256": "0" * 64,
+            "projectedSarifBytes": 1,
+            "projectionAuditSha256": "0" * 64,
             "resultCount": 2,
         },
         "candidate": {
-            "sourceRoot": f"{family_root}/candidate",
+            "sourceRoot": f"{family_root}/candidate/source",
             "sarifPath": candidate_sarif,
+            "projectionAuditPath": (
+                "capture-evidence/projection-audits/"
+                f"{family_id}/candidate.json"
+            ),
             "sourceTreeSha256": "0" * 64,
             "rawCaptureSha256": "b" * 64,
+            "rawCaptureBytes": 4352,
             "projectedSarifSha256": "0" * 64,
+            "projectedSarifBytes": 1,
+            "projectionAuditSha256": "0" * 64,
             "resultCount": 2,
         },
     }
@@ -497,24 +572,54 @@ def _create_fixture(root: Path) -> None:
             "family": "pmd",
             "name": "PMD",
             "version": "7.26.0",
-            "sourceCommit": "1" * 40,
+            "sourceCommit": PMD_SOURCE_COMMIT,
+            "projectUrl": PMD_PROJECT_URL,
+            "releaseUrl": PMD_RELEASE_URL,
             "license": {
-                "identifier": "BSD-3-Clause",
-                "name": "BSD 3-Clause License",
-                "url": "https://github.com/pmd/pmd/blob/main/LICENSE",
+                "identifier": "LicenseRef-PMD-BSD-Style",
+                "name": "PMD BSD-style license",
+                "url": PMD_LICENSE_URL,
             },
             "archive": {
-                "url": "https://example.invalid/pmd.zip",
-                "sizeBytes": 1,
-                "sha256": "2" * 64,
+                "url": (
+                    "https://github.com/pmd/pmd/releases/download/"
+                    "pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip"
+                ),
+                "sizeBytes": 73_646_044,
+                "sha256": (
+                    "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
+                ),
             },
-            "helpSha256": "3" * 64,
-            "javaVersion": "17.0.19+10",
-            "captureCommand": ["pmd", "check", "--format", "sarif"],
-            "captureEnvironment": {
-                "runnerImage": "ubuntu-24.04",
-                "runnerVersion": "20260727.1",
-                "os": "Ubuntu 24.04",
+            "helpSha256": (
+                "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91"
+            ),
+            "capture": {
+                "sourceHeadSha": "4" * 40,
+                "workflow": {
+                    "runId": 123,
+                    "artifactId": 456,
+                    "artifactName": "sparse-sarif-pmd-bootstrap-" + "4" * 40,
+                    "artifactDigest": "5" * 64,
+                },
+                "runner": {
+                    "label": "ubuntu-24.04",
+                    "imageOS": "ubuntu24",
+                    "imageVersion": "20260727.1.0",
+                    "operatingSystem": "Linux",
+                    "architecture": "x86_64",
+                },
+                "runtime": {
+                    "pythonVersion": "3.12.13",
+                    "javaDistribution": "Eclipse Temurin",
+                    "javaVendor": "Eclipse Adoptium",
+                    "javaVersion": "17.0.19+10",
+                },
+                "contract": {
+                    "version": CAPTURE_CONTRACT_VERSION,
+                    "sha256": "6" * 64,
+                },
+                "captureCommand": list(CAPTURE_COMMAND),
+                "downloadCommand": list(DOWNLOAD_COMMAND),
             },
         },
         "families": [
@@ -557,12 +662,19 @@ def _refresh(root: Path) -> None:
             side = family[side_name]
             side["sourceTreeSha256"] = _tree_hash(root, side["sourceRoot"])
             sarif_path = root / side["sarifPath"]
-            side["projectedSarifSha256"] = hashlib.sha256(
-                sarif_path.read_bytes()
-            ).hexdigest()
+            sarif_payload = sarif_path.read_bytes()
+            side["projectedSarifSha256"] = hashlib.sha256(sarif_payload).hexdigest()
+            side["projectedSarifBytes"] = len(sarif_payload)
             document = json.loads(sarif_path.read_text(encoding="utf-8"))
             side["resultCount"] = sum(
                 len(run.get("results", [])) for run in document.get("runs", [])
+            )
+            _write_projection_audit(
+                root,
+                family["id"],
+                side_name,
+                side,
+                manifest["producer"]["capture"]["contract"]["sha256"],
             )
     manifest["integrity"]["files"] = []
     integrity_paths = sorted(
@@ -637,8 +749,150 @@ class ContaminationScannerTests(unittest.TestCase):
     def test_clean_fixture_passes(self) -> None:
         self.assertEqual((), scan_research_root(self.root))
 
+    def test_promotion_schemas_are_closed_and_exact(self) -> None:
+        schemas = Path(__file__).resolve().parent.parent / "schemas"
+        manifest = json.loads(
+            (schemas / "manifest.schema.json").read_text(encoding="utf-8")
+        )
+        audit = json.loads(
+            (schemas / "projection-audit.schema.json").read_text(encoding="utf-8")
+        )
+        self.assertFalse(manifest["additionalProperties"])
+        self.assertEqual(
+            {
+                "schemaVersion",
+                "corpusId",
+                "producer",
+                "families",
+                "contamination",
+                "integrity",
+            },
+            set(manifest["required"]),
+        )
+        producer = manifest["$defs"]["producer"]
+        self.assertFalse(producer["additionalProperties"])
+        self.assertEqual(
+            {
+                "family",
+                "name",
+                "version",
+                "sourceCommit",
+                "projectUrl",
+                "releaseUrl",
+                "license",
+                "archive",
+                "helpSha256",
+                "capture",
+            },
+            set(producer["required"]),
+        )
+        self.assertEqual(PMD_SOURCE_COMMIT, producer["properties"]["sourceCommit"]["const"])
+        side = manifest["$defs"]["side"]
+        self.assertTrue(
+            {
+                "projectionAuditPath",
+                "projectionAuditSha256",
+                "rawCaptureBytes",
+                "projectedSarifBytes",
+            }
+            <= set(side["required"])
+        )
+        self.assertFalse(audit["additionalProperties"])
+        self.assertEqual(
+            {
+                "schemaVersion",
+                "algorithmVersion",
+                "captureContractSha256",
+                "familyId",
+                "side",
+                "logicalSourceRoot",
+                "rawSarif",
+                "projectedSarif",
+                "changes",
+            },
+            set(audit["required"]),
+        )
+        self.assertFalse(audit["$defs"]["change"]["additionalProperties"])
+
+    def test_manifest_capture_provenance_is_fail_closed(self) -> None:
+        manifest_path = self.root / "manifest.json"
+        original = json.loads(manifest_path.read_text(encoding="utf-8"))
+        mutations = (
+            lambda value: value["producer"].__setitem__("sourceCommit", "0" * 40),
+            lambda value: value["producer"]["capture"]["workflow"].__setitem__(
+                "artifactId", "456"
+            ),
+            lambda value: value["producer"]["capture"]["runner"].__setitem__(
+                "imageVersion", "latest"
+            ),
+            lambda value: value["producer"]["license"].__setitem__(
+                "url", "https://github.com/pmd/pmd/blob/main/LICENSE"
+            ),
+            lambda value: value["producer"]["capture"].__setitem__(
+                "downloadCommand", ["curl", "https://example.invalid/pmd.zip"]
+            ),
+        )
+        for mutate in mutations:
+            with self.subTest(mutate=mutate):
+                manifest = json.loads(json.dumps(original))
+                mutate(manifest)
+                _write_json(manifest_path, manifest)
+                self.assertIn("MANIFEST010", _codes(self.root))
+        _write_json(manifest_path, original)
+
+    def test_projection_audit_cross_binding_is_fail_closed(self) -> None:
+        audit_path = (
+            self.root
+            / "capture-evidence/projection-audits/pmd-clean-a/baseline.json"
+        )
+        original = json.loads(audit_path.read_text(encoding="utf-8"))
+        mutations = (
+            ("AUDIT003", lambda value: value.__setitem__("familyId", "pmd-clean-b")),
+            (
+                "AUDIT004",
+                lambda value: value.__setitem__("captureContractSha256", "0" * 64),
+            ),
+            (
+                "AUDIT005",
+                lambda value: value["rawSarif"].__setitem__("bytes", 1),
+            ),
+            (
+                "AUDIT006",
+                lambda value: value["projectedSarif"].__setitem__("sha256", "0" * 64),
+            ),
+            (
+                "AUDIT007",
+                lambda value: value["changes"][0].__setitem__(
+                    "pointer",
+                    "/runs/0/results/1/locations/0/physicalLocation/"
+                    "artifactLocation/uri",
+                ),
+            ),
+        )
+        for expected, mutate in mutations:
+            with self.subTest(expected=expected):
+                audit = json.loads(json.dumps(original))
+                mutate(audit)
+                _write_json(audit_path, audit)
+                self.assertIn(expected, _codes(self.root))
+        _write_json(audit_path, original)
+
+    def test_projection_audit_path_and_hash_are_fail_closed(self) -> None:
+        manifest_path = self.root / "manifest.json"
+        original = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for field, value in (
+            ("projectionAuditPath", "capture-evidence/audit.json"),
+            ("projectionAuditSha256", "0" * 64),
+        ):
+            with self.subTest(field=field):
+                manifest = json.loads(json.dumps(original))
+                manifest["families"][0]["baseline"][field] = value
+                _write_json(manifest_path, manifest)
+                self.assertIn("AUDIT002", _codes(self.root))
+        _write_json(manifest_path, original)
+
     def test_label_id_and_distinctive_proof_phrase_are_rejected(self) -> None:
-        source = self.root / "cases/pmd-clean-a/baseline/src/Worker.java"
+        source = self.root / "cases/pmd-clean-a/baseline/source/Worker.java"
         source.write_text(
             _source()
             + "// pmd-clean-a-relationship-main\n"
@@ -650,7 +904,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("SOURCE002", _codes(self.root))
 
     def test_known_marker_and_suspicious_identifier_are_rejected(self) -> None:
-        source = self.root / "cases/pmd-clean-a/baseline/src/Worker.java"
+        source = self.root / "cases/pmd-clean-a/baseline/source/Worker.java"
         source.write_text(
             _source().replace(
                 "final class Worker",
@@ -665,7 +919,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("SOURCE004", codes)
 
     def test_correspondence_comment_adjacent_to_call_is_rejected(self) -> None:
-        source = self.root / "cases/pmd-clean-a/baseline/src/Worker.java"
+        source = self.root / "cases/pmd-clean-a/baseline/source/Worker.java"
         source.write_text(
             _source().replace(
                 "        error.printStackTrace();",
@@ -678,7 +932,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("SOURCE005", _codes(self.root))
 
     def test_symlink_and_nonregular_file_are_rejected(self) -> None:
-        link = self.root / "cases/pmd-clean-a/baseline/src/Alias.java"
+        link = self.root / "cases/pmd-clean-a/baseline/source/Alias.java"
         try:
             link.symlink_to("Worker.java")
         except OSError as error:
@@ -688,7 +942,7 @@ class ContaminationScannerTests(unittest.TestCase):
         mkfifo = getattr(os, "mkfifo", None)
         if mkfifo is None:
             return
-        fifo = self.root / "cases/pmd-clean-a/baseline/src/pipe"
+        fifo = self.root / "cases/pmd-clean-a/baseline/source/pipe"
         try:
             mkfifo(fifo)
         except OSError as error:
@@ -829,7 +1083,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertEqual(tuple(sorted(first)), first)
 
     def test_separator_normalized_label_id_identifier_is_rejected(self) -> None:
-        source = self.root / "cases/pmd-clean-a/baseline/src/Worker.java"
+        source = self.root / "cases/pmd-clean-a/baseline/source/Worker.java"
         source.write_text(
             _source().replace(
                 "final class Worker {",
@@ -842,7 +1096,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("SOURCE002", _codes(self.root))
 
     def test_separator_normalized_label_id_comment_is_rejected(self) -> None:
-        source = self.root / "cases/pmd-clean-a/baseline/src/Worker.java"
+        source = self.root / "cases/pmd-clean-a/baseline/source/Worker.java"
         source.write_text(
             _source().replace(
                 "        error.printStackTrace();",
@@ -868,7 +1122,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("SARIF008", _codes(self.root))
 
     def test_natural_identity_and_matches_comments_are_allowed(self) -> None:
-        source = self.root / "cases/pmd-clean-a/baseline/src/Worker.java"
+        source = self.root / "cases/pmd-clean-a/baseline/source/Worker.java"
         source.write_text(
             _source().replace(
                 "        error.printStackTrace();",
@@ -956,6 +1210,28 @@ class ContaminationScannerTests(unittest.TestCase):
                 scanner._is_reparse_point(SimpleNamespace(), "unknown")  # type: ignore[arg-type]
             )
         self.assertIn("FS009", {finding.code for finding in scanner.findings})
+
+    def test_windows_handle_containment_is_case_sensitive_and_boundary_aware(self) -> None:
+        root = r"\Device\HarddiskVolume7\case\Root"
+        self.assertTrue(
+            Scanner._windows_handle_target_is_descendant(
+                root,
+                root + r"\source\Worker.java",
+            )
+        )
+        self.assertFalse(
+            Scanner._windows_handle_target_is_descendant(
+                root,
+                r"\Device\HarddiskVolume7\case\root\source\Worker.java",
+            )
+        )
+        self.assertFalse(
+            Scanner._windows_handle_target_is_descendant(
+                root,
+                root + r"ed\source\Worker.java",
+            )
+        )
+        self.assertFalse(Scanner._windows_handle_target_is_descendant(root, root))
 
     @unittest.skipUnless(os.name == "nt", "Windows junction test")
     def test_windows_junction_is_rejected(self) -> None:
@@ -1070,7 +1346,7 @@ class ContaminationScannerTests(unittest.TestCase):
         path = self.root / "cases/pmd-clean-a/baseline.sarif"
         document = json.loads(path.read_text(encoding="utf-8"))
         document["runs"][0]["results"].append(
-            _result(_selector("src/Worker.java", line=20))
+            _result(_selector("Worker.java", line=20))
         )
         _write_json(path, document)
         _refresh(self.root)
@@ -1157,7 +1433,7 @@ class ContaminationScannerTests(unittest.TestCase):
         labels = json.loads(labels_path.read_text(encoding="utf-8"))
         proof = labels["relationships"][0]["sourceTransformation"]
         proof["baselineSourcePath"] = (
-            "cases/pmd-clean-a/candidate/src/Worker.java"
+            "cases/pmd-clean-a/candidate/source/Worker.java"
         )
         proof.pop("baselineFileSha256", None)
         _write_json(labels_path, labels)
@@ -1231,7 +1507,7 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("MANIFEST001", _codes(self.root))
 
     def test_source_only_mode_rejects_pre_capture_marker_and_unexpected_topology(self) -> None:
-        source = self.root / "cases/pmd-clean-a/baseline/src/Worker.java"
+        source = self.root / "cases/pmd-clean-a/baseline/source/Worker.java"
         source.write_text(
             _source().replace(
                 "        error.printStackTrace();",
@@ -1297,13 +1573,13 @@ class ContaminationScannerTests(unittest.TestCase):
         _write_json(labels_path, original)
 
     def test_proof_source_must_identify_the_applicable_endpoint_file(self) -> None:
-        other = self.root / "cases/pmd-clean-a/baseline/src/Other.java"
+        other = self.root / "cases/pmd-clean-a/baseline/source/Other.java"
         other.write_text(_source(), encoding="utf-8", newline="\n")
         labels_path = self.root / "cases/pmd-clean-a/labels.json"
         labels = json.loads(labels_path.read_text(encoding="utf-8"))
         proof = labels["relationships"][0]["sourceTransformation"]
         proof["baselineSourcePath"] = (
-            "cases/pmd-clean-a/baseline/src/Other.java"
+            "cases/pmd-clean-a/baseline/source/Other.java"
         )
         proof["baselineFileSha256"] = hashlib.sha256(other.read_bytes()).hexdigest()
         _write_json(labels_path, labels)
@@ -1456,7 +1732,7 @@ class ContaminationScannerTests(unittest.TestCase):
     def test_arbitrary_same_blob_cannot_satisfy_implement_v4_evidence_roles(self) -> None:
         variants = _complete_experiment_variants()
         selected = variants[-1]
-        evidence_path = "cases/pmd-clean-a/ruleset.xml"
+        evidence_path = "cases/pmd-clean-a/pmd-ruleset.xml"
         evidence_sha256 = hashlib.sha256(
             (self.root / evidence_path).read_bytes()
         ).hexdigest()
@@ -1715,7 +1991,7 @@ class ContaminationScannerTests(unittest.TestCase):
     ) -> None:
         family_root = self.root / "cases/pmd-clean-a"
         for side, uri in (("baseline", baseline_uri), ("candidate", candidate_uri)):
-            source_path = family_root / side / uri
+            source_path = family_root / side / "source" / uri
             source_path.parent.mkdir(parents=True, exist_ok=True)
             source_path.write_text(_source(), encoding="utf-8", newline="\n")
         labels_path = family_root / "labels.json"
@@ -1730,8 +2006,8 @@ class ContaminationScannerTests(unittest.TestCase):
                 "candidate": candidate,
                 "sourceTransformation": _proof(
                     self.root,
-                    "cases/pmd-clean-a/baseline/src/Worker.java",
-                    "cases/pmd-clean-a/candidate/src/Worker.java",
+                    f"cases/pmd-clean-a/baseline/source/{baseline_uri}",
+                    f"cases/pmd-clean-a/candidate/source/{candidate_uri}",
                     "A second relationship is derived independently from source.",
                 ),
             }

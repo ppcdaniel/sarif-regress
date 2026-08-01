@@ -5,10 +5,11 @@ producer supplies neither reliable fingerprints nor embedded snippets. It is del
 from the development corpus and the frozen real-producer holdout. No matcher result was consulted
 when the source transformations or labels were written.
 
-The corpus is not evidence that side-specific repository context is safe to ship. Hosted PMD
-capture and the repository-context experiment are still pending. Their eventual outputs must pass
-the fixed gates in [ADR 0003](../../../docs/decisions/0003-side-specific-repository-context-experiment.md)
-before any product behavior changes.
+The corpus is not evidence that side-specific repository context is safe to ship. An authentic
+hosted PMD capture has been promoted, while its strict exact-head recapture and the
+repository-context experiment are still pending. The experiment must pass the fixed gates in
+[ADR 0003](../../../docs/decisions/0003-side-specific-repository-context-experiment.md) before any
+product behavior changes.
 
 ## Independence protocol
 
@@ -64,7 +65,7 @@ unversioned latest release.
 | `pmd check --help` SHA-256 | `babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91` |
 | Java | Eclipse Temurin `17.0.19+10`; PMD language level `java-17` |
 | Licence reference | `LicenseRef-PMD-BSD-Style` |
-| Capture contract | `sparse-pmd-capture/v1`; canonical PMD and curl argv are runtime-verified |
+| Capture contract | `pmd-authentic-sparse-capture/v1`; canonical PMD and curl argv are runtime-verified |
 
 The official release URL, archive URL, extraction procedure, and licence context are recorded in
 [`validation/tools/capture/capture-provenance.json`](../../tools/capture/capture-provenance.json)
@@ -96,36 +97,44 @@ transfer ceiling, and inherited file-size limit. The contract SHA-256 is recorde
 environment and every projection audit. Hosted image version and exact source HEAD are run
 provenance, not deterministic projected-output fields.
 
-The committed `baseline.sarif` and `candidate.sarif` files will be those audited URI-only
-projections, not hand-authored SARIF. The projection audit must bind raw and projected hashes and
-list every changed JSON pointer. Those SARIF files and `manifest.json` do not exist yet; hosted
-capture is pending, and no workflow run or outcome is claimed here. The capture, projection, and
-verification tools have only local static and mutation-focused test evidence at this checkpoint.
+The committed `baseline.sarif` and `candidate.sarif` files are the audited URI-only projections,
+not hand-authored SARIF. Each projection audit binds raw and projected hashes and lists every
+changed JSON pointer. The first authentic capture job succeeded on source head
+`3a398396213cac416f1b1237c605dd2d119d572f` in workflow run `30717611507`; `manifest.json`
+records its runner image, artifact ID, artifact digest, commands, and hashes. The untouched raw
+SARIF remains in that workflow artifact and is not committed. A strict exact-head recapture must
+still reproduce the promoted projections, audits, and raw hashes before the corpus checkpoint is
+accepted.
 
 ## Expected layout
 
 ```text
 validation/research/sparse-sarif/
   README.md
-  manifest.json                         # added with capture hashes and provenance
+  manifest.json                         # capture hashes and provenance
+  capture-evidence/
+    projection-audits/
+      pmd-clean-a/{baseline,candidate}.json
+      pmd-clean-b/{baseline,candidate}.json
   cases/
     pmd-clean-a/
       baseline/source/**/*.java
       candidate/source/**/*.java
       pmd-ruleset.xml
       labels.json
-      baseline.sarif                    # pending authentic URI-only projection
-      candidate.sarif                   # pending authentic URI-only projection
+      baseline.sarif                    # authentic URI-only projection
+      candidate.sarif                   # authentic URI-only projection
     pmd-clean-b/
       baseline/source/**/*.java
       candidate/source/**/*.java
       pmd-ruleset.xml
       labels.json
-      baseline.sarif                    # pending authentic URI-only projection
-      candidate.sarif                   # pending authentic URI-only projection
+      baseline.sarif                    # authentic URI-only projection
+      candidate.sarif                   # authentic URI-only projection
   schemas/
     labels.schema.json
     manifest.schema.json
+    projection-audit.schema.json
     experiment-report.schema.json
   expected/
     experiment-report.json              # pending; generated only after evaluation

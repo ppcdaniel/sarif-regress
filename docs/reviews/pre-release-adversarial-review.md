@@ -560,3 +560,90 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   separately.
 - **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** conversion from bootstrap to
   strict mode. **Blocks release:** no independently; **blocks a deterministic research claim:** yes.
+
+### H-12 — Promoted capture provenance was structurally recorded but not authenticated
+
+- **Evidence and code area:** the first promotion draft in
+  `.github/workflows/holdout-validation.yml`, `validation/research/sparse-sarif/manifest.json`, and
+  `tools/verify_pmd_capture.py` recorded the historical workflow run, artifact ID/name/digest,
+  source SHA, and runner image, but the routine workflow verified only the manifest shape and
+  artifact content contract. It never retrieved artifact `8823830998` from run `30717611507`,
+  compared GitHub's authoritative metadata, or proved that the current sources, labels, and
+  rulesets were unchanged from capture source `3a398396...`.
+- **Why it matters:** a locally edited provenance object could remain shape-valid and internally
+  cross-consistent without proving that the asserted GitHub run or artifact supplied the promoted
+  raw bytes. That weakens independent auditability even when every committed projection hash is
+  correct.
+- **Smallest safe remediation:** grant only `actions: read`, download the historical artifact by
+  immutable run and artifact ID with digest mismatch configured to fail, compare the GitHub REST
+  artifact ID/name/digest/run/head metadata to a separate workflow authority and the manifest,
+  rerun strict promotion verification over the downloaded content, and byte-compare the frozen
+  corpus inputs against the recorded source commit.
+- **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** yes until authenticated on
+  the exact head. **Blocks release or matcher v4:** yes because the clean-PMD evidence would be
+  unauthenticated.
+- **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
+- **Pre-commit disposition:** remediated locally in the strict workflow; hosted Actions authority
+  and the historical artifact remain required before this finding is closed.
+
+### H-13 — Exact-head recapture was verified before upload but not after upload
+
+- **Evidence and code area:** the first strict form of
+  `.github/workflows/holdout-validation.yml` compared the runner staging directory with the promoted
+  projections and then uploaded it. The upload step exposed `artifact-id` and `artifact-digest`, but
+  no downstream job consumed either value or re-downloaded the stored artifact.
+- **Why it matters:** the verified staging directory and the retained GitHub artifact were adjacent
+  evidence objects, not one authenticated chain. A corrupt, misidentified, or differently named
+  retained artifact would not fail the workflow that claimed to preserve exact-head evidence.
+- **Smallest safe remediation:** after the upload job completes, download by its immutable artifact
+  ID, require the action's archive-digest verification to succeed, compare GitHub's artifact
+  metadata with the upload outputs/current run/head, and rerun the strict promotion verifier over
+  the downloaded content.
+- **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** yes until hosted on the exact
+  head. **Blocks release or matcher v4:** yes for reliance on the recapture evidence.
+- **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
+- **Pre-commit disposition:** remediated locally with a downstream attestation job; hosted evidence
+  remains required.
+
+### M-17 — Cross-platform corpus admission lacked a post-execution clean-tree guard
+
+- **Evidence and code area:** the initial `sparse-admission` matrix checked the exact clean checkout
+  before installing Python and running scanner tests/admission, but did not repeat that assertion
+  afterwards.
+- **Why it matters:** a platform-specific scanner/test side effect could modify or add a repository
+  file without invalidating the otherwise successful admission cell.
+- **Smallest safe remediation:** repeat both the exact-HEAD comparison and full tracked/untracked
+  clean-worktree assertion after admission on Ubuntu and Windows.
+- **Blocks PR #8/#13/release:** no independently. **Blocks accepting the corpus:** until corrected.
+- **Pre-commit disposition:** remediated locally; hosted Windows and Ubuntu execution remains
+  required.
+
+### M-18 — Sparse-corpus status text contradicted the promoted capture record
+
+- **Evidence and code area:** the opening of
+  `validation/research/sparse-sarif/README.md` said hosted PMD capture was still pending, while its
+  provenance section recorded the successful first capture, promoted projections, artifact ID, and
+  workflow run.
+- **Why it matters:** mutually inconsistent status text makes it unclear whether the SARIF is
+  authentic producer output or an unexecuted fixture plan.
+- **Smallest safe remediation:** distinguish the already promoted authentic capture, the pending
+  strict exact-head recapture, and the still-pending repository-context experiment.
+- **Blocks PR #8/#13/release:** no independently. **Blocks accepting the corpus documentation:** yes.
+- **Pre-commit disposition:** remediated locally.
+
+### M-19 — A permanent CI gate cannot depend on the 30-day promotion artifact
+
+- **Evidence and code area:** the first provenance-remediation draft added an unconditional
+  `promoted-capture-provenance` job to `.github/workflows/holdout-validation.yml`. It downloads
+  historical artifact `8823830998`, whose producing bootstrap step retained it for 30 days.
+- **Why it matters:** after expiration, every otherwise unchanged pull-request and `main` holdout
+  run would fail before reaching the repeatable PMD recapture. A temporary GitHub evidence object
+  must not become a hidden permanent availability dependency.
+- **Smallest safe remediation:** execute the historical download/authentication once on the exact
+  promotion head, preserve that successful run and its checked metadata in the corpus provenance
+  record, then remove the unconditional historical download. Keep the reproducible exact-head PMD
+  recapture and post-upload verification as the long-lived gate.
+- **Blocks PR #8/#13/release:** no independently. **Blocks accepting the final hardening workflow:**
+  until the one-time gate is retired after successful execution.
+- **Pre-commit disposition:** the one-time gate is intentionally present for the promotion
+  checkpoint; retirement and a strict final hosted run are required before handoff.

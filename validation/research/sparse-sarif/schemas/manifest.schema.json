@@ -17,7 +17,7 @@
       "const": "1"
     },
     "corpusId": {
-      "$ref": "#/$defs/stableId"
+      "const": "pmd-sparse-research"
     },
     "producer": {
       "$ref": "#/$defs/producer"
@@ -132,12 +132,12 @@
         "name",
         "version",
         "sourceCommit",
+        "projectUrl",
+        "releaseUrl",
         "license",
         "archive",
         "helpSha256",
-        "javaVersion",
-        "captureCommand",
-        "captureEnvironment"
+        "capture"
       ],
       "properties": {
         "family": {
@@ -150,7 +150,13 @@
           "const": "7.26.0"
         },
         "sourceCommit": {
-          "$ref": "#/$defs/gitCommit"
+          "const": "8fd38edf285a33e1164f66205ebe243441db9557"
+        },
+        "projectUrl": {
+          "const": "https://github.com/pmd/pmd"
+        },
+        "releaseUrl": {
+          "const": "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0"
         },
         "license": {
           "type": "object",
@@ -162,18 +168,13 @@
           ],
           "properties": {
             "identifier": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9.-]+$"
+              "const": "LicenseRef-PMD-BSD-Style"
             },
             "name": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
+              "const": "PMD BSD-style license"
             },
             "url": {
-              "$ref": "#/$defs/httpsUrl"
+              "const": "https://github.com/pmd/pmd/blob/8fd38edf285a33e1164f66205ebe243441db9557/LICENSE"
             }
           }
         },
@@ -187,59 +188,177 @@
           ],
           "properties": {
             "url": {
-              "$ref": "#/$defs/httpsUrl"
+              "const": "https://github.com/pmd/pmd/releases/download/pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip"
             },
             "sizeBytes": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 1073741824
+              "const": 73646044
             },
             "sha256": {
-              "$ref": "#/$defs/sha256"
+              "const": "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
             }
           }
         },
         "helpSha256": {
-          "$ref": "#/$defs/sha256"
+          "const": "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91"
         },
-        "javaVersion": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
-        },
-        "captureCommand": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 128,
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 2048
-          }
-        },
-        "captureEnvironment": {
+        "capture": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "runnerImage",
-            "runnerVersion",
-            "os"
+            "sourceHeadSha",
+            "workflow",
+            "runner",
+            "runtime",
+            "contract",
+            "captureCommand",
+            "downloadCommand"
           ],
           "properties": {
-            "runnerImage": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
+            "sourceHeadSha": {
+              "$ref": "#/$defs/gitCommit"
             },
-            "runnerVersion": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
+            "workflow": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "runId",
+                "artifactId",
+                "artifactName",
+                "artifactDigest"
+              ],
+              "properties": {
+                "runId": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "artifactId": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "artifactName": {
+                  "type": "string",
+                  "pattern": "^sparse-sarif-pmd-(?:bootstrap|capture)-[0-9a-f]{40}$",
+                  "maxLength": 128
+                },
+                "artifactDigest": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
             },
-            "os": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
+            "runner": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label",
+                "imageOS",
+                "imageVersion",
+                "operatingSystem",
+                "architecture"
+              ],
+              "properties": {
+                "label": {
+                  "const": "ubuntu-24.04"
+                },
+                "imageOS": {
+                  "const": "ubuntu24"
+                },
+                "imageVersion": {
+                  "type": "string",
+                  "pattern": "^[0-9]{8}\\.[0-9]+\\.[0-9]+$"
+                },
+                "operatingSystem": {
+                  "const": "Linux"
+                },
+                "architecture": {
+                  "const": "x86_64"
+                }
+              }
+            },
+            "runtime": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pythonVersion",
+                "javaDistribution",
+                "javaVendor",
+                "javaVersion"
+              ],
+              "properties": {
+                "pythonVersion": {
+                  "const": "3.12.13"
+                },
+                "javaDistribution": {
+                  "const": "Eclipse Temurin"
+                },
+                "javaVendor": {
+                  "const": "Eclipse Adoptium"
+                },
+                "javaVersion": {
+                  "const": "17.0.19+10"
+                }
+              }
+            },
+            "contract": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "sha256"
+              ],
+              "properties": {
+                "version": {
+                  "const": "pmd-authentic-sparse-capture/v1"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            },
+            "captureCommand": {
+              "const": [
+                "pmd",
+                "check",
+                "--dir",
+                ".",
+                "--format",
+                "sarif",
+                "--no-cache",
+                "--no-fail-on-violation",
+                "--no-progress",
+                "--relativize-paths-with",
+                "<side-source-root>",
+                "--report-file",
+                "<raw-capture>",
+                "--rulesets",
+                "<family-ruleset>",
+                "--threads",
+                "0",
+                "--use-version",
+                "java-17"
+              ]
+            },
+            "downloadCommand": {
+              "const": [
+                "curl",
+                "--disable",
+                "--fail",
+                "--location",
+                "--max-filesize",
+                "<archive-bytes>",
+                "--proto",
+                "=https",
+                "--retry",
+                "3",
+                "--retry-all-errors",
+                "--show-error",
+                "--silent",
+                "--tlsv1.2",
+                "--output",
+                "<archive-destination>",
+                "<archive-url>"
+              ]
             }
           }
         }
@@ -279,9 +398,13 @@
       "required": [
         "sourceRoot",
         "sarifPath",
+        "projectionAuditPath",
         "sourceTreeSha256",
         "rawCaptureSha256",
+        "rawCaptureBytes",
         "projectedSarifSha256",
+        "projectedSarifBytes",
+        "projectionAuditSha256",
         "resultCount"
       ],
       "properties": {
@@ -291,13 +414,29 @@
         "sarifPath": {
           "$ref": "#/$defs/relativePath"
         },
+        "projectionAuditPath": {
+          "$ref": "#/$defs/relativePath"
+        },
         "sourceTreeSha256": {
           "$ref": "#/$defs/sha256"
         },
         "rawCaptureSha256": {
           "$ref": "#/$defs/sha256"
         },
+        "rawCaptureBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
         "projectedSarifSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "projectedSarifBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "projectionAuditSha256": {
           "$ref": "#/$defs/sha256"
         },
         "resultCount": {

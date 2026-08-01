@@ -62,6 +62,25 @@ DOWNLOAD_FILE_SIZE_BLOCKS: Final = (
 MAX_ARTIFACT_FILES: Final = 128
 MAX_ARTIFACT_BYTES: Final = 128 * 1024 * 1024
 MAX_SOURCE_BYTES: Final = 1024 * 1024
+MAX_PROMOTED_FILE_BYTES: Final = 16 * 1024 * 1024
+PROMOTED_SIDE_FIELDS: Final = frozenset(
+    {
+        "sourceRoot",
+        "sarifPath",
+        "projectionAuditPath",
+        "sourceTreeSha256",
+        "rawCaptureSha256",
+        "rawCaptureBytes",
+        "projectedSarifSha256",
+        "projectedSarifBytes",
+        "projectionAuditSha256",
+        "resultCount",
+    }
+)
+PROMOTED_FAMILY_FIELDS: Final = frozenset(
+    {"id", "labelsPath", "rulesetPath", "baseline", "candidate"}
+)
+SIDES: Final = ("baseline", "candidate")
 MARKER_PATTERN: Final = re.compile(
     r"(?i)(?:\bHOLDOUT\b|\bGROUND[-_ ]?TRUTH\b|"
     r"\bIDENTITY[-_:](?:ID|KEY|MARKER)\b)"
@@ -277,6 +296,7 @@ def _read_regular_beneath(
     root: Path,
     relative: PurePosixPath,
     context: str,
+    maximum_bytes: int = MAX_SOURCE_BYTES,
 ) -> bytes:
     """Read one bounded regular file through a fixed no-follow root handle."""
 
@@ -298,24 +318,24 @@ def _read_regular_beneath(
             os.close(descriptor)
             descriptor = next_descriptor
         status = os.fstat(descriptor)
-        if not stat.S_ISREG(status.st_mode) or status.st_size > MAX_SOURCE_BYTES:
+        if not stat.S_ISREG(status.st_mode) or status.st_size > maximum_bytes:
             raise VerificationError(
-                f"{context} must be a regular file no larger than {MAX_SOURCE_BYTES} bytes."
+                f"{context} must be a regular file no larger than {maximum_bytes} bytes."
             )
         chunks: list[bytes] = []
         observed = 0
         while True:
             chunk = os.read(
                 descriptor,
-                min(64 * 1024, MAX_SOURCE_BYTES + 1 - observed),
+                min(64 * 1024, maximum_bytes + 1 - observed),
             )
             if not chunk:
                 break
             chunks.append(chunk)
             observed += len(chunk)
-            if observed > MAX_SOURCE_BYTES:
+            if observed > maximum_bytes:
                 raise VerificationError(
-                    f"{context} exceeds the {MAX_SOURCE_BYTES}-byte source limit."
+                    f"{context} exceeds its {maximum_bytes}-byte limit."
                 )
         return b"".join(chunks)
     except OSError as error:
@@ -1014,6 +1034,334 @@ def verify_capture(
         )
 
 
+def _require_sha256(value: object, context: str) -> str:
+    if not isinstance(value, str) or SHA256_PATTERN.fullmatch(value) is None:
+        raise VerificationError(f"{context} must be one lowercase SHA-256 digest.")
+    return value
+
+
+def _require_positive_integer(value: object, context: str, maximum: int) -> int:
+    if (
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or value < 1
+        or value > maximum
+    ):
+        raise VerificationError(
+            f"{context} must be an integer from 1 through {maximum}."
+        )
+    return value
+
+
+def _require_exact_path(value: object, expected: str, context: str) -> None:
+    observed = _safe_relative(value, context)
+    if observed != expected:
+        raise VerificationError(f"{context} must be {expected!r}.")
+
+
+def _promotion_family_names(research_root: Path) -> list[str]:
+    cases_root = _require_real_directory(research_root / "cases", "research cases root")
+    names: list[str] = []
+    try:
+        entries = sorted(os.scandir(cases_root), key=lambda entry: entry.name)
+    except OSError as error:
+        raise VerificationError("Research cases root cannot be read.") from error
+    for entry in entries:
+        try:
+            status = entry.stat(follow_symlinks=False)
+        except OSError as error:
+            raise VerificationError(f"Cannot inspect research case {entry.name}.") from error
+        if stat.S_ISLNK(status.st_mode) or not stat.S_ISDIR(status.st_mode):
+            raise VerificationError(
+                f"Research cases root contains a non-directory entry: {entry.name}."
+            )
+        if STABLE_ID_PATTERN.fullmatch(entry.name) is None:
+            raise VerificationError(f"Invalid family ID: {entry.name}.")
+        _require_real_directory(Path(entry.path), f"research family {entry.name}")
+        names.append(entry.name)
+    if len(names) < 2:
+        raise VerificationError("At least two PMD research families are required.")
+    return names
+
+
+def _promotion_capture_files(family_names: Sequence[str]) -> set[str]:
+    expected = {"capture-environment.json", "checksums.sha256"}
+    for family_id in family_names:
+        for side in SIDES:
+            expected.update(
+                {
+                    f"cases/{family_id}/{side}.raw.sarif",
+                    f"cases/{family_id}/{side}.sarif",
+                    f"cases/{family_id}/{side}.projection-audit.json",
+                }
+            )
+    return expected
+
+
+def _read_promoted_file(research_root: Path, relative: str, context: str) -> bytes:
+    return _read_regular_beneath(
+        research_root,
+        PurePosixPath(relative),
+        context,
+        MAX_PROMOTED_FILE_BYTES,
+    )
+
+
+def _verify_promoted_side(
+    *,
+    research_root: Path,
+    capture_files: Mapping[str, Path],
+    family_id: str,
+    side: str,
+    side_value: object,
+    manifest_contract_sha256: str,
+) -> None:
+    context = f"manifest family {family_id}.{side}"
+    manifest_side = _require_mapping(side_value, context)
+    if set(manifest_side) != PROMOTED_SIDE_FIELDS:
+        raise VerificationError(f"{context} fields do not match the promotion contract.")
+
+    logical_source_root = f"cases/{family_id}/{side}/source"
+    projected_relative = f"cases/{family_id}/{side}.sarif"
+    audit_relative = f"capture-evidence/projection-audits/{family_id}/{side}.json"
+    _require_exact_path(
+        manifest_side.get("sourceRoot"),
+        logical_source_root,
+        f"{context}.sourceRoot",
+    )
+    _require_exact_path(
+        manifest_side.get("sarifPath"),
+        projected_relative,
+        f"{context}.sarifPath",
+    )
+    _require_exact_path(
+        manifest_side.get("projectionAuditPath"),
+        audit_relative,
+        f"{context}.projectionAuditPath",
+    )
+    _require_sha256(manifest_side.get("sourceTreeSha256"), f"{context}.sourceTreeSha256")
+
+    raw_capture_relative = f"cases/{family_id}/{side}.raw.sarif"
+    staged_projected_relative = f"cases/{family_id}/{side}.sarif"
+    staged_audit_relative = f"cases/{family_id}/{side}.projection-audit.json"
+    raw_payload = capture_files[raw_capture_relative].read_bytes()
+    staged_projected_path = capture_files[staged_projected_relative]
+    staged_audit_path = capture_files[staged_audit_relative]
+    projected_document, staged_projected_payload = read_strict_json(staged_projected_path)
+    audit_value, staged_audit_payload = read_strict_json(staged_audit_path)
+    audit = _require_mapping(audit_value, f"{family_id}/{side} projection audit")
+
+    committed_projected_payload = _read_promoted_file(
+        research_root,
+        projected_relative,
+        f"committed {family_id}/{side} projected SARIF",
+    )
+    if committed_projected_payload != staged_projected_payload:
+        raise VerificationError(
+            f"{family_id}/{side} committed projected SARIF differs from the capture artifact."
+        )
+    committed_audit_payload = _read_promoted_file(
+        research_root,
+        audit_relative,
+        f"committed {family_id}/{side} projection audit",
+    )
+    if committed_audit_payload != staged_audit_payload:
+        raise VerificationError(
+            f"{family_id}/{side} committed projection audit differs from the capture artifact."
+        )
+
+    raw_hash = sha256_bytes(raw_payload)
+    raw_bytes = len(raw_payload)
+    manifest_raw_hash = _require_sha256(
+        manifest_side.get("rawCaptureSha256"),
+        f"{context}.rawCaptureSha256",
+    )
+    manifest_raw_bytes = _require_positive_integer(
+        manifest_side.get("rawCaptureBytes"),
+        f"{context}.rawCaptureBytes",
+        MAX_PROMOTED_FILE_BYTES,
+    )
+    audit_raw = _require_mapping(audit.get("rawSarif"), f"{family_id}/{side} audit.rawSarif")
+    audit_raw_hash = _require_sha256(
+        audit_raw.get("sha256"),
+        f"{family_id}/{side} audit.rawSarif.sha256",
+    )
+    audit_raw_bytes = _require_positive_integer(
+        audit_raw.get("bytes"),
+        f"{family_id}/{side} audit.rawSarif.bytes",
+        MAX_PROMOTED_FILE_BYTES,
+    )
+    if len({raw_hash, manifest_raw_hash, audit_raw_hash}) != 1:
+        raise VerificationError(f"{family_id}/{side} raw capture SHA-256 is not cross-bound.")
+    if len({raw_bytes, manifest_raw_bytes, audit_raw_bytes}) != 1:
+        raise VerificationError(f"{family_id}/{side} raw capture byte size is not cross-bound.")
+
+    projected_hash = sha256_bytes(staged_projected_payload)
+    projected_bytes = len(staged_projected_payload)
+    results = _flatten_results(projected_document, f"{family_id}/{side} promoted SARIF")
+    result_count = len(results)
+    manifest_projected_hash = _require_sha256(
+        manifest_side.get("projectedSarifSha256"),
+        f"{context}.projectedSarifSha256",
+    )
+    manifest_projected_bytes = _require_positive_integer(
+        manifest_side.get("projectedSarifBytes"),
+        f"{context}.projectedSarifBytes",
+        MAX_PROMOTED_FILE_BYTES,
+    )
+    manifest_result_count = _require_positive_integer(
+        manifest_side.get("resultCount"),
+        f"{context}.resultCount",
+        10_000,
+    )
+    audit_projected = _require_mapping(
+        audit.get("projectedSarif"),
+        f"{family_id}/{side} audit.projectedSarif",
+    )
+    audit_projected_hash = _require_sha256(
+        audit_projected.get("sha256"),
+        f"{family_id}/{side} audit.projectedSarif.sha256",
+    )
+    audit_projected_bytes = _require_positive_integer(
+        audit_projected.get("bytes"),
+        f"{family_id}/{side} audit.projectedSarif.bytes",
+        MAX_PROMOTED_FILE_BYTES,
+    )
+    audit_result_count = _require_positive_integer(
+        audit_projected.get("resultCount"),
+        f"{family_id}/{side} audit.projectedSarif.resultCount",
+        10_000,
+    )
+    if len({projected_hash, manifest_projected_hash, audit_projected_hash}) != 1:
+        raise VerificationError(
+            f"{family_id}/{side} projected SARIF SHA-256 is not cross-bound."
+        )
+    if len({projected_bytes, manifest_projected_bytes, audit_projected_bytes}) != 1:
+        raise VerificationError(
+            f"{family_id}/{side} projected SARIF byte size is not cross-bound."
+        )
+    if len({result_count, manifest_result_count, audit_result_count}) != 1:
+        raise VerificationError(f"{family_id}/{side} result count is not cross-bound.")
+
+    manifest_audit_hash = _require_sha256(
+        manifest_side.get("projectionAuditSha256"),
+        f"{context}.projectionAuditSha256",
+    )
+    if sha256_bytes(staged_audit_payload) != manifest_audit_hash:
+        raise VerificationError(
+            f"{family_id}/{side} projection audit SHA-256 is not cross-bound."
+        )
+    if (
+        audit.get("schemaVersion") != "1"
+        or audit.get("algorithmVersion") != ALGORITHM_VERSION
+        or audit.get("familyId") != family_id
+        or audit.get("side") != side
+        or audit.get("logicalSourceRoot") != logical_source_root
+        or audit.get("captureContractSha256") != manifest_contract_sha256
+    ):
+        raise VerificationError(
+            f"{family_id}/{side} projection audit identity is not cross-bound."
+        )
+
+
+def verify_promotion(research_root: Path, capture_root: Path) -> None:
+    """Bind a previously verified hosted capture to committed research evidence."""
+
+    research_root = _require_real_directory(research_root, "research root")
+    capture_root = _require_real_directory(capture_root, "capture root")
+    family_names = _promotion_family_names(research_root)
+    capture_files = _enumerate_artifact_files(capture_root)
+    if set(capture_files) != _promotion_capture_files(family_names):
+        raise VerificationError("Capture artifact file set is not exact for promotion.")
+    _verify_checksums(capture_root, capture_files)
+
+    manifest_relative = "manifest.json"
+    manifest_payload = _read_promoted_file(
+        research_root,
+        manifest_relative,
+        "research manifest",
+    )
+    manifest_value, parsed_manifest_payload = read_strict_json(
+        research_root / manifest_relative
+    )
+    if manifest_payload != parsed_manifest_payload:
+        raise VerificationError("Research manifest changed while it was being verified.")
+    manifest = _require_mapping(manifest_value, "research manifest")
+    producer = _require_mapping(manifest.get("producer"), "manifest.producer")
+    capture = _require_mapping(producer.get("capture"), "manifest.producer.capture")
+    contract = _require_mapping(
+        capture.get("contract"),
+        "manifest.producer.capture.contract",
+    )
+    manifest_contract_sha256 = _require_sha256(
+        contract.get("sha256"),
+        "manifest.producer.capture.contract.sha256",
+    )
+    if manifest_contract_sha256 != capture_contract_sha256():
+        raise VerificationError("Manifest capture contract SHA-256 is not canonical.")
+
+    environment_value, _ = read_strict_json(capture_files["capture-environment.json"])
+    environment = _require_mapping(environment_value, "capture environment")
+    environment_contract = _require_mapping(
+        environment.get("captureContract"),
+        "capture environment.captureContract",
+    )
+    if environment_contract.get("sha256") != manifest_contract_sha256:
+        raise VerificationError(
+            "Capture environment and manifest contract SHA-256 are not cross-bound."
+        )
+
+    families = _require_list(manifest.get("families"), "manifest.families")
+    manifest_names: list[str] = []
+    family_values: dict[str, dict[str, object]] = {}
+    for index, family_value in enumerate(families):
+        family = _require_mapping(family_value, f"manifest.families[{index}]")
+        if set(family) != PROMOTED_FAMILY_FIELDS:
+            raise VerificationError(
+                f"manifest.families[{index}] fields do not match the promotion contract."
+            )
+        family_id = family.get("id")
+        if (
+            not isinstance(family_id, str)
+            or STABLE_ID_PATTERN.fullmatch(family_id) is None
+            or family_id in family_values
+        ):
+            raise VerificationError("Manifest has an invalid or duplicate family ID.")
+        manifest_names.append(family_id)
+        family_values[family_id] = family
+    if manifest_names != family_names:
+        raise VerificationError(
+            "Manifest families must exactly and ordinally match research and capture families."
+        )
+
+    for family_id in family_names:
+        family = family_values[family_id]
+        _require_exact_path(
+            family.get("labelsPath"),
+            f"cases/{family_id}/labels.json",
+            f"manifest family {family_id}.labelsPath",
+        )
+        _require_exact_path(
+            family.get("rulesetPath"),
+            f"cases/{family_id}/pmd-ruleset.xml",
+            f"manifest family {family_id}.rulesetPath",
+        )
+        for side in SIDES:
+            raw_committed = research_root / f"cases/{family_id}/{side}.raw.sarif"
+            if os.path.lexists(raw_committed):
+                raise VerificationError(
+                    f"Raw capture must not be committed: cases/{family_id}/{side}.raw.sarif."
+                )
+            _verify_promoted_side(
+                research_root=research_root,
+                capture_files=capture_files,
+                family_id=family_id,
+                side=side,
+                side_value=family.get(side),
+                manifest_contract_sha256=manifest_contract_sha256,
+            )
+
+
 def shell_capture_contract(
     *,
     pmd_version: str,
@@ -1116,6 +1464,9 @@ def _parser() -> argparse.ArgumentParser:
     verify.add_argument("--source-sha", required=True)
     verify.add_argument("--expected-image-os", required=True)
     verify.add_argument("--expected-image-version", required=True)
+    promotion = subparsers.add_parser("verify-promotion")
+    promotion.add_argument("--research-root", type=Path, required=True)
+    promotion.add_argument("--capture-root", type=Path, required=True)
     return parser
 
 
@@ -1172,6 +1523,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 parsed.source_sha,
                 parsed.expected_image_os,
                 parsed.expected_image_version,
+            )
+        elif parsed.command == "verify-promotion":
+            verify_promotion(
+                Path(os.path.abspath(parsed.research_root)),
+                Path(os.path.abspath(parsed.capture_root)),
             )
         else:
             raise VerificationError(f"Unsupported verifier command: {parsed.command}.")
