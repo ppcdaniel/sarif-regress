@@ -196,6 +196,7 @@ jobs:
           readonly reports=(
             'sarif-regress-holdout.json'
             'sarif-multitool-baseline.json'
+            'v2-to-v3-delta.json'
             'comparison-summary.json'
             'checksums.sha256'
           )
@@ -310,6 +311,7 @@ jobs:
           report_names = (
               "sarif-regress-holdout.json",
               "sarif-multitool-baseline.json",
+              "v2-to-v3-delta.json",
           )
           report_hashes = {}
           for name in report_names:
@@ -334,6 +336,7 @@ jobs:
 
           sarif_report = load_json(verified / report_names[0])
           multitool_report = load_json(verified / report_names[1])
+          delta_report = load_json(verified / report_names[2])
           for name, report in (
                   (report_names[0], sarif_report),
                   (report_names[1], multitool_report)):
@@ -343,6 +346,21 @@ jobs:
               if evaluation.get("holdoutManifestSha256") != manifest_sha256:
                   raise SystemExit(f"{name} does not identify the holdout manifest.")
 
+          matcher_v2_history_root = (
+              root / "validation" / "history" / "matcher-v2")
+          matcher_v2_history_manifest_hash = sha256(
+              matcher_v2_history_root / "checksums.sha256")
+          matcher_v2_report_hash = sha256(
+              matcher_v2_history_root / "sarif-regress-holdout.json")
+          expected_delta_hashes = {
+              "matcherV2HistoryChecksumManifestSha256":
+                  matcher_v2_history_manifest_hash,
+              "matcherV2ReportSha256": matcher_v2_report_hash,
+              "matcherV3ReportSha256": report_hashes[report_names[0]],
+              "holdoutManifestSha256": manifest_sha256,
+          }
+          if delta_report.get("inputHashes") != expected_delta_hashes:
+              raise SystemExit("v2-to-v3-delta.json does not bind its exact inputs.")
           checksums = parse_checksum_manifest(verified / "checksums.sha256")
           required_checksums = {
               "validation/holdout/manifest.json": manifest_sha256,
@@ -351,6 +369,12 @@ jobs:
                   report_hashes[report_names[0]],
               "validation/expected/sarif-multitool-baseline.json":
                   report_hashes[report_names[1]],
+              "validation/expected/v2-to-v3-delta.json":
+                  report_hashes[report_names[2]],
+              "validation/history/matcher-v2/checksums.sha256":
+                  matcher_v2_history_manifest_hash,
+              "validation/history/matcher-v2/sarif-regress-holdout.json":
+                  matcher_v2_report_hash,
           }
           for name, expected in required_checksums.items():
               if checksums.get(name) != expected:
@@ -363,6 +387,8 @@ jobs:
               "evaluationMetadataSha256": metadata_sha256,
               "sarifRegressReportSha256": report_hashes[report_names[0]],
               "sarifMultitoolBaselineReportSha256": report_hashes[report_names[1]],
+              "matcherV2ReportSha256": matcher_v2_report_hash,
+              "v2ToV3DeltaReportSha256": report_hashes[report_names[2]],
           }
           if comparison_hashes != expected_comparison_hashes:
               raise SystemExit("comparison-summary.json does not bind the base inputs.")
@@ -376,9 +402,10 @@ jobs:
           base_report_digests = {
               "sarifRegressHoldoutSha256": report_hashes[report_names[0]],
               "sarifMultitoolBaselineSha256": report_hashes[report_names[1]],
+              "v2ToV3DeltaSha256": report_hashes[report_names[2]],
           }
           candidate = {
-              "schemaVersion": "1",
+              "schemaVersion": "2",
               "repository": "ppcdaniel/sarif-regress",
               "repositoryCommitSha": frozen_commit,
               "holdoutManifestSha256": manifest_sha256,
@@ -413,6 +440,7 @@ jobs:
               "byteIdentity": {
                   "sarifRegressHoldout": True,
                   "sarifMultitoolBaseline": True,
+                  "v2ToV3Delta": True,
               },
           }
           candidate_bytes = (
@@ -427,6 +455,7 @@ jobs:
               "cross-platform-attestation.json",
               "sarif-multitool-baseline.json",
               "sarif-regress-holdout.json",
+              "v2-to-v3-delta.json",
           )
           coordinator_manifest = "".join(
               f"{sha256(verified / name)}  {name}\n"

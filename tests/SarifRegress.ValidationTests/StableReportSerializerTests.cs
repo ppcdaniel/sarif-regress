@@ -14,10 +14,12 @@ public sealed class StableReportSerializerTests
             sarifRegress,
             multitool,
             new ComparisonReportHashes(
-                Hash('a'),
+                sarifRegress.Evaluation.HoldoutManifestSha256,
                 Hash('b'),
                 Hash('c'),
-                Hash('d')),
+                Hash('d'),
+                Hash('e'),
+                Hash('f')),
             crossPlatformByteIdentity: true);
 
         AssertStable(() => StableReportSerializer.Serialize(sarifRegress));
@@ -67,10 +69,12 @@ public sealed class StableReportSerializerTests
             mismatchedReport,
             multitool,
             new ComparisonReportHashes(
-                Hash('a'),
+                mismatchedReport.Evaluation.HoldoutManifestSha256,
                 Hash('b'),
                 Hash('c'),
-                Hash('d')),
+                Hash('d'),
+                Hash('e'),
+                Hash('f')),
             crossPlatformByteIdentity: true);
 
         Assert.Equal("blocked", comparison.ReleaseRecommendation);

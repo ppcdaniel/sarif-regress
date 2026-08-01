@@ -11,6 +11,12 @@ configuration diagnostics.
 {
   "schemaVersion": "1",
   "repoRoot": "../source",
+  "uriBaseMappings": [
+    {
+      "id": "WORKSPACE_ROOT",
+      "uri": "repo:/"
+    }
+  ],
   "pathRebases": [
     {
       "from": "file:///C:/agent/_work/1/s/",
@@ -70,6 +76,23 @@ directory and overrides `repoRoot`.
 Repository context is used only when `matching.enableRepoContext` is true. It remains read-only,
 bounded by file size and snippet radius, and contained below the approved root. A missing,
 escaping, symlinked, or junction path fails closed.
+
+## External URI bases
+
+`uriBaseMappings` explicitly define logical bases that an input references but does not define in
+`run.originalUriBaseIds`. Each entry has an ordinal `id`, a directory-form `uri`, and optionally a
+parent `uriBaseId`. A configured definition fills only a missing base: a valid SARIF-defined base
+with the same identifier always wins and is never silently replaced.
+
+Root targets are limited to `repo:/`, local POSIX or drive-absolute directories, and hostless local
+`file:` directories. A child target must be repository-relative and end in a directory separator.
+UNC, network, authority-bearing repository URIs, queries, fragments, control characters, and parent
+traversal are rejected. References remain lexical; SarifRegress never fetches a URI. Unknown bases,
+cycles, and chains deeper than 32 continue to fail closed. Successful use records a
+`configured-uri-base` transformation with algorithm
+`sarifregress/configured-uri-base/v1` in the finding explanation. The record identifies the
+configured logical base but omits its raw target, so equivalent local roots do not expose machine
+paths or make stable reports platform-specific.
 
 ## Path rebases and aliases
 

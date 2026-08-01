@@ -27,7 +27,26 @@ public sealed record HoldoutMetrics(
     int StructuralFailures,
     decimal Precision,
     decimal Recall,
-    decimal F1);
+    decimal F1)
+{
+    /// <summary>Gets the number of labelled candidate-only lifecycle units.</summary>
+    public int ExpectedNewClassifications { get; init; }
+
+    /// <summary>Gets the number of labelled candidate-only units classified incorrectly.</summary>
+    public int IncorrectNewClassifications { get; init; }
+
+    /// <summary>Gets correct labelled new classifications divided by expected new units.</summary>
+    public decimal NewClassificationAccuracy { get; init; } = 1m;
+
+    /// <summary>Gets the number of labelled baseline-only lifecycle units.</summary>
+    public int ExpectedResolvedClassifications { get; init; }
+
+    /// <summary>Gets the number of labelled baseline-only units classified incorrectly.</summary>
+    public int IncorrectResolvedClassifications { get; init; }
+
+    /// <summary>Gets correct labelled resolved classifications divided by expected units.</summary>
+    public decimal ResolvedClassificationAccuracy { get; init; } = 1m;
+}
 
 /// <summary>Defines one ground-truth relationship independent of matcher output.</summary>
 public sealed record GroundTruthRelationship(
@@ -40,7 +59,11 @@ public sealed record GroundTruthRelationship(
 public sealed record ActualRelationship(
     string State,
     string? BaselineKey,
-    string? CandidateKey);
+    string? CandidateKey)
+{
+    /// <summary>Gets bounded value-free explanations for decisions touching this unit.</summary>
+    public ImmutableArray<DecisionTraceProjection> DecisionTraces { get; init; } = [];
+}
 
 /// <summary>Reports one exact ground-truth relationship outcome.</summary>
 public sealed record RelationshipResult(
@@ -105,39 +128,89 @@ public static class HoldoutMetricsCalculator
     /// <summary>Projects existing corpus metrics plus lifecycle/refusal details.</summary>
     public static HoldoutMetrics FromCase(
         CorpusMetrics metrics,
-        int groundTruthUnits,
+        ImmutableArray<RelationshipResult> relationships,
         int ambiguousClassifications,
         int correctAmbiguityRefusals,
         int unexpectedAmbiguityRefusals,
         int incorrectlyAutoMatchedAmbiguousCases,
         int ingestionFailures,
-        int structuralFailures) => new(
-        groundTruthUnits,
-        metrics.LabelledPairs,
-        metrics.TruePositives + metrics.FalsePositives,
-        metrics.TruePositives,
-        metrics.FalsePositives,
-        metrics.FalseNegatives,
-        metrics.ClassificationMismatches,
-        metrics.CorrectNew + metrics.UnexpectedNew,
-        metrics.CorrectResolved + metrics.UnexpectedResolved,
-        ambiguousClassifications,
-        metrics.CorrectNew,
-        metrics.CorrectResolved,
-        correctAmbiguityRefusals,
-        unexpectedAmbiguityRefusals,
-        incorrectlyAutoMatchedAmbiguousCases,
-        ingestionFailures,
-        structuralFailures,
-        metrics.Precision,
-        metrics.Recall,
-        metrics.F1);
+        int structuralFailures)
+    {
+        ArgumentNullException.ThrowIfNull(metrics);
+        if (relationships.IsDefault)
+        {
+            throw new ArgumentException(
+                "Case relationships must be initialized.",
+                nameof(relationships));
+        }
+
+        int expectedNew = relationships.Count(item =>
+            item.GroundTruth.Kind == "new");
+        int correctNew = relationships.Count(item =>
+            item.GroundTruth.Kind == "new"
+            && item.Outcome == "correct-new");
+        int expectedResolved = relationships.Count(item =>
+            item.GroundTruth.Kind == "resolved");
+        int correctResolved = relationships.Count(item =>
+            item.GroundTruth.Kind == "resolved"
+            && item.Outcome == "correct-resolved");
+        if (relationships.Any(item =>
+                item.Outcome == "correct-new"
+                && item.GroundTruth.Kind != "new")
+            || relationships.Any(item =>
+                item.Outcome == "correct-resolved"
+                && item.GroundTruth.Kind != "resolved"))
+        {
+            throw new InvalidDataException(
+                "A correct lifecycle outcome does not identify a corresponding labelled unit.");
+        }
+
+        var result = new HoldoutMetrics(
+            relationships.Length,
+            metrics.LabelledPairs,
+            metrics.TruePositives + metrics.FalsePositives,
+            metrics.TruePositives,
+            metrics.FalsePositives,
+            metrics.FalseNegatives,
+            metrics.ClassificationMismatches,
+            metrics.CorrectNew + metrics.UnexpectedNew,
+            metrics.CorrectResolved + metrics.UnexpectedResolved,
+            ambiguousClassifications,
+            correctNew,
+            correctResolved,
+            correctAmbiguityRefusals,
+            unexpectedAmbiguityRefusals,
+            incorrectlyAutoMatchedAmbiguousCases,
+            ingestionFailures,
+            structuralFailures,
+            metrics.Precision,
+            metrics.Recall,
+            metrics.F1)
+        {
+            ExpectedNewClassifications = expectedNew,
+            IncorrectNewClassifications = checked(expectedNew - correctNew),
+            NewClassificationAccuracy = Divide(correctNew, expectedNew),
+            ExpectedResolvedClassifications = expectedResolved,
+            IncorrectResolvedClassifications = checked(
+                expectedResolved - correctResolved),
+            ResolvedClassificationAccuracy = Divide(
+                correctResolved,
+                expectedResolved),
+        };
+        ValidateLifecycleCounts(result);
+        return result;
+    }
 
     /// <summary>Aggregates raw counts and recomputes precision, recall, and F1.</summary>
     public static HoldoutMetrics Aggregate(IEnumerable<HoldoutMetrics> metrics)
     {
         ArgumentNullException.ThrowIfNull(metrics);
         HoldoutMetrics[] values = metrics.ToArray();
+        foreach (HoldoutMetrics value in values)
+        {
+            ValidateLifecycleCounts(value);
+        }
+
         int truePositives = values.Sum(item => item.TruePositives);
         int falsePositives = values.Sum(item => item.FalsePositives);
         int falseNegatives = values.Sum(item => item.FalseNegatives);
@@ -149,7 +222,7 @@ public static class HoldoutMetricsCalculator
                 2 * precision * recall / (precision + recall),
                 6,
                 MidpointRounding.ToEven);
-        return new HoldoutMetrics(
+        var result = new HoldoutMetrics(
             values.Sum(item => item.GroundTruthUnits),
             values.Sum(item => item.LabelledRelationships),
             values.Sum(item => item.LabelledMatches),
@@ -169,7 +242,53 @@ public static class HoldoutMetricsCalculator
             values.Sum(item => item.StructuralFailures),
             precision,
             recall,
-            f1);
+            f1)
+        {
+            ExpectedNewClassifications = values.Sum(item =>
+                item.ExpectedNewClassifications),
+            IncorrectNewClassifications = values.Sum(item =>
+                item.IncorrectNewClassifications),
+            ExpectedResolvedClassifications = values.Sum(item =>
+                item.ExpectedResolvedClassifications),
+            IncorrectResolvedClassifications = values.Sum(item =>
+                item.IncorrectResolvedClassifications),
+        };
+        result = result with
+        {
+            NewClassificationAccuracy = Divide(
+                result.CorrectNewClassifications,
+                result.ExpectedNewClassifications),
+            ResolvedClassificationAccuracy = Divide(
+                result.CorrectResolvedClassifications,
+                result.ExpectedResolvedClassifications),
+        };
+        ValidateLifecycleCounts(result);
+        return result;
+    }
+
+    private static void ValidateLifecycleCounts(HoldoutMetrics metrics)
+    {
+        if (metrics.ExpectedNewClassifications < 0
+            || metrics.CorrectNewClassifications < 0
+            || metrics.IncorrectNewClassifications < 0
+            || metrics.ExpectedNewClassifications
+                != checked(metrics.CorrectNewClassifications
+                    + metrics.IncorrectNewClassifications))
+        {
+            throw new InvalidDataException(
+                "New-classification lifecycle counts are inconsistent.");
+        }
+
+        if (metrics.ExpectedResolvedClassifications < 0
+            || metrics.CorrectResolvedClassifications < 0
+            || metrics.IncorrectResolvedClassifications < 0
+            || metrics.ExpectedResolvedClassifications
+                != checked(metrics.CorrectResolvedClassifications
+                    + metrics.IncorrectResolvedClassifications))
+        {
+            throw new InvalidDataException(
+                "Resolved-classification lifecycle counts are inconsistent.");
+        }
     }
 
     private static decimal Divide(int numerator, int denominator) => denominator == 0
@@ -230,7 +349,7 @@ public static class HoldoutOutcomeClassifier
             - correctAmbiguities;
         HoldoutMetrics metrics = HoldoutMetricsCalculator.FromCase(
             caseRun.Metrics,
-            relationships.Length,
+            relationships,
             observed.Decisions.Count(item =>
                 item.Classification == FindingClassification.Ambiguous),
             correctAmbiguities,
@@ -310,16 +429,26 @@ public static class HoldoutOutcomeClassifier
                 continue;
             }
 
-            ObservedDecision? ambiguity = observed.Decisions.FirstOrDefault(item =>
-                item.Classification == FindingClassification.Ambiguous
-                && (item.BaselineKey == expected.BaselineKey
-                    || item.CandidateKey == expected.CandidateKey));
+            ObservedDecision[] related = observed.Decisions
+                .Where(item => item.BaselineKey == expected.BaselineKey
+                    || item.CandidateKey == expected.CandidateKey)
+                .ToArray();
+            ObservedDecision? ambiguity = related.FirstOrDefault(item =>
+                item.Classification == FindingClassification.Ambiguous);
+            ImmutableArray<DecisionTraceProjection> relatedTraces =
+                ProjectDecisionTraces(related);
             results.Add(new RelationshipResult(
                 id,
                 GroundTruth(expected),
                 ambiguity is null
                     ? new ActualRelationship("not-reported", null, null)
-                    : Actual(ambiguity),
+                    {
+                        DecisionTraces = relatedTraces,
+                    }
+                    : Actual(ambiguity) with
+                    {
+                        DecisionTraces = relatedTraces,
+                    },
                 ambiguity is null
                     ? "missed-match"
                     : "unexpected-ambiguity-refusal"));
@@ -482,7 +611,12 @@ public static class HoldoutOutcomeClassifier
                 : new ActualRelationship(
                     refused ? "ambiguous" : "not-reported",
                     refused ? baseline[index] : null,
-                    refused ? candidate[index] : null);
+                    refused ? candidate[index] : null)
+                {
+                    DecisionTraces = ProjectDecisionTraces(
+                        new[] { baselineDecision, candidateDecision }
+                            .OfType<ObservedDecision>()),
+                };
             string outcome = accepted
                 ? "incorrect-ambiguity-match"
                 : refused
@@ -571,7 +705,14 @@ public static class HoldoutOutcomeClassifier
         ReadOnlyMemory<byte> artifact)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(artifactKind);
-        using JsonDocument document = JsonDocument.Parse(artifact);
+        using JsonDocument document = JsonDocument.Parse(
+            artifact,
+            new JsonDocumentOptions
+            {
+                AllowTrailingCommas = false,
+                CommentHandling = JsonCommentHandling.Disallow,
+                MaxDepth = ValidationLimits.Default.MaximumJsonDepth,
+            });
         var decisions = ImmutableArray.CreateBuilder<ObservedDecision>();
         bool isComparison = string.Equals(
             artifactKind,
@@ -605,7 +746,8 @@ public static class HoldoutOutcomeClassifier
                 decisions.Add(new ObservedDecision(
                     GetFindingKey(finding, "baseline"),
                     GetFindingKey(finding, "candidate"),
-                    classification));
+                    classification,
+                    DecisionTraceProjectionFactory.Create(finding)));
             }
         }
 
@@ -749,7 +891,15 @@ public static class HoldoutOutcomeClassifier
     private static ActualRelationship Actual(ObservedDecision decision) => new(
         Classification(decision.Classification),
         decision.BaselineKey,
-        decision.CandidateKey);
+        decision.CandidateKey)
+    {
+        DecisionTraces = [decision.Trace],
+    };
+
+    private static ImmutableArray<DecisionTraceProjection> ProjectDecisionTraces(
+        IEnumerable<ObservedDecision> decisions) =>
+        DecisionTraceProjectionFactory.OrderAndValidate(
+            decisions.Select(item => item.Trace));
 
     private static string RelationshipId(
         string caseId,
@@ -787,7 +937,8 @@ public static class HoldoutOutcomeClassifier
     private sealed record ObservedDecision(
         string? BaselineKey,
         string? CandidateKey,
-        FindingClassification Classification)
+        FindingClassification Classification,
+        DecisionTraceProjection Trace)
     {
         public bool IsAccepted => BaselineKey is not null
             && CandidateKey is not null

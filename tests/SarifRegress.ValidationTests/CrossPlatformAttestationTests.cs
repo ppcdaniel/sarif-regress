@@ -18,6 +18,8 @@ public sealed class CrossPlatformAttestationTests
         "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
     private const string MultitoolSha =
         "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
+    private const string DeltaSha =
+        "abababababababababababababababababababababababababababababababab";
 
     [Fact]
     public void Reader_accepts_exact_hosted_evidence_and_retains_input_bytes()
@@ -53,12 +55,14 @@ public sealed class CrossPlatformAttestationTests
     [InlineData("base-sarif-regress")]
     [InlineData("linux-sarif-regress")]
     [InlineData("windows-multitool")]
+    [InlineData("linux-delta")]
     [InlineData("run-url")]
     [InlineData("workflow-head")]
     [InlineData("workflow-conclusion")]
     [InlineData("coordinator-job")]
     [InlineData("duplicate-artifact-id")]
     [InlineData("zero-archive-digest")]
+    [InlineData("delta-byte-identity")]
     public void Reader_rejects_tampered_identity_or_hosted_evidence(string mutation)
     {
         string root = CreateRepository();
@@ -140,7 +144,8 @@ public sealed class CrossPlatformAttestationTests
         ManifestSha,
         MetadataSha,
         SarifRegressSha,
-        MultitoolSha);
+        MultitoolSha,
+        DeltaSha);
 
     private static string CreateRepository()
     {
@@ -171,7 +176,7 @@ public sealed class CrossPlatformAttestationTests
 
     private static JsonObject CreateDocument() => new()
     {
-        ["schemaVersion"] = "1",
+        ["schemaVersion"] = "2",
         ["repository"] = "ppcdaniel/sarif-regress",
         ["repositoryCommitSha"] = FrozenCommit,
         ["holdoutManifestSha256"] = ManifestSha,
@@ -205,6 +210,7 @@ public sealed class CrossPlatformAttestationTests
         {
             ["sarifRegressHoldout"] = true,
             ["sarifMultitoolBaseline"] = true,
+            ["v2ToV3Delta"] = true,
         },
     };
 
@@ -223,6 +229,7 @@ public sealed class CrossPlatformAttestationTests
     {
         ["sarifRegressHoldoutSha256"] = SarifRegressSha,
         ["sarifMultitoolBaselineSha256"] = MultitoolSha,
+        ["v2ToV3DeltaSha256"] = DeltaSha,
     };
 
     private static void Mutate(JsonObject document, string mutation)
@@ -254,6 +261,10 @@ public sealed class CrossPlatformAttestationTests
                 windows["reportDigests"]!.AsObject()["sarifMultitoolBaselineSha256"] =
                     SarifRegressSha;
                 break;
+            case "linux-delta":
+                linux["reportDigests"]!.AsObject()["v2ToV3DeltaSha256"] =
+                    MultitoolSha;
+                break;
             case "run-url":
                 actions["runUrl"] =
                     "https://github.com/ppcdaniel/sarif-regress/actions/runs/1";
@@ -272,6 +283,9 @@ public sealed class CrossPlatformAttestationTests
                 break;
             case "zero-archive-digest":
                 linux["archiveSha256"] = new string('0', 64);
+                break;
+            case "delta-byte-identity":
+                document["byteIdentity"]!.AsObject()["v2ToV3Delta"] = false;
                 break;
             default:
                 throw new InvalidOperationException(

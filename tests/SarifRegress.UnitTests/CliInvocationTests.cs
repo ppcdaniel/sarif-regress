@@ -29,6 +29,32 @@ public sealed class CliInvocationTests
         }
         """;
 
+    private const string ExternalBaseFindingSarif =
+        """
+        {
+          "version": "2.1.0",
+          "runs": [{
+            "tool": { "driver": { "name": "Example Analyzer" } },
+            "results": [{
+              "ruleId": "EXAMPLE001",
+              "message": { "text": "Stable message" },
+              "partialFingerprints": {
+                "primaryLocationLineHash/v1": "stable-fingerprint"
+              },
+              "locations": [{
+                "physicalLocation": {
+                  "artifactLocation": {
+                    "uri": "src/example.cs",
+                    "uriBaseId": "EXPLICIT_ROOT"
+                  },
+                  "region": { "startLine": 2, "startColumn": 1 }
+                }
+              }]
+            }]
+          }]
+        }
+        """;
+
     [Fact]
     public void Compare_without_baseline_fails_with_an_actionable_error()
     {
@@ -216,6 +242,135 @@ public sealed class CliInvocationTests
         Assert.Contains(
             "\"kind\": \"context-snippet\"",
             invocation.StandardOutput,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Explicit_repository_root_preserves_configured_uri_bases()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", ExternalBaseFindingSarif);
+        workspace.Write("candidate.sarif", ExternalBaseFindingSarif);
+        workspace.Write(
+            "regress.json",
+            """
+            {
+              "schemaVersion": "1",
+              "uriBaseMappings": [
+                { "id": "EXPLICIT_ROOT", "uri": "repo:/" }
+              ],
+              "policy": { "failOn": [] }
+            }
+            """);
+        workspace.Write(
+            "repository/src/example.cs",
+            "namespace Example;\ninternal sealed class ExampleType { }\n");
+
+        var invocation = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline",
+            "baseline.sarif",
+            "--candidate",
+            "candidate.sarif",
+            "--config",
+            "regress.json",
+            "--repo",
+            "repository");
+
+        Assert.Equal(0, invocation.ExitCode);
+        Assert.DoesNotContain(
+            "CANON0032",
+            invocation.StandardOutput + invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "configured-uri-base",
+            invocation.StandardOutput,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Equivalent_local_uri_base_roots_produce_identical_stable_reports()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", ExternalBaseFindingSarif);
+        workspace.Write("candidate.sarif", ExternalBaseFindingSarif);
+        var firstRoot = workspace.PathOf("first-root");
+        var secondRoot = workspace.PathOf("second-root");
+        Directory.CreateDirectory(firstRoot);
+        Directory.CreateDirectory(secondRoot);
+        var firstUri = new Uri(
+            firstRoot + Path.DirectorySeparatorChar).AbsoluteUri;
+        var secondUri = new Uri(
+            secondRoot + Path.DirectorySeparatorChar).AbsoluteUri;
+        workspace.Write(
+            "first.json",
+            JsonSerializer.Serialize(
+                new
+                {
+                    schemaVersion = "1",
+                    repoRoot = firstRoot,
+                    uriBaseMappings = new[]
+                    {
+                        new { id = "EXPLICIT_ROOT", uri = firstUri },
+                    },
+                    policy = new { failOn = Array.Empty<string>() },
+                }));
+        workspace.Write(
+            "second.json",
+            JsonSerializer.Serialize(
+                new
+                {
+                    schemaVersion = "1",
+                    repoRoot = secondRoot,
+                    uriBaseMappings = new[]
+                    {
+                        new { id = "EXPLICIT_ROOT", uri = secondUri },
+                    },
+                    policy = new { failOn = Array.Empty<string>() },
+                }));
+
+        var first = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline",
+            "baseline.sarif",
+            "--candidate",
+            "candidate.sarif",
+            "--config",
+            "first.json");
+        var second = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline",
+            "baseline.sarif",
+            "--candidate",
+            "candidate.sarif",
+            "--config",
+            "second.json");
+
+        Assert.Equal(0, first.ExitCode);
+        Assert.Equal(0, second.ExitCode);
+        Assert.Equal(first.StandardOutput, second.StandardOutput);
+        Assert.DoesNotContain(
+            firstRoot,
+            first.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            secondRoot,
+            second.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            firstUri,
+            first.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            secondUri,
+            second.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "configured-uri-base",
+            first.StandardOutput,
             StringComparison.Ordinal);
     }
 

@@ -31,7 +31,7 @@ public sealed class MatchingEngineTests
         var decision = Assert.Single(result.Decisions);
         Assert.Equal(FindingClassification.Unchanged, decision.Classification);
         Assert.Equal(
-            "sarifregress/matcher/v2",
+            "sarifregress/matcher/v3",
             decision.Decision.MatcherAlgorithmVersion);
         Assert.Contains(
             decision.Decision.Evidence,

@@ -336,16 +336,7 @@ public sealed class CorpusRunner
         }
 
         return new CorpusConfigurationReadResult(
-            new SarifRegressConfiguration(
-                configuration.SchemaVersion,
-                repositoryRoot,
-                configuration.PathRebases,
-                configuration.PathAliases,
-                configuration.RuleAliases,
-                configuration.Matching,
-                configuration.Policy,
-                configuration.Reporting,
-                configuration.Limits),
+            configuration.WithRepositoryRoot(repositoryRoot),
             diagnostics);
     }
 

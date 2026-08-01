@@ -336,6 +336,7 @@ try {
     $normalizedReports = @(
         'sarif-regress-holdout.json',
         'sarif-multitool-baseline.json',
+        'v2-to-v3-delta.json',
         'comparison-summary.json',
         'checksums.sha256'
     )

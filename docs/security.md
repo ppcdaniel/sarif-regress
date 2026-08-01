@@ -26,6 +26,15 @@ Limit violations are deterministic. A violation that prevents safe identity reso
 the affected finding or command. A component too large for exact assignment is refused as
 ambiguous; SarifRegress does not substitute a heuristic assignment.
 
+Explicit `uriBaseMappings` can supply a missing logical URI base, but cannot replace a valid base
+defined by SARIF. Definitions are bounded to directory-form repository or local filesystem roots,
+or safe relative children of another configured base. Network/UNC roots, authority-bearing
+repository URIs, queries, fragments, traversal, cycles, and excessive depth fail closed. Resolution
+is lexical and never dereferences or fetches the configured URI. A resolved filesystem path still
+receives the independent repository-containment checks below before any optional source read.
+Stable explanation output records the configured logical identifier and versioned mechanism, but
+not the raw configured target, so explicit local roots do not leak into reports or vary by host.
+
 Configuration may lower a built-in ceiling but cannot raise the trusted bootstrap ceiling. Parser
 collection limits are enforced while JSON tokens are read, before an oversized subtree is
 materialised. Known, unsupported, and future SARIF/configuration subtrees all use the same bounded

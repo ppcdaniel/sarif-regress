@@ -1,6 +1,17 @@
 name: Extended benchmark evidence
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/benchmarks.yml'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'SarifRegress.slnx'
+      - 'scripts/build.ps1'
+      - 'scripts/build.sh'
+      - 'src/**'
   schedule:
     - cron: '23 4 * * 1'
   workflow_dispatch:

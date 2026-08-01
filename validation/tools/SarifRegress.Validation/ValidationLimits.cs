@@ -12,6 +12,8 @@ public sealed record ValidationLimits(
     int MaximumCases,
     int MaximumResultsPerCase,
     int MaximumStringCharacters,
+    int MaximumDecisionTracesPerRelationship,
+    int MaximumDecisionTraceItems,
     int MaximumProcessOutputCharacters,
     TimeSpan ProcessTimeout)
 {
@@ -25,6 +27,8 @@ public sealed record ValidationLimits(
         MaximumCases: 64,
         MaximumResultsPerCase: 100_000,
         MaximumStringCharacters: 64 * 1024,
+        MaximumDecisionTracesPerRelationship: 2,
+        MaximumDecisionTraceItems: 100,
         MaximumProcessOutputCharacters: 1024 * 1024,
         ProcessTimeout: TimeSpan.FromMinutes(2));
 
@@ -39,6 +43,10 @@ public sealed record ValidationLimits(
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(MaximumCases);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(MaximumResultsPerCase);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(MaximumStringCharacters);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
+            MaximumDecisionTracesPerRelationship);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
+            MaximumDecisionTraceItems);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
             MaximumProcessOutputCharacters);
         if (ProcessTimeout <= TimeSpan.Zero)

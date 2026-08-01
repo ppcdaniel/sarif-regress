@@ -19,15 +19,18 @@ internal sealed class CandidateEdgeFactory
 
     private readonly SarifRegressConfiguration configuration;
     private readonly ProducerFingerprintOccurrenceIndex fingerprintOccurrences;
+    private readonly ContextFingerprintOccurrenceIndex contextFingerprintOccurrences;
     private readonly PathAliasIndex pathAliases;
     private readonly RuleAliasIndex ruleAliases;
 
     public CandidateEdgeFactory(
         SarifRegressConfiguration configuration,
-        ProducerFingerprintOccurrenceIndex fingerprintOccurrences)
+        ProducerFingerprintOccurrenceIndex fingerprintOccurrences,
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
     {
         this.configuration = configuration;
         this.fingerprintOccurrences = fingerprintOccurrences;
+        this.contextFingerprintOccurrences = contextFingerprintOccurrences;
         pathAliases = PathAliasIndex.Create(
             configuration.PathAliases,
             configuration.Matching.PathCaseSensitivity);
@@ -49,9 +52,9 @@ internal sealed class CandidateEdgeFactory
         AddRuleEvidence(evidence, baseline, candidate, applicableAliases);
 
         var producerFingerprint = CompareProducerFingerprints(baseline, candidate, evidence);
-        var derivedFingerprintExact = CompareDerivedFingerprints(baseline, candidate, evidence);
+        var derivedFingerprint = CompareDerivedFingerprints(baseline, candidate, evidence);
         var pathMatchKind = ComparePaths(baseline, candidate, evidence);
-        var contextAgreement = CompareContext(baseline.Context, candidate.Context, evidence);
+        var context = CompareContext(baseline, candidate, evidence);
         var messageAgreement = CompareMessages(baseline.Message, candidate.Message, evidence);
         var supportingAgreement = CompareSupportingEvidence(baseline, candidate, evidence);
         var regionDriftBand = CompareRegions(
@@ -59,24 +62,31 @@ internal sealed class CandidateEdgeFactory
             candidate.PrimaryLocation?.Region,
             evidence);
 
-        var precedenceTier = DeterminePrecedenceTier(
+        var precedence = DeterminePrecedenceTier(
             aliasApplied: !applicableAliases.IsEmpty,
             producerFingerprint.Strength,
-            derivedFingerprintExact,
+            derivedFingerprint,
             pathMatchKind,
-            contextAgreement,
+            context,
             supportingAgreement,
             messageAgreement);
-        if (precedenceTier == PrecedenceTier.Refuse)
+        if (precedence.Tier == PrecedenceTier.Refuse)
         {
             return null;
         }
 
+        if (precedence.CollisionOnly)
+        {
+            // Repeated evidence may retain a bounded same-path candidate edge, but line
+            // proximity must not manufacture a preferred pairing inside a collision set.
+            regionDriftBand = 0;
+        }
+
         var decisionVector = new DecisionVector(
-            precedenceTier,
+            precedence.Tier,
             producerFingerprint.Strength,
             pathMatchKind,
-            contextAgreement,
+            context.Agreement,
             supportingAgreement,
             messageAgreement,
             regionDriftBand);
@@ -86,7 +96,7 @@ internal sealed class CandidateEdgeFactory
             candidate,
             decisionVector,
             CreateStableIdentityKey(baseline.FindingKey, candidate.FindingKey),
-            CreateEvidence(evidence, precedenceTier),
+            CreateEvidence(evidence, precedence.Tier),
             GetTransformations(baseline, candidate));
     }
 
@@ -314,42 +324,11 @@ internal sealed class CandidateEdgeFactory
         return new CommonVersion(hasCommonUnversioned, Version: null);
     }
 
-    private static bool CompareDerivedFingerprints(
+    private DerivedFingerprintComparison CompareDerivedFingerprints(
         Finding baseline,
         Finding candidate,
         ICollection<EvidenceDraft> evidence)
     {
-        if (baseline.DerivedFingerprints.Length == 1
-            && candidate.DerivedFingerprints.Length == 1)
-        {
-            var baselineFingerprint = baseline.DerivedFingerprints[0];
-            var candidateFingerprint = candidate.DerivedFingerprints[0];
-            if (!string.Equals(
-                    baselineFingerprint.Name,
-                    candidateFingerprint.Name,
-                    StringComparison.Ordinal)
-                || !string.Equals(
-                    baselineFingerprint.AlgorithmVersion,
-                    candidateFingerprint.AlgorithmVersion,
-                    StringComparison.Ordinal)
-                || !string.Equals(
-                    baselineFingerprint.Value,
-                    candidateFingerprint.Value,
-                    StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            evidence.Add(new EvidenceDraft(
-                "derived-fingerprint",
-                $"{baselineFingerprint.Name}:{baselineFingerprint.Value}",
-                $"{candidateFingerprint.Name}:{candidateFingerprint.Value}",
-                EvidenceOrigin.System,
-                Lossy: false,
-                MatchingAlgorithms.DerivedFingerprintVersion));
-            return true;
-        }
-
         var candidateByIdentity = candidate.DerivedFingerprints
             .ToLookup(
                 item => new DerivedFingerprintIdentity(item.Name, item.AlgorithmVersion));
@@ -363,16 +342,32 @@ internal sealed class CandidateEdgeFactory
                         baselineFingerprint.Value,
                         candidateFingerprint.Value,
                         StringComparison.Ordinal))
-                    .Select(candidateFingerprint => (
-                        Baseline: baselineFingerprint,
-                        Candidate: candidateFingerprint)))
-            .OrderBy(item => item.Baseline.Name, StringComparer.Ordinal)
+                    .Select(candidateFingerprint =>
+                    {
+                        var baselineCount =
+                            contextFingerprintOccurrences.GetDerivedFingerprintCount(
+                                InputKind.Baseline,
+                                baseline,
+                                baselineFingerprint);
+                        var candidateCount =
+                            contextFingerprintOccurrences.GetDerivedFingerprintCount(
+                                InputKind.Candidate,
+                                candidate,
+                                candidateFingerprint);
+                        return new DerivedFingerprintMatch(
+                            baselineFingerprint,
+                            candidateFingerprint,
+                            baselineCount,
+                            candidateCount);
+                    }))
+            .OrderByDescending(item => item.IsUnique)
+            .ThenBy(item => item.Baseline.Name, StringComparer.Ordinal)
             .ThenBy(item => item.Baseline.AlgorithmVersion, StringComparer.Ordinal)
             .ThenBy(item => item.Baseline.Value, StringComparer.Ordinal)
             .ToArray();
         if (matches.Length == 0)
         {
-            return false;
+            return DerivedFingerprintComparison.None;
         }
 
         var match = matches[0];
@@ -383,7 +378,24 @@ internal sealed class CandidateEdgeFactory
             EvidenceOrigin.System,
             Lossy: false,
             MatchingAlgorithms.DerivedFingerprintVersion));
-        return true;
+        if (!match.IsUnique)
+        {
+            evidence.Add(new EvidenceDraft(
+                "derived-fingerprint-collision",
+                ContextFingerprintOccurrenceIndex.FormatDerivedFingerprint(
+                    match.Baseline,
+                    match.BaselineCount),
+                ContextFingerprintOccurrenceIndex.FormatDerivedFingerprint(
+                    match.Candidate,
+                    match.CandidateCount),
+                EvidenceOrigin.System,
+                Lossy: false,
+                MatchingAlgorithms.EvidenceOccurrenceVersion));
+        }
+
+        return new DerivedFingerprintComparison(
+            Unique: match.IsUnique,
+            Collided: !match.IsUnique);
     }
 
     private PathMatchKind ComparePaths(
@@ -441,48 +453,61 @@ internal sealed class CandidateEdgeFactory
     private static bool HasLossyTransform(CanonicalPath path) =>
         path.Transformations.Any(item => item.IsLossy);
 
-    private AgreementBand CompareContext(
-        ContextEvidence? baseline,
-        ContextEvidence? candidate,
+    private ContextComparison CompareContext(
+        Finding baseline,
+        Finding candidate,
         ICollection<EvidenceDraft> evidence)
     {
-        if (baseline is null || candidate is null)
+        var baselineContext = baseline.Context;
+        var candidateContext = candidate.Context;
+        if (baselineContext is null || candidateContext is null)
         {
-            return AgreementBand.None;
+            return ContextComparison.None;
         }
 
-        var exactHashCount = 0;
+        var uniqueHashCount = 0;
+        var collidedHashCount = 0;
         var conflictingHashCount = 0;
         CompareContextHash(
             "context-snippet",
-            baseline.SnippetHash,
-            candidate.SnippetHash,
-            ref exactHashCount,
+            baseline,
+            baselineContext.SnippetHash,
+            candidate,
+            candidateContext.SnippetHash,
+            ref uniqueHashCount,
+            ref collidedHashCount,
             ref conflictingHashCount,
             evidence);
         CompareContextHash(
             "context-token-window",
-            baseline.TokenWindowHash,
-            candidate.TokenWindowHash,
-            ref exactHashCount,
+            baseline,
+            baselineContext.TokenWindowHash,
+            candidate,
+            candidateContext.TokenWindowHash,
+            ref uniqueHashCount,
+            ref collidedHashCount,
             ref conflictingHashCount,
             evidence);
 
-        if (exactHashCount > 0 && conflictingHashCount == 0)
-        {
-            return AgreementBand.Exact;
-        }
-
-        return exactHashCount > 0
-            ? AgreementBand.Compatible
-            : AgreementBand.None;
+        var agreement = uniqueHashCount > 0 && conflictingHashCount == 0
+            ? AgreementBand.Exact
+            : uniqueHashCount > 0 || collidedHashCount > 0
+                ? AgreementBand.Compatible
+                : AgreementBand.None;
+        return new ContextComparison(
+            agreement,
+            ReliableExact: agreement == AgreementBand.Exact,
+            Collided: collidedHashCount > 0);
     }
 
-    private static void CompareContextHash(
+    private void CompareContextHash(
         string kind,
+        Finding baselineFinding,
         string? baseline,
+        Finding candidateFinding,
         string? candidate,
-        ref int exactHashCount,
+        ref int uniqueHashCount,
+        ref int collidedHashCount,
         ref int conflictingHashCount,
         ICollection<EvidenceDraft> evidence)
     {
@@ -493,7 +518,37 @@ internal sealed class CandidateEdgeFactory
 
         if (string.Equals(baseline, candidate, StringComparison.Ordinal))
         {
-            exactHashCount++;
+            var baselineCount = contextFingerprintOccurrences.GetContextCount(
+                InputKind.Baseline,
+                baselineFinding,
+                kind,
+                baseline);
+            var candidateCount = contextFingerprintOccurrences.GetContextCount(
+                InputKind.Candidate,
+                candidateFinding,
+                kind,
+                candidate);
+            if (baselineCount == 1 && candidateCount == 1)
+            {
+                uniqueHashCount++;
+            }
+            else
+            {
+                collidedHashCount++;
+                evidence.Add(new EvidenceDraft(
+                    "context-collision",
+                    ContextFingerprintOccurrenceIndex.FormatContextOccurrence(
+                        kind,
+                        baseline,
+                        baselineCount),
+                    ContextFingerprintOccurrenceIndex.FormatContextOccurrence(
+                        kind,
+                        candidate,
+                        candidateCount),
+                    EvidenceOrigin.System,
+                    Lossy: false,
+                    MatchingAlgorithms.EvidenceOccurrenceVersion));
+            }
         }
         else
         {
@@ -698,53 +753,80 @@ internal sealed class CandidateEdgeFactory
     private static string FormatCoordinate(int? coordinate) =>
         coordinate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "?";
 
-    private PrecedenceTier DeterminePrecedenceTier(
+    private PrecedenceSelection DeterminePrecedenceTier(
         bool aliasApplied,
         int producerFingerprintStrength,
-        bool derivedFingerprintExact,
+        DerivedFingerprintComparison derivedFingerprint,
         PathMatchKind pathMatchKind,
-        AgreementBand contextAgreement,
+        ContextComparison context,
         AgreementBand supportingAgreement,
         AgreementBand messageAgreement)
     {
         var stableContext =
-            derivedFingerprintExact || contextAgreement == AgreementBand.Exact;
+            derivedFingerprint.Unique || context.ReliableExact;
         if (aliasApplied)
         {
             var hasLocationAndRealContext =
                 pathMatchKind != PathMatchKind.None
-                && contextAgreement == AgreementBand.Exact;
+                && context.ReliableExact;
             return hasLocationAndRealContext
-                ? PrecedenceTier.Override
-                : PrecedenceTier.Refuse;
+                ? new PrecedenceSelection(PrecedenceTier.Override, CollisionOnly: false)
+                : PrecedenceSelection.Refuse;
         }
 
         if (producerFingerprintStrength == HighProducerFingerprintStrength)
         {
-            return PrecedenceTier.ExactProducer;
+            return new PrecedenceSelection(
+                PrecedenceTier.ExactProducer,
+                CollisionOnly: false);
         }
 
-        if (pathMatchKind == PathMatchKind.Exact && derivedFingerprintExact)
+        if (pathMatchKind == PathMatchKind.Exact && derivedFingerprint.Unique)
         {
-            return PrecedenceTier.ExactCanonical;
+            return new PrecedenceSelection(
+                PrecedenceTier.ExactCanonical,
+                CollisionOnly: false);
         }
 
         if (stableContext)
         {
-            return PrecedenceTier.StrongMoved;
+            return new PrecedenceSelection(
+                PrecedenceTier.StrongMoved,
+                CollisionOnly: false);
         }
 
         if (supportingAgreement >= AgreementBand.Compatible)
         {
-            return PrecedenceTier.PathProblem;
+            return new PrecedenceSelection(
+                PrecedenceTier.PathProblem,
+                CollisionOnly: false);
         }
 
-        return configuration.Matching.AllowWeakMessageSimilarity
+        var duplicatedDerivedFingerprintAdmissible =
+            derivedFingerprint.Collided
+            && pathMatchKind != PathMatchKind.None;
+        var duplicatedRawContextAdmissible =
+            context.Collided
+            && (pathMatchKind == PathMatchKind.Aliased
+                || pathMatchKind == PathMatchKind.Exact
+                    && messageAgreement >= AgreementBand.Compatible);
+        if (duplicatedDerivedFingerprintAdmissible
+            || duplicatedRawContextAdmissible)
+        {
+            return new PrecedenceSelection(
+                PrecedenceTier.WeakContextual,
+                CollisionOnly: true);
+        }
+
+        var weakMessageAdmissible = configuration.Matching.AllowWeakMessageSimilarity
             && messageAgreement >= AgreementBand.Compatible
             && (pathMatchKind == PathMatchKind.Exact
-                || contextAgreement >= AgreementBand.Compatible)
-            ? PrecedenceTier.WeakContextual
-            : PrecedenceTier.Refuse;
+                || context.Agreement >= AgreementBand.Compatible);
+        return weakMessageAdmissible
+            ? new PrecedenceSelection(
+                PrecedenceTier.WeakContextual,
+                CollisionOnly: false)
+            : PrecedenceSelection.Refuse;
     }
 
     private ImmutableArray<TransformationRecord> GetTransformations(
@@ -957,6 +1039,40 @@ internal sealed class CandidateEdgeFactory
     }
 
     private readonly record struct CommonVersion(bool HasCommonVersion, int? Version);
+
+    private readonly record struct DerivedFingerprintComparison(
+        bool Unique,
+        bool Collided)
+    {
+        public static DerivedFingerprintComparison None { get; } =
+            new(Unique: false, Collided: false);
+    }
+
+    private readonly record struct DerivedFingerprintMatch(
+        DerivedFingerprint Baseline,
+        DerivedFingerprint Candidate,
+        int BaselineCount,
+        int CandidateCount)
+    {
+        public bool IsUnique => BaselineCount == 1 && CandidateCount == 1;
+    }
+
+    private readonly record struct ContextComparison(
+        AgreementBand Agreement,
+        bool ReliableExact,
+        bool Collided)
+    {
+        public static ContextComparison None { get; } =
+            new(AgreementBand.None, ReliableExact: false, Collided: false);
+    }
+
+    private readonly record struct PrecedenceSelection(
+        PrecedenceTier Tier,
+        bool CollisionOnly)
+    {
+        public static PrecedenceSelection Refuse { get; } =
+            new(PrecedenceTier.Refuse, CollisionOnly: false);
+    }
 
     private readonly record struct DerivedFingerprintIdentity(
         string Name,

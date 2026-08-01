@@ -1,0 +1,529 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/history-metadata.schema.json",
+  "title": "SarifRegress immutable holdout history metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "historySchemaVersion",
+    "record",
+    "branchStrategy",
+    "baseCommits",
+    "matcherAlgorithmVersion",
+    "fingerprintAlgorithmVersions",
+    "matchingEvidenceAlgorithmVersions",
+    "configurationSchemaVersion",
+    "outputSchemaVersion",
+    "validationSchemaVersions",
+    "dotnetSdkVersion",
+    "multitoolExactVersion",
+    "holdout",
+    "qualityThresholds",
+    "metrics",
+    "lifecycle",
+    "ambiguity",
+    "evaluationHealth",
+    "delta",
+    "reportHashes",
+    "releaseRecommendation",
+    "releaseReasons",
+    "links",
+    "immutability"
+  ],
+  "properties": {
+    "historySchemaVersion": {
+      "const": "1"
+    },
+    "record": {
+      "const": "frozen-independent-holdout-evaluation"
+    },
+    "branchStrategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "baseBranch",
+        "headBranch"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "stacked",
+            "main"
+          ]
+        },
+        "baseBranch": {
+          "$ref": "#/$defs/branch"
+        },
+        "headBranch": {
+          "$ref": "#/$defs/branch"
+        }
+      }
+    },
+    "baseCommits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validationBase",
+        "matcherV2Implementation",
+        "matcherV3Implementation",
+        "matcherV3SourceTreeSha256"
+      ],
+      "properties": {
+        "validationBase": {
+          "$ref": "#/$defs/gitCommit"
+        },
+        "matcherV2Implementation": {
+          "$ref": "#/$defs/gitCommit"
+        },
+        "matcherV3Implementation": {
+          "$ref": "#/$defs/gitCommit"
+        },
+        "matcherV3SourceTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "matcherAlgorithmVersion": {
+      "$ref": "#/$defs/algorithm"
+    },
+    "fingerprintAlgorithmVersions": {
+      "$ref": "#/$defs/algorithms"
+    },
+    "matchingEvidenceAlgorithmVersions": {
+      "$ref": "#/$defs/algorithms"
+    },
+    "configurationSchemaVersion": {
+      "$ref": "#/$defs/version"
+    },
+    "outputSchemaVersion": {
+      "$ref": "#/$defs/version"
+    },
+    "validationSchemaVersions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sarifRegressHoldout",
+        "sarifMultitoolBaseline",
+        "comparisonSummary",
+        "v2ToV3Delta",
+        "crossPlatformAttestation"
+      ],
+      "properties": {
+        "sarifRegressHoldout": {
+          "$ref": "#/$defs/version"
+        },
+        "sarifMultitoolBaseline": {
+          "$ref": "#/$defs/version"
+        },
+        "comparisonSummary": {
+          "$ref": "#/$defs/version"
+        },
+        "v2ToV3Delta": {
+          "$ref": "#/$defs/version"
+        },
+        "crossPlatformAttestation": {
+          "$ref": "#/$defs/version"
+        }
+      }
+    },
+    "dotnetSdkVersion": {
+      "$ref": "#/$defs/version"
+    },
+    "multitoolExactVersion": {
+      "$ref": "#/$defs/version"
+    },
+    "holdout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifestSha256",
+        "groundTruthUnits",
+        "labelledRelationships",
+        "labelSha256"
+      ],
+      "properties": {
+        "manifestSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "groundTruthUnits": {
+          "const": 99
+        },
+        "labelledRelationships": {
+          "const": 75
+        },
+        "labelSha256": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gitleaks",
+            "pmd",
+            "semgrep"
+          ],
+          "properties": {
+            "gitleaks": {
+              "$ref": "#/$defs/sha256"
+            },
+            "pmd": {
+              "$ref": "#/$defs/sha256"
+            },
+            "semgrep": {
+              "$ref": "#/$defs/sha256"
+            }
+          }
+        }
+      }
+    },
+    "qualityThresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregatePrecision",
+        "aggregateRecall",
+        "perProducerPrecision",
+        "perProducerRecall",
+        "maximumIncorrectAmbiguityMatches"
+      ],
+      "properties": {
+        "aggregatePrecision": {
+          "const": 0.95
+        },
+        "aggregateRecall": {
+          "const": 0.9
+        },
+        "perProducerPrecision": {
+          "const": 0.95
+        },
+        "perProducerRecall": {
+          "const": 0.8
+        },
+        "maximumIncorrectAmbiguityMatches": {
+          "const": 0
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregate",
+        "perProducer"
+      ],
+      "properties": {
+        "aggregate": {
+          "$ref": "#/$defs/identityMetrics"
+        },
+        "perProducer": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "producerId",
+              "metrics"
+            ],
+            "properties": {
+              "producerId": {
+                "enum": [
+                  "gitleaks",
+                  "pmd",
+                  "semgrep"
+                ]
+              },
+              "metrics": {
+                "$ref": "#/$defs/identityMetrics"
+              }
+            }
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/lifecycle"
+    },
+    "ambiguity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "correctRefusals",
+        "incorrectAutoMatches",
+        "unexpectedRefusals"
+      ],
+      "properties": {
+        "correctRefusals": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "incorrectAutoMatches": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unexpectedRefusals": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "evaluationHealth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ingestionFailures",
+        "structuralFailures",
+        "classificationMismatches",
+        "changedDecisionsWithTrace",
+        "changedDecisionsWithoutTrace"
+      ],
+      "properties": {
+        "ingestionFailures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "structuralFailures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "classificationMismatches": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "changedDecisionsWithTrace": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "changedDecisionsWithoutTrace": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixedRelationships",
+        "regressedRelationships",
+        "stillFailingRelationships",
+        "newlyIntroducedFalseMatches"
+      ],
+      "properties": {
+        "fixedRelationships": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "regressedRelationships": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stillFailingRelationships": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newlyIntroducedFalseMatches": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "reportHashes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      },
+      "minProperties": 8,
+      "maxProperties": 16
+    },
+    "releaseRecommendation": {
+      "enum": [
+        "ready",
+        "blocked",
+        "inconclusive"
+      ]
+    },
+    "releaseReasons": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/url"
+      },
+      "minProperties": 6,
+      "maxProperties": 16
+    },
+    "immutability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "holdoutLabelsChanged",
+        "qualityThresholdsChanged",
+        "difficultCasesRemoved",
+        "producerSpecificProductLogicAdded"
+      ],
+      "properties": {
+        "holdoutLabelsChanged": {
+          "const": false
+        },
+        "qualityThresholdsChanged": {
+          "const": false
+        },
+        "difficultCasesRemoved": {
+          "const": false
+        },
+        "producerSpecificProductLogicAdded": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "gitCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "branch": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[0-9]+(?:[.][0-9]+)*$"
+    },
+    "algorithm": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+/-]*$"
+    },
+    "algorithms": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          },
+          "version": {
+            "$ref": "#/$defs/algorithm"
+          }
+        }
+      }
+    },
+    "identityMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "truePositives": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "falsePositives": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "falseNegatives": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "precision": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "recall": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "f1": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "lifecycleSide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected",
+        "correct",
+        "incorrect",
+        "accuracy"
+      ],
+      "properties": {
+        "expected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correct": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "incorrect": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "new",
+        "resolved"
+      ],
+      "properties": {
+        "new": {
+          "$ref": "#/$defs/lifecycleSide"
+        },
+        "resolved": {
+          "$ref": "#/$defs/lifecycleSide"
+        }
+      }
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https://github[.]com/ppcdaniel/sarif-regress/(?:pull|issues|actions/runs)/[0-9]+$"
+    }
+  }
+}

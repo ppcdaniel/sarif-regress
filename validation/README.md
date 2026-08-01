@@ -18,6 +18,11 @@ and normalizing the external baseline is supported on Linux and Windows.
   Microsoft SARIF Multitool comparison.
 - `schemas/` defines the strict machine-readable contracts.
 - `expected/` contains the byte-stable evaluation snapshot and its checksums.
+- `history/matcher-v2/` preserves the original frozen MVP result.
+- `history/matcher-v3/` preserves the attested successor result, schemas, and
+  checksum anchors.
+- `history/v2-to-v3-delta.json` records every fixed, regressed, and remaining
+  relationship without rewriting either historical snapshot.
 
 ## Evaluation
 
@@ -34,6 +39,10 @@ From any current directory, run the platform wrapper:
 Both wrappers verify structure, provenance, schemas, tool identity, checksums,
 and expected bytes. They write regenerated evidence beneath
 `artifacts/holdout-validation/` and do not modify committed fixtures.
+
+The active result uses `sarifregress/matcher/v3`. Its frozen record is
+`history/matcher-v3/metadata.json`; the original matcher-v2 evidence remains
+independently checksummed and reproducible from its exact validation commit.
 
 Producer capture is deliberately separate. See `tools/capture/README.md` for
 the exact Linux-only commands, versions, download hashes, and mutation steps.

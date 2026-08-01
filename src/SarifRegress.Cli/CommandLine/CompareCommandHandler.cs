@@ -309,16 +309,7 @@ internal sealed class CompareCommandHandler
             return configuration;
         }
 
-        return new SarifRegressConfiguration(
-            configuration.SchemaVersion,
-            repositoryPath,
-            configuration.PathRebases,
-            configuration.PathAliases,
-            configuration.RuleAliases,
-            configuration.Matching,
-            configuration.Policy,
-            configuration.Reporting,
-            configuration.Limits);
+        return configuration.WithRepositoryRoot(repositoryPath);
     }
 
     private static RepositoryContextCreationResult CreateRepositoryContext(

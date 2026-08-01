@@ -199,6 +199,10 @@ public sealed class DeterminismAndSafetyTests
                 "--compare-expected",
                 script,
                 StringComparison.Ordinal);
+            Assert.Contains(
+                "v2-to-v3-delta.json",
+                script,
+                StringComparison.Ordinal);
             if (relativePath.EndsWith(".sh", StringComparison.Ordinal))
             {
                 Assert.Contains(
@@ -250,7 +254,17 @@ public sealed class DeterminismAndSafetyTests
                 "Unattested candidate",
                 script,
                 StringComparison.Ordinal);
+            Assert.DoesNotContain(
+                "$global:LASTEXITCODE = 0",
+                script,
+                StringComparison.Ordinal);
         }
+
+        Assert.False(File.Exists(Path.Combine(
+            root,
+            "validation",
+            "holdout",
+            ".regenerate-expected")));
     }
 
     [Fact]
@@ -295,6 +309,16 @@ public sealed class DeterminismAndSafetyTests
             "Push-Location -LiteralPath $env:RUNNER_TEMP",
             workflow,
             StringComparison.Ordinal);
+        Assert.Contains("v2-to-v3-delta.json", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "matcherV2HistoryChecksumManifestSha256",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains("matcherV2ReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("matcherV3ReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v2ToV3DeltaReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v2ToV3DeltaSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v2ToV3Delta", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain(
             "--cross-platform-byte-identity",
             workflow,
@@ -323,6 +347,8 @@ public sealed class DeterminismAndSafetyTests
             "TrackedOutputTests",
             workflow,
             StringComparison.Ordinal);
+        Assert.DoesNotContain("LINUX_MODE", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("WINDOWS_MODE", workflow, StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(
             ValidationTestRepository.FindRoot(),
             ".github",
