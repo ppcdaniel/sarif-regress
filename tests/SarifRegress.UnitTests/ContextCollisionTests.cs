@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Findings;
 using SarifRegress.Core.Matching;
 using SarifRegress.Core.Security;
