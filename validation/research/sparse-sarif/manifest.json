@@ -148,7 +148,7 @@
   ],
   "contamination": {
     "scannerPath": "tools/scan_contamination.py",
-    "scannerSha256": "e6474db89f0f90ebad62cbd6945aaa78f887270bc65f508891c3e704301f3d52",
+    "scannerSha256": "2f7865fefff4d3405d2c7f69126e75d94edba1f7d4d8bd2b9ac623f1a89fe128",
     "policyVersion": "sparse-sarif-contamination/v1"
   },
   "integrity": {
@@ -348,7 +348,7 @@
       },
       {
         "path": "experiment-implementation-manifest.json",
-        "sha256": "015bdd454006a62f5a61fa44a167dee7792427ae0ba6e72111eff8e1984b7745"
+        "sha256": "4a89f45e246ffea923ab82cc4440b6d2b2ea4b0a09457c3bf969d808083f583d"
       },
       {
         "path": "schemas/experiment-gate-evidence.schema.json",
@@ -368,7 +368,7 @@
       },
       {
         "path": "schemas/experiment-supporting-evidence.schema.json",
-        "sha256": "69943ec2276da1d0e24bee554f0c54d9dceae2a13b99b14931762b773ecec5f9"
+        "sha256": "28c5cde76f63a56ca38bf9069beda93abc4e38ac2dbd055ed6029c439dfad9c7"
       },
       {
         "path": "schemas/labels.schema.json",
@@ -392,7 +392,7 @@
       },
       {
         "path": "tools/scan_contamination.py",
-        "sha256": "e6474db89f0f90ebad62cbd6945aaa78f887270bc65f508891c3e704301f3d52"
+        "sha256": "2f7865fefff4d3405d2c7f69126e75d94edba1f7d4d8bd2b9ac623f1a89fe128"
       },
       {
         "path": "tools/test_pmd_capture_tools.py",
@@ -400,7 +400,7 @@
       },
       {
         "path": "tools/test_scan_contamination.py",
-        "sha256": "941fc7440b01b186d161abdef361f33e6d31ac065a461b974e9b91b1350d1a8b"
+        "sha256": "6f02d24fba7e311c7961661816d4cd6dd32a5af0102bda29707aac3334107e96"
       },
       {
         "path": "tools/verify_pmd_capture.py",

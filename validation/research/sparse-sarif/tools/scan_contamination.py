@@ -178,6 +178,11 @@ EXPERIMENT_SUPPORTING_KINDS: Final = {
     "determinism": "sparse-experiment-determinism-evidence/v1",
     "resources": "sparse-experiment-resource-evidence/v1",
 }
+EXPERIMENT_SUPPORTING_PROJECTION_KINDS: Final = {
+    "release": "sparse-experiment-release-projection/v1",
+    "determinism": "sparse-experiment-determinism-projection/v1",
+    "resources": "sparse-experiment-resource-projection/v1",
+}
 EXPERIMENT_SUPPORTING_ARTIFACT_NAMES: Final = {
     "release": (
         "holdout-linux",
@@ -3152,7 +3157,7 @@ class Scanner:
         for role, evidence_value in supporting.items():
             if evidence_value is None:
                 continue
-            _, document = evidence_value
+            evidence_path, document = evidence_value
             expected_values = (
                 [
                     {
@@ -3173,6 +3178,8 @@ class Scanner:
                     "corpusManifestSha256",
                     "implementationManifestSha256",
                     "workflow",
+                    "projectionPath",
+                    "projectionSha256",
                     "variants",
                 }
                 and document.get("schemaVersion") == "1"
@@ -3184,6 +3191,12 @@ class Scanner:
                     document.get("workflow"),
                 )
                 and document.get("variants") == expected_values
+                and self._supporting_projection_is_valid(
+                    report_path,
+                    role,
+                    evidence_path,
+                    document,
+                )
                 and self._supporting_artifact_references_are_valid(
                     report_path,
                     role,
@@ -3370,6 +3383,43 @@ class Scanner:
             for key in counts:
                 counts[key] += producer_metrics[key]
         return all(metrics[key] == total for key, total in counts.items())
+
+    def _supporting_projection_is_valid(
+        self,
+        report_path: str,
+        role: str,
+        evidence_path: str,
+        document: Mapping[str, object],
+    ) -> bool:
+        projection_path = document.get("projectionPath")
+        if projection_path == evidence_path or not self._evidence_reference_bound(
+            report_path,
+            f"{role} coordinator projection",
+            document,
+            "projectionPath",
+            "projectionSha256",
+        ):
+            return False
+        assert isinstance(projection_path, str)
+        projection = self.json_documents.get(projection_path)
+        expected_kind = EXPERIMENT_SUPPORTING_PROJECTION_KINDS.get(role)
+        expected_projection = {
+            "schemaVersion": "1",
+            "kind": expected_kind,
+            "corpusManifestSha256": document.get("corpusManifestSha256"),
+            "implementationManifestSha256": document.get(
+                "implementationManifestSha256"
+            ),
+            "variants": document.get("variants"),
+        }
+        if not isinstance(projection, dict) or projection != expected_projection:
+            self._add(
+                "EXPERIMENT028",
+                report_path,
+                f"{role} coordinator projection is not the exact typed semantic payload",
+            )
+            return False
+        return True
 
     def _supporting_artifact_references_are_valid(
         self,

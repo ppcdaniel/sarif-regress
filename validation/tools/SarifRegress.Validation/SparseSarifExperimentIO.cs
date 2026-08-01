@@ -266,7 +266,7 @@ internal static class SparseResearchManifestReader
         string prefix = $"families[{index}]";
         return new SparseFamilyManifest(
             FamilyId(value, prefix),
-            Path(value, "labelsPath", prefix),
+            RelativePath(value, "labelsPath", prefix),
             ReadSide(RequireObject(value["baseline"], prefix + ".baseline"), prefix + ".baseline"),
             ReadSide(RequireObject(value["candidate"], prefix + ".candidate"), prefix + ".candidate"));
     }
@@ -280,14 +280,17 @@ internal static class SparseResearchManifestReader
         }
 
         return new SparseSideManifest(
-            Path(value, "sourceRoot", prefix),
-            Path(value, "sarifPath", prefix),
+            RelativePath(value, "sourceRoot", prefix),
+            RelativePath(value, "sarifPath", prefix),
             Sha256(value, "sourceTreeSha256", prefix),
             Sha256(value, "projectedSarifSha256", prefix),
             resultCount);
     }
 
-    private static string Path(JsonObject value, string property, string prefix) =>
+    private static string RelativePath(
+        JsonObject value,
+        string property,
+        string prefix) =>
         StablePath.RequireRepositoryRelative(String(value, property), prefix + "." + property);
 
     private static string FamilyId(JsonObject value, string prefix)

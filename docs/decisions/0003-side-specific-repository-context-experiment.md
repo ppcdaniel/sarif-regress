@@ -34,6 +34,23 @@ original-holdout, development, resource, security, and cross-platform evidence f
 hash-valid file cannot satisfy more than one evidence role. This fail-closed restriction may be
 relaxed only by a separately reviewed experiment-evidence change; it is not a gate waiver.
 
+Each hosted supporting-evidence role also requires one role-level coordinator projection and its
+SHA-256. The projection is a closed, role-specific JSON document containing the admitted corpus
+and implementation hashes and the complete ordered five-variant semantic payload. The scanner
+reads and hashes those bytes and requires the payload to equal the supporting document; a missing
+reference, digest mismatch, different role, partial payload, or unrelated hash-valid file fails the
+role. One projection per role avoids a large collection of per-value attestations while binding
+every claimed value to coordinator output. Workflow run/head/artifact identities remain in the
+wrapper rather than the projection, because artifact IDs and digests do not exist until upload and
+would otherwise make a coordinator projection self-referential and unstable across strict reruns.
+
+This local binding is necessary but is not a signature: a repository editor could replace a
+projection and its digest together. Final evidence therefore additionally requires an
+authenticated exact-head coordinator to verify the listed GitHub artifact IDs, names, and digests,
+byte-compare the platform outputs, emit the role projection, and compare its bytes with the
+committed projection. Connector-confirmed workflow success and artifact identity close that
+external trust step; the repository-only scanner does not claim to authenticate GitHub.
+
 The harness will construct two independent `FileSystemRepositoryContext` instances using the
 existing product security primitive:
 

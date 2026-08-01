@@ -37,7 +37,7 @@ Severity means:
 | Severity | Count | Merge/release effect |
 |---|---:|---|
 | Blocker | 1 | Prior hosted checks do not prove the exact PR head |
-| High | 8 | PR #13 matcher safety and evidence wording; PR #8 validator terms; release gates/notices |
+| High | 9 | PR #13 matcher safety and evidence wording; PR #8 validator terms; release gates/notices |
 | Medium | 14 | Metric semantics, context security, output/package hardening, compatibility, maintainability |
 | Low | 3 | Version authority, public constructor compatibility, unused restore path |
 
@@ -214,6 +214,26 @@ Severity means:
 - **Blocks merging PR #13:** no if tracked independently, although v3 can admit more edges.
 - **Blocks release:** yes.
 - **Tracking:** [#22](https://github.com/ppcdaniel/sarif-regress/issues/22).
+
+### H-09 — Sparse-experiment supporting projections can self-attest semantics
+
+- **Evidence and code area:** the initial Phase 4 research contract in
+  `validation/research/sparse-sarif/schemas/experiment-supporting-evidence.schema.json` makes the
+  release `reportPath`, determinism `artifactPath`, and resource `evidencePath`/cell
+  `artifactPath` references optional. `_optional_experiment_reference_is_valid` in
+  `validation/research/sparse-sarif/tools/scan_contamination.py` accepts a missing path/hash pair.
+- **Why it matters:** a report and its typed supporting JSON can agree on invented semantic values
+  while citing unrelated, structurally valid workflow artifact IDs and digests. The deliberate
+  absence of a product-implementation evidence role prevents this from authorising matcher v4, but
+  it would weaken the scientific integrity of the limitation record.
+- **Smallest safe remediation:** require one hash-bound typed projection per supporting role whose
+  complete ordered variant payload equals the claimed values. Generate that projection inside the
+  authenticated workflow coordinator and require final strict CI to compare its bytes with the
+  committed projection. Connector verification remains the external artifact-service trust check.
+- **Blocks merging PR #8:** no.
+- **Blocks merging PR #13:** no.
+- **Blocks release:** yes, until the Phase 4 limitation evidence is bound and reproduced.
+- **Tracking:** [#27](https://github.com/ppcdaniel/sarif-regress/issues/27).
 
 ## Medium findings
 

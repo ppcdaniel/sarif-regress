@@ -4,7 +4,7 @@
   "title": "Typed sparse-experiment supporting evidence",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "kind", "corpusManifestSha256", "implementationManifestSha256", "workflow", "variants"],
+  "required": ["schemaVersion", "kind", "corpusManifestSha256", "implementationManifestSha256", "workflow", "projectionPath", "projectionSha256", "variants"],
   "properties": {
     "schemaVersion": { "const": "1" },
     "kind": {
@@ -17,6 +17,14 @@
     "corpusManifestSha256": { "$ref": "#/$defs/sha256" },
     "implementationManifestSha256": { "$ref": "#/$defs/sha256" },
     "workflow": { "$ref": "#/$defs/workflow" },
+    "projectionPath": {
+      "allOf": [{ "$ref": "#/$defs/relativePath" }],
+      "description": "Coordinator-produced typed projection containing this role's exact admitted corpus, implementation, and ordered variant values."
+    },
+    "projectionSha256": {
+      "allOf": [{ "$ref": "#/$defs/sha256" }],
+      "description": "SHA-256 of the exact coordinator projection bytes."
+    },
     "variants": {
       "type": "array",
       "minItems": 5,

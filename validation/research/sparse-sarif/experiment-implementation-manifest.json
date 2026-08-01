@@ -477,11 +477,11 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentIO.cs",
-      "sha256": "dfec7325d49fbf25d53ae2691ae5f000146fab399424f17c85714c569b9f4265"
+      "sha256": "17faf63cd2e31648dec4add2ebb6c80b3deca33b9e2b04e2ce1694f2ac496a26"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentRunner.cs",
-      "sha256": "e5867132671bdfe5361cbc77aa51bdf3307ecad17320c39c7e2d918904d7deb2"
+      "sha256": "8ed38923783e4bef31da34d868eee1122cca7e2bd59209161e42cd38b662324c"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/StableJson.cs",

@@ -602,7 +602,7 @@ public sealed class SparseSarifExperimentRunner
             {
                 string? contextHash = contexts.TryGetValue(
                     finding.FindingKey,
-                    out string observedContext)
+                    out string? observedContext)
                     ? observedContext
                     : null;
                 return CloneWithContext(finding, contextHash, variantId);

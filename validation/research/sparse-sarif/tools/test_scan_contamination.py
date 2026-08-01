@@ -27,6 +27,7 @@ from scan_contamination import (
     EXPERIMENT_IMPLEMENTATION_ROOTS,
     EXPERIMENT_OBSERVATIONS_KIND,
     EXPERIMENT_SUPPORTING_ARTIFACT_NAMES,
+    EXPERIMENT_SUPPORTING_PROJECTION_KINDS,
     FAIL_CLOSED_SCENARIOS,
     FIXED_EXPERIMENT_GATES,
     PMD_LICENSE_URL,
@@ -67,6 +68,31 @@ def _workflow_artifacts(role: str) -> list[dict[str, object]]:
         }
         for index, name in enumerate(EXPERIMENT_SUPPORTING_ARTIFACT_NAMES[role])
     ]
+
+
+def _write_supporting_projection(
+    root: Path,
+    role: str,
+    document: dict[str, object],
+) -> None:
+    projection_path = (
+        f"expected/projections/sparse-experiment-{role}-projection.json"
+    )
+    projection = {
+        "schemaVersion": "1",
+        "kind": EXPERIMENT_SUPPORTING_PROJECTION_KINDS[role],
+        "corpusManifestSha256": document["corpusManifestSha256"],
+        "implementationManifestSha256": document[
+            "implementationManifestSha256"
+        ],
+        "variants": document["variants"],
+    }
+    absolute_path = root / projection_path
+    _write_json(absolute_path, projection)
+    document["projectionPath"] = projection_path
+    document["projectionSha256"] = hashlib.sha256(
+        absolute_path.read_bytes()
+    ).hexdigest()
 
 
 def _selector(uri: str, *, line: int = 4) -> dict[str, object]:
@@ -594,26 +620,28 @@ def _bind_experiment_evidence(
     }
     for role, report_key in supporting.items():
         evidence_path = root / str(report["evidence"][role]["path"])
+        document = {
+            "schemaVersion": "1",
+            "kind": report["evidence"][role]["kind"],
+            "corpusManifestSha256": manifest_sha256,
+            "implementationManifestSha256": implementation_sha256,
+            "workflow": {
+                "runId": 123,
+                "sourceHeadSha": "7" * 40,
+                "artifacts": _workflow_artifacts(role),
+            },
+            "variants": [
+                {
+                    "id": variant["id"],
+                    "value": variant[report_key],
+                }
+                for variant in report["variants"]
+            ],
+        }
+        _write_supporting_projection(root, role, document)
         _write_json(
             evidence_path,
-            {
-                "schemaVersion": "1",
-                "kind": report["evidence"][role]["kind"],
-                "corpusManifestSha256": manifest_sha256,
-                "implementationManifestSha256": implementation_sha256,
-                "workflow": {
-                    "runId": 123,
-                    "sourceHeadSha": "7" * 40,
-                    "artifacts": _workflow_artifacts(role),
-                },
-                "variants": [
-                    {
-                        "id": variant["id"],
-                        "value": variant[report_key],
-                    }
-                    for variant in report["variants"]
-                ],
-            },
+            document,
         )
         report["evidence"][role]["sha256"] = hashlib.sha256(
             evidence_path.read_bytes()
@@ -1079,6 +1107,30 @@ def _forge_bound_experiment_evidence(
     evidence_path = root / reference["path"]
     document = json.loads(evidence_path.read_text(encoding="utf-8"))
     mutate(document)
+    if {
+        "corpusManifestSha256",
+        "implementationManifestSha256",
+        "workflow",
+        "variants",
+    } <= set(document):
+        _write_supporting_projection(root, role, document)
+    _write_json(evidence_path, document)
+    reference["sha256"] = hashlib.sha256(evidence_path.read_bytes()).hexdigest()
+    _write_json(report_path, report)
+    _refresh_expected_checksums(root)
+
+
+def _forge_supporting_wrapper(
+    root: Path,
+    role: str,
+    mutate: Callable[[dict[str, object]], None],
+) -> None:
+    report_path = root / "expected/experiment-report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    reference = report["evidence"][role]
+    evidence_path = root / reference["path"]
+    document = json.loads(evidence_path.read_text(encoding="utf-8"))
+    mutate(document)
     _write_json(evidence_path, document)
     reference["sha256"] = hashlib.sha256(evidence_path.read_bytes()).hexdigest()
     _write_json(report_path, report)
@@ -1236,7 +1288,12 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertFalse(implementation["additionalProperties"])
         self.assertFalse(supporting["additionalProperties"])
         self.assertTrue(
-            {"implementationManifestSha256", "workflow"}
+            {
+                "implementationManifestSha256",
+                "workflow",
+                "projectionPath",
+                "projectionSha256",
+            }
             <= set(supporting["required"])
         )
         self.assertEqual(
@@ -2633,6 +2690,53 @@ class ContaminationScannerTests(unittest.TestCase):
         codes = _codes(self.root)
         self.assertIn("EXPERIMENT027", codes)
         self.assertIn("EXPERIMENT019", codes)
+
+    def test_supporting_role_requires_projection_reference(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document.pop("projectionPath")
+            document.pop("projectionSha256")
+
+        _forge_supporting_wrapper(self.root, "release", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_supporting_projection_digest_must_match_exact_bytes(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            document["projectionSha256"] = "0" * 64
+
+        _forge_supporting_wrapper(self.root, "determinism", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT014", codes)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_unrelated_hash_valid_blob_is_not_a_supporting_projection(self) -> None:
+        report = _complete_limitation_report()
+        _write_json(self.root / "expected/experiment-report.json", report)
+        _refresh(self.root)
+
+        def mutate(document: dict[str, object]) -> None:
+            unrelated_path = self.root / "manifest.json"
+            document["projectionPath"] = "manifest.json"
+            document["projectionSha256"] = hashlib.sha256(
+                unrelated_path.read_bytes()
+            ).hexdigest()
+
+        _forge_supporting_wrapper(self.root, "resources", mutate)
+        codes = _codes(self.root)
+        self.assertIn("EXPERIMENT028", codes)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+        self.assertNotIn("EXPERIMENT014", codes)
 
     def test_implementation_manifest_contract_is_not_digest_only(self) -> None:
         report = _complete_limitation_report()
