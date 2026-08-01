@@ -290,6 +290,91 @@ public sealed class CliInvocationTests
     }
 
     [Fact]
+    public void Equivalent_local_uri_base_roots_produce_identical_stable_reports()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", ExternalBaseFindingSarif);
+        workspace.Write("candidate.sarif", ExternalBaseFindingSarif);
+        var firstRoot = workspace.PathOf("first-root");
+        var secondRoot = workspace.PathOf("second-root");
+        Directory.CreateDirectory(firstRoot);
+        Directory.CreateDirectory(secondRoot);
+        var firstUri = new Uri(
+            firstRoot + Path.DirectorySeparatorChar).AbsoluteUri;
+        var secondUri = new Uri(
+            secondRoot + Path.DirectorySeparatorChar).AbsoluteUri;
+        workspace.Write(
+            "first.json",
+            JsonSerializer.Serialize(
+                new
+                {
+                    schemaVersion = "1",
+                    repoRoot = firstRoot,
+                    uriBaseMappings = new[]
+                    {
+                        new { id = "EXPLICIT_ROOT", uri = firstUri },
+                    },
+                    policy = new { failOn = Array.Empty<string>() },
+                }));
+        workspace.Write(
+            "second.json",
+            JsonSerializer.Serialize(
+                new
+                {
+                    schemaVersion = "1",
+                    repoRoot = secondRoot,
+                    uriBaseMappings = new[]
+                    {
+                        new { id = "EXPLICIT_ROOT", uri = secondUri },
+                    },
+                    policy = new { failOn = Array.Empty<string>() },
+                }));
+
+        var first = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline",
+            "baseline.sarif",
+            "--candidate",
+            "candidate.sarif",
+            "--config",
+            "first.json");
+        var second = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline",
+            "baseline.sarif",
+            "--candidate",
+            "candidate.sarif",
+            "--config",
+            "second.json");
+
+        Assert.Equal(0, first.ExitCode);
+        Assert.Equal(0, second.ExitCode);
+        Assert.Equal(first.StandardOutput, second.StandardOutput);
+        Assert.DoesNotContain(
+            firstRoot,
+            first.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            secondRoot,
+            second.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            firstUri,
+            first.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            secondUri,
+            second.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "configured-uri-base",
+            first.StandardOutput,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Configured_regression_policy_returns_exit_code_three_after_reporting()
     {
         using var workspace = new TestWorkspace();

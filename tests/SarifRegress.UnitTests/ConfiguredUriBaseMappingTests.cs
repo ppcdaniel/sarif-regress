@@ -302,6 +302,16 @@ public sealed class ConfiguredUriBaseMappingTests
             "repo://src/example.cs",
             Assert.Single(posix.ComparisonInput.Findings)
                 .PrimaryLocation?.Path.CanonicalUri);
+        Assert.Equal(
+            Snapshot(posix).Transformations,
+            Snapshot(windows).Transformations);
+        Assert.All(
+            Snapshot(posix).Transformations,
+            item => Assert.DoesNotContain(
+                "workspace",
+                (item.OriginalValue ?? string.Empty) +
+                (item.TransformedValue ?? string.Empty),
+                StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -340,7 +350,7 @@ public sealed class ConfiguredUriBaseMappingTests
             path.Transformations,
             item => item.Kind == "configured-uri-base");
         Assert.Equal("ROOT", transformation.OriginalValue);
-        Assert.Equal("repo:/", transformation.TransformedValue);
+        Assert.Null(transformation.TransformedValue);
         Assert.False(transformation.IsLossy);
         Assert.Equal(
             SarifIngestor.ConfiguredUriBaseAlgorithmVersion,

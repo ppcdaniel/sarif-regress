@@ -2111,7 +2111,7 @@ public sealed class SarifIngestor
                 mapping => new TransformationRecord(
                     "configured-uri-base",
                     mapping.Id,
-                    mapping.Uri,
+                    transformedValue: null,
                     isLossy: false,
                     ConfiguredUriBaseAlgorithmVersion));
             return new CanonicalPath(
