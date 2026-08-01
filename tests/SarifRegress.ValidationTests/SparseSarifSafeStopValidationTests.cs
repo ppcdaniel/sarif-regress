@@ -123,9 +123,9 @@ public sealed class SparseSarifSafeStopValidationTests
         Dictionary<BucketKey, int> candidateBucketCounts = candidate
             .GroupBy(item => item.Bucket)
             .ToDictionary(group => group.Key, group => group.Count());
-        Assert.Empty(intersections.Where(item =>
+        Assert.DoesNotContain(intersections, item =>
             baselineBucketCounts[item.Baseline.Bucket] == 1
-            && candidateBucketCounts[item.Candidate.Bucket] == 1));
+            && candidateBucketCounts[item.Candidate.Bucket] == 1);
     }
 
     [Fact]
