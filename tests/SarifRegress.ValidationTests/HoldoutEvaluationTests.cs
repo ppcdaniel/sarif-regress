@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Text.Json.Nodes;
 using SarifRegress.Cli.Corpus;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Matching;
@@ -43,6 +44,129 @@ public sealed class HoldoutEvaluationTests
         Assert.Equal(1m, aggregate.Precision);
         Assert.Equal(1m, aggregate.Recall);
         Assert.Equal(1m, aggregate.F1);
+        Assert.Equal(1m, aggregate.NewClassificationAccuracy);
+        Assert.Equal(1m, aggregate.ResolvedClassificationAccuracy);
+    }
+
+    [Fact]
+    public void Lifecycle_accuracy_uses_labelled_units_not_observed_decision_totals()
+    {
+        ImmutableArray<RelationshipResult> relationships =
+        [
+            Lifecycle("case-new-001", "new", "correct-new"),
+            Lifecycle("case-new-002", "new", "incorrect-new"),
+            Lifecycle("case-resolved-001", "resolved", "correct-resolved"),
+            Lifecycle("case-resolved-002", "resolved", "ingestion-failure"),
+        ];
+        var corpusMetrics = new CorpusMetrics(
+            LabelledPairs: 0,
+            TruePositives: 0,
+            FalsePositives: 0,
+            FalseNegatives: 0,
+            ExpectedAmbiguous: 0,
+            SilentAmbiguousMatches: 0,
+            Precision: 1m,
+            Recall: 1m,
+            F1: 1m)
+        {
+            CorrectNew = 7,
+            UnexpectedNew = 8,
+            CorrectResolved = 11,
+            UnexpectedResolved = 12,
+        };
+
+        HoldoutMetrics metrics = HoldoutMetricsCalculator.FromCase(
+            corpusMetrics,
+            relationships,
+            ambiguousClassifications: 0,
+            correctAmbiguityRefusals: 0,
+            unexpectedAmbiguityRefusals: 0,
+            incorrectlyAutoMatchedAmbiguousCases: 0,
+            ingestionFailures: 1,
+            structuralFailures: 0);
+
+        Assert.Equal(15, metrics.NewClassifications);
+        Assert.Equal(23, metrics.ResolvedClassifications);
+        Assert.Equal(2, metrics.ExpectedNewClassifications);
+        Assert.Equal(1, metrics.CorrectNewClassifications);
+        Assert.Equal(1, metrics.IncorrectNewClassifications);
+        Assert.Equal(0.5m, metrics.NewClassificationAccuracy);
+        Assert.Equal(2, metrics.ExpectedResolvedClassifications);
+        Assert.Equal(1, metrics.CorrectResolvedClassifications);
+        Assert.Equal(1, metrics.IncorrectResolvedClassifications);
+        Assert.Equal(0.5m, metrics.ResolvedClassificationAccuracy);
+    }
+
+    [Fact]
+    public void Aggregate_lifecycle_accuracy_is_recomputed_from_total_counts()
+    {
+        HoldoutMetrics first = CreateMetrics(0, 0, 0, 0) with
+        {
+            ExpectedNewClassifications = 1,
+            CorrectNewClassifications = 1,
+            IncorrectNewClassifications = 0,
+            NewClassificationAccuracy = 1m,
+            ExpectedResolvedClassifications = 2,
+            CorrectResolvedClassifications = 1,
+            IncorrectResolvedClassifications = 1,
+            ResolvedClassificationAccuracy = 0.5m,
+        };
+        HoldoutMetrics second = CreateMetrics(0, 0, 0, 0) with
+        {
+            ExpectedNewClassifications = 3,
+            CorrectNewClassifications = 1,
+            IncorrectNewClassifications = 2,
+            NewClassificationAccuracy = 0.333333m,
+            ExpectedResolvedClassifications = 2,
+            CorrectResolvedClassifications = 2,
+            IncorrectResolvedClassifications = 0,
+            ResolvedClassificationAccuracy = 1m,
+        };
+
+        HoldoutMetrics aggregate = HoldoutMetricsCalculator.Aggregate(
+            [first, second]);
+
+        Assert.Equal(4, aggregate.ExpectedNewClassifications);
+        Assert.Equal(2, aggregate.CorrectNewClassifications);
+        Assert.Equal(2, aggregate.IncorrectNewClassifications);
+        Assert.Equal(0.5m, aggregate.NewClassificationAccuracy);
+        Assert.Equal(4, aggregate.ExpectedResolvedClassifications);
+        Assert.Equal(3, aggregate.CorrectResolvedClassifications);
+        Assert.Equal(1, aggregate.IncorrectResolvedClassifications);
+        Assert.Equal(0.75m, aggregate.ResolvedClassificationAccuracy);
+    }
+
+    [Fact]
+    public void Lifecycle_counts_reject_misaligned_or_inconsistent_inputs()
+    {
+        ImmutableArray<RelationshipResult> misaligned =
+        [
+            Lifecycle("case-resolved-001", "resolved", "correct-new"),
+        ];
+
+        InvalidDataException caseException = Assert.Throws<InvalidDataException>(() =>
+            HoldoutMetricsCalculator.FromCase(
+                new CorpusMetrics(0, 0, 0, 0, 0, 0, 1m, 1m, 1m),
+                misaligned,
+                ambiguousClassifications: 0,
+                correctAmbiguityRefusals: 0,
+                unexpectedAmbiguityRefusals: 0,
+                incorrectlyAutoMatchedAmbiguousCases: 0,
+                ingestionFailures: 0,
+                structuralFailures: 0));
+        Assert.Contains(
+            "corresponding labelled unit",
+            caseException.Message,
+            StringComparison.Ordinal);
+
+        HoldoutMetrics inconsistent = CreateMetrics(0, 0, 0, 0) with
+        {
+            ExpectedNewClassifications = 1,
+            CorrectNewClassifications = 1,
+            IncorrectNewClassifications = 1,
+        };
+        Assert.Throws<InvalidDataException>(() =>
+            HoldoutMetricsCalculator.Aggregate([inconsistent]));
     }
 
     [Fact]
@@ -217,9 +341,42 @@ public sealed class HoldoutEvaluationTests
         observedInvalidInputs.IsDefault ? [] : observedInvalidInputs,
         new CorpusCaseArtifact(
             artifactKind,
-            ValidationTestRepository.Utf8(artifactJson + "\n")),
+            ValidationTestRepository.Utf8(
+                AddDecisionTraces(artifactJson, artifactKind) + "\n")),
         metrics,
         Passed: false);
+
+    private static string AddDecisionTraces(string artifactJson, string artifactKind)
+    {
+        if (artifactKind != "comparison")
+        {
+            return artifactJson;
+        }
+
+        JsonObject root = JsonNode.Parse(artifactJson)!.AsObject();
+        foreach (JsonObject finding in root["findings"]!.AsArray()
+                     .Select(item => item!.AsObject()))
+        {
+            string classification = finding["classification"]!.GetValue<string>();
+            finding["decision"] = new JsonObject
+            {
+                ["precedenceTier"] = classification == "ambiguous"
+                    ? "refuse"
+                    : "exact-canonical",
+                ["displayConfidence"] = classification == "ambiguous"
+                    ? "low"
+                    : "high",
+                ["ambiguous"] = classification == "ambiguous",
+                ["matcherAlgorithmVersion"] = "sarifregress/matcher/v3",
+            };
+            finding["evidence"] = new JsonArray();
+            finding["rejectedAlternatives"] = new JsonArray();
+            finding["transforms"] = new JsonArray();
+            finding["diagnostics"] = new JsonArray();
+        }
+
+        return root.ToJsonString();
+    }
 
     private static ValidatedHoldoutCase CreateHoldoutCase(
         string caseId,
@@ -285,6 +442,19 @@ public sealed class HoldoutEvaluationTests
         Precision: 0,
         Recall: 0,
         F1: 0);
+
+    private static RelationshipResult Lifecycle(
+        string relationshipId,
+        string kind,
+        string outcome) => new(
+        relationshipId,
+        new GroundTruthRelationship(
+            kind,
+            kind == "resolved" ? "baseline:0:0" : null,
+            kind == "new" ? "candidate:0:0" : null,
+            kind),
+        new ActualRelationship("not-reported", null, null),
+        outcome);
 
     private static string[] RelationshipIds(
         IEnumerable<RelationshipReference> relationships) => relationships

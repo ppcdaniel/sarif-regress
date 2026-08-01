@@ -1,10 +1,17 @@
 [CmdletBinding()]
-param()
+param(
+    [switch] $GenerateCrossPlatformAttestationCandidate,
+    [switch] $RegenerateAttestedExpected
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if ($GenerateCrossPlatformAttestationCandidate -and $RegenerateAttestedExpected) {
+    throw 'The two holdout report-generation modes are mutually exclusive.'
+}
 if ($args.Count -ne 0) {
-    throw 'Usage: validate-holdout.ps1'
+    throw `
+        'Usage: validate-holdout.ps1 [-GenerateCrossPlatformAttestationCandidate|-RegenerateAttestedExpected]'
 }
 
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
@@ -315,16 +322,33 @@ try {
         '--multitool-version',
         $multitoolVersion
     )
-    $evaluationArguments += @(
-        '--expected-root',
-        $expectedRoot,
-        '--compare-expected',
-        'true',
-        '--cross-platform-attestation',
-        $crossPlatformAttestation
-    )
+    if ($GenerateCrossPlatformAttestationCandidate) {
+        $evaluationArguments += @('--compare-expected', 'false')
+    }
+    elseif ($RegenerateAttestedExpected) {
+        $evaluationArguments += @(
+            '--compare-expected',
+            'false',
+            '--cross-platform-attestation',
+            $crossPlatformAttestation
+        )
+    }
+    else {
+        $evaluationArguments += @(
+            '--expected-root',
+            $expectedRoot,
+            '--compare-expected',
+            'true',
+            '--cross-platform-attestation',
+            $crossPlatformAttestation
+        )
+    }
     & dotnet @evaluationArguments
     $evaluationExitCode = $LASTEXITCODE
+    # Bootstrap intentionally returns validation code 2 until the hosted
+    # attestation is committed. Preserve it here without leaking that accepted
+    # native status through the dot-sourced workflow host.
+    $global:LASTEXITCODE = 0
 
     Write-HoldoutSnapshot -Destination $afterSnapshot
     Assert-FilesEqual `
@@ -336,6 +360,7 @@ try {
     $normalizedReports = @(
         'sarif-regress-holdout.json',
         'sarif-multitool-baseline.json',
+        'v2-to-v3-delta.json',
         'comparison-summary.json',
         'checksums.sha256'
     )
@@ -370,13 +395,71 @@ try {
     if ($missingEvidence) {
         throw 'Holdout evaluation did not produce the complete evidence set.'
     }
-    if ($evaluationExitCode -ne 0) {
+    if ($GenerateCrossPlatformAttestationCandidate) {
+        if ($evaluationExitCode -ne 2) {
+            throw `
+                "Unattested candidate generation expected validation exit code 2, got $evaluationExitCode."
+        }
+        $summary = Get-Content `
+            -LiteralPath (Join-Path $generatedRoot 'comparison-summary.json') `
+            -Raw | ConvertFrom-Json
+        $conditions = $summary.releaseConditions
+        if ($conditions.evaluationCompleted -ne $true) {
+            throw 'Unattested evaluation did not complete successfully.'
+        }
+        if ($conditions.noStructuralFailures -ne $true) {
+            throw 'Unattested evaluation contains a structural failure.'
+        }
+        if ($conditions.everyChangedDecisionExplained -ne $true) {
+            throw 'Unattested evaluation lacks a changed-decision trace.'
+        }
+        if ($conditions.crossPlatformByteIdentity -ne $false) {
+            throw 'Unattested evaluation unexpectedly asserts byte identity.'
+        }
+        if ($summary.releaseRecommendation -ne 'blocked') {
+            throw 'Unattested evaluation must retain a blocked recommendation.'
+        }
+        if ($summary.recommendationReasons -notcontains
+            'cross-platform-determinism-failed') {
+            throw 'Unattested evaluation omitted the determinism blocker.'
+        }
+    }
+    elseif ($evaluationExitCode -ne 0) {
         throw `
             "Holdout evaluation failed with exit code $evaluationExitCode; available evidence was preserved at $artifactRoot."
     }
 
-    Write-Host `
-        'Holdout validation reproduced all committed normalized reports byte-for-byte.'
+    if ($GenerateCrossPlatformAttestationCandidate) {
+        Write-Host `
+            'Generated unattested normalized reports for a hosted attestation candidate.'
+    }
+    elseif ($RegenerateAttestedExpected) {
+        $summary = Get-Content `
+            -LiteralPath (Join-Path $generatedRoot 'comparison-summary.json') `
+            -Raw | ConvertFrom-Json
+        $conditions = $summary.releaseConditions
+        if ($conditions.evaluationCompleted -ne $true) {
+            throw 'Attested expected-output regeneration did not complete.'
+        }
+        if ($conditions.noStructuralFailures -ne $true) {
+            throw `
+                'Attested expected-output regeneration has a structural failure.'
+        }
+        if ($conditions.everyChangedDecisionExplained -ne $true) {
+            throw `
+                'Attested expected-output regeneration lacks decision traces.'
+        }
+        if ($conditions.crossPlatformByteIdentity -ne $true) {
+            throw `
+                'Attested expected-output regeneration lacks validated byte identity.'
+        }
+        Write-Host `
+            'Regenerated attested normalized reports without comparing stale expected bytes.'
+    }
+    else {
+        Write-Host `
+            'Holdout validation reproduced all committed normalized reports byte-for-byte.'
+    }
     Write-Host "Evidence: $artifactRoot"
 }
 finally {

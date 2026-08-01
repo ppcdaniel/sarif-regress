@@ -12,7 +12,8 @@ public sealed record CrossPlatformAttestationExpectation(
     string HoldoutManifestSha256,
     string EvaluationMetadataSha256,
     string SarifRegressReportSha256,
-    string SarifMultitoolBaselineReportSha256);
+    string SarifMultitoolBaselineReportSha256,
+    string V2ToV3DeltaReportSha256);
 
 /// <summary>Retains exact validated attestation bytes for checksum construction.</summary>
 public sealed record ValidatedCrossPlatformAttestation(
@@ -120,7 +121,7 @@ public sealed class CrossPlatformAttestationReader
         AttestationDocument document,
         CrossPlatformAttestationExpectation expected)
     {
-        RequireEqual("schema version", "1", document.SchemaVersion);
+        RequireEqual("schema version", "2", document.SchemaVersion);
         RequireEqual("repository", RepositoryName, document.Repository);
         RequireEqual(
             "frozen repository commit",
@@ -177,10 +178,11 @@ public sealed class CrossPlatformAttestationReader
         }
 
         if (!document.ByteIdentity.SarifRegressHoldout
-            || !document.ByteIdentity.SarifMultitoolBaseline)
+            || !document.ByteIdentity.SarifMultitoolBaseline
+            || !document.ByteIdentity.V2ToV3Delta)
         {
             throw new InvalidDataException(
-                "Cross-platform attestation does not assert both base-report byte identities.");
+                "Cross-platform attestation does not assert every independently generated report byte identity.");
         }
     }
 
@@ -208,6 +210,10 @@ public sealed class CrossPlatformAttestationReader
             $"{context} Multitool report SHA-256",
             expected.SarifMultitoolBaselineReportSha256,
             digests.SarifMultitoolBaselineSha256);
+        RequireEqual(
+            $"{context} matcher v2-to-v3 delta SHA-256",
+            expected.V2ToV3DeltaReportSha256,
+            digests.V2ToV3DeltaSha256);
     }
 
     private static void RejectZeroDigest(string name, string value)
@@ -248,6 +254,7 @@ public sealed class CrossPlatformAttestationReader
     {
         public required string SarifRegressHoldoutSha256 { get; init; }
         public required string SarifMultitoolBaselineSha256 { get; init; }
+        public required string V2ToV3DeltaSha256 { get; init; }
     }
 
     private sealed class GithubActionsDocument
@@ -279,5 +286,6 @@ public sealed class CrossPlatformAttestationReader
     {
         public required bool SarifRegressHoldout { get; init; }
         public required bool SarifMultitoolBaseline { get; init; }
+        public required bool V2ToV3Delta { get; init; }
     }
 }

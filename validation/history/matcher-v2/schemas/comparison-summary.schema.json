@@ -23,7 +23,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "2"
+      "const": "1"
     },
     "reportKind": {
       "const": "holdout-external-baseline-comparison"
@@ -92,20 +92,17 @@
     },
     "recommendationReasons": {
       "type": "array",
-      "maxItems": 11,
+      "maxItems": 8,
       "uniqueItems": true,
       "items": {
         "enum": [
           "precision-below-threshold",
           "recall-below-threshold",
-          "per-producer-precision-below-threshold",
-          "per-producer-recall-below-threshold",
           "incorrectly-auto-matched-ambiguity",
           "unexplained-ingestion-failure",
           "structural-failure",
           "complete-label-graph-failed",
           "cross-platform-determinism-failed",
-          "changed-decision-explanation-missing",
           "evaluation-incomplete"
         ]
       }
@@ -128,27 +125,18 @@
             "required": [
               "precisionMet",
               "recallMet",
-              "allProducerPrecisionMet",
-              "allProducerRecallMet",
               "zeroIncorrectAmbiguityMatches",
               "noUnexplainedIngestionFailures",
               "noStructuralFailures",
               "completeLabelGraphSatisfied",
               "crossPlatformByteIdentity",
-              "evaluationCompleted",
-              "everyChangedDecisionExplained"
+              "evaluationCompleted"
             ],
             "properties": {
               "precisionMet": {
                 "const": true
               },
               "recallMet": {
-                "const": true
-              },
-              "allProducerPrecisionMet": {
-                "const": true
-              },
-              "allProducerRecallMet": {
                 "const": true
               },
               "zeroIncorrectAmbiguityMatches": {
@@ -167,9 +155,6 @@
                 "const": true
               },
               "evaluationCompleted": {
-                "const": true
-              },
-              "everyChangedDecisionExplained": {
                 "const": true
               }
             }
@@ -197,27 +182,18 @@
             "required": [
               "precisionMet",
               "recallMet",
-              "allProducerPrecisionMet",
-              "allProducerRecallMet",
               "zeroIncorrectAmbiguityMatches",
               "noUnexplainedIngestionFailures",
               "noStructuralFailures",
               "completeLabelGraphSatisfied",
               "crossPlatformByteIdentity",
-              "evaluationCompleted",
-              "everyChangedDecisionExplained"
+              "evaluationCompleted"
             ],
             "properties": {
               "precisionMet": {
                 "type": "boolean"
               },
               "recallMet": {
-                "type": "boolean"
-              },
-              "allProducerPrecisionMet": {
-                "type": "boolean"
-              },
-              "allProducerRecallMet": {
                 "type": "boolean"
               },
               "zeroIncorrectAmbiguityMatches": {
@@ -237,15 +213,12 @@
               },
               "evaluationCompleted": {
                 "const": false
-              },
-              "everyChangedDecisionExplained": {
-                "type": "boolean"
               }
             }
           },
           "recommendationReasons": {
             "type": "array",
-            "maxItems": 11,
+            "maxItems": 8,
             "contains": {
               "const": "evaluation-incomplete"
             }
@@ -269,27 +242,18 @@
             "required": [
               "precisionMet",
               "recallMet",
-              "allProducerPrecisionMet",
-              "allProducerRecallMet",
               "zeroIncorrectAmbiguityMatches",
               "noUnexplainedIngestionFailures",
               "noStructuralFailures",
               "completeLabelGraphSatisfied",
               "crossPlatformByteIdentity",
-              "evaluationCompleted",
-              "everyChangedDecisionExplained"
+              "evaluationCompleted"
             ],
             "properties": {
               "precisionMet": {
                 "type": "boolean"
               },
               "recallMet": {
-                "type": "boolean"
-              },
-              "allProducerPrecisionMet": {
-                "type": "boolean"
-              },
-              "allProducerRecallMet": {
                 "type": "boolean"
               },
               "zeroIncorrectAmbiguityMatches": {
@@ -309,9 +273,6 @@
               },
               "evaluationCompleted": {
                 "const": true
-              },
-              "everyChangedDecisionExplained": {
-                "type": "boolean"
               }
             },
             "anyOf": [
@@ -325,20 +286,6 @@
               {
                 "properties": {
                   "recallMet": {
-                    "const": false
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "allProducerPrecisionMet": {
-                    "const": false
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "allProducerRecallMet": {
                     "const": false
                   }
                 }
@@ -374,13 +321,6 @@
               {
                 "properties": {
                   "crossPlatformByteIdentity": {
-                    "const": false
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "everyChangedDecisionExplained": {
                     "const": false
                   }
                 }
@@ -509,9 +449,7 @@
         "holdoutManifestSha256",
         "evaluationMetadataSha256",
         "sarifRegressReportSha256",
-        "sarifMultitoolBaselineReportSha256",
-        "matcherV2ReportSha256",
-        "v2ToV3DeltaReportSha256"
+        "sarifMultitoolBaselineReportSha256"
       ],
       "properties": {
         "holdoutManifestSha256": {
@@ -525,12 +463,6 @@
         },
         "sarifMultitoolBaselineReportSha256": {
           "$ref": "#/$defs/sha256"
-        },
-        "matcherV2ReportSha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "v2ToV3DeltaReportSha256": {
-          "$ref": "#/$defs/sha256"
         }
       }
     },
@@ -540,15 +472,12 @@
       "required": [
         "minimumPrecision",
         "minimumRecall",
-        "minimumPerProducerPrecision",
-        "minimumPerProducerRecall",
         "maximumIncorrectlyAutoMatchedAmbiguousCases",
         "maximumUnexplainedIngestionFailures",
         "maximumStructuralFailures",
         "requireCompleteLabelGraph",
         "requireCrossPlatformByteIdentity",
-        "requireCompletedEvaluation",
-        "requireChangedDecisionExplanations"
+        "requireCompletedEvaluation"
       ],
       "properties": {
         "minimumPrecision": {
@@ -556,12 +485,6 @@
         },
         "minimumRecall": {
           "const": 0.9
-        },
-        "minimumPerProducerPrecision": {
-          "const": 0.95
-        },
-        "minimumPerProducerRecall": {
-          "const": 0.8
         },
         "maximumIncorrectlyAutoMatchedAmbiguousCases": {
           "const": 0
@@ -580,9 +503,6 @@
         },
         "requireCompletedEvaluation": {
           "const": true
-        },
-        "requireChangedDecisionExplanations": {
-          "const": true
         }
       }
     },
@@ -592,27 +512,18 @@
       "required": [
         "precisionMet",
         "recallMet",
-        "allProducerPrecisionMet",
-        "allProducerRecallMet",
         "zeroIncorrectAmbiguityMatches",
         "noUnexplainedIngestionFailures",
         "noStructuralFailures",
         "completeLabelGraphSatisfied",
         "crossPlatformByteIdentity",
-        "evaluationCompleted",
-        "everyChangedDecisionExplained"
+        "evaluationCompleted"
       ],
       "properties": {
         "precisionMet": {
           "type": "boolean"
         },
         "recallMet": {
-          "type": "boolean"
-        },
-        "allProducerPrecisionMet": {
-          "type": "boolean"
-        },
-        "allProducerRecallMet": {
           "type": "boolean"
         },
         "zeroIncorrectAmbiguityMatches": {
@@ -632,9 +543,6 @@
         },
         "evaluationCompleted": {
           "type": "boolean"
-        },
-        "everyChangedDecisionExplained": {
-          "type": "boolean"
         }
       }
     },
@@ -649,14 +557,6 @@
         "falsePositives",
         "falseNegatives",
         "classificationMismatches",
-        "expectedNewClassifications",
-        "correctNewClassifications",
-        "incorrectNewClassifications",
-        "newClassificationAccuracy",
-        "expectedResolvedClassifications",
-        "correctResolvedClassifications",
-        "incorrectResolvedClassifications",
-        "resolvedClassificationAccuracy",
         "correctAmbiguityRefusals",
         "incorrectlyAutoMatchedAmbiguousCases",
         "ingestionFailures",
@@ -687,30 +587,6 @@
         },
         "classificationMismatches": {
           "$ref": "#/$defs/count"
-        },
-        "expectedNewClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "correctNewClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "incorrectNewClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "newClassificationAccuracy": {
-          "$ref": "#/$defs/ratio"
-        },
-        "expectedResolvedClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "correctResolvedClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "incorrectResolvedClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "resolvedClassificationAccuracy": {
-          "$ref": "#/$defs/ratio"
         },
         "correctAmbiguityRefusals": {
           "$ref": "#/$defs/count"
@@ -869,8 +745,7 @@
         "producerId",
         "sarifRegress",
         "sarifMultitool",
-        "comparison",
-        "qualityGates"
+        "comparison"
       ],
       "properties": {
         "producerId": {
@@ -884,33 +759,6 @@
         },
         "comparison": {
           "$ref": "#/$defs/comparisonMetrics"
-        },
-        "qualityGates": {
-          "$ref": "#/$defs/producerQualityGates"
-        }
-      }
-    },
-    "producerQualityGates": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "minimumPrecision",
-        "minimumRecall",
-        "precisionMet",
-        "recallMet"
-      ],
-      "properties": {
-        "minimumPrecision": {
-          "const": 0.95
-        },
-        "minimumRecall": {
-          "const": 0.8
-        },
-        "precisionMet": {
-          "type": "boolean"
-        },
-        "recallMet": {
-          "type": "boolean"
         }
       }
     },

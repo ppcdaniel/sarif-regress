@@ -54,7 +54,7 @@ public sealed class EvaluationMetadataReader
                 "sarifregress/producer-fingerprint-common-version/v1"),
             new NamedAlgorithmVersion(
                 "derived-fingerprint-compare",
-                "sarifregress/derived-fingerprint-compare/v1"));
+                "sarifregress/derived-fingerprint-compare/v2"));
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {

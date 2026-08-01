@@ -7,7 +7,9 @@ public sealed record ComparisonReportHashes(
     string HoldoutManifestSha256,
     string EvaluationMetadataSha256,
     string SarifRegressReportSha256,
-    string SarifMultitoolBaselineReportSha256);
+    string SarifMultitoolBaselineReportSha256,
+    string MatcherV2ReportSha256,
+    string V2ToV3DeltaReportSha256);
 
 /// <summary>Freezes release gates before evaluating the holdout.</summary>
 public sealed record ReleaseThresholds(
@@ -20,6 +22,15 @@ public sealed record ReleaseThresholds(
     bool RequireCrossPlatformByteIdentity,
     bool RequireCompletedEvaluation)
 {
+    /// <summary>Gets the minimum precision required from every producer.</summary>
+    public decimal MinimumPerProducerPrecision { get; init; } = 0.95m;
+
+    /// <summary>Gets the minimum recall required from every producer.</summary>
+    public decimal MinimumPerProducerRecall { get; init; } = 0.80m;
+
+    /// <summary>Gets whether every changed v3 decision requires an explanation trace.</summary>
+    public bool RequireChangedDecisionExplanations { get; init; } = true;
+
     /// <summary>Gets the architecture-aligned, predeclared milestone thresholds.</summary>
     public static ReleaseThresholds Frozen { get; } = new(
         MinimumPrecision: 0.95m,
@@ -29,7 +40,12 @@ public sealed record ReleaseThresholds(
         MaximumStructuralFailures: 0,
         RequireCompleteLabelGraph: true,
         RequireCrossPlatformByteIdentity: true,
-        RequireCompletedEvaluation: true);
+        RequireCompletedEvaluation: true)
+    {
+        MinimumPerProducerPrecision = 0.95m,
+        MinimumPerProducerRecall = 0.80m,
+        RequireChangedDecisionExplanations = true,
+    };
 }
 
 /// <summary>Records each independently evaluated release gate.</summary>
@@ -41,7 +57,17 @@ public sealed record ReleaseConditions(
     bool NoStructuralFailures,
     bool CompleteLabelGraphSatisfied,
     bool CrossPlatformByteIdentity,
-    bool EvaluationCompleted);
+    bool EvaluationCompleted)
+{
+    /// <summary>Gets whether every producer met its precision threshold.</summary>
+    public bool AllProducerPrecisionMet { get; init; } = true;
+
+    /// <summary>Gets whether every producer met its recall threshold.</summary>
+    public bool AllProducerRecallMet { get; init; } = true;
+
+    /// <summary>Gets whether every changed matcher decision has an explanation trace.</summary>
+    public bool EveryChangedDecisionExplained { get; init; } = true;
+}
 
 /// <summary>Projects the SarifRegress metrics used by release comparison.</summary>
 public sealed record SarifRegressComparisonMetrics(
@@ -59,7 +85,32 @@ public sealed record SarifRegressComparisonMetrics(
     int StructuralFailures,
     decimal Precision,
     decimal Recall,
-    decimal F1);
+    decimal F1)
+{
+    /// <summary>Gets the number of labelled candidate-only lifecycle units.</summary>
+    public int ExpectedNewClassifications { get; init; }
+
+    /// <summary>Gets the number of correctly classified candidate-only units.</summary>
+    public int CorrectNewClassifications { get; init; }
+
+    /// <summary>Gets the number of incorrectly classified candidate-only units.</summary>
+    public int IncorrectNewClassifications { get; init; }
+
+    /// <summary>Gets exact new-classification accuracy, or one for no labelled units.</summary>
+    public decimal NewClassificationAccuracy { get; init; } = 1m;
+
+    /// <summary>Gets the number of labelled baseline-only lifecycle units.</summary>
+    public int ExpectedResolvedClassifications { get; init; }
+
+    /// <summary>Gets the number of correctly classified baseline-only units.</summary>
+    public int CorrectResolvedClassifications { get; init; }
+
+    /// <summary>Gets the number of incorrectly classified baseline-only units.</summary>
+    public int IncorrectResolvedClassifications { get; init; }
+
+    /// <summary>Gets exact resolved-classification accuracy, or one for no labelled units.</summary>
+    public decimal ResolvedClassificationAccuracy { get; init; } = 1m;
+}
 
 /// <summary>Wraps SarifRegress comparison metrics.</summary>
 public sealed record SarifRegressComparisonSummary(
@@ -96,12 +147,59 @@ public sealed record ToolComparisonMetrics(
     int BothIncorrect,
     int NonComparable);
 
+/// <summary>Records fixed precision and recall gates for one producer.</summary>
+public sealed record ProducerQualityGates(
+    decimal MinimumPrecision,
+    decimal MinimumRecall,
+    bool PrecisionMet,
+    bool RecallMet);
+
 /// <summary>Compares both tools for one producer family.</summary>
 public sealed record ProducerComparison(
     string ProducerId,
     SarifRegressComparisonMetrics SarifRegress,
     MultitoolComparisonMetrics SarifMultitool,
-    ToolComparisonMetrics Comparison);
+    ToolComparisonMetrics Comparison)
+{
+    /// <summary>Gets the producer's independently evaluated quality gates.</summary>
+    public ProducerQualityGates QualityGates { get; init; } = new(
+        MinimumPrecision: 0m,
+        MinimumRecall: 0m,
+        PrecisionMet: true,
+        RecallMet: true);
+}
+
+/// <summary>Summarizes whether matcher-v3 decision changes retain explanation traces.</summary>
+public sealed record ChangedDecisionExplanationCoverage(
+    int ChangedDecisionCount,
+    int ChangedDecisionTraceCount)
+{
+    /// <summary>Gets whether every changed decision has a retained explanation trace.</summary>
+    public bool EveryChangedDecisionExplained =>
+        ChangedDecisionCount >= 0
+        && ChangedDecisionTraceCount == ChangedDecisionCount;
+
+    /// <summary>Validates the bounded relationship between changed and traced decisions.</summary>
+    public void Validate()
+    {
+        if (ChangedDecisionCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(ChangedDecisionCount),
+                ChangedDecisionCount,
+                "The changed-decision count cannot be negative.");
+        }
+
+        if (ChangedDecisionTraceCount < 0
+            || ChangedDecisionTraceCount > ChangedDecisionCount)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(ChangedDecisionTraceCount),
+                ChangedDecisionTraceCount,
+                "The trace count must be between zero and the changed-decision count.");
+        }
+    }
+}
 
 /// <summary>Compares correctness for one ground-truth unit.</summary>
 public sealed record RelationshipComparison(
@@ -152,11 +250,14 @@ public static class ComparisonSummaryBuilder
         SarifMultitoolBaselineReport sarifMultitool,
         ComparisonReportHashes reportHashes,
         bool crossPlatformByteIdentity,
-        bool evaluationCompleted = true)
+        bool evaluationCompleted = true,
+        ChangedDecisionExplanationCoverage? changedDecisionExplanations = null)
     {
         ArgumentNullException.ThrowIfNull(sarifRegress);
         ArgumentNullException.ThrowIfNull(sarifMultitool);
         ArgumentNullException.ThrowIfNull(reportHashes);
+        ValidateReportHashes(reportHashes, sarifRegress.Evaluation);
+        changedDecisionExplanations?.Validate();
         if (sarifRegress.Evaluation != sarifMultitool.Evaluation)
         {
             throw new InvalidDataException(
@@ -177,15 +278,25 @@ public static class ComparisonSummaryBuilder
         ToolComparisonMetrics aggregate = CreateComparisonMetrics(
             relationships,
             sarifRegress.Aggregate.LabelledRelationships);
+        ReleaseThresholds thresholds = ReleaseThresholds.Frozen;
         ImmutableArray<ProducerComparison> producers = CreateProducerComparisons(
             sarifRegress,
             sarifMultitool,
-            relationships);
+            relationships,
+            thresholds);
         SarifRegressComparisonMetrics sarifMetrics = Project(sarifRegress.Aggregate);
         MultitoolComparisonMetrics multitoolMetrics = Project(
             sarifMultitool.Aggregate);
-        bool completeLabelGraph = CompleteLabelGraphSatisfied(sarifRegress);
-        ReleaseThresholds thresholds = ReleaseThresholds.Frozen;
+        bool completeLabelGraph = CompleteLabelGraphSatisfied(
+            sarifRegress,
+            sarifMetrics);
+        bool allProducerPrecisionsMet = producers.All(item =>
+            item.QualityGates.PrecisionMet);
+        bool allProducerRecallsMet = producers.All(item =>
+            item.QualityGates.RecallMet);
+        bool everyChangedDecisionExplained =
+            !thresholds.RequireChangedDecisionExplanations
+            || changedDecisionExplanations?.EveryChangedDecisionExplained == true;
         var conditions = new ReleaseConditions(
             sarifMetrics.Precision >= thresholds.MinimumPrecision,
             sarifMetrics.Recall >= thresholds.MinimumRecall,
@@ -196,7 +307,12 @@ public static class ComparisonSummaryBuilder
             sarifMetrics.StructuralFailures <= thresholds.MaximumStructuralFailures,
             completeLabelGraph,
             crossPlatformByteIdentity,
-            evaluationCompleted);
+            evaluationCompleted)
+        {
+            AllProducerPrecisionMet = allProducerPrecisionsMet,
+            AllProducerRecallMet = allProducerRecallsMet,
+            EveryChangedDecisionExplained = everyChangedDecisionExplained,
+        };
         ImmutableArray<string> reasons = RecommendationReasons(conditions);
         string recommendation = !conditions.EvaluationCompleted
             ? "inconclusive"
@@ -222,6 +338,41 @@ public static class ComparisonSummaryBuilder
                 sarifMultitool.Cases.SelectMany(item => item.RelationshipResults)),
             recommendation,
             reasons);
+    }
+
+    private static void ValidateReportHashes(
+        ComparisonReportHashes hashes,
+        EvaluationIdentity evaluation)
+    {
+        foreach ((string name, string value) in new[]
+                 {
+                     ("holdout manifest", hashes.HoldoutManifestSha256),
+                     ("evaluation metadata", hashes.EvaluationMetadataSha256),
+                     ("SarifRegress report", hashes.SarifRegressReportSha256),
+                     ("Multitool report", hashes.SarifMultitoolBaselineReportSha256),
+                     ("matcher-v2 report", hashes.MatcherV2ReportSha256),
+                     ("v2-to-v3 delta report", hashes.V2ToV3DeltaReportSha256),
+                 })
+        {
+            if (value is null
+                || value.Length != 64
+                || value.Any(character =>
+                    (character < '0' || character > '9')
+                    && (character < 'a' || character > 'f')))
+            {
+                throw new InvalidDataException(
+                    $"The comparison {name} SHA-256 is not lowercase hexadecimal.");
+            }
+        }
+
+        if (!string.Equals(
+                hashes.HoldoutManifestSha256,
+                evaluation.HoldoutManifestSha256,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                "The comparison hashes identify a different holdout manifest.");
+        }
     }
 
     private static ImmutableArray<RelationshipComparison> CompareRelationships(
@@ -317,7 +468,8 @@ public static class ComparisonSummaryBuilder
     private static ImmutableArray<ProducerComparison> CreateProducerComparisons(
         SarifRegressHoldoutReport sarifRegress,
         SarifMultitoolBaselineReport sarifMultitool,
-        ImmutableArray<RelationshipComparison> relationships)
+        ImmutableArray<RelationshipComparison> relationships,
+        ReleaseThresholds thresholds)
     {
         Dictionary<string, HoldoutMetrics> sarifMetrics = sarifRegress.Producers
             .ToDictionary(item => item.ProducerId, item => item.Metrics, StringComparer.Ordinal);
@@ -332,14 +484,27 @@ public static class ComparisonSummaryBuilder
         }
 
         return sarifMetrics.Keys.Order(StringComparer.Ordinal)
-            .Select(producerId => new ProducerComparison(
+            .Select(producerId => CreateProducerComparison(producerId))
+            .ToImmutableArray();
+
+        ProducerComparison CreateProducerComparison(string producerId)
+        {
+            SarifRegressComparisonMetrics projected = Project(sarifMetrics[producerId]);
+            return new ProducerComparison(
                 producerId,
-                Project(sarifMetrics[producerId]),
+                projected,
                 Project(multitoolMetrics[producerId]),
                 CreateComparisonMetrics(
                     relationships.Where(item => item.ProducerId == producerId),
-                    sarifMetrics[producerId].LabelledRelationships)))
-            .ToImmutableArray();
+                    sarifMetrics[producerId].LabelledRelationships))
+            {
+                QualityGates = new ProducerQualityGates(
+                    thresholds.MinimumPerProducerPrecision,
+                    thresholds.MinimumPerProducerRecall,
+                    projected.Precision >= thresholds.MinimumPerProducerPrecision,
+                    projected.Recall >= thresholds.MinimumPerProducerRecall),
+            };
+        }
     }
 
     private static ToolComparisonMetrics CreateComparisonMetrics(
@@ -391,7 +556,17 @@ public static class ComparisonSummaryBuilder
         value.StructuralFailures,
         value.Precision,
         value.Recall,
-        value.F1);
+        value.F1)
+        {
+            ExpectedNewClassifications = value.ExpectedNewClassifications,
+            CorrectNewClassifications = value.CorrectNewClassifications,
+            IncorrectNewClassifications = value.IncorrectNewClassifications,
+            NewClassificationAccuracy = value.NewClassificationAccuracy,
+            ExpectedResolvedClassifications = value.ExpectedResolvedClassifications,
+            CorrectResolvedClassifications = value.CorrectResolvedClassifications,
+            IncorrectResolvedClassifications = value.IncorrectResolvedClassifications,
+            ResolvedClassificationAccuracy = value.ResolvedClassificationAccuracy,
+        };
 
     private static MultitoolComparisonMetrics Project(MultitoolMetrics value) => new(
         value.GroundTruthUnits,
@@ -416,12 +591,11 @@ public static class ComparisonSummaryBuilder
         };
 
     private static bool CompleteLabelGraphSatisfied(
-        SarifRegressHoldoutReport report) =>
+        SarifRegressHoldoutReport report,
+        SarifRegressComparisonMetrics metrics) =>
         report.Aggregate.ClassificationMismatches == 0
-        && report.Aggregate.NewClassifications
-            == report.Aggregate.CorrectNewClassifications
-        && report.Aggregate.ResolvedClassifications
-            == report.Aggregate.CorrectResolvedClassifications
+        && metrics.IncorrectNewClassifications == 0
+        && metrics.IncorrectResolvedClassifications == 0
         && report.Aggregate.UnexpectedAmbiguityRefusals == 0
         && report.Aggregate.IncorrectlyAutoMatchedAmbiguousCases == 0
         && report.Aggregate.IngestionFailures == 0
@@ -437,6 +611,10 @@ public static class ComparisonSummaryBuilder
         var reasons = ImmutableArray.CreateBuilder<string>();
         Add(!conditions.PrecisionMet, "precision-below-threshold");
         Add(!conditions.RecallMet, "recall-below-threshold");
+        Add(!conditions.AllProducerPrecisionMet,
+            "per-producer-precision-below-threshold");
+        Add(!conditions.AllProducerRecallMet,
+            "per-producer-recall-below-threshold");
         Add(!conditions.ZeroIncorrectAmbiguityMatches,
             "incorrectly-auto-matched-ambiguity");
         Add(!conditions.NoUnexplainedIngestionFailures,
@@ -446,6 +624,8 @@ public static class ComparisonSummaryBuilder
             "complete-label-graph-failed");
         Add(!conditions.CrossPlatformByteIdentity,
             "cross-platform-determinism-failed");
+        Add(!conditions.EveryChangedDecisionExplained,
+            "changed-decision-explanation-missing");
         Add(!conditions.EvaluationCompleted, "evaluation-incomplete");
         return reasons.ToImmutable();
 

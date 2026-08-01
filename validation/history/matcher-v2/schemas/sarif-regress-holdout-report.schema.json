@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "2"
+      "const": "1"
     },
     "reportKind": {
       "const": "sarif-regress-independent-holdout"
@@ -186,17 +186,11 @@
         "falsePositives",
         "falseNegatives",
         "classificationMismatches",
-        "expectedNewClassifications",
         "newClassifications",
-        "correctNewClassifications",
-        "incorrectNewClassifications",
-        "newClassificationAccuracy",
-        "expectedResolvedClassifications",
         "resolvedClassifications",
-        "correctResolvedClassifications",
-        "incorrectResolvedClassifications",
-        "resolvedClassificationAccuracy",
         "ambiguousClassifications",
+        "correctNewClassifications",
+        "correctResolvedClassifications",
         "correctAmbiguityRefusals",
         "unexpectedAmbiguityRefusals",
         "incorrectlyAutoMatchedAmbiguousCases",
@@ -228,37 +222,19 @@
         "classificationMismatches": {
           "$ref": "#/$defs/count"
         },
-        "expectedNewClassifications": {
-          "$ref": "#/$defs/count"
-        },
         "newClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "correctNewClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "incorrectNewClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "newClassificationAccuracy": {
-          "$ref": "#/$defs/ratio"
-        },
-        "expectedResolvedClassifications": {
           "$ref": "#/$defs/count"
         },
         "resolvedClassifications": {
           "$ref": "#/$defs/count"
         },
-        "correctResolvedClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "incorrectResolvedClassifications": {
-          "$ref": "#/$defs/count"
-        },
-        "resolvedClassificationAccuracy": {
-          "$ref": "#/$defs/ratio"
-        },
         "ambiguousClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "correctNewClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "correctResolvedClassifications": {
           "$ref": "#/$defs/count"
         },
         "correctAmbiguityRefusals": {
@@ -419,282 +395,13 @@
         }
       ]
     },
-    "precedenceTier": {
-      "enum": [
-        "refuse",
-        "weak-contextual",
-        "path-problem",
-        "strong-moved",
-        "exact-canonical",
-        "exact-producer",
-        "override"
-      ]
-    },
-    "decisionVector": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "precedenceTier",
-        "producerFingerprintStrength",
-        "pathMatchKind",
-        "contextAgreement",
-        "codeFlowAgreement",
-        "messageAgreement",
-        "regionDriftBand"
-      ],
-      "properties": {
-        "precedenceTier": {
-          "$ref": "#/$defs/precedenceTier"
-        },
-        "producerFingerprintStrength": {
-          "$ref": "#/$defs/count"
-        },
-        "pathMatchKind": {
-          "enum": [
-            "none",
-            "aliased",
-            "exact"
-          ]
-        },
-        "contextAgreement": {
-          "enum": [
-            "none",
-            "compatible",
-            "exact"
-          ]
-        },
-        "codeFlowAgreement": {
-          "enum": [
-            "none",
-            "compatible",
-            "exact"
-          ]
-        },
-        "messageAgreement": {
-          "enum": [
-            "none",
-            "compatible",
-            "exact"
-          ]
-        },
-        "regionDriftBand": {
-          "$ref": "#/$defs/count"
-        }
-      }
-    },
-    "decisionEvidence": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "kind",
-        "origin",
-        "precedenceTier",
-        "lossy",
-        "algorithmVersion",
-        "count"
-      ],
-      "properties": {
-        "kind": {
-          "$ref": "#/$defs/nonAmbientString"
-        },
-        "origin": {
-          "enum": [
-            "producer",
-            "configuration",
-            "repository",
-            "system"
-          ]
-        },
-        "precedenceTier": {
-          "$ref": "#/$defs/precedenceTier"
-        },
-        "lossy": {
-          "type": "boolean"
-        },
-        "algorithmVersion": {
-          "$ref": "#/$defs/algorithmVersion"
-        },
-        "count": {
-          "$ref": "#/$defs/count"
-        }
-      }
-    },
-    "rejectedAlternative": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "precedenceTier",
-        "decisionVector",
-        "count"
-      ],
-      "properties": {
-        "precedenceTier": {
-          "$ref": "#/$defs/precedenceTier"
-        },
-        "decisionVector": {
-          "$ref": "#/$defs/decisionVector"
-        },
-        "count": {
-          "$ref": "#/$defs/count"
-        }
-      }
-    },
-    "decisionTransformation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "kind",
-        "lossy",
-        "algorithmVersion",
-        "count"
-      ],
-      "properties": {
-        "kind": {
-          "$ref": "#/$defs/nonAmbientString"
-        },
-        "lossy": {
-          "type": "boolean"
-        },
-        "algorithmVersion": {
-          "$ref": "#/$defs/algorithmVersion"
-        },
-        "count": {
-          "$ref": "#/$defs/count"
-        }
-      }
-    },
-    "decisionDiagnostic": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "severity",
-        "stage",
-        "count"
-      ],
-      "properties": {
-        "code": {
-          "$ref": "#/$defs/diagnosticCode"
-        },
-        "severity": {
-          "enum": [
-            "note",
-            "warning",
-            "error"
-          ]
-        },
-        "stage": {
-          "enum": [
-            "io",
-            "parse",
-            "schema",
-            "unsupported",
-            "canonicalisation",
-            "repository",
-            "fingerprint",
-            "match",
-            "github-compat",
-            "security",
-            "report",
-            "internal"
-          ]
-        },
-        "count": {
-          "$ref": "#/$defs/count"
-        }
-      }
-    },
-    "decisionTrace": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "side",
-        "classification",
-        "precedenceTier",
-        "displayConfidence",
-        "ambiguous",
-        "matcherAlgorithmVersion",
-        "evidence",
-        "rejectedAlternatives",
-        "transformations",
-        "diagnostics"
-      ],
-      "properties": {
-        "side": {
-          "enum": [
-            "baseline",
-            "candidate",
-            "pair"
-          ]
-        },
-        "classification": {
-          "enum": [
-            "new",
-            "unchanged",
-            "moved",
-            "modified",
-            "resolved",
-            "ambiguous"
-          ]
-        },
-        "precedenceTier": {
-          "$ref": "#/$defs/precedenceTier"
-        },
-        "displayConfidence": {
-          "enum": [
-            "low",
-            "medium",
-            "high"
-          ]
-        },
-        "ambiguous": {
-          "type": "boolean"
-        },
-        "matcherAlgorithmVersion": {
-          "$ref": "#/$defs/algorithmVersion"
-        },
-        "evidence": {
-          "type": "array",
-          "maxItems": 100,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/decisionEvidence"
-          }
-        },
-        "rejectedAlternatives": {
-          "type": "array",
-          "maxItems": 100,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/rejectedAlternative"
-          }
-        },
-        "transformations": {
-          "type": "array",
-          "maxItems": 100,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/decisionTransformation"
-          }
-        },
-        "diagnostics": {
-          "type": "array",
-          "maxItems": 100,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/decisionDiagnostic"
-          }
-        }
-      }
-    },
     "actualResult": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "state",
         "baselineKey",
-        "candidateKey",
-        "decisionTraces"
+        "candidateKey"
       ],
       "properties": {
         "state": {
@@ -715,14 +422,6 @@
         },
         "candidateKey": {
           "$ref": "#/$defs/nullableFindingKey"
-        },
-        "decisionTraces": {
-          "type": "array",
-          "maxItems": 2,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/decisionTrace"
-          }
         }
       }
     },

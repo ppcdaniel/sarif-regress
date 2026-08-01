@@ -25,6 +25,9 @@ public sealed class TrackedOutputTests
     [InlineData(
         "comparison-summary.json",
         "comparison-summary.schema.json")]
+    [InlineData(
+        "v2-to-v3-delta.json",
+        "v2-to-v3-delta.schema.json")]
     public void Tracked_normalized_output_is_schema_valid_and_free_of_ambient_data(
         string reportName,
         string schemaName)
@@ -159,6 +162,9 @@ public sealed class TrackedOutputTests
             "validation/expected/comparison-summary.json",
             "validation/expected/sarif-multitool-baseline.json",
             "validation/expected/sarif-regress-holdout.json",
+            "validation/expected/v2-to-v3-delta.json",
+            "validation/history/matcher-v2/checksums.sha256",
+            "validation/history/matcher-v2/sarif-regress-holdout.json",
             "validation/holdout/cross-platform-attestation.json",
             "validation/holdout/evaluation-metadata.json",
             "validation/holdout/manifest.json",

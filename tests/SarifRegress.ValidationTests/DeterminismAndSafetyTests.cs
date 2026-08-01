@@ -192,69 +192,22 @@ public sealed class DeterminismAndSafetyTests
                 script,
                 StringComparison.Ordinal);
             Assert.Contains(
-                "--expected-root",
+                "Unattested candidate generation expected validation exit code 2",
                 script,
                 StringComparison.Ordinal);
             Assert.Contains(
-                "--compare-expected",
+                "crossPlatformByteIdentity",
                 script,
                 StringComparison.Ordinal);
-            if (relativePath.EndsWith(".sh", StringComparison.Ordinal))
-            {
-                Assert.Contains(
-                    "--compare-expected true",
-                    script,
-                    StringComparison.Ordinal);
-                Assert.Contains(
-                    "cd -- \"${repository_root}\"",
-                    script,
-                    StringComparison.Ordinal);
-            }
-            else
-            {
-                Assert.Contains(
-                    "'--compare-expected',",
-                    script,
-                    StringComparison.Ordinal);
-                Assert.Contains("'true',", script, StringComparison.Ordinal);
-                Assert.Contains(
-                    "Push-Location -LiteralPath $repositoryRoot",
-                    script,
-                    StringComparison.Ordinal);
-            }
             Assert.DoesNotContain(
                 "--cross-platform-byte-identity",
-                script,
-                StringComparison.Ordinal);
-            Assert.DoesNotContain(
-                "--generate-cross-platform-attestation-candidate",
-                script,
-                StringComparison.Ordinal);
-            Assert.DoesNotContain(
-                "--regenerate-attested-expected",
-                script,
-                StringComparison.Ordinal);
-            Assert.DoesNotContain(
-                "GenerateCrossPlatformAttestationCandidate",
-                script,
-                StringComparison.Ordinal);
-            Assert.DoesNotContain(
-                "RegenerateAttestedExpected",
-                script,
-                StringComparison.Ordinal);
-            Assert.DoesNotContain(
-                ".regenerate-expected",
-                script,
-                StringComparison.Ordinal);
-            Assert.DoesNotContain(
-                "Unattested candidate",
                 script,
                 StringComparison.Ordinal);
         }
     }
 
     [Fact]
-    public void Hosted_workflow_is_strict_and_binds_real_artifact_evidence()
+    public void Hosted_coordinator_binds_real_artifacts_into_a_raw_attestation()
     {
         string workflow = File.ReadAllText(Path.Combine(
             ValidationTestRepository.FindRoot(),
@@ -272,55 +225,11 @@ public sealed class DeterminismAndSafetyTests
         Assert.Contains("GITHUB_RUN_ATTEMPT", workflow, StringComparison.Ordinal);
         Assert.Contains("GITHUB_SHA", workflow, StringComparison.Ordinal);
         Assert.Contains(
-            "./scripts/verify.sh",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            ".\\scripts\\verify.ps1",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1'",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "cd -- \"${RUNNER_TEMP}\"",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Push-Location -LiteralPath $env:RUNNER_TEMP",
+            "Linux and Windows selected different attestation modes.",
             workflow,
             StringComparison.Ordinal);
         Assert.DoesNotContain(
             "--cross-platform-byte-identity",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            ".regenerate-expected",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "--generate-cross-platform-attestation-candidate",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "--regenerate-attested-expected",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "Select attestation mode",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "attestation-mode",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "TrackedOutputTests",
             workflow,
             StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(
