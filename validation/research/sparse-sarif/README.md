@@ -6,8 +6,8 @@ from the development corpus and the frozen real-producer holdout. No matcher res
 when the source transformations or labels were written.
 
 The corpus is not evidence that side-specific repository context is safe to ship. An authentic
-hosted PMD capture has been promoted, while its strict exact-head recapture and the
-repository-context experiment are still pending. The experiment must pass the fixed gates in
+hosted PMD capture and strict exact-head recapture have been promoted; the repository-context
+experiment is still pending. The experiment must pass the fixed gates in
 [ADR 0003](../../../docs/decisions/0003-side-specific-repository-context-experiment.md) before any
 product behavior changes.
 
@@ -99,12 +99,14 @@ provenance, not deterministic projected-output fields.
 
 The committed `baseline.sarif` and `candidate.sarif` files are the audited URI-only projections,
 not hand-authored SARIF. Each projection audit binds raw and projected hashes and lists every
-changed JSON pointer. The first authentic capture job succeeded on source head
-`3a398396213cac416f1b1237c605dd2d119d572f` in workflow run `30717611507`; `manifest.json`
-records its runner image, artifact ID, artifact digest, commands, and hashes. The untouched raw
-SARIF remains in that workflow artifact and is not committed. A strict exact-head recapture must
-still reproduce the promoted projections, audits, and raw hashes before the corpus checkpoint is
-accepted.
+changed JSON pointer. The canonical promotion record is exact-head workflow run `30719295884` on
+source `2f4499a51f621ee8c1fb3816752205d7e5b224bf`. Its Ubuntu and Windows admission jobs passed; its
+strict PMD recapture reproduced every promoted projection, audit, and raw hash; and a downstream
+job downloaded artifact `8824342390` by ID and reverified its GitHub digest and content.
+`manifest.json` records that run's runner image, artifact identity, commands, and hashes. The
+untouched raw SARIF remains in the workflow artifact and is not committed. Routine exact-head
+recapture continues to enforce the same byte comparisons without depending on that expiring
+historical artifact.
 
 ## Expected layout
 

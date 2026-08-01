@@ -64,7 +64,7 @@ public sealed class SparseSarifResearchTests
     }
 
     [Fact]
-    public void Hosted_sparse_capture_authenticates_promoted_and_new_artifacts()
+    public void Hosted_sparse_capture_authenticates_each_new_artifact()
     {
         string root = ValidationTestRepository.FindRoot();
         string researchRoot = Path.Combine(
@@ -76,8 +76,6 @@ public sealed class SparseSarifResearchTests
             File.ReadAllBytes(Path.Combine(researchRoot, "manifest.json")))!.AsObject();
         JsonObject capture = manifest["producer"]!["capture"]!.AsObject();
         JsonObject workflowEvidence = capture["workflow"]!.AsObject();
-        long artifactId = workflowEvidence["artifactId"]!.GetValue<long>();
-        long runId = workflowEvidence["runId"]!.GetValue<long>();
         string artifactName = workflowEvidence["artifactName"]!.GetValue<string>();
         string artifactDigest = workflowEvidence["artifactDigest"]!.GetValue<string>();
         string sourceHeadSha = capture["sourceHeadSha"]!.GetValue<string>();
@@ -88,26 +86,8 @@ public sealed class SparseSarifResearchTests
             "holdout-validation.yml"));
 
         Assert.Contains("actions: read", workflow, StringComparison.Ordinal);
-        Assert.Contains(
-            $"artifact-ids: '{artifactId}'",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            $"run-id: '{runId}'",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            $"ARTIFACT_NAME: {artifactName}",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            $"ARTIFACT_DIGEST: {artifactDigest}",
-            workflow,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            $"CAPTURE_SOURCE_SHA: {sourceHeadSha}",
-            workflow,
-            StringComparison.Ordinal);
+        Assert.Equal($"sparse-sarif-pmd-capture-{sourceHeadSha}", artifactName);
+        Assert.Matches("^[0-9a-f]{64}$", artifactDigest);
         Assert.Contains(
             "needs.sparse-capture.outputs.artifact_id",
             workflow,
@@ -120,8 +100,12 @@ public sealed class SparseSarifResearchTests
             ".workflow_run.head_sha == $source_sha",
             workflow,
             StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "promoted-capture-provenance:",
+            workflow,
+            StringComparison.Ordinal);
         Assert.Equal(
-            3,
+            2,
             workflow.Split("verify-promotion", StringSplitOptions.None).Length - 1);
     }
 

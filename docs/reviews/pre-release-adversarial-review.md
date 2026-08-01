@@ -458,9 +458,9 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the nightly hardening PR:**
   yes until fixed. **Blocks release or matcher v4:** yes.
 - **Tracking:** [#24](https://github.com/ppcdaniel/sarif-regress/issues/24).
-- **Pre-capture disposition:** remediated locally. Seventy-two scanner mutation/contract tests pass,
-  the real corpus passes source-only admission, and the only local skip is the Windows junction
-  test reserved for hosted Windows. Hosted admission on the exact published head remains required.
+- **Disposition:** remediated. Seventy-seven scanner mutation/contract tests and the real corpus
+  passed on exact head `2f4499a...` on hosted Ubuntu and Windows. Windows executed the junction test;
+  the one local skip remains an operating-system boundary, not an untested hosted path.
 
 ### H-10 — An `implement-v4` decision was not bound to every fixed gate
 
@@ -518,10 +518,10 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   recaptured. **Blocks release or matcher v4:** yes, because the clean-PMD evidence would otherwise
   be unauditable.
 - **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
-- **Pre-capture disposition:** remediated locally. Twenty-seven capture/projector mutation tests
-  pass, canonical PMD and curl argument arrays are verified immediately before those same arrays
-  execute, and environment evidence is checked against independently supplied runner values.
-  Authentic hosted PMD capture and the post-promotion strict run remain required.
+- **Disposition:** remediated. Thirty-four capture/projector mutation tests pass. On exact head
+  `2f4499a...`, hosted PMD capture verified the canonical PMD/curl arrays, environment evidence,
+  projection mutations, raw hashes, and promoted bytes; the retained artifact was then downloaded
+  by ID and independently reverified.
 
 ### M-15 — The initial PMD URI projector did not establish its no-link input boundary
 
@@ -542,9 +542,9 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** until the capture tool is
   corrected or removed. **Blocks release:** no independently; **blocks sparse-corpus evidence:**
   yes.
-- **Pre-capture disposition:** remediated locally with anchored no-follow handles, lexical JSON
-  depth rejection, a complete URI-only mutation audit, and ambient-data refusal. Hosted execution
-  remains pending.
+- **Disposition:** remediated with anchored no-follow handles, lexical JSON depth rejection, a
+  complete URI-only mutation audit, and ambient-data refusal. Hosted capture and strict replay
+  passed on exact head `2f4499a...`.
 
 ### M-16 — Whole-artifact capture checksums are not stable promotion targets
 
@@ -560,6 +560,8 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   separately.
 - **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** conversion from bootstrap to
   strict mode. **Blocks release:** no independently; **blocks a deterministic research claim:** yes.
+- **Disposition:** the strict workflow compares only stable projected/audit/raw identities and
+  independently authenticates each newly uploaded artifact. Exact-head run `30719295884` passed.
 
 ### H-12 — Promoted capture provenance was structurally recorded but not authenticated
 
@@ -583,8 +585,9 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   the exact head. **Blocks release or matcher v4:** yes because the clean-PMD evidence would be
   unauthenticated.
 - **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
-- **Pre-commit disposition:** remediated locally in the strict workflow; hosted Actions authority
-  and the historical artifact remain required before this finding is closed.
+- **Disposition:** resolved by exact-head run `30719295884`, job `91420311128`. GitHub authenticated
+  the historical artifact ID/name/digest/run/head; the downloaded content and frozen source inputs
+  were reverified. The canonical manifest now records the subsequently attested exact-head capture.
 
 ### H-13 — Exact-head recapture was verified before upload but not after upload
 
@@ -602,8 +605,9 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** yes until hosted on the exact
   head. **Blocks release or matcher v4:** yes for reliance on the recapture evidence.
 - **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
-- **Pre-commit disposition:** remediated locally with a downstream attestation job; hosted evidence
-  remains required.
+- **Disposition:** resolved by exact-head run `30719295884`, job `91420356347`. It downloaded newly
+  uploaded artifact `8824342390` by ID, matched GitHub metadata to the upload outputs/run/head, and
+  reran strict promotion verification over the downloaded content.
 
 ### M-17 — Cross-platform corpus admission lacked a post-execution clean-tree guard
 
@@ -615,8 +619,8 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Smallest safe remediation:** repeat both the exact-HEAD comparison and full tracked/untracked
   clean-worktree assertion after admission on Ubuntu and Windows.
 - **Blocks PR #8/#13/release:** no independently. **Blocks accepting the corpus:** until corrected.
-- **Pre-commit disposition:** remediated locally; hosted Windows and Ubuntu execution remains
-  required.
+- **Disposition:** remediated and passed on hosted Windows and Ubuntu in exact-head run
+  `30719295884`.
 
 ### M-18 — Sparse-corpus status text contradicted the promoted capture record
 
@@ -645,5 +649,6 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   recapture and post-upload verification as the long-lived gate.
 - **Blocks PR #8/#13/release:** no independently. **Blocks accepting the final hardening workflow:**
   until the one-time gate is retired after successful execution.
-- **Pre-commit disposition:** the one-time gate is intentionally present for the promotion
-  checkpoint; retirement and a strict final hosted run are required before handoff.
+- **Disposition:** the one-time provenance job passed in run `30719295884` and was then removed.
+  Routine CI retains reproducible PMD recapture plus post-upload authentication without depending
+  on the 30-day historical artifact.

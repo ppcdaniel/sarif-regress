@@ -20,12 +20,12 @@
     },
     "helpSha256": "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91",
     "capture": {
-      "sourceHeadSha": "3a398396213cac416f1b1237c605dd2d119d572f",
+      "sourceHeadSha": "2f4499a51f621ee8c1fb3816752205d7e5b224bf",
       "workflow": {
-        "runId": 30717611507,
-        "artifactId": 8823830998,
-        "artifactName": "sparse-sarif-pmd-bootstrap-3a398396213cac416f1b1237c605dd2d119d572f",
-        "artifactDigest": "1f96943d599c4c0a9e68387131d873e23281d248e4a462e79829f0140274e0e4"
+        "runId": 30719295884,
+        "artifactId": 8824342390,
+        "artifactName": "sparse-sarif-pmd-capture-2f4499a51f621ee8c1fb3816752205d7e5b224bf",
+        "artifactDigest": "6a73f61d5c6c37369621f0dd1dc1b1cda63cf6ae0f9f504d0e85f72fa24c86a1"
       },
       "runner": {
         "label": "ubuntu-24.04",
@@ -156,7 +156,7 @@
     "files": [
       {
         "path": "README.md",
-        "sha256": "25d88eb07dfe15a8c2f4ab9956548aa16f2a7e7da0cab488e51d993020069ea5"
+        "sha256": "04636da1d58e6a2ac36a85b58d188fa4ff68940cdd5a25d2f3db3f9908a54e84"
       },
       {
         "path": "capture-evidence/projection-audits/pmd-clean-a/baseline.json",
