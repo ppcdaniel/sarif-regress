@@ -853,9 +853,18 @@ class Scanner:
             import msvcrt
             from ctypes import wintypes
 
-            handle = msvcrt.get_osfhandle(descriptor)
-            buffer = ctypes.create_unicode_buffer(32768)
             kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            create_file = kernel32.CreateFileW
+            create_file.argtypes = (
+                wintypes.LPCWSTR,
+                wintypes.DWORD,
+                wintypes.DWORD,
+                wintypes.LPVOID,
+                wintypes.DWORD,
+                wintypes.DWORD,
+                wintypes.HANDLE,
+            )
+            create_file.restype = wintypes.HANDLE
             final_path = kernel32.GetFinalPathNameByHandleW
             final_path.argtypes = (
                 wintypes.HANDLE,
@@ -864,21 +873,45 @@ class Scanner:
                 wintypes.DWORD,
             )
             final_path.restype = wintypes.DWORD
-            copied = final_path(
-                handle,
-                buffer,
-                len(buffer),
+            close_handle = kernel32.CloseHandle
+            close_handle.argtypes = (wintypes.HANDLE,)
+            close_handle.restype = wintypes.BOOL
+
+            def resolved_handle_path(handle: int) -> str:
+                buffer = ctypes.create_unicode_buffer(32768)
+                copied = final_path(handle, buffer, len(buffer), 0)
+                if copied == 0 or copied >= len(buffer):
+                    raise OSError("GetFinalPathNameByHandleW failed")
+                value = buffer.value
+                if value.startswith("\\\\?\\UNC\\"):
+                    value = "\\\\" + value[8:]
+                elif value.startswith("\\\\?\\"):
+                    value = value[4:]
+                return os.path.normcase(os.path.abspath(value))
+
+            # Compare two kernel-resolved handles. A lexical root can differ
+            # from a file handle on hosted runners that use drive mappings;
+            # comparing it to the final file path would reject safe files.
+            # FILE_FLAG_OPEN_REPARSE_POINT prevents a replaced root from being
+            # followed while FILE_FLAG_BACKUP_SEMANTICS permits directory open.
+            root_handle = create_file(
+                os.fspath(os.path.abspath(self.root)),
                 0,
+                0x00000001 | 0x00000002 | 0x00000004,
+                None,
+                3,
+                0x02000000 | 0x00200000,
+                None,
             )
-            if copied == 0 or copied >= len(buffer):
-                raise OSError("GetFinalPathNameByHandleW failed")
-            target = buffer.value
-            if target.startswith("\\\\?\\UNC\\"):
-                target = "\\\\" + target[8:]
-            elif target.startswith("\\\\?\\"):
-                target = target[4:]
-            target = os.path.normcase(os.path.abspath(target))
-            root = os.path.normcase(os.path.abspath(self.root))
+            invalid_handle = ctypes.c_void_p(-1).value
+            if root_handle == invalid_handle:
+                raise OSError("CreateFileW failed for research root")
+            try:
+                root = resolved_handle_path(root_handle)
+            finally:
+                if not close_handle(root_handle):
+                    raise OSError("CloseHandle failed for research root")
+            target = resolved_handle_path(msvcrt.get_osfhandle(descriptor))
             return os.path.commonpath((root, target)) == root
         except (AttributeError, ImportError, OSError, ValueError):
             self._add(

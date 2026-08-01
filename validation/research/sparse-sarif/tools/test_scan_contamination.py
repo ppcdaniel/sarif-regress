@@ -683,13 +683,17 @@ class ContaminationScannerTests(unittest.TestCase):
             link.symlink_to("Worker.java")
         except OSError as error:
             self.skipTest(f"symbolic links unavailable: {error}")
+        self.assertIn("FS004", _codes(self.root))
+
+        mkfifo = getattr(os, "mkfifo", None)
+        if mkfifo is None:
+            return
         fifo = self.root / "cases/pmd-clean-a/baseline/src/pipe"
         try:
-            os.mkfifo(fifo)
+            mkfifo(fifo)
         except OSError as error:
             self.skipTest(f"FIFOs unavailable: {error}")
         codes = _codes(self.root)
-        self.assertIn("FS004", codes)
         self.assertIn("FS005", codes)
 
     def test_environmental_json_is_rejected(self) -> None:
