@@ -458,6 +458,9 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the nightly hardening PR:**
   yes until fixed. **Blocks release or matcher v4:** yes.
 - **Tracking:** [#24](https://github.com/ppcdaniel/sarif-regress/issues/24).
+- **Pre-capture disposition:** remediated locally. Seventy-two scanner mutation/contract tests pass,
+  the real corpus passes source-only admission, and the only local skip is the Windows junction
+  test reserved for hosted Windows. Hosted admission on the exact published head remains required.
 
 ### H-10 — An `implement-v4` decision was not bound to every fixed gate
 
@@ -485,6 +488,10 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the nightly hardening PR:**
   yes until fixed. **Blocks release or matcher v4:** yes.
 - **Tracking:** [#25](https://github.com/ppcdaniel/sarif-regress/issues/25).
+- **Pre-capture disposition:** fail-closed. The policy now rejects every `implement-v4` decision
+  until role-specific parsers and cross-reference validators exist; a forged report that reuses one
+  hash-valid irrelevant file for every evidence role is rejected. This restriction is not a
+  substitute for the Phase 4 experiment.
 
 ### H-11 — The initial sparse-capture pipeline could attest unauthentic or ambient PMD output
 
@@ -511,6 +518,10 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   recaptured. **Blocks release or matcher v4:** yes, because the clean-PMD evidence would otherwise
   be unauditable.
 - **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
+- **Pre-capture disposition:** remediated locally. Twenty-seven capture/projector mutation tests
+  pass, canonical PMD and curl argument arrays are verified immediately before those same arrays
+  execute, and environment evidence is checked against independently supplied runner values.
+  Authentic hosted PMD capture and the post-promotion strict run remain required.
 
 ### M-15 — The initial PMD URI projector did not establish its no-link input boundary
 
@@ -531,6 +542,9 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** until the capture tool is
   corrected or removed. **Blocks release:** no independently; **blocks sparse-corpus evidence:**
   yes.
+- **Pre-capture disposition:** remediated locally with anchored no-follow handles, lexical JSON
+  depth rejection, a complete URI-only mutation audit, and ambient-data refusal. Hosted execution
+  remains pending.
 
 ### M-16 — Whole-artifact capture checksums are not stable promotion targets
 
