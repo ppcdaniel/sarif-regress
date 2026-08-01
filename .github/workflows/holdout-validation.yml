@@ -103,8 +103,6 @@ jobs:
     needs: sparse-admission
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    env:
-      CAPTURE_OUTPUT_ROOT: ${{ runner.temp }}/sparse-sarif-pmd-capture
 
     steps:
       - name: Check out exact pull-request head
@@ -185,6 +183,7 @@ jobs:
       - name: Bootstrap capture and verify authentic PMD SARIF
         shell: bash
         env:
+          CAPTURE_OUTPUT_ROOT: ${{ runner.temp }}/sparse-sarif-pmd-capture
           EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PYTHONDONTWRITEBYTECODE: '1'
           PYTHONNOUSERSITE: '1'
