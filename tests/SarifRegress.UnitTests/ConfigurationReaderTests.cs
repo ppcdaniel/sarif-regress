@@ -613,7 +613,7 @@ public sealed class ConfigurationReaderTests
             definition
                 .GetProperty("required")
                 .EnumerateArray()
-                .Select(item => item.GetString())
+                .Select(item => item.GetString()!)
                 .ToArray());
         Assert.Equal(
             ["id", "uri", "uriBaseId"],
