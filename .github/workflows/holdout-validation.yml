@@ -40,8 +40,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -99,8 +109,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -166,8 +186,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 1
           persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
 
       - name: Install attestation serializer runtime
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
@@ -228,6 +258,7 @@ jobs:
       - name: Create cross-platform artifact attestation projection
         shell: bash
         env:
+          CHECKED_OUT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.artifact_id }}
           LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.artifact_digest }}
           WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.artifact_id }}
@@ -395,9 +426,10 @@ jobs:
 
           run_id = required_decimal("GITHUB_RUN_ID")
           run_attempt = required_decimal("GITHUB_RUN_ATTEMPT", maximum=1000)
-          workflow_head = os.environ["GITHUB_SHA"]
+          workflow_head = os.environ["CHECKED_OUT_SOURCE_SHA"]
           if commit_pattern.fullmatch(workflow_head) is None:
-              raise SystemExit("GITHUB_SHA is not a lowercase commit SHA.")
+              raise SystemExit(
+                  "CHECKED_OUT_SOURCE_SHA is not a lowercase commit SHA.")
 
           base_report_digests = {
               "sarifRegressHoldoutSha256": report_hashes[report_names[0]],

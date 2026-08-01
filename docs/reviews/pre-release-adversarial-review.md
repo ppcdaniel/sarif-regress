@@ -1,0 +1,429 @@
+# Pre-release adversarial review
+
+Review date: 2026-08-01  
+Repository: `ppcdaniel/sarif-regress`  
+PR #8 head: `0231d6fe779203a92469099b90d446fafe67b064`  
+PR #13 head and reviewed tree: `733e383858fa940faca5b6f8f087832e9ee582cf`  
+PR #13 base: PR #8 head  
+Reviewer: Codex, using three parallel read-only review tracks; this was not an external or human
+review.
+
+## Scope and method
+
+The review treated PR #8 as the experimental-infrastructure change and PR #13 as the exposed-
+holdout generalisation change. It read both pull requests and their conversations, issues #9–#12,
+the repository contracts, every ADR, every workflow, every verification or capture script, the
+matching and repository-context implementations, the immutable evaluation histories, and the
+package/release surface. The working tree was clean before review. Holdout labels and both history
+checksum manifests were hashed and verified before any edit.
+
+Locally available static checks passed: JSON parsing with duplicate-key rejection, Python syntax,
+workflow YAML parsing, shell syntax, checksum verification, and `git diff --check`. The pinned
+.NET SDK `10.0.302` was present but CoreCLR could not start (`0x8007000E`, exit 137), so this review
+does not claim local executable or Windows evidence. Successful historical Actions runs are useful
+evidence, but finding B-01 limits what they prove about an exact pull-request head.
+
+Severity means:
+
+- **Blocker:** the claimed review or evidence boundary is invalid until corrected.
+- **High:** a correctness, scientific-validity, licensing, or release failure that needs a focused
+  disposition before the affected merge or release.
+- **Medium:** material risk or misleading contract that is bounded by another control.
+- **Low:** maintainability or hygiene debt with limited immediate effect.
+- **Observation:** a verified positive control or a limitation that is already represented safely.
+
+## Summary
+
+| Severity | Count | Merge/release effect |
+|---|---:|---|
+| Blocker | 1 | Prior hosted checks do not prove the exact PR head |
+| High | 8 | PR #13 matcher safety and evidence wording; PR #8 validator terms; release gates/notices |
+| Medium | 14 | Metric semantics, context security, output/package hardening, compatibility, maintainability |
+| Low | 3 | Version authority, public constructor compatibility, unused restore path |
+
+## Blocker findings
+
+### B-01 — Pull-request workflows test a synthetic merge commit, not the exact head
+
+- **Evidence and code area:** `.github/workflows/ci.yml` checkout step; equivalent checkout steps in
+  `holdout-validation.yml`, `determinism.yml`, and `benchmarks.yml`. They trigger on
+  `pull_request` but do not set `actions/checkout`'s `ref`. GitHub therefore checks out the
+  pull-request merge ref. The holdout attestation checks only the shape of `GITHUB_SHA`; it does not
+  compare the checked-out commit with `github.event.pull_request.head.sha`. The committed v3
+  attestation binds product commit `29ea23e...` and generation-workflow commit `cc1016e...`, not
+  final PR #13 head `733e383...`.
+- **Why it matters:** successful run metadata names the PR head, but the compiled and tested tree may
+  include the current base through a generated merge commit. That is valuable integration evidence,
+  not the required exact-head evidence. Claims that PR #8 or PR #13 passed on its exact head are not
+  established by the current workflow implementation.
+- **Smallest safe remediation:** explicitly check out
+  `${{ github.event.pull_request.head.sha || github.sha }}`, fail unless `git rev-parse HEAD` equals
+  that selected SHA, and bind it into generated evidence. A separate merge-ref integration job may
+  remain, but cannot replace the exact-head job.
+- **Blocks merging PR #8:** yes, for its hosted-evidence claim.
+- **Blocks merging PR #13:** yes.
+- **Blocks release:** yes.
+- **Tracking:** [#14](https://github.com/ppcdaniel/sarif-regress/issues/14).
+
+## High findings
+
+### H-01 — Path-templated messages turn pure Gitleaks moves into modifications
+
+- **Evidence and code area:** `validation/holdout/cases/gitleaks/labels.json` relationships
+  `gitleaks-match-014` through `-018`; `producer-input/notes.md`; source-transformation checks in
+  `validation/tools/capture/verify_source_transformations.py`; message comparison in
+  `src/SarifRegress.Match/CandidateEdgeFactory.cs`; classification ordering in
+  `src/SarifRegress.Match/FindingMatcher.cs` (`Classify`).
+- **Why it matters:** all five accepted correspondences are correct, but each byte-identical file
+  rename is reported as `modified` because Gitleaks mechanically echoes the changed path in its
+  message. This is a general classification defect, not a label defect, and it fails the complete
+  label graph.
+- **Smallest safe remediation:** after correspondence only, recognize an exact, bounded,
+  producer-neutral location-token substitution when the old and new repository-relative path each
+  occur exactly once at token boundaries and replacing them with one sentinel makes the canonical
+  messages identical. Any additional message delta remains material. Emit a versioned structured
+  explanation; do not alter edge admission or scoring.
+- **Blocks merging PR #8:** no.
+- **Blocks merging PR #13:** yes under its complete-label acceptance contract.
+- **Blocks release:** yes.
+- **Tracking:** [#15](https://github.com/ppcdaniel/sarif-regress/issues/15); #12 reports the
+  aggregate count.
+
+### H-02 — Matcher-v3 is post-hoc regression evidence but is labelled independent
+
+- **Evidence and code area:** `docs/real-producer-generalisation.md` diagnoses v2 failures and
+  selects changes using the same holdout later scored as v3.
+  `validation/history/matcher-v3/metadata.json` calls the record
+  `frozen-independent-holdout-evaluation`, and the report kind repeats the independent claim.
+- **Why it matters:** frozen labels prevent metric manipulation, but they do not restore
+  out-of-sample status after the corpus has guided implementation. `50 TP / 0 FP / 25 FN` is valid
+  exposed-holdout regression evidence, not independent v3 generalisation evidence. Unqualified use
+  would overstate scientific and portfolio claims.
+- **Smallest safe remediation:** preserve historical bytes, add a machine-readable erratum, call v3
+  an exposed-holdout regression everywhere current claims are made, and reserve independent claims
+  for a new untouched or blinded corpus.
+- **Blocks merging PR #8:** no; its v2 baseline was measured before product changes.
+- **Blocks merging PR #13:** yes for evidence wording, not necessarily its code after correction.
+- **Blocks release:** yes for a generalisation claim.
+- **Tracking:** [#16](https://github.com/ppcdaniel/sarif-regress/issues/16); #12 remains the
+  umbrella.
+
+### H-03 — Required validation uses binaries with unresolved maintenance terms
+
+- **Evidence and code area:** `Directory.Packages.props` pins `JsonSchema.Net 9.4.0`;
+  `validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj` references it; the lock
+  file resolves `JsonPointer.Net 7.0.2`, `Json.More.Net 3.0.1`, and `Humanizer.Core 3.0.10`. PR #8
+  introduced this chain. The exact JsonSchema, JsonPointer, and Json.More NuGet binary releases each
+  include an Open Source Maintenance Fee Agreement.
+- **Why it matters:** the packages are validation-only and are not redistributed in product
+  artifacts, but required CI and owner verification execute upstream precompiled binaries. Their
+  terms depend on user revenue/use/exemptions that cannot be inferred from the repository. This
+  review does not conclude that a fee is owed; it concludes that no applicability disposition is
+  recorded.
+- **Smallest safe remediation:** obtain and record an owner-appropriate applicability/exemption
+  decision. To eliminate the uncertainty technically, use a conventionally licensed bounded
+  validator or independently build pinned MIT sources with complete provenance.
+- **Blocks merging PR #8:** yes pending disposition.
+- **Blocks merging PR #13:** yes because it is stacked.
+- **Blocks release:** yes.
+- **Tracking:** [#17](https://github.com/ppcdaniel/sarif-regress/issues/17).
+
+### H-04 — Release artifacts omit project and third-party notice material
+
+- **Evidence and code area:** `scripts/package.sh`, `scripts/package.ps1`,
+  `.github/workflows/release.yml`, and `docs/releasing.md` put only the nupkg, two self-contained
+  executables, and checksums in the release bundle. The nupkg embeds the project `LICENSE`, but not a
+  third-party notice. The standalone executables redistribute .NET runtime components and
+  `System.CommandLine 2.0.10`.
+- **Why it matters:** the project MIT notice must accompany copies/substantial portions, and the
+  self-contained runtime carries third-party notices with binary-redistribution conditions. The
+  current top-level release bundle does not carry those materials or checksum them.
+- **Smallest safe remediation:** create a verified third-party notice, include the project licence
+  and applicable runtime/dependency notices in the release bundle and nupkg as appropriate, checksum
+  them, and assert their contents during package smoke tests.
+- **Blocks merging PR #8:** no.
+- **Blocks merging PR #13:** no.
+- **Blocks release:** yes.
+- **Tracking:** [#18](https://github.com/ppcdaniel/sarif-regress/issues/18).
+
+### H-05 — Tagged release drafts ignore the blocked holdout recommendation
+
+- **Evidence and code area:** `.github/workflows/release.yml` runs development-corpus and small
+  benchmark gates but does not run `validate-holdout`, authenticate the committed comparison
+  summary, or check `releaseRecommendation`. Current committed evidence says `blocked`, yet a
+  matching `v*.*.*` tag can still create a draft release.
+- **Why it matters:** a draft is not publication, but the automated release control contradicts the
+  repository's authoritative readiness record and makes an unqualified stable release too easy to
+  stage.
+- **Smallest safe remediation:** bind the exact-head holdout report/attestation into the release
+  job, fail according to documented preview/stable criteria, and prohibit an unqualified stable tag
+  while the stable gate is blocked.
+- **Blocks merging PR #8:** no.
+- **Blocks merging PR #13:** no.
+- **Blocks release:** yes.
+- **Tracking:** [#19](https://github.com/ppcdaniel/sarif-regress/issues/19).
+
+### H-06 — Collided context can be admitted even when other context conflicts
+
+- **Evidence and code area:** context comparison and weak-context edge admission in
+  `src/SarifRegress.Match/CandidateEdgeFactory.cs`; positive collision tests in
+  `tests/SarifRegress.UnitTests/ContextCollisionTests.cs`. One repeated snippet or token hash can
+  produce compatible/collided context while another available context hash conflicts. The weak
+  tier can then admit the edge using path/message support.
+- **Why it matters:** an unrelated new finding can replace a resolved finding at the same path while
+  generic or redacted context repeats. Stronger contradictory context is currently unable to veto
+  that collision-only correspondence.
+- **Smallest safe remediation:** carry an explicit context-conflict flag and refuse collision-only
+  edge admission whenever any available context conflicts. Add asymmetric snippet/token and
+  resolved/new same-path tests; keep all graph and assignment limits unchanged.
+- **Blocks merging PR #8:** no; v3 collision logic is in PR #13.
+- **Blocks merging PR #13:** yes.
+- **Blocks release:** yes.
+- **Tracking:** [#20](https://github.com/ppcdaniel/sarif-regress/issues/20).
+
+### H-07 — Code-flow anchors can act as unbounded primary identity
+
+- **Evidence and code area:** code-flow comparison and `PathProblem` admission in
+  `src/SarifRegress.Match/CandidateEdgeFactory.cs`; code-flow tests in
+  `tests/SarifRegress.UnitTests/MatchingEngineTests.cs`. A single shared anchor can admit a match
+  despite unrelated primary path/message evidence, and anchor occurrences are not collision-counted.
+- **Why it matters:** common helpers or sinks can pair resolved and new findings; message or region
+  can then select among anchor collisions. This conflicts with documentation that presents code flow
+  as supporting evidence.
+- **Smallest safe remediation:** occurrence-count anchors by side and producer/rule bucket, require
+  uniqueness plus independent compatible identity evidence, or make code flow scoring-only after
+  another tier admits the edge.
+- **Blocks merging PR #8:** no; this predates PR #8.
+- **Blocks merging PR #13:** no if tracked independently.
+- **Blocks release:** yes.
+- **Tracking:** [#21](https://github.com/ppcdaniel/sarif-regress/issues/21).
+
+### H-08 — Candidate-edge bounds are applied after full edge materialisation
+
+- **Evidence and code area:** `BuildCandidateGraph` in
+  `src/SarifRegress.Match/FindingMatcher.cs` creates every admissible `MatchEdge` in
+  `allAdmissibleEdges`; `RetainBoundedEdges` sorts and applies the per-finding retained cap only
+  afterwards. Defaults permit up to 1,000,000 evaluated pairs.
+- **Why it matters:** many individually legal small buckets can allocate and sort close to one
+  million full edge/evidence objects. Existing oversized-single-bucket benchmarks do not exercise
+  that shape, so documented memory budgets are not proved at the global cap.
+- **Smallest safe remediation:** use a two-pass or compact streamed score representation and only
+  materialize bounded retained edges while preserving complete-graph ambiguity accounting and stable
+  ordering. Add a many-small-buckets global-cap stress test; do not raise limits.
+- **Blocks merging PR #8:** no; this predates PR #8.
+- **Blocks merging PR #13:** no if tracked independently, although v3 can admit more edges.
+- **Blocks release:** yes.
+- **Tracking:** [#22](https://github.com/ppcdaniel/sarif-regress/issues/22).
+
+## Medium findings
+
+### M-01 — Controlled fixtures limit ecosystem and source-context validity
+
+- **Evidence and code area:** holdout source snapshots contain adjacent `HOLDOUT:<semantic-id>`
+  markers, and Semgrep/Gitleaks evidence contains scenario-like identifiers. Current configs omit
+  `repositoryRoot`, so current v2/v3 runs do not read marker-bearing source. The projection tool also
+  rejects markers from SARIF snippets.
+- **Why it matters:** current SARIF-only metrics are not directly contaminated by source markers,
+  but the same trees cannot test source-context matching, and scenario-coded evidence limits broad
+  ecosystem claims.
+- **Smallest safe remediation:** build a neutral contamination-scanned corpus with ground truth only
+  in labels. Preserve and qualify the historical controlled-fixture metrics.
+- **Blocks PR #8/#13:** no if claims are qualified. **Blocks release:** broad ecosystem claims only.
+- **Tracking:** #11 and #12 cover the source-context limitation.
+
+### M-02 — Lifecycle “accuracy” omits false new/resolved outputs
+
+- **Evidence and code area:** `HoldoutMetricsCalculator` in
+  `validation/tools/SarifRegress.Validation/HoldoutEvaluation.cs` computes accuracy as
+  correct/expected while separately counting observed outputs. PMD emits 30 new and 30 resolved,
+  only three of each are expected, yet both accuracy fields are `1.0`.
+- **Why it matters:** the quantity is label recall, not accuracy. The complete-label-graph gate still
+  blocks release, but individual metrics can mislead readers.
+- **Smallest safe remediation:** preserve history; in a versioned current contract add unexpected
+  counts, lifecycle precision/recall/F1, or rename the existing value to label recall.
+- **Blocks PR #8/#13:** no if qualified. **Blocks release:** yes for metric claims.
+
+### M-03 — Vacuous precision is machine-reported as a passing value
+
+- **Evidence and code area:** zero-denominator division returns `1` in corpus and holdout metric
+  calculators; the comparison gate therefore records PMD `precisionMet: true` for zero accepted
+  pairs.
+- **Why it matters:** recall and accepted-count fields keep the release blocked, but precision has
+  not been demonstrated.
+- **Smallest safe remediation:** add `precisionDefined` or a nullable precision state and treat an
+  undefined producer value as not demonstrated/inconclusive.
+- **Blocks PR #8/#13:** no. **Blocks release:** yes for metric interpretation.
+
+### M-04 — Accepted explanations omit the selected decision vector
+
+- **Evidence and code area:** `DecisionTraceProjection.cs`, `StableJsonWireModels.cs`, and
+  `StableJsonWireMapper.cs` serialize vectors for rejected alternatives only. Accepted Gitleaks
+  traces therefore do not independently expose the vector used by classification.
+- **Why it matters:** “trace present” is weaker than reproducing the decision; the five mismatches
+  require code-based reconstruction.
+- **Smallest safe remediation:** add a bounded selected vector and versioned classification reason,
+  or commit an independently checked secret-safe analysis record.
+- **Blocks PR #8:** no. **Blocks PR #13:** its explanation-completeness claim. **Blocks release:**
+  auditability only.
+
+### M-05 — Repository roots are reopened by pathname and ancestor links are not rejected
+
+- **Evidence and code area:** `FileSystemRepositoryContext` stores a root string and calls
+  `RepositoryFileHandleOpener.Open` for each read. Linux and Windows validate the final root handle,
+  but do not component-walk every ancestor or retain a root handle across reads.
+- **Why it matters:** an intermediate symlink/junction or root replacement can change the snapshot
+  between reads, weakening the promised fixed-root model and any future two-root experiment.
+- **Smallest safe remediation:** validate/open the root component-by-component once, retain the safe
+  directory handle for the context lifetime, and open all files relative to it. Test ancestor links
+  and root replacement independently for both sides.
+- **Blocks PR #8/#13:** no. **Blocks release:** repository-context guarantee; **blocks v4:** yes.
+
+### M-06 — Corpus JSON output may overwrite a corpus input
+
+- **Evidence and code area:** `CorpusCommandHandler` writes `--json-out` without the physical
+  input/output identity checks present in compare and validate handlers.
+- **Why it matters:** a labels, config, or SARIF file can be selected as output and destroyed.
+- **Smallest safe remediation:** conservatively forbid output under the physical corpus root or
+  reject every consumed input identity, including symlink aliases.
+- **Blocks PR #8/#13:** no. **Blocks release:** yes.
+
+### M-07 — Package cleanup follows an `artifacts` symlink/junction
+
+- **Evidence and code area:** `scripts/package.sh` recursively removes artifact children and
+  `scripts/package.ps1` does the same without the real-directory/reparse guards used by holdout
+  scripts.
+- **Why it matters:** a malicious or accidental artifacts link can make packaging delete files
+  outside the repository.
+- **Smallest safe remediation:** reuse the existing real-directory/reparse checks before recursive
+  cleanup and test a Linux symlink and Windows junction.
+- **Blocks PR #8/#13:** no. **Blocks release:** yes.
+
+### M-08 — Atomic outputs rely on pathname checks across a TOCTOU window
+
+- **Evidence and code area:** `AtomicOutputWriter` checks for a random sibling name before creating
+  it, then stages, backs up, and renames by pathname after identity checks. A writable shared parent
+  can replace an ancestor or staging name.
+- **Why it matters:** this is narrower than untrusted SARIF—it requires a hostile local filesystem
+  peer—but it exceeds the unconditional atomic-output wording in `docs/security.md`.
+- **Smallest safe remediation:** reserve staging files with `CreateNew` and no-follow handles,
+  retain/revalidate the parent identity, and use platform-safe rename/replace; otherwise narrow the
+  documented output-directory threat model.
+- **Blocks PR #8/#13:** no. **Blocks release:** security claim.
+
+### M-09 — Vulnerability reporting is not concretely discoverable
+
+- **Evidence and code area:** no top-level `SECURITY.md`; `docs/security.md` refers generically to
+  GitHub's security-reporting mechanism without supported versions, a direct route, or response
+  expectations.
+- **Why it matters:** reporters may disclose sensitive SARIF publicly or be unable to reach the
+  owner.
+- **Smallest safe remediation:** confirm GitHub Private Vulnerability Reporting and document the
+  exact route plus supported versions; otherwise provide an owner-approved private channel.
+- **Blocks PR #8/#13:** no. **Blocks release:** yes.
+
+### M-10 — Deterministic reports do not prove reproducible package bytes
+
+- **Evidence and code area:** deterministic compilation and locked dependencies are enabled, but
+  `.github/workflows/determinism.yml` compares reports only. No same-commit independent builds
+  compare nupkg or executable bytes.
+- **Why it matters:** current claims support deterministic normalized output, not reproducible
+  binaries.
+- **Smallest safe remediation:** either add repeated-build byte/provenance evidence or state the
+  narrower guarantee explicitly. Do not call current package builds reproducible.
+- **Blocks PR #8/#13:** no. **Blocks release:** a reproducible-build claim only.
+
+### M-11 — Configuration schema v1 now names two behavioral languages
+
+- **Evidence and code area:** PR #13 adds `uriBaseMappings` while retaining configuration schema
+  version `1`; older v1 implementations ignore the unsupported property and may resolve the same
+  configuration differently.
+- **Why it matters:** strict shape validation and behavior compatibility are no longer aligned.
+- **Smallest safe remediation:** define the evolution contract and prefer a v2 configuration schema
+  with v1 reading/migration where practical.
+- **Blocks PR #8:** no. **Blocks PR #13:** compatibility disposition. **Blocks release:** no before
+  the first public release if documented.
+
+### M-12 — Required release and handoff documents are absent
+
+- **Evidence and code area:** no `CHANGELOG.md`, top-level `SECURITY.md`,
+  `THIRD_PARTY_NOTICES.md`, release-readiness/notes/checklist, Windows owner checklist, or engineering
+  case study exists at the reviewed head.
+- **Why it matters:** release status, security intake, attribution, rollback, unsupported evidence,
+  and owner-only verification are not collected into auditable handoff documents.
+- **Smallest safe remediation:** create the requested documents from verified evidence, clearly
+  separating performed checks from owner actions.
+- **Blocks PR #8/#13:** no. **Blocks release:** yes.
+
+### M-13 — Validation evidence code is monolithic and shell orchestration is duplicated
+
+- **Evidence and code area:** the validation tool exceeds 10,000 lines; several individual files
+  exceed 1,000 lines, while Linux and Windows wrappers separately encode the evaluation sequence.
+- **Why it matters:** the byte coordinator catches output drift, but structural changes remain hard
+  to review and platform orchestration can diverge before output comparison.
+- **Smallest safe remediation:** after evidence is frozen, split contract/runner/projection concerns
+  and derive both wrappers from one declarative sequence. Do not refactor during metric repair.
+- **Blocks PR #8/#13/release:** no.
+
+### M-14 — Package smoke tests do not execute a real comparison
+
+- **Evidence and code area:** CI/release smoke verifies checksums, exact nupkg installation, and
+  startup/help, but not a JSON/HTML-producing comparison through installed and standalone forms.
+- **Why it matters:** dependency bundling or runtime-only compare failures can survive packaging.
+- **Smallest safe remediation:** execute one tiny checked fixture comparison on Linux and Windows
+  with the tool package and standalone executable; validate JSON and inspect the HTML contract.
+- **Blocks PR #8/#13:** no. **Blocks release:** yes.
+
+## Low findings
+
+### L-01 — Matcher version has multiple authorities
+
+`MatchingAlgorithms.MatcherVersion` and `ProductInformation.MatcherAlgorithmVersion` duplicate the
+same literal for different output paths. Consolidate them or enforce an invariant test before the
+next version change. This does not block either PR or release by itself.
+
+### L-02 — Public configuration constructor changed CLR signature
+
+PR #13 adds an optional constructor parameter, which is source-compatible but not binary-compatible
+for callers compiled against the previous signature. No library package has been released, so the
+safe minimum is to document the tool-only public API boundary or retain a forwarding overload. This
+does not block release if resolved before the first stable API promise.
+
+### L-03 — An unused tool manifest bypasses audited Multitool acquisition
+
+`.config/dotnet-tools.json` permits ordinary `dotnet tool restore` of Multitool `5.5.0`, while the
+accepted validation scripts download, hash, verify, and install the exact nupkg offline. Remove the
+unused manifest or clearly mark it as non-authoritative. It does not affect the audited scripts.
+
+## Positive observations
+
+- Holdout ground truth is derived from source transformations and case plans, not matcher output.
+  Label hashes are unchanged from PR #8. No difficult case or threshold was removed.
+- Current v3 does not read marker-bearing source snapshots. The marker scanner excludes those
+  strings from projected snippets. The limitation is prospective source-context research, not a
+  hidden contaminant in current SARIF-only runs.
+- Correspondence, classification mismatch, ambiguity, ingestion, and structural-failure counts are
+  distinct. Arithmetic for `50 TP / 0 FP / 25 FN` is internally coherent, and no labelled ambiguity
+  is silently matched.
+- Assignment is exact and non-greedy within the bounded component. Equal semantic optima are refused
+  before stable keys are used, and all dictionary-derived outputs are explicitly ordered.
+- URI-base mappings reject network roots, encoded traversal, cycles, and excessive depth. SARIF
+  definitions take precedence over configuration. Stable provenance omits ambient absolute roots.
+- Repository source reads use handle-anchored beneath/no-link primitives for files under an opened
+  root, reject non-regular files, bound bytes/encoding/token work, and fail closed when required OS
+  primitives are unavailable. M-05 identifies the remaining root-lifetime boundary.
+- HTML values are escaped under a restrictive offline CSP. Capture extractors reject traversal,
+  links, encryption, unsupported entries, and oversized expansion.
+- Producer and baseline acquisitions pin exact versions, sizes, hashes, and provenance. No producer
+  binaries or archives are committed or released. All external GitHub Actions use full commit SHAs,
+  workflows default to `contents: read`, and checkout credentials are not persisted.
+- Historical v2/v3 checksum manifests verify. Historical successful Ubuntu/Windows runs are real
+  merge-ref integration evidence; B-01 prevents treating them as exact-head evidence.
+
+## Required disposition before release
+
+At minimum, B-01 and every High finding require either a verified fix or a focused open issue with a
+release-blocking disposition. Medium findings that are not fixed must appear in release readiness,
+security, and supported-evidence documentation. A safe preview remains blocked until the project
+defines preview criteria; a stable release remains blocked by the exposed-holdout recall failure,
+PMD evidence gap, classification defect, licensing disposition, release notices/gates, and matcher
+safety findings.

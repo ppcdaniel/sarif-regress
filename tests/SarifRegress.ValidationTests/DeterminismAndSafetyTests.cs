@@ -284,7 +284,14 @@ public sealed class DeterminismAndSafetyTests
             StringComparison.Ordinal);
         Assert.Contains("GITHUB_RUN_ID", workflow, StringComparison.Ordinal);
         Assert.Contains("GITHUB_RUN_ATTEMPT", workflow, StringComparison.Ordinal);
-        Assert.Contains("GITHUB_SHA", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "CHECKED_OUT_SOURCE_SHA",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "os.environ[\"GITHUB_SHA\"]",
+            workflow,
+            StringComparison.Ordinal);
         Assert.Contains(
             "./scripts/verify.sh",
             workflow,
@@ -362,6 +369,66 @@ public sealed class DeterminismAndSafetyTests
             "holdout-capture.yml"));
         Assert.Contains("workflow_dispatch:", captureWorkflow, StringComparison.Ordinal);
         Assert.DoesNotContain("pull_request:", captureWorkflow, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("ci.yml")]
+    [InlineData("holdout-validation.yml")]
+    [InlineData("determinism.yml")]
+    [InlineData("benchmarks.yml")]
+    public void Pull_request_workflows_checkout_and_verify_the_exact_head(
+        string workflowName)
+    {
+        string workflow = File.ReadAllText(Path.Combine(
+            ValidationTestRepository.FindRoot(),
+            ".github",
+            "workflows",
+            workflowName));
+        const string exactHeadExpression =
+            "${{ github.event.pull_request.head.sha || github.sha }}";
+
+        int checkoutCount = CountOccurrences(
+            workflow,
+            "uses: actions/checkout@");
+        Assert.True(checkoutCount > 0);
+        Assert.Equal(
+            checkoutCount,
+            CountOccurrences(workflow, $"ref: {exactHeadExpression}"));
+        Assert.Equal(
+            checkoutCount,
+            CountOccurrences(workflow, "- name: Verify exact source commit"));
+        Assert.Contains(
+            $"EXPECTED_SOURCE_SHA: {exactHeadExpression}",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "actual_source_sha=\"$(git rev-parse HEAD)\"",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "test \"${actual_source_sha}\" = \"${EXPECTED_SOURCE_SHA}\"",
+            workflow,
+            StringComparison.Ordinal);
+    }
+
+    private static int CountOccurrences(string value, string search)
+    {
+        int count = 0;
+        int offset = 0;
+        while (true)
+        {
+            int match = value.IndexOf(
+                search,
+                offset,
+                StringComparison.Ordinal);
+            if (match < 0)
+            {
+                return count;
+            }
+
+            count++;
+            offset = match + search.Length;
+        }
     }
 
     private static void WritePortableTree(string root)
