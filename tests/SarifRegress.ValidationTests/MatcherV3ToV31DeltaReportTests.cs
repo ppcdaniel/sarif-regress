@@ -240,9 +240,9 @@ public sealed class MatcherV3ToV31DeltaReportTests
 
         MatcherV3ToV31InputHashes wrongHash = InputHashes(matcherV3, matcherV31)
             with
-            {
-                MatcherV31ReportSha256 = new string('f', 64),
-            };
+        {
+            MatcherV31ReportSha256 = new string('f', 64),
+        };
         Assert.Throws<InvalidDataException>(() =>
             MatcherV3ToV31DeltaBuilder.Create(matcherV3, matcherV31, wrongHash));
 
@@ -333,20 +333,23 @@ public sealed class MatcherV3ToV31DeltaReportTests
     }
 
     private static SarifRegressCaseResult UpdateTraceVersions(
-        SarifRegressCaseResult item) => item with
+        SarifRegressCaseResult item)
     {
-        RelationshipResults = item.RelationshipResults
-            .Select(relationship => relationship with
-            {
-                Actual = relationship.Actual with
+        return item with
+        {
+            RelationshipResults = item.RelationshipResults
+                .Select(relationship => relationship with
                 {
-                    DecisionTraces = relationship.Actual.DecisionTraces
-                        .Select(trace => UpdateTrace(trace, addEvidence: false))
-                        .ToImmutableArray(),
-                },
-            })
-            .ToImmutableArray(),
-    };
+                    Actual = relationship.Actual with
+                    {
+                        DecisionTraces = relationship.Actual.DecisionTraces
+                            .Select(trace => UpdateTrace(trace, addEvidence: false))
+                            .ToImmutableArray(),
+                    },
+                })
+                .ToImmutableArray(),
+        };
+    }
 
     private static DecisionTraceProjection UpdateTrace(
         DecisionTraceProjection trace,
@@ -378,34 +381,37 @@ public sealed class MatcherV3ToV31DeltaReportTests
     }
 
     private static SarifRegressHoldoutReport RemoveClassificationTransformations(
-        SarifRegressHoldoutReport report) => report with
+        SarifRegressHoldoutReport report)
     {
-        Cases = report.Cases
-            .Select(caseResult => caseResult with
-            {
-                RelationshipResults = caseResult.RelationshipResults
-                    .Select(relationship => relationship with
-                    {
-                        Actual = relationship.Actual with
+        return report with
+        {
+            Cases = report.Cases
+                .Select(caseResult => caseResult with
+                {
+                    RelationshipResults = caseResult.RelationshipResults
+                        .Select(relationship => relationship with
                         {
-                            DecisionTraces = relationship.Actual.DecisionTraces
-                                .Select(trace => trace with
-                                {
-                                    Transformations = trace.Transformations
-                                        .Where(transformation =>
-                                            transformation.Kind
-                                                != ClassificationEvidenceKind
-                                            || transformation.AlgorithmVersion
-                                                != ClassificationEvidenceVersion)
-                                        .ToImmutableArray(),
-                                })
-                                .ToImmutableArray(),
-                        },
-                    })
-                    .ToImmutableArray(),
-            })
-            .ToImmutableArray(),
-    };
+                            Actual = relationship.Actual with
+                            {
+                                DecisionTraces = relationship.Actual.DecisionTraces
+                                    .Select(trace => trace with
+                                    {
+                                        Transformations = trace.Transformations
+                                            .Where(transformation =>
+                                                transformation.Kind
+                                                    != ClassificationEvidenceKind
+                                                || transformation.AlgorithmVersion
+                                                    != ClassificationEvidenceVersion)
+                                            .ToImmutableArray(),
+                                    })
+                                    .ToImmutableArray(),
+                            },
+                        })
+                        .ToImmutableArray(),
+                })
+                .ToImmutableArray(),
+        };
+    }
 
     private static SarifRegressHoldoutReport Recalculate(
         SarifRegressHoldoutReport report)
@@ -427,18 +433,21 @@ public sealed class MatcherV3ToV31DeltaReportTests
     }
 
     private static SarifRegressHoldoutReport Reorder(
-        SarifRegressHoldoutReport report) => report with
+        SarifRegressHoldoutReport report)
     {
-        Producers = report.Producers.Reverse().ToImmutableArray(),
-        Cases = report.Cases.Reverse()
-            .Select(item => item with
-            {
-                RelationshipResults = item.RelationshipResults.Reverse()
-                    .ToImmutableArray(),
-            })
-            .ToImmutableArray(),
-        DiagnosticCounts = report.DiagnosticCounts.Reverse().ToImmutableArray(),
-    };
+        return report with
+        {
+            Producers = report.Producers.Reverse().ToImmutableArray(),
+            Cases = report.Cases.Reverse()
+                .Select(item => item with
+                {
+                    RelationshipResults = item.RelationshipResults.Reverse()
+                        .ToImmutableArray(),
+                })
+                .ToImmutableArray(),
+            DiagnosticCounts = report.DiagnosticCounts.Reverse().ToImmutableArray(),
+        };
+    }
 
     private static SarifRegressHoldoutReport ChangeGroundTruth(
         SarifRegressHoldoutReport report)
