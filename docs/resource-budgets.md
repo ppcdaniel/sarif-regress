@@ -33,6 +33,10 @@ budgets, not guaranteed performance on every machine.
 - A comparison-wide preflight refusal emits one source-less top-level diagnostic; every affected
   finding retains a minimal structured `refuse` trace without copying that global diagnostic.
 - Retained candidate edges are capped per finding.
+- Context evidence is counted within each input-side producer/rule bucket. Unique context retains
+  its normal tier; duplicated context is explicitly degraded, and collision-only cross-path edges
+  are refused before they can merge otherwise separable components. Occurrence evidence is bounded
+  and reported with `sarifregress/evidence-occurrence/v1`.
 - The assignment graph is split into connected components.
 - Components within the exact bound use a maximum-cardinality lexicographic solver.
 - Larger components are classified as ambiguous and produce a bounded explanation.
@@ -74,7 +78,8 @@ deterministic projection that excludes observations and their derived pass/failu
 determinism workflow compares those application-emitted bytes directly on Windows and Linux; the
 embedded comparison-output SHA-256 must agree.
 
-`.github/workflows/benchmarks.yml` runs weekly and on manual dispatch. Its matrix measures both
+`.github/workflows/benchmarks.yml` runs for matcher-affecting pull requests, weekly, and on manual
+dispatch. Its matrix measures both
 dataset shapes at 10,000 and 100,000 findings on standard Ubuntu and Windows runners. Ubuntu
 enforces the published latency, memory, and refusal budgets; Windows records the same deterministic
 operation projection without applying Ubuntu-calibrated runtime ceilings. Every matrix cell

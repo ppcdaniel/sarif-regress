@@ -1,0 +1,345 @@
+# Real-producer generalisation
+
+## Outcome
+
+Matcher v3 safely fixes the independent Semgrep ingestion defect and the
+repeated-context Gitleaks graph defect. It does not add a sparse-SARIF
+continuity rule for PMD because the proposed general rule failed the fixed
+precision and ambiguity gates.
+
+The release recommendation remains:
+
+```json
+{
+  "releaseRecommendation": "blocked"
+}
+```
+
+The implementation is stacked on the still-open independent-validation PR:
+
+| Item | Value |
+|---|---|
+| Validation base | `0231d6fe779203a92469099b90d446fafe67b064` |
+| Base branch | `agent/independent-holdout-validation` |
+| Implementation branch | `agent/holdout-generalization-fixes` |
+| Evaluated matcher-v3 implementation | `29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b` |
+| Product source-tree SHA-256 | `4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486` |
+| Matcher | `sarifregress/matcher/v3` |
+| Product output/configuration schemas | `1` / `1` |
+| Holdout manifest SHA-256 | `b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379` |
+
+The holdout labels, source transformations, difficult cases, Microsoft SARIF
+Multitool pin, and quality thresholds are byte-unchanged. The original v2
+reports remain under `validation/history/matcher-v2/`; matcher-v3 reports
+are under `validation/history/matcher-v3/`. The deterministic relationship
+delta is `validation/history/v2-to-v3-delta.json`.
+
+## Original matcher-v2 failures
+
+The frozen MVP accepted none of the 75 known identity relationships:
+
+| Producer | TP | FP | FN | Precision | Recall | F1 | Primary failure |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gitleaks 8.30.1 | 0 | 0 | 25 | 1.000000 | 0.000000 | 0.000000 | Repeated context formed one oversized component |
+| PMD 7.26.0 | 0 | 0 | 25 | 1.000000 | 0.000000 | No admissible fingerprint or context evidence |
+| Semgrep 1.172.0 | 0 | 0 | 25 | 1.000000 | 0.000000 | Two inputs failed on an undefined external URI base |
+| **Aggregate** | **0** | **0** | **75** | **1.000000** | **0.000000** | **0.000000** | Release blocked |
+
+Precision was vacuously 1.0 because v2 accepted zero matches. Gitleaks produced
+60 ambiguous endpoint classifications, Semgrep produced 58 `CANON0032`
+diagnostics, and PMD produced 30 new plus 30 resolved classifications. These
+facts remain reproducible at the exact PR #8 head and are not rewritten by v3.
+
+## Phase 1: explicit external URI bases
+
+### Design
+
+`uriBaseMappings` is an explicit, bounded configuration overlay for a
+logical base referenced by SARIF but absent from `run.originalUriBaseIds`.
+For example:
+
+```json
+{
+  "schemaVersion": "1",
+  "uriBaseMappings": [
+    {
+      "id": "WORKSPACE_ROOT",
+      "uri": "repo:/"
+    }
+  ]
+}
+```
+
+A SARIF-defined base always wins. Configuration fills only a missing
+definition; it cannot silently replace producer data. Unknown bases remain an
+error. Configured definitions may chain through `uriBaseId`, with the same
+cycle detection and maximum depth of 32 used for SARIF definitions.
+
+Targets are limited to directory-form repository roots, local POSIX or
+drive-absolute roots, hostless local `file:` roots, or safe relative children
+of another configured base. Network/UNC roots, authorities, queries,
+fragments, traversal, control characters, and non-directory targets fail
+closed. Resolution is lexical and never performs a network fetch. Optional
+source reads still pass through the independent repository-containment and
+symlink/junction checks.
+
+Successful use records a `configured-uri-base` transformation with
+`sarifregress/configured-uri-base/v1`. It records the logical identifier but
+not the raw configured target, keeping equivalent local-root reports
+platform-neutral. The mechanism contains no producer name or well-known
+identifier.
+
+### Result
+
+Both authentic Semgrep inputs ingest. `CANON0032` falls from 58 to 0, all 25
+known relationships match, both deliberate ambiguity units are refused, and
+the three new and three resolved labels remain correct. An unrelated logical
+identifier exercises the same path in tests.
+
+## Phase 2: collision-aware contextual evidence
+
+### Alternatives considered
+
+1. **Occurrence-aware reliability — selected.** Context and derived
+   fingerprint values are counted independently on each input side within the
+   automatic producer-identity and canonical-rule bucket. A value is reliable
+   only when it occurs once on both sides. Counts are based on distinct
+   findings, not repeated fields within one finding.
+2. **Indisputable-edge peeling — not used as the primary rule.** Resolving
+   exact-path edges before building the complete graph would recover some
+   diagonals, but by itself it leaves the invalid dense weak graph in place
+   and risks making the result depend on the order in which edges are peeled.
+   The existing global one-to-one solver therefore remains authoritative.
+3. **Graph decomposition by evidence tier — combined with occurrence
+   reliability.** Collision-only context is degraded before graph union.
+   Cross-path collision-only edges are refused, so weak shared values cannot
+   merge components that stronger identity and path evidence keep separate.
+   This fixes graph quality without raising the exact-assignment size limit.
+
+### Evidence policy
+
+- A unique derived fingerprint or unique exact context retains its existing
+  strong tier.
+- A duplicated derived fingerprint is admissible only with an exact or
+  explicitly aliased path.
+- Duplicated raw context requires an explicit path alias, or an exact path
+  plus a compatible canonical message.
+- Region proximity cannot manufacture a preferred pairing inside a collision
+  set.
+- Collision evidence is emitted with
+  `sarifregress/evidence-occurrence/v1`; context comparison is
+  `sarifregress/context-evidence/v2`.
+- Candidate-pair, retained-edge, assignment-component, and explanation limits
+  are unchanged and still enforced.
+
+No literal snippet, producer, scanner category, rule ID, or component size is
+special-cased.
+
+### Result
+
+The authentic Gitleaks case now preserves all 25 identity pairs with no false
+matches. Its two 2×2 ambiguity units remain ambiguous, and the six labelled
+lifecycle findings are correct. The original repeated context is visible as
+degraded collision evidence rather than being treated as a unique identity.
+The exact 13×13 reproduction and a 30×30 repeated-context test remain bounded
+and input-order invariant.
+
+Five accepted Gitleaks pairs still have a classification mismatch
+(`gitleaks-match-014` through `-018`). Their identity is correct, so they
+are true-positive correspondence edges, but the complete label graph gate
+remains failed and the mismatches stay visible in the report.
+
+## Phase 3: sparse SARIF safe stop
+
+Three producer-agnostic options were evaluated before changing matching code.
+The full evidence is in
+[ADR 0002](decisions/0002-sparse-sarif-continuity.md).
+
+### Option A: unique exact-location signature
+
+The proposed signature combined producer family, canonical rule, canonical
+repository-relative path, exact region, and canonical message, requiring
+uniqueness on both sides. On the authentic PMD case it admitted ten
+intersections: five true pairs, three false cross-pairs, and two intersection
+pairs covering all four deliberate ambiguity endpoints.
+
+The hypothetical result was `5 TP / 5 FP / 20 FN`, precision `0.5`,
+recall `0.2`, with labelled ambiguity silently paired. Whole-bucket
+uniqueness avoided false matches but recovered zero relationships. Both
+variants fail the selection rule.
+
+### Option B: separate baseline and candidate repositories
+
+Side-specific read-only source roots remain a plausible future design, but
+the current holdout snapshots contain adjacent semantic identity markers used
+to construct ground truth. Deriving source context from those files would
+leak labels into the matcher. Removing those markers or changing labels would
+invalidate the holdout. No CLI or configuration option was added.
+
+Any future implementation must preserve shared-`--repo` compatibility,
+bind every source read to its correct side, and independently enforce
+containment, regular-file, symlink/junction, size, and encoding rules.
+
+### Option C: combination
+
+The combination inherits Option A's false matches and Option B's validation
+leakage. It was rejected.
+
+### Decision
+
+No sparse-continuity tier was added. PMD remains unmatched and issue #11
+remains open. This is the required stop condition: a safe partial improvement
+is preferable to a rule below 0.95 precision or one that silently resolves
+ambiguity.
+
+## Matcher-v3 evidence hierarchy and versions
+
+The global one-to-one assignment policy and deterministic tie refusal remain
+unchanged. Candidate edges are ranked through these explainable tiers:
+
+1. explicit override with real path and reliable context;
+2. unique, version-compatible producer fingerprint;
+3. exact path plus unique derived fingerprint;
+4. unique reliable context, including moved-path continuity;
+5. compatible supporting evidence for a path problem;
+6. collision-degraded context constrained by exact or explicit alias paths;
+7. optional weak message evidence only when explicitly enabled;
+8. refusal when no admissible tier exists or equal optima remain.
+
+Version changes are:
+
+| Contract | Matcher v2 | Matcher v3 |
+|---|---|---|
+| Matcher | `sarifregress/matcher/v2` | `sarifregress/matcher/v3` |
+| Derived fingerprint generator | `rule-path-context/v2` | unchanged |
+| Derived comparison | `sarifregress/derived-fingerprint-compare/v1` | `sarifregress/derived-fingerprint-compare/v2` |
+| Context evidence | prior matcher semantics | `sarifregress/context-evidence/v2` |
+| Occurrence explanation | absent | `sarifregress/evidence-occurrence/v1` |
+| Configured URI-base provenance | absent | `sarifregress/configured-uri-base/v1` |
+
+Product configuration and output schemas remain version 1 because their
+readers remain backward compatible and no existing output field changed
+meaning. The validation-only SarifRegress report and comparison summary
+advance to schema 2; the deterministic delta and attestation use schemas 1
+and 2 respectively.
+
+## Matcher-v3 results
+
+| Producer | TP | FP | FN | Precision | Recall | F1 | Other result |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gitleaks 8.30.1 | 25 | 0 | 0 | 1.000000 | 1.000000 | 1.000000 | 2 correct ambiguity refusals; 5 classification mismatches |
+| PMD 7.26.0 | 0 | 0 | 25 | 1.000000 | 0.000000 | 0.000000 | No sparse tier; 2 ambiguity units remain unmatched |
+| Semgrep 1.172.0 | 25 | 0 | 0 | 1.000000 | 1.000000 | 1.000000 | 0 ingestion failures; 2 correct ambiguity refusals |
+| **Aggregate** | **50** | **0** | **25** | **1.000000** | **0.666667** | **0.800000** | Release blocked |
+
+Additional gates:
+
+| Measure | Matcher v2 | Matcher v3 |
+|---|---:|---:|
+| Correct new labels | 3 / 9 | 9 / 9 |
+| Correct resolved labels | 3 / 9 | 9 / 9 |
+| Correct ambiguity refusals | 2 | 4 |
+| Unexpected ambiguity refusals | 25 | 0 |
+| Incorrect ambiguity auto-matches | 0 | 0 |
+| Ingestion failures | 2 | 0 |
+| Structural failures | 0 | 0 |
+| Classification mismatches | 0 accepted pairs | 5 |
+
+The delta records 59 fixed ground-truth relationships, 0 regressed
+relationships, 32 still failing relationships, and 0 newly introduced false
+matches. All 64 changed decisions have bounded explanation traces.
+
+## External baseline
+
+Microsoft SARIF Multitool remains pinned at 5.5.0 and is not ground truth.
+Across 72 comparable identity relationships it remains
+`47 TP / 17 FP / 25 FN`, precision `0.734375`, recall `0.652778`,
+and F1 `0.691177`.
+
+Across all 99 units, the v3 comparison classifies 48 as both correct, 18 as
+SarifRegress-only correct, 11 as Multitool-only correct, 13 as both
+incorrect, and 9 as non-comparable. The external baseline was not retuned or
+used to select matcher behavior.
+
+## Determinism, resources, and security
+
+The first hosted run produced identical unattested report bytes on Ubuntu and
+Windows. Its fixed attestation is
+[run 30698849989](https://github.com/ppcdaniel/sarif-regress/actions/runs/30698849989).
+An attested regeneration then reproduced the same base reports and identical
+final project-owned bytes on both systems in
+[run 30699075579](https://github.com/ppcdaniel/sarif-regress/actions/runs/30699075579).
+The attestation from the first run is retained to avoid a self-referential
+hash cycle.
+
+Matcher-v3 checkpoint benchmarks passed the 10,000 and 100,000 unique and
+pathological datasets on hosted Ubuntu and Windows, including deterministic
+byte comparison, in
+[run 30698849978](https://github.com/ppcdaniel/sarif-regress/actions/runs/30698849978).
+The 1,000-finding resource smoke remains part of normal CI. No assignment,
+candidate-pair, retained-edge, repository-containment, or source-read ceiling
+was increased.
+
+Configured bases remain local, lexical, non-fetching, and fail closed.
+Occurrence indexing is bounded by the already ingested findings and stores
+only per-bucket evidence identities and counts. It does not execute producer
+code, inspect secret values semantically, or use machine learning.
+
+## Release decision and remaining limitations
+
+The fixed aggregate thresholds are precision at least 0.95 and recall at
+least 0.90; each producer requires precision at least 0.95 and recall at
+least 0.80. Matcher v3 passes every precision, ambiguity, ingestion,
+structural, trace, and determinism condition, but fails aggregate recall, PMD
+recall, and the complete label graph. The recommendation therefore remains
+`blocked`.
+
+Remaining failures are exactly:
+
+- five Gitleaks classification mismatches;
+- 25 PMD missed identity relationships; and
+- two PMD ambiguity units that remain unmatched rather than being silently
+  paired.
+
+The holdout is one controlled case per producer, not an ecosystem-wide
+sample. Producer capture remains Linux-only, while evaluation of committed
+SARIF is cross-platform. The suite measures finding continuity, not analyzer
+detection quality.
+
+## Reproduction
+
+From any directory on Linux:
+
+```sh
+/path/to/sarif-regress/scripts/verify.sh
+/path/to/sarif-regress/scripts/validate-holdout.sh
+```
+
+From hosted Windows PowerShell:
+
+```powershell
+& C:\path\to\sarif-regress\scripts\verify.ps1
+& C:\path\to\sarif-regress\scripts\validate-holdout.ps1
+```
+
+The wrappers restore locked dependencies, verify the exact Multitool package,
+validate provenance and schemas, regenerate reports in a temporary directory,
+and byte-compare them with `validation/expected/`. They do not modify
+committed fixtures.
+
+The matcher-v2 and matcher-v3 history anchors can be checked without running
+the analyzers:
+
+```sh
+sha256sum -c validation/history/matcher-v2/checksums.sha256
+sha256sum -c validation/history/matcher-v3/checksums.sha256
+```
+
+Extended deterministic datasets use:
+
+```sh
+sarif-regress bench --size 10000 --dataset unique --enforce-budgets
+sarif-regress bench --size 10000 --dataset pathological --enforce-budgets
+sarif-regress bench --size 100000 --dataset unique --enforce-budgets
+sarif-regress bench --size 100000 --dataset pathological --enforce-budgets
+```

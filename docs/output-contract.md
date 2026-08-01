@@ -83,7 +83,15 @@ fingerprint and algorithm identifiers are versioned as `sarifregress/rule-path-c
 `rule-path-context/v2`; v1 values are not compared as v2 evidence.
 Rule-alias canonical identities and matching decisions now resolve producer names through this
 same identity, so their public identifiers are likewise versioned as
-`sarifregress/rule-alias/v2` and `sarifregress/matcher/v2`.
+`sarifregress/rule-alias/v2` and `sarifregress/matcher/v3`.
+
+Matcher v3 makes context reliability occurrence-aware. The derived fingerprint generator remains
+`rule-path-context/v2` because its bytes are unchanged, while comparison semantics advance to
+`sarifregress/derived-fingerprint-compare/v2`. Context evidence advances to
+`sarifregress/context-evidence/v2`, and bounded collision explanations use
+`sarifregress/evidence-occurrence/v1`. These version changes identify altered matching semantics;
+the product JSON output schema remains version `1` because no existing field was removed, renamed,
+or reinterpreted.
 
 ## HTML and canonical SARIF
 

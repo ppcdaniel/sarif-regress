@@ -1,4 +1,10 @@
-# Independent holdout validation
+# Independent holdout validation: matcher v2
+
+> [!IMPORTANT]
+> This document and `validation/history/matcher-v2/` preserve the original,
+> untuned MVP evaluation from PR #8. Matcher v3 is evaluated separately in
+> [Real-producer generalisation](real-producer-generalisation.md); none of the
+> v2 labels, thresholds, difficult cases, or reports were replaced.
 
 ## Result
 
@@ -21,13 +27,13 @@ This is an evaluation result, not a producer-quality benchmark. It says nothing
 about how well Semgrep, Gitleaks, or PMD detect vulnerabilities or other source
 problems.
 
-The machine-readable evidence is committed in:
+The immutable machine-readable evidence is committed in:
 
-- `validation/expected/sarif-regress-holdout.json`
-- `validation/expected/sarif-multitool-baseline.json`
-- `validation/expected/comparison-summary.json`
-- `validation/expected/checksums.sha256`
-- `validation/holdout/cross-platform-attestation.json`
+- `validation/history/matcher-v2/sarif-regress-holdout.json`
+- `validation/history/matcher-v2/sarif-multitool-baseline.json`
+- `validation/history/matcher-v2/comparison-summary.json`
+- `validation/history/matcher-v2/checksums.sha256`
+- `validation/history/matcher-v2/cross-platform-attestation.json`
 
 ## Why this suite is separate
 
@@ -252,18 +258,20 @@ the result.
 
 ## Reproduction and cross-platform evidence
 
-From any directory on Linux:
+To reproduce matcher v2, materialise the exact validation head instead of
+running the active matcher-v3 branch:
 
 ```sh
-/path/to/sarif-regress/scripts/verify.sh
-/path/to/sarif-regress/scripts/validate-holdout.sh
+git worktree add ../sarif-regress-matcher-v2 0231d6fe779203a92469099b90d446fafe67b064
+../sarif-regress-matcher-v2/scripts/verify.sh
+../sarif-regress-matcher-v2/scripts/validate-holdout.sh
 ```
 
-From any directory in hosted Windows PowerShell:
+The equivalent hosted Windows commands at that commit are:
 
 ```powershell
-& C:\path\to\sarif-regress\scripts\verify.ps1
-& C:\path\to\sarif-regress\scripts\validate-holdout.ps1
+& C:\path\to\sarif-regress-matcher-v2\scripts\verify.ps1
+& C:\path\to\sarif-regress-matcher-v2\scripts\validate-holdout.ps1
 ```
 
 The wrappers restore locked dependencies, verify the pinned Multitool package,
