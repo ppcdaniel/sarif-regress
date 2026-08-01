@@ -233,7 +233,7 @@ public sealed record ResourceLimits
                 nameof(MaximumAssignmentSideSize),
                 MaximumAssignmentSideSize,
                 $"The exact-assignment side limit cannot exceed "
-                + $"{HardMaximumAssignmentSideSize} in matcher v2.");
+                + $"{HardMaximumAssignmentSideSize} in matcher v3.");
         }
 
         if (MaximumCandidateEdgesPerFinding > MaximumCandidatePairEvaluationsPerFinding)

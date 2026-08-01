@@ -48,7 +48,13 @@ public sealed class FindingMatcher
         var fingerprintOccurrences = ProducerFingerprintOccurrenceIndex.Create(
             baselineFindings,
             candidateFindings);
-        var edgeFactory = new CandidateEdgeFactory(configuration, fingerprintOccurrences);
+        var contextFingerprintOccurrences = ContextFingerprintOccurrenceIndex.Create(
+            baselineFindings,
+            candidateFindings);
+        var edgeFactory = new CandidateEdgeFactory(
+            configuration,
+            fingerprintOccurrences,
+            contextFingerprintOccurrences);
         var candidateBuckets = CandidateBucketIndex.Create(
             candidateFindings,
             configuration.RuleAliases);
@@ -63,6 +69,7 @@ public sealed class FindingMatcher
             candidateFindings,
             configuration,
             graph,
+            contextFingerprintOccurrences,
             fingerprintOccurrences.Diagnostics);
     }
 
@@ -505,6 +512,7 @@ public sealed class FindingMatcher
         ImmutableArray<Finding> candidateFindings,
         SarifRegressConfiguration configuration,
         CandidateGraph graph,
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
         ImmutableArray<Diagnostic> fingerprintDiagnostics)
     {
         if (graph.PreflightRefusal is not null)
@@ -653,7 +661,8 @@ public sealed class FindingMatcher
             selectedByCandidate,
             ambiguousBaselineIndexes,
             ambiguousCandidateIndexes,
-            diagnosticsByNode);
+            diagnosticsByNode,
+            contextFingerprintOccurrences);
 
         return new MatchResult(
             decisions,
@@ -993,7 +1002,8 @@ public sealed class FindingMatcher
         IReadOnlyDictionary<int, MatchEdge> selectedByCandidate,
         IReadOnlySet<int> ambiguousBaselineIndexes,
         IReadOnlySet<int> ambiguousCandidateIndexes,
-        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
+        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
     {
         var allRetainedEdgesWereSelected =
             ambiguousBaselineIndexes.Count == 0
@@ -1022,7 +1032,8 @@ public sealed class FindingMatcher
                     configuration,
                     incidentEdgeIndex?.ForBaseline(baselineIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
-                    diagnosticsByNode));
+                    diagnosticsByNode,
+                    contextFingerprintOccurrences));
                 continue;
             }
 
@@ -1036,7 +1047,8 @@ public sealed class FindingMatcher
                     configuration,
                     incidentEdgeIndex?.ForMatch(baselineIndex, candidateIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
-                    diagnosticsByNode));
+                    diagnosticsByNode,
+                    contextFingerprintOccurrences));
                 continue;
             }
 
@@ -1048,7 +1060,8 @@ public sealed class FindingMatcher
                 configuration,
                 incidentEdgeIndex?.ForBaseline(baselineIndex)
                     ?? ImmutableArray<MatchEdge>.Empty,
-                diagnosticsByNode));
+                diagnosticsByNode,
+                contextFingerprintOccurrences));
         }
 
         for (var candidateIndex = 0; candidateIndex < candidateFindings.Length; candidateIndex++)
@@ -1068,7 +1081,8 @@ public sealed class FindingMatcher
                     configuration,
                     incidentEdgeIndex?.ForCandidate(candidateIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
-                    diagnosticsByNode)
+                    diagnosticsByNode,
+                    contextFingerprintOccurrences)
                 : CreateUnmatchedDecision(
                     FindingClassification.New,
                     baseline: null,
@@ -1077,7 +1091,8 @@ public sealed class FindingMatcher
                     configuration,
                     incidentEdgeIndex?.ForCandidate(candidateIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
-                    diagnosticsByNode));
+                    diagnosticsByNode,
+                    contextFingerprintOccurrences));
         }
 
         return decisions
@@ -1098,7 +1113,8 @@ public sealed class FindingMatcher
         int candidateIndex,
         SarifRegressConfiguration configuration,
         ImmutableArray<MatchEdge> incidentEdges,
-        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
+        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
     {
         var alternatives =
             incidentEdges.Length == 1
@@ -1107,11 +1123,16 @@ public sealed class FindingMatcher
                 : incidentEdges
                     .Where(edge => !ReferenceEquals(edge, selectedEdge))
                     .ToImmutableArray();
+        var evidence = OrderEvidence(
+            selectedEdge.Evidence.Concat(GetDegradationEvidence(
+                contextFingerprintOccurrences,
+                selectedEdge.Baseline,
+                selectedEdge.Candidate)));
         var trace = CreateTrace(
             selectedEdge.DecisionVector.PrecedenceTier,
             GetDisplayConfidence(selectedEdge.DecisionVector.PrecedenceTier),
             ambiguous: false,
-            selectedEdge.Evidence,
+            evidence,
             CreateRejectedAlternatives(
                 alternatives,
                 selectedEdge.Baseline,
@@ -1139,20 +1160,16 @@ public sealed class FindingMatcher
         int node,
         SarifRegressConfiguration configuration,
         ImmutableArray<MatchEdge> incidentEdges,
-        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
+        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
     {
         var sourceReference = (baseline ?? candidate)!.SourceReference;
         var evidence = incidentEdges
             .SelectMany(edge => edge.Evidence)
-            .Distinct()
-            .OrderBy(item => item.Kind, StringComparer.Ordinal)
-            .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
-            .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
-            .ThenBy(item => item.Origin)
-            .ThenBy(item => item.PrecedenceTier)
-            .ThenBy(item => item.Lossy)
-            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-            .ToImmutableArray();
+            .Concat(GetDegradationEvidence(
+                contextFingerprintOccurrences,
+                baseline,
+                candidate));
         var transformations = incidentEdges
             .SelectMany(edge => edge.Transformations)
             .Distinct()
@@ -1166,7 +1183,7 @@ public sealed class FindingMatcher
             PrecedenceTier.Refuse,
             DisplayConfidence.Low,
             ambiguous: true,
-            evidence,
+            OrderEvidence(evidence),
             CreateRejectedAlternatives(
                 incidentEdges,
                 baseline,
@@ -1190,7 +1207,8 @@ public sealed class FindingMatcher
         int node,
         SarifRegressConfiguration configuration,
         ImmutableArray<MatchEdge> incidentEdges,
-        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode)
+        IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
     {
         var sourceReference = (baseline ?? candidate)!.SourceReference;
         var outcome = incidentEdges.IsEmpty
@@ -1200,6 +1218,10 @@ public sealed class FindingMatcher
             : "not-selected-after-one-to-one-assignment";
         var evidence = incidentEdges
             .SelectMany(edge => edge.Evidence)
+            .Concat(GetDegradationEvidence(
+                contextFingerprintOccurrences,
+                baseline,
+                candidate))
             .Append(new EvidenceRecord(
                 "assignment-outcome",
                 baseline is null ? null : outcome,
@@ -1207,16 +1229,7 @@ public sealed class FindingMatcher
                 EvidenceOrigin.System,
                 PrecedenceTier.Refuse,
                 Lossy: false,
-                MatchingAlgorithms.AssignmentOutcomeVersion))
-            .Distinct()
-            .OrderBy(item => item.Kind, StringComparer.Ordinal)
-            .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
-            .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
-            .ThenBy(item => item.Origin)
-            .ThenBy(item => item.PrecedenceTier)
-            .ThenBy(item => item.Lossy)
-            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
-            .ToImmutableArray();
+                MatchingAlgorithms.AssignmentOutcomeVersion));
         var transformations = incidentEdges
             .SelectMany(edge => edge.Transformations)
             .Concat(GetFindingTransformations(baseline))
@@ -1232,7 +1245,7 @@ public sealed class FindingMatcher
             PrecedenceTier.Refuse,
             DisplayConfidence.Low,
             ambiguous: false,
-            evidence,
+            OrderEvidence(evidence),
             CreateRejectedAlternatives(
                 incidentEdges,
                 baseline,
@@ -1245,6 +1258,36 @@ public sealed class FindingMatcher
             sourceReference);
         return new FindingDecision(classification, baseline, candidate, trace);
     }
+
+    private static IEnumerable<EvidenceRecord> GetDegradationEvidence(
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        Finding? baseline,
+        Finding? candidate)
+    {
+        IEnumerable<EvidenceRecord> evidence = baseline is null
+            ? Enumerable.Empty<EvidenceRecord>()
+            : contextFingerprintOccurrences.GetDegradationEvidence(
+                InputKind.Baseline,
+                baseline);
+        return candidate is null
+            ? evidence
+            : evidence.Concat(contextFingerprintOccurrences.GetDegradationEvidence(
+                InputKind.Candidate,
+                candidate));
+    }
+
+    private static ImmutableArray<EvidenceRecord> OrderEvidence(
+        IEnumerable<EvidenceRecord> evidence) =>
+        evidence
+            .Distinct()
+            .OrderBy(item => item.Kind, StringComparer.Ordinal)
+            .ThenBy(item => item.BaselineValue, StringComparer.Ordinal)
+            .ThenBy(item => item.CandidateValue, StringComparer.Ordinal)
+            .ThenBy(item => item.Origin)
+            .ThenBy(item => item.PrecedenceTier)
+            .ThenBy(item => item.Lossy)
+            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+            .ToImmutableArray();
 
     private static ImmutableArray<TransformationRecord> GetFindingTransformations(
         Finding? finding) =>
@@ -1329,11 +1372,41 @@ public sealed class FindingMatcher
             displayConfidence,
             ambiguous,
             MatchingAlgorithms.MatcherVersion,
-            TakeAtMost(evidence, maximumItems),
+            TakeEvidenceAtMost(evidence, maximumItems),
             TakeAtMost(rejectedAlternatives, maximumItems),
             TakeAtMost(transformations, maximumItems),
             diagnostics);
     }
+
+    private static ImmutableArray<EvidenceRecord> TakeEvidenceAtMost(
+        ImmutableArray<EvidenceRecord> evidence,
+        int maximumItems)
+    {
+        if (evidence.Length <= maximumItems)
+        {
+            return evidence;
+        }
+
+        var boundedPrefix = evidence.Take(maximumItems).ToImmutableArray();
+        if (boundedPrefix.Any(IsOccurrenceEvidence))
+        {
+            return boundedPrefix;
+        }
+
+        var occurrenceEvidence = evidence.FirstOrDefault(IsOccurrenceEvidence);
+        return occurrenceEvidence is null
+            ? boundedPrefix
+            : OrderEvidence(
+                evidence
+                    .Take(maximumItems - 1)
+                    .Append(occurrenceEvidence));
+    }
+
+    private static bool IsOccurrenceEvidence(EvidenceRecord evidence) =>
+        string.Equals(
+            evidence.AlgorithmVersion,
+            MatchingAlgorithms.EvidenceOccurrenceVersion,
+            StringComparison.Ordinal);
 
     private static ImmutableArray<T> TakeAtMost<T>(
         ImmutableArray<T> values,

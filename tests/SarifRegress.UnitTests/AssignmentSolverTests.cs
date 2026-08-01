@@ -265,7 +265,7 @@ public sealed class AssignmentSolverTests
     }
 
     [Fact]
-    public void Matcher_v2_rejects_an_assignment_side_limit_above_twelve()
+    public void Matcher_v3_rejects_an_assignment_side_limit_above_twelve()
     {
         var limits = ResourceLimits.Default with
         {
