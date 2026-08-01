@@ -7,7 +7,7 @@ name: Sparse SARIF PMD research capture
 # exact-head attested because source SHA and runner image version vary per run.
 
 on:
-  pull_request: {}
+  workflow_call: {}
 
 permissions:
   contents: read
@@ -30,14 +30,14 @@ jobs:
       - name: Check out exact pull-request head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
       - name: Verify exact clean source commit
         shell: bash
         env:
-          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
@@ -90,14 +90,14 @@ jobs:
       - name: Check out exact pull-request head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
       - name: Verify exact clean source commit
         shell: bash
         env:
-          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
@@ -165,7 +165,7 @@ jobs:
       - name: Bootstrap capture and verify authentic PMD SARIF
         shell: bash
         env:
-          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PYTHONDONTWRITEBYTECODE: '1'
           PYTHONNOUSERSITE: '1'
         run: |
@@ -186,7 +186,7 @@ jobs:
       - name: Verify post-capture source integrity
         shell: bash
         env:
-          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           actual_source_sha="$(git rev-parse HEAD)"
@@ -196,7 +196,7 @@ jobs:
       - name: Upload bootstrap raw and projected capture evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: sparse-sarif-pmd-bootstrap-${{ github.event.pull_request.head.sha }}
+          name: sparse-sarif-pmd-bootstrap-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/sparse-sarif-pmd-capture
           if-no-files-found: error
           retention-days: 30

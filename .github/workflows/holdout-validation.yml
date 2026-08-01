@@ -28,6 +28,12 @@ permissions:
   contents: read
 
 jobs:
+  sparse-sarif-research:
+    name: Execute sparse SARIF research bootstrap
+    uses: ./.github/workflows/sparse-sarif-research.yml
+    permissions:
+      contents: read
+
   linux:
     name: Evaluate committed holdout (Linux)
     runs-on: ubuntu-latest
