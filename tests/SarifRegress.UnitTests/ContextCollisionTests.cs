@@ -103,8 +103,9 @@ public sealed class ContextCollisionTests
                 evidence => evidence.Kind == "context-collision"));
 
         var pathTemplatedMoves = matched
-            .Where(decision => decision.Baseline!.PrimaryLocation!.Path
-                .RepositoryRelativePath.StartsWith(
+            .Where(decision => decision.Baseline!.PrimaryLocation?.Path
+                .RepositoryRelativePath is string path
+                && path.StartsWith(
                     "src/renamed-old/",
                     StringComparison.Ordinal))
             .OrderBy(decision => decision.Baseline!.FindingKey, StringComparer.Ordinal)
