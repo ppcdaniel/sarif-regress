@@ -151,7 +151,7 @@ public sealed class MatcherV2ToV3DeltaReportTests
             ["a-ambiguous", "z-false"],
             delta.NewlyIntroducedFalseMatches.Select(item => item.RelationshipId));
         Assert.Equal(
-            ["a-ambiguous", "regressed", "z-false"],
+            ["regressed", "a-ambiguous", "z-false"],
             delta.RemainingFailures.Select(item => item.RelationshipId));
         Assert.Equal(5, delta.ChangedDecisionCount);
         Assert.Equal(3, delta.ChangedDecisionTraceCount);
