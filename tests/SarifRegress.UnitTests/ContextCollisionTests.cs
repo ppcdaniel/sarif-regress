@@ -52,7 +52,11 @@ public sealed class ContextCollisionTests
             .EnumerateArray()
             .ToDictionary(
                 item => item.GetProperty("baselineKey").GetString()!,
-                item => item.GetProperty("candidateKey").GetString()!,
+                item => new ExpectedPair(
+                    item.GetProperty("candidateKey").GetString()!,
+                    Enum.Parse<FindingClassification>(
+                        item.GetProperty("classification").GetString()!,
+                        ignoreCase: true)),
                 StringComparer.Ordinal);
         var matched = result.Decisions
             .Where(decision => decision.Baseline is not null && decision.Candidate is not null)
@@ -64,7 +68,8 @@ public sealed class ContextCollisionTests
             decision =>
             {
                 var expected = expectedPairs[decision.Baseline!.FindingKey];
-                Assert.Equal(expected, decision.Candidate!.FindingKey);
+                Assert.Equal(expected.CandidateKey, decision.Candidate!.FindingKey);
+                Assert.Equal(expected.Classification, decision.Classification);
             });
         Assert.Equal(expectedPairs.Keys.Order(StringComparer.Ordinal), matched
             .Select(decision => decision.Baseline!.FindingKey)
@@ -96,6 +101,68 @@ public sealed class ContextCollisionTests
             decision => Assert.Contains(
                 decision.Decision.Evidence,
                 evidence => evidence.Kind == "context-collision"));
+
+        var pathTemplatedMoves = matched
+            .Where(decision => decision.Baseline!.PrimaryLocation!.Path
+                .RepositoryRelativePath.StartsWith(
+                    "src/renamed-old/",
+                    StringComparison.Ordinal))
+            .OrderBy(decision => decision.Baseline!.FindingKey, StringComparer.Ordinal)
+            .ToArray();
+        Assert.Equal(5, pathTemplatedMoves.Length);
+        Assert.Equal(
+            [
+                "baseline:0:22",
+                "baseline:0:23",
+                "baseline:0:24",
+                "baseline:0:25",
+                "baseline:0:26",
+            ],
+            pathTemplatedMoves.Select(decision => decision.Baseline!.FindingKey));
+        Assert.Equal(
+            [
+                "candidate:0:25",
+                "candidate:0:26",
+                "candidate:0:27",
+                "candidate:0:28",
+                "candidate:0:29",
+            ],
+            pathTemplatedMoves.Select(decision => decision.Candidate!.FindingKey));
+        Assert.All(
+            pathTemplatedMoves,
+            decision =>
+            {
+                Assert.Equal(FindingClassification.Moved, decision.Classification);
+                Assert.Equal(
+                    PrecedenceTier.WeakContextual,
+                    decision.Decision.PrecedenceTier);
+                Assert.Contains(
+                    decision.Decision.Evidence,
+                    evidence => evidence.Kind == "context-collision");
+                var transformation = Assert.Single(
+                    decision.Decision.Transformations,
+                    item => item.Kind ==
+                        "classification-message-location-template");
+                Assert.Equal(
+                    "sarifregress/message-location-template/v1",
+                    transformation.AlgorithmVersion);
+                var originalValue = Assert.IsType<string>(
+                    transformation.OriginalValue);
+                var transformedValue = Assert.IsType<string>(
+                    transformation.TransformedValue);
+                Assert.StartsWith(
+                    "sha256:",
+                    originalValue,
+                    StringComparison.Ordinal);
+                Assert.StartsWith(
+                    "sha256:",
+                    transformedValue,
+                    StringComparison.Ordinal);
+                Assert.Equal(71, originalValue.Length);
+                Assert.Equal(71, transformedValue.Length);
+                Assert.NotEqual(originalValue, transformedValue);
+                Assert.True(transformation.IsLossy);
+            });
     }
 
     [Fact]
@@ -726,4 +793,8 @@ public sealed class ContextCollisionTests
         || (evidence.CandidateValue?.Contains(
             $"occurrences={count}",
             StringComparison.Ordinal) ?? false);
+
+    private sealed record ExpectedPair(
+        string CandidateKey,
+        FindingClassification Classification);
 }

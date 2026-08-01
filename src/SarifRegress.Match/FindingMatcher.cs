@@ -1116,6 +1116,9 @@ public sealed class FindingMatcher
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
         ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
     {
+        ClassificationResult classification = Classify(
+            selectedEdge,
+            configuration.Matching.PathCaseSensitivity);
         var alternatives =
             incidentEdges.Length == 1
             && ReferenceEquals(incidentEdges[0], selectedEdge)
@@ -1128,6 +1131,12 @@ public sealed class FindingMatcher
                 contextFingerprintOccurrences,
                 selectedEdge.Baseline,
                 selectedEdge.Candidate)));
+        var transformations = OrderTransformations(
+            selectedEdge.Transformations.Concat(
+                classification.Transformation is TransformationRecord
+                    classificationTransformation
+                    ? [classificationTransformation]
+                    : []));
         var trace = CreateTrace(
             selectedEdge.DecisionVector.PrecedenceTier,
             GetDisplayConfidence(selectedEdge.DecisionVector.PrecedenceTier),
@@ -1138,7 +1147,7 @@ public sealed class FindingMatcher
                 selectedEdge.Baseline,
                 selectedEdge.Candidate,
                 "A stronger maximum-cardinality assignment was selected."),
-            selectedEdge.Transformations,
+            transformations,
             GetNodeDiagnostics(
                 diagnosticsByNode,
                 baselineIndex,
@@ -1146,9 +1155,7 @@ public sealed class FindingMatcher
             configuration.Limits.MaximumRejectedAlternatives,
             selectedEdge.Baseline.SourceReference);
         return new FindingDecision(
-            Classify(
-                selectedEdge,
-                configuration.Matching.PathCaseSensitivity),
+            classification.Classification,
             selectedEdge.Baseline,
             selectedEdge.Candidate,
             trace);
@@ -1289,6 +1296,17 @@ public sealed class FindingMatcher
             .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
             .ToImmutableArray();
 
+    private static ImmutableArray<TransformationRecord> OrderTransformations(
+        IEnumerable<TransformationRecord> transformations) =>
+        transformations
+            .Distinct()
+            .OrderBy(item => item.Kind, StringComparer.Ordinal)
+            .ThenBy(item => item.OriginalValue, StringComparer.Ordinal)
+            .ThenBy(item => item.TransformedValue, StringComparer.Ordinal)
+            .ThenBy(item => item.IsLossy)
+            .ThenBy(item => item.AlgorithmVersion, StringComparer.Ordinal)
+            .ToImmutableArray();
+
     private static ImmutableArray<TransformationRecord> GetFindingTransformations(
         Finding? finding) =>
         finding?.PrimaryLocation?.Path.Transformations
@@ -1374,7 +1392,7 @@ public sealed class FindingMatcher
             MatchingAlgorithms.MatcherVersion,
             TakeEvidenceAtMost(evidence, maximumItems),
             TakeAtMost(rejectedAlternatives, maximumItems),
-            TakeAtMost(transformations, maximumItems),
+            TakeTransformationsAtMost(transformations, maximumItems),
             diagnostics);
     }
 
@@ -1408,6 +1426,29 @@ public sealed class FindingMatcher
             MatchingAlgorithms.EvidenceOccurrenceVersion,
             StringComparison.Ordinal);
 
+    private static ImmutableArray<TransformationRecord> TakeTransformationsAtMost(
+        ImmutableArray<TransformationRecord> transformations,
+        int maximumItems)
+    {
+        if (transformations.Length <= maximumItems)
+        {
+            return transformations;
+        }
+
+        TransformationRecord? classificationTransformation = transformations
+            .FirstOrDefault(item => string.Equals(
+                item.AlgorithmVersion,
+                MatchingAlgorithms.MessageLocationTemplateVersion,
+                StringComparison.Ordinal));
+        return classificationTransformation is null
+            ? transformations.Take(maximumItems).ToImmutableArray()
+            : OrderTransformations(
+                transformations
+                    .Where(item => item != classificationTransformation)
+                    .Take(maximumItems - 1)
+                    .Append(classificationTransformation));
+    }
+
     private static ImmutableArray<T> TakeAtMost<T>(
         ImmutableArray<T> values,
         int maximumItems) =>
@@ -1439,11 +1480,20 @@ public sealed class FindingMatcher
                     : item));
     }
 
-    private static FindingClassification Classify(
+    private static ClassificationResult Classify(
         MatchEdge edge,
         PathCaseSensitivity pathCaseSensitivity)
     {
         var messageChanged = edge.DecisionVector.MessageAgreement == AgreementBand.None;
+        TransformationRecord? classificationTransformation = null;
+        if (messageChanged
+            && MessageLocationTemplateClassifier.TryCreateTransformation(
+                edge,
+                out classificationTransformation))
+        {
+            messageChanged = false;
+        }
+
         var contextChanged = HasChangedMaterialContext(edge.Baseline, edge.Candidate);
         var codeFlowChanged = HasChangedCodeFlow(
             edge.Baseline,
@@ -1451,7 +1501,9 @@ public sealed class FindingMatcher
             pathCaseSensitivity);
         if (messageChanged || contextChanged || codeFlowChanged)
         {
-            return FindingClassification.Modified;
+            return new ClassificationResult(
+                FindingClassification.Modified,
+                classificationTransformation);
         }
 
         var baselineLocation = edge.Baseline.PrimaryLocation;
@@ -1464,9 +1516,11 @@ public sealed class FindingMatcher
         var regionMoved = !Equals(
             baselineLocation?.Region,
             candidateLocation?.Region);
-        return pathMoved || regionMoved
-            ? FindingClassification.Moved
-            : FindingClassification.Unchanged;
+        return new ClassificationResult(
+            pathMoved || regionMoved
+                ? FindingClassification.Moved
+                : FindingClassification.Unchanged,
+            classificationTransformation);
     }
 
     private static bool HasChangedMaterialContext(Finding baseline, Finding candidate)
@@ -1521,6 +1575,10 @@ public sealed class FindingMatcher
         baseline is not null
         && candidate is not null
         && !string.Equals(baseline, candidate, StringComparison.Ordinal);
+
+    private readonly record struct ClassificationResult(
+        FindingClassification Classification,
+        TransformationRecord? Transformation);
 
     private static string NormalizePathForComparison(
         string path,

@@ -1,3 +1,4 @@
+using SarifRegress.Core;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Findings;
@@ -31,7 +32,10 @@ public sealed class MatchingEngineTests
         var decision = Assert.Single(result.Decisions);
         Assert.Equal(FindingClassification.Unchanged, decision.Classification);
         Assert.Equal(
-            "sarifregress/matcher/v3",
+            "sarifregress/matcher/v3.1",
+            ProductInformation.MatcherAlgorithmVersion);
+        Assert.Equal(
+            ProductInformation.MatcherAlgorithmVersion,
             decision.Decision.MatcherAlgorithmVersion);
         Assert.Contains(
             decision.Decision.Evidence,

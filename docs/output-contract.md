@@ -93,6 +93,14 @@ Matcher v3 makes context reliability occurrence-aware. The derived fingerprint g
 the product JSON output schema remains version `1` because no existing field was removed, renamed,
 or reinterpreted.
 
+Matcher v3.1 corrects post-correspondence classification when an accepted edge uses an explicit
+path alias and each canonical producer message differs only by one delimited occurrence of its own
+full repository-relative path. The path-neutral message template is recorded as a lossy, hashed
+`classification-message-location-template` transform under
+`sarifregress/message-location-template/v1`. This transform cannot admit, score, or assign an edge.
+Matcher v3 history remains immutable; the minor matcher revision distinguishes the observable
+classification change without claiming the separately gated sparse-SARIF matcher-v4 design.
+
 ## HTML and canonical SARIF
 
 HTML is rendered by deserialising this JSON contract and cannot call the matching engine. Its

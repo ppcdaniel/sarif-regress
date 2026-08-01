@@ -249,6 +249,32 @@ The delta records 59 fixed ground-truth relationships, 0 regressed
 relationships, 32 still failing relationships, and 0 newly introduced false
 matches. All 64 changed decisions have bounded explanation traces.
 
+## Matcher-v3.1 classification correction
+
+The frozen matcher-v3 record above remains unchanged. A subsequent
+post-correspondence audit proved that `gitleaks-match-014` through `-018` are
+unchanged one-finding files moved through the configured
+`src/renamed-old/` to `src/renamed-new/` alias: each baseline/candidate source
+pair is byte-identical, while Gitleaks embeds the changed repository-relative
+path in its otherwise identical canonical message.
+
+Matcher v3.1 corrects only that general classification boundary. It requires an
+already accepted, explicitly aliased edge; one unique, delimited occurrence of
+each side's own full repository-relative path; and byte-identical canonical
+message prefix and suffix. Extra message text, repeated tokens, embedded path
+prefixes, path continuations, context changes, and code-flow changes remain
+`modified`. The classifier cannot affect candidate admission, scoring,
+assignment, or ambiguity.
+
+Each use adds a bounded hashed
+`classification-message-location-template` transformation under
+`sarifregress/message-location-template/v1`. Matcher v3.1 therefore preserves
+the correspondence metrics (`50 TP / 0 FP / 25 FN`) while reducing the five
+known Gitleaks classification mismatches to zero. The exact case-level evidence
+is in
+[`validation/research/gitleaks-classification/analysis.json`](../validation/research/gitleaks-classification/analysis.json).
+Matcher v4 remains reserved for the separately gated sparse-SARIF experiment.
+
 ## External baseline
 
 Microsoft SARIF Multitool remains pinned at 5.5.0 and is not ground truth.
