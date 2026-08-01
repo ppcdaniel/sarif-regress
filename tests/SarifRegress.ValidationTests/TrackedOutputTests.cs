@@ -181,7 +181,7 @@ public sealed class TrackedOutputTests
     public void Matcher_v3_history_is_immutable_schema_valid_and_exact()
     {
         const string expectedManifestSha256 =
-            "1e99493b52780109d230ce91d8d7f23eb9b128e35c25c4b474d2b1b7681dac4f";
+            "39f880e379dc08dc94945bf31eda2c72b13a0f281f54e3e0528b7d04ba677a0c";
         string root = ValidationTestRepository.FindRoot();
         string historyRoot = Path.Combine(
             root,

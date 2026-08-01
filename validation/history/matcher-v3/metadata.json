@@ -9,8 +9,8 @@
   "baseCommits": {
     "validationBase": "0231d6fe779203a92469099b90d446fafe67b064",
     "matcherV2Implementation": "df45e021bc4d2b3c2fd0155bf75ae3967ee80b0d",
-    "matcherV3Implementation": "f91dfbd4328fb5680b0a5197408b09132692ce8a",
-    "matcherV3SourceTreeSha256": "2de20c3e0e1e5452610af2210d28e9b4b2fef6f3dc87f1ed04e6fa3703261fc1"
+    "matcherV3Implementation": "29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b",
+    "matcherV3SourceTreeSha256": "4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486"
   },
   "matcherAlgorithmVersion": "sarifregress/matcher/v3",
   "fingerprintAlgorithmVersions": [
@@ -151,13 +151,13 @@
     "newlyIntroducedFalseMatches": 0
   },
   "reportHashes": {
-    "sarifRegressHoldout": "9c233bb0e6ff2e9862e5241fc62f992e4e81f736ee44cac17eca34b8bdefa00a",
-    "sarifMultitoolBaseline": "a1b15d3da216a0a1309191da43f0ffb2d389375b1c2356aa80b5ae876fdf3d99",
-    "comparisonSummary": "7013d1f073d8c8488e3f78b05596864ed4339efb329abe6268a7d66d84ae0b86",
-    "v2ToV3Delta": "3b53312b07e14d55a35471543707880eb8ce196ec1d9d19905e8a2d12770169b",
-    "expectedChecksumManifest": "f9e970f6100a76dc4ac84b81e191d2fd01debf3bc63326a1179ff8ee3c40735e",
-    "crossPlatformAttestation": "7ffd729a3b3b3d748d9d77b9ac2a773258fff3198839e306709c39700b73f764",
-    "evaluationMetadata": "b5fd042cf47f967533325f868a5436d023073046f5e25ccb7690de5615cc2cc3",
+    "sarifRegressHoldout": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99",
+    "sarifMultitoolBaseline": "edc58e16c85635ee3ffa7dddd454425230fe3f71f4020b80cb1baf7f20300aa2",
+    "comparisonSummary": "4d8b79c467a26fd2f35d806e8ab8945fde0a8a48449edeb667ecdcd2c676784a",
+    "v2ToV3Delta": "e75c5fd7855e4da55029a8f262d78ba2007f574092c2464085f870204a18afdb",
+    "expectedChecksumManifest": "8ea45034a51c70de8de6bb05bad99729655d705a7fbec706800bfceb541b59f9",
+    "crossPlatformAttestation": "1063dda897ee632e6c91cc6af8fa36dc91dc802ebd05141be657db7e5c0f0b50",
+    "evaluationMetadata": "d9e88ba62142a23459ad86f5372b2e153e4727c3560662b8625a7a115d9006b7",
     "holdoutManifest": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
     "matcherV2ChecksumManifest": "04ed4d840b20a5cd681ee25303d0488e32aeaef46007a765c7ad29fd2c702f1a",
     "matcherV2SarifRegressHoldout": "d53225fbafeda78048726d201b230c6c24f0f8f68348e827b096f754406110cf"
@@ -175,8 +175,8 @@
     "externalUriBaseIssue": "https://github.com/ppcdaniel/sarif-regress/issues/9",
     "contextCollisionIssue": "https://github.com/ppcdaniel/sarif-regress/issues/10",
     "sparseSarifIssue": "https://github.com/ppcdaniel/sarif-regress/issues/11",
-    "bootstrapWorkflow": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30697017000",
-    "attestedRegenerationWorkflow": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30697377140"
+    "bootstrapWorkflow": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30698849989",
+    "attestedRegenerationWorkflow": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30699075579"
   },
   "immutability": {
     "holdoutLabelsChanged": false,

@@ -35,7 +35,6 @@ jobs:
     outputs:
       artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
       artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
-      mode: ${{ steps.attestation-mode.outputs.mode }}
 
     steps:
       - name: Check out repository
@@ -43,34 +42,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Select attestation mode
-        id: attestation-mode
-        shell: bash
-        run: |
-          set -euo pipefail
-          readonly attestation='validation/holdout/cross-platform-attestation.json'
-          readonly regeneration_marker='validation/holdout/.regenerate-expected'
-          if [[ -e "${regeneration_marker}" || -L "${regeneration_marker}" ]]; then
-            if [[ "${GITHUB_EVENT_NAME}" != 'pull_request' \
-                || ! -f "${regeneration_marker}" \
-                || -L "${regeneration_marker}" \
-                || ! -f "${attestation}" \
-                || -L "${attestation}" ]]; then
-              echo 'The expected-output regeneration marker is valid only on a pull request with a regular committed attestation.' >&2
-              exit 1
-            fi
-            echo 'mode=regenerate' >> "${GITHUB_OUTPUT}"
-          elif [[ -f "${attestation}" && ! -L "${attestation}" ]]; then
-            echo 'mode=strict' >> "${GITHUB_OUTPUT}"
-          elif [[ "${GITHUB_EVENT_NAME}" == 'pull_request' \
-              && ! -e "${attestation}" \
-              && ! -L "${attestation}" ]]; then
-            echo 'mode=bootstrap' >> "${GITHUB_OUTPUT}"
-          else
-            echo 'The fixed cross-platform attestation is missing or is not a regular file; only a pull request may bootstrap it.' >&2
-            exit 1
-          fi
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -96,49 +67,15 @@ jobs:
           dotnet restore SarifRegress.slnx --locked-mode
 
       - name: Verify repository
-        if: steps.attestation-mode.outputs.mode == 'strict'
         shell: bash
         run: ./scripts/verify.sh
-
-      - name: Verify repository before attestation exists
-        if: steps.attestation-mode.outputs.mode != 'strict'
-        shell: bash
-        run: |
-          set -euo pipefail
-          dotnet format SarifRegress.slnx --no-restore --verify-no-changes
-          dotnet build \
-            SarifRegress.slnx \
-            --configuration Release \
-            --no-restore \
-            --warnaserror
-          dotnet test \
-            SarifRegress.slnx \
-            --configuration Release \
-            --no-build \
-            --no-restore \
-            --filter \
-              'FullyQualifiedName!~TrackedOutputTests&FullyQualifiedName!~Both_validation_scripts_are_strict_and_enforce_fixture_snapshots&FullyQualifiedName!~Hosted_workflow_is_strict_and_binds_real_artifact_evidence'
 
       - name: Evaluate holdout
         shell: bash
         run: |
           set -euo pipefail
-          case '${{ steps.attestation-mode.outputs.mode }}' in
-            bootstrap)
-              ./scripts/validate-holdout.sh \
-                --generate-cross-platform-attestation-candidate
-              ;;
-            regenerate)
-              ./scripts/validate-holdout.sh --regenerate-attested-expected
-              ;;
-            strict)
-              ./scripts/validate-holdout.sh
-              ;;
-            *)
-              echo 'Unknown holdout attestation mode.' >&2
-              exit 1
-              ;;
-          esac
+          cd -- "${RUNNER_TEMP}"
+          "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh"
 
       - name: Upload Linux evaluation evidence
         id: upload-evidence
@@ -157,7 +94,6 @@ jobs:
     outputs:
       artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
       artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
-      mode: ${{ steps.attestation-mode.outputs.mode }}
 
     steps:
       - name: Check out repository
@@ -165,44 +101,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Select attestation mode
-        id: attestation-mode
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $attestation = 'validation/holdout/cross-platform-attestation.json'
-          $regenerationMarker = 'validation/holdout/.regenerate-expected'
-          if (Test-Path -LiteralPath $regenerationMarker) {
-            if ($env:GITHUB_EVENT_NAME -ne 'pull_request' -or
-                -not (Test-Path -LiteralPath $regenerationMarker -PathType Leaf) -or
-                -not (Test-Path -LiteralPath $attestation -PathType Leaf)) {
-              throw `
-                'The expected-output regeneration marker is valid only on a pull request with a regular committed attestation.'
-            }
-            $markerItem = Get-Item -LiteralPath $regenerationMarker -Force
-            $attestationItem = Get-Item -LiteralPath $attestation -Force
-            if (($markerItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
-                ($attestationItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-              throw 'The regeneration marker and attestation must not be reparse points.'
-            }
-            'mode=regenerate' | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          }
-          elseif (Test-Path -LiteralPath $attestation -PathType Leaf) {
-            $item = Get-Item -LiteralPath $attestation -Force
-            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-              throw 'The fixed cross-platform attestation cannot be a reparse point.'
-            }
-            'mode=strict' | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          }
-          elseif ($env:GITHUB_EVENT_NAME -eq 'pull_request' -and
-              -not (Test-Path -LiteralPath $attestation)) {
-            'mode=bootstrap' | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          }
-          else {
-            throw `
-              'The fixed cross-platform attestation is missing or is not a regular file; only a pull request may bootstrap it.'
-          }
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -231,50 +129,19 @@ jobs:
           }
 
       - name: Verify repository
-        if: steps.attestation-mode.outputs.mode == 'strict'
         shell: pwsh
         run: .\scripts\verify.ps1
-
-      - name: Verify repository before attestation exists
-        if: steps.attestation-mode.outputs.mode != 'strict'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          dotnet format SarifRegress.slnx --no-restore --verify-no-changes
-          if ($LASTEXITCODE -ne 0) { throw 'dotnet format failed.' }
-          dotnet build `
-            SarifRegress.slnx `
-            --configuration Release `
-            --no-restore `
-            --warnaserror
-          if ($LASTEXITCODE -ne 0) { throw 'dotnet build failed.' }
-          dotnet test `
-            SarifRegress.slnx `
-            --configuration Release `
-            --no-build `
-            --no-restore `
-            --filter `
-              'FullyQualifiedName!~TrackedOutputTests&FullyQualifiedName!~Both_validation_scripts_are_strict_and_enforce_fixture_snapshots&FullyQualifiedName!~Hosted_workflow_is_strict_and_binds_real_artifact_evidence'
-          if ($LASTEXITCODE -ne 0) { throw 'dotnet test failed.' }
 
       - name: Evaluate holdout
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          switch ('${{ steps.attestation-mode.outputs.mode }}') {
-            'bootstrap' {
-              .\scripts\validate-holdout.ps1 `
-                -GenerateCrossPlatformAttestationCandidate
-            }
-            'regenerate' {
-              .\scripts\validate-holdout.ps1 -RegenerateAttestedExpected
-            }
-            'strict' {
-              .\scripts\validate-holdout.ps1
-            }
-            default {
-              throw 'Unknown holdout attestation mode.'
-            }
+          Push-Location -LiteralPath $env:RUNNER_TEMP
+          try {
+            & (Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1')
+          }
+          finally {
+            Pop-Location
           }
 
       - name: Upload Windows evaluation evidence
@@ -363,10 +230,8 @@ jobs:
         env:
           LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.artifact_id }}
           LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.artifact_digest }}
-          LINUX_MODE: ${{ needs.linux.outputs.mode }}
           WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.artifact_id }}
           WINDOWS_ARTIFACT_DIGEST: ${{ needs.windows.outputs.artifact_digest }}
-          WINDOWS_MODE: ${{ needs.windows.outputs.mode }}
         run: |
           set -euo pipefail
           python3 -B - <<'PY'
@@ -435,9 +300,6 @@ jobs:
                       raise SystemExit(f"{path.name} contains an invalid entry.")
                   result[match.group(2)] = match.group(1)
               return result
-
-          if os.environ["LINUX_MODE"] != os.environ["WINDOWS_MODE"]:
-              raise SystemExit("Linux and Windows selected different attestation modes.")
 
           linux_artifact_id = required_decimal("LINUX_ARTIFACT_ID")
           windows_artifact_id = required_decimal("WINDOWS_ARTIFACT_ID")
