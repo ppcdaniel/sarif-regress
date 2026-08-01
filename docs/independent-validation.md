@@ -259,7 +259,7 @@ the result.
 ## Reproduction and cross-platform evidence
 
 To reproduce matcher v2, materialise the exact validation head instead of
-running the active matcher-v3 branch:
+running the active matcher-v3.1 branch:
 
 ```sh
 git worktree add ../sarif-regress-matcher-v2 0231d6fe779203a92469099b90d446fafe67b064

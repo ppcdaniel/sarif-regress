@@ -315,14 +315,13 @@ code, inspect secret values semantically, or use machine learning.
 
 The fixed aggregate thresholds are precision at least 0.95 and recall at
 least 0.90; each producer requires precision at least 0.95 and recall at
-least 0.80. Matcher v3 passes every precision, ambiguity, ingestion,
-structural, trace, and determinism condition, but fails aggregate recall, PMD
-recall, and the complete label graph. The recommendation therefore remains
-`blocked`.
+least 0.80. Matcher v3.1 passes every precision, classification, ambiguity,
+ingestion, structural, trace, and determinism condition, but fails aggregate
+recall, PMD recall, and the complete label graph. The recommendation therefore
+remains `blocked`.
 
 Remaining failures are exactly:
 
-- five Gitleaks classification mismatches;
 - 25 PMD missed identity relationships; and
 - two PMD ambiguity units that remain unmatched rather than being silently
   paired.

@@ -329,6 +329,14 @@ public sealed class DeterminismAndSafetyTests
         Assert.Contains("v3ToV31DeltaReportSha256", workflow, StringComparison.Ordinal);
         Assert.Contains("v3ToV31DeltaSha256", workflow, StringComparison.Ordinal);
         Assert.Contains("v3ToV31Delta", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "\"schemaVersion\": \"3\"",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "\"schemaVersion\": \"2\"",
+            workflow,
+            StringComparison.Ordinal);
         Assert.DoesNotContain(
             "--cross-platform-byte-identity",
             workflow,
