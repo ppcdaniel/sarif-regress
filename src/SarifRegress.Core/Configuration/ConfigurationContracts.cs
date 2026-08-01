@@ -11,6 +11,14 @@ namespace SarifRegress.Core.Configuration;
 public sealed record PathRebase(string From, string To);
 
 /// <summary>
+/// Defines one explicit logical URI base supplied by configuration.
+/// </summary>
+public sealed record UriBaseMapping(
+    string Id,
+    string Uri,
+    string? UriBaseId = null);
+
+/// <summary>
 /// Defines baseline and candidate path-prefix equivalence.
 /// </summary>
 public sealed record PathAlias(string Baseline, string Candidate);
@@ -83,7 +91,8 @@ public sealed record SarifRegressConfiguration
         new ReportingConfiguration(
             EmitCanonicalSarif: false,
             EmitHtml: false),
-        ResourceLimits.Default);
+        ResourceLimits.Default,
+        uriBaseMappings: []);
 
     /// <summary>
     /// Initializes a configuration.
@@ -97,7 +106,8 @@ public sealed record SarifRegressConfiguration
         MatchingConfiguration matching,
         PolicyConfiguration policy,
         ReportingConfiguration reporting,
-        ResourceLimits limits)
+        ResourceLimits limits,
+        IEnumerable<UriBaseMapping>? uriBaseMappings = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(schemaVersion);
         ArgumentNullException.ThrowIfNull(matching);
@@ -107,6 +117,7 @@ public sealed record SarifRegressConfiguration
 
         SchemaVersion = schemaVersion;
         RepositoryRoot = string.IsNullOrWhiteSpace(repositoryRoot) ? null : repositoryRoot;
+        UriBaseMappings = NormalizeUriBaseMappings(uriBaseMappings);
         PathRebases = (pathRebases ?? [])
             .OrderByDescending(item => item.From.Length)
             .ThenBy(item => item.From, StringComparer.Ordinal)
@@ -136,6 +147,25 @@ public sealed record SarifRegressConfiguration
     }
 
     /// <summary>
+    /// Creates a configuration with a different repository root while preserving
+    /// every other validated setting.
+    /// </summary>
+    /// <param name="repositoryRoot">The replacement repository root.</param>
+    /// <returns>The equivalent configuration with the requested root.</returns>
+    public SarifRegressConfiguration WithRepositoryRoot(string? repositoryRoot) =>
+        new(
+            SchemaVersion,
+            repositoryRoot,
+            PathRebases,
+            PathAliases,
+            RuleAliases,
+            Matching,
+            Policy,
+            Reporting,
+            Limits,
+            UriBaseMappings);
+
+    /// <summary>
     /// Gets the independent configuration schema version.
     /// </summary>
     public string SchemaVersion { get; }
@@ -144,6 +174,11 @@ public sealed record SarifRegressConfiguration
     /// Gets the configured repository root.
     /// </summary>
     public string? RepositoryRoot { get; }
+
+    /// <summary>
+    /// Gets configured logical URI bases in ordinal identifier order.
+    /// </summary>
+    public ImmutableArray<UriBaseMapping> UriBaseMappings { get; }
 
     /// <summary>
     /// Gets path rebases in longest-prefix-first order.
@@ -179,4 +214,38 @@ public sealed record SarifRegressConfiguration
     /// Gets untrusted-input limits.
     /// </summary>
     public ResourceLimits Limits { get; }
+
+    private static ImmutableArray<UriBaseMapping> NormalizeUriBaseMappings(
+        IEnumerable<UriBaseMapping>? mappings)
+    {
+        var byId = new Dictionary<string, UriBaseMapping>(StringComparer.Ordinal);
+        foreach (var mapping in mappings ?? [])
+        {
+            ArgumentNullException.ThrowIfNull(mapping);
+            ArgumentException.ThrowIfNullOrWhiteSpace(mapping.Id);
+            ArgumentException.ThrowIfNullOrWhiteSpace(mapping.Uri);
+            if (mapping.UriBaseId is not null)
+            {
+                ArgumentException.ThrowIfNullOrWhiteSpace(mapping.UriBaseId);
+            }
+
+            if (byId.TryGetValue(mapping.Id, out var existing) &&
+                existing != mapping)
+            {
+                throw new ArgumentException(
+                    "A URI-base identifier cannot map to multiple definitions.",
+                    nameof(mappings));
+            }
+
+            byId[mapping.Id] = mapping;
+        }
+
+        return byId.Values
+            .OrderBy(item => item.Id, StringComparer.Ordinal)
+            .ThenBy(item => item.Uri, StringComparer.Ordinal)
+            .ThenBy(
+                item => item.UriBaseId ?? string.Empty,
+                StringComparer.Ordinal)
+            .ToImmutableArray();
+    }
 }

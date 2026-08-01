@@ -7,6 +7,7 @@ using SarifRegress.Core.Paths;
 using SarifRegress.Core.Security;
 using SarifRegress.Core.Utility;
 using SarifRegress.Sarif.Canonicalization;
+using SarifRegress.Sarif.Configuration;
 using SarifRegress.Sarif.Fingerprints;
 using SarifRegress.Sarif.Repository;
 
@@ -21,6 +22,12 @@ public sealed class SarifIngestor
     /// Gets the only SARIF version accepted by the comparison adapter.
     /// </summary>
     public const string SupportedSarifVersion = "2.1.0";
+
+    /// <summary>
+    /// Gets the configured URI-base provenance algorithm identifier.
+    /// </summary>
+    public const string ConfiguredUriBaseAlgorithmVersion =
+        "sarifregress/configured-uri-base/v1";
 
     private const string RelatedLocationAlgorithmVersion = "related-location/v1";
     private const string CodeFlowContextAlgorithmVersion = "code-flow-context/v1";
@@ -1775,6 +1782,8 @@ public sealed class SarifIngestor
         private readonly int runIndex;
         private readonly SarifIngestionRequest request;
         private readonly PathCanonicalizer pathCanonicalizer;
+        private readonly ImmutableArray<UriBaseMapping>
+            configuredUriBases;
 
         public LocationResolver(
             SarifRunWire run,
@@ -1786,6 +1795,7 @@ public sealed class SarifIngestor
             this.runIndex = runIndex;
             this.request = request;
             this.pathCanonicalizer = pathCanonicalizer;
+            configuredUriBases = request.Configuration.UriBaseMappings;
         }
 
         public PrimaryLocation? ResolvePrimary(
@@ -2073,23 +2083,46 @@ public sealed class SarifIngestor
             }
 
             string? resolvedUri = null;
+            var configuredMappings = new List<UriBaseMapping>();
             if (uriBaseId is not null)
             {
                 resolvedUri = ResolveUriBase(
                     uriBaseId,
                     originalUri,
                     pointer,
-                    diagnostics);
+                    diagnostics,
+                    configuredMappings);
                 if (resolvedUri is null)
                 {
                     return null;
                 }
             }
 
-            return pathCanonicalizer.Canonicalize(
+            var canonicalPath = pathCanonicalizer.Canonicalize(
                 originalUri,
                 resolvedUri,
                 sourceReference);
+            if (configuredMappings.Count == 0)
+            {
+                return canonicalPath;
+            }
+
+            var configurationTransforms = configuredMappings.Select(
+                mapping => new TransformationRecord(
+                    "configured-uri-base",
+                    mapping.Id,
+                    mapping.Uri,
+                    isLossy: false,
+                    ConfiguredUriBaseAlgorithmVersion));
+            return new CanonicalPath(
+                canonicalPath.OriginalValue,
+                canonicalPath.ResolvedValue,
+                canonicalPath.CanonicalUri,
+                canonicalPath.RepositoryRelativePath,
+                canonicalPath.Kind,
+                configurationTransforms.Concat(
+                    canonicalPath.Transformations),
+                canonicalPath.Diagnostics);
         }
 
         private SarifArtifactLocationWire? ResolveArtifactIndex(
@@ -2126,22 +2159,50 @@ public sealed class SarifIngestor
             string uriBaseId,
             string childUri,
             string pointer,
-            ICollection<Diagnostic> diagnostics)
+            ICollection<Diagnostic> diagnostics,
+            ICollection<UriBaseMapping> configuredMappings)
         {
             var visited = new HashSet<string>(StringComparer.Ordinal);
+            var resolutionLegs = new List<UriBaseResolutionLeg>();
             var baseUri = ResolveUriBaseCore(
                 uriBaseId,
                 visited,
                 depth: 0,
                 pointer,
-                diagnostics);
-            return baseUri is null
-                ? null
-                : CombineLogicalUri(
-                    baseUri,
-                    childUri,
+                diagnostics,
+                configuredMappings,
+                resolutionLegs);
+            if (baseUri is null)
+            {
+                return null;
+            }
+
+            if (configuredMappings.Count > 0 &&
+                (!ConfiguredUriBasePolicy.IsSafeResolvedRoot(baseUri) ||
+                    !HasSafeConfiguredChain(resolutionLegs)))
+            {
+                AddUnresolvedUriBaseDiagnostic(
                     pointer,
-                    diagnostics);
+                    diagnostics,
+                    "The configured URI-base chain resolved outside approved local roots.");
+                return null;
+            }
+
+            if (configuredMappings.Count > 0 &&
+                !ConfiguredUriBasePolicy.IsSafeArtifactReference(childUri))
+            {
+                AddUnresolvedUriBaseDiagnostic(
+                    pointer,
+                    diagnostics,
+                    "A configured URI-base mapping cannot resolve a parent-traversing artifact reference.");
+                return null;
+            }
+
+            return CombineLogicalUri(
+                baseUri,
+                childUri,
+                pointer,
+                diagnostics);
         }
 
         // Time: O(d), where d is the configured URI-base depth. Space: O(d).
@@ -2150,7 +2211,9 @@ public sealed class SarifIngestor
             ISet<string> visited,
             int depth,
             string pointer,
-            ICollection<Diagnostic> diagnostics)
+            ICollection<Diagnostic> diagnostics,
+            ICollection<UriBaseMapping> configuredMappings,
+            ICollection<UriBaseResolutionLeg> resolutionLegs)
         {
             if (depth >= request.Configuration.Limits.MaximumUriBaseDepth)
             {
@@ -2182,28 +2245,58 @@ public sealed class SarifIngestor
                 return null;
             }
 
-            if (run.OriginalUriBaseIds is null ||
-                !run.OriginalUriBaseIds.TryGetValue(
+            SarifArtifactLocationWire? baseLocation = null;
+            var isSarifDefined =
+                run.OriginalUriBaseIds is not null &&
+                run.OriginalUriBaseIds.TryGetValue(
                     uriBaseId,
-                    out var baseLocation) ||
-                baseLocation is null ||
-                string.IsNullOrWhiteSpace(baseLocation.Uri))
+                    out baseLocation);
+            UriBaseMapping? configuredMapping = null;
+            if (!isSarifDefined)
             {
-                diagnostics.Add(
-                    CreateDiagnostic(
-                        "CANON0032",
-                        DiagnosticSeverity.Error,
-                        DiagnosticStage.Canonicalisation,
-                        "The URI-base identifier cannot be resolved.",
-                        request.Input,
-                        runIndex,
-                        TryExtractResultIndex(pointer),
-                        pointer + "/uriBaseId"));
+                TryGetConfiguredUriBase(
+                    uriBaseId,
+                    out configuredMapping);
+            }
+
+            if (isSarifDefined &&
+                (baseLocation is null ||
+                    string.IsNullOrWhiteSpace(baseLocation.Uri)))
+            {
+                AddUnresolvedUriBaseDiagnostic(
+                    pointer,
+                    diagnostics,
+                    "The SARIF-defined URI-base identifier is invalid.");
                 return null;
             }
 
-            var resolved = baseLocation.Uri;
-            if (resolved.Length >
+            if (!isSarifDefined && configuredMapping is null)
+            {
+                AddUnresolvedUriBaseDiagnostic(
+                    pointer,
+                    diagnostics,
+                    "The URI-base identifier cannot be resolved.");
+                return null;
+            }
+
+            if (configuredMapping is not null &&
+                !ConfiguredUriBasePolicy.IsSafe(configuredMapping))
+            {
+                AddUnresolvedUriBaseDiagnostic(
+                    pointer,
+                    diagnostics,
+                    "The configured URI-base identifier has an unsafe target.");
+                return null;
+            }
+
+            var declaredUri = isSarifDefined
+                ? baseLocation!.Uri!
+                : configuredMapping!.Uri;
+            string? resolved = declaredUri;
+            var parentUriBaseId = isSarifDefined
+                ? baseLocation!.UriBaseId
+                : configuredMapping!.UriBaseId;
+            if (declaredUri.Length >
                 request.Configuration.Limits.MaximumStringCharacters)
             {
                 diagnostics.Add(
@@ -2219,9 +2312,9 @@ public sealed class SarifIngestor
                 return null;
             }
 
-            if (baseLocation.UriBaseId is not null)
+            if (parentUriBaseId is not null)
             {
-                if (baseLocation.UriBaseId.Length >
+                if (parentUriBaseId.Length >
                     request.Configuration.Limits.MaximumStringCharacters)
                 {
                     diagnostics.Add(
@@ -2238,11 +2331,13 @@ public sealed class SarifIngestor
                 }
 
                 var parent = ResolveUriBaseCore(
-                    baseLocation.UriBaseId,
+                    parentUriBaseId,
                     visited,
                     depth + 1,
                     pointer,
-                    diagnostics);
+                    diagnostics,
+                    configuredMappings,
+                    resolutionLegs);
                 if (parent is null)
                 {
                     return null;
@@ -2259,9 +2354,102 @@ public sealed class SarifIngestor
                 }
             }
 
+            if (configuredMapping is not null)
+            {
+                configuredMappings.Add(configuredMapping);
+                diagnostics.Add(
+                    CreateDiagnostic(
+                        "CANON0033",
+                        DiagnosticSeverity.Note,
+                        DiagnosticStage.Canonicalisation,
+                        "The missing URI-base identifier was supplied by explicit configuration.",
+                        request.Input,
+                        runIndex,
+                        TryExtractResultIndex(pointer),
+                        pointer + "/uriBaseId"));
+            }
+
+            resolutionLegs.Add(
+                new UriBaseResolutionLeg(declaredUri));
+
             visited.Remove(uriBaseId);
             return resolved;
         }
+
+        // Time: O(log m), where m is the bounded mapping count. Space: O(1).
+        private bool TryGetConfiguredUriBase(
+            string uriBaseId,
+            out UriBaseMapping? mapping)
+        {
+            var lower = 0;
+            var upper = configuredUriBases.Length - 1;
+            while (lower <= upper)
+            {
+                var middle = lower + ((upper - lower) / 2);
+                var candidate = configuredUriBases[middle];
+                var comparison = StringComparer.Ordinal.Compare(
+                    candidate.Id,
+                    uriBaseId);
+                if (comparison == 0)
+                {
+                    mapping = candidate;
+                    return true;
+                }
+
+                if (comparison < 0)
+                {
+                    lower = middle + 1;
+                }
+                else
+                {
+                    upper = middle - 1;
+                }
+            }
+
+            mapping = null;
+            return false;
+        }
+
+        private static bool HasSafeConfiguredChain(
+            IReadOnlyList<UriBaseResolutionLeg> resolutionLegs)
+        {
+            if (resolutionLegs.Count == 0 ||
+                !ConfiguredUriBasePolicy.IsSafeResolvedRoot(
+                    resolutionLegs[0].Uri))
+            {
+                return false;
+            }
+
+            for (var index = 1; index < resolutionLegs.Count; index++)
+            {
+                if (!ConfiguredUriBasePolicy.IsSafeRelativeDefinition(
+                        resolutionLegs[index].Uri))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void AddUnresolvedUriBaseDiagnostic(
+            string pointer,
+            ICollection<Diagnostic> diagnostics,
+            string message)
+        {
+            diagnostics.Add(
+                CreateDiagnostic(
+                    "CANON0032",
+                    DiagnosticSeverity.Error,
+                    DiagnosticStage.Canonicalisation,
+                    message,
+                    request.Input,
+                    runIndex,
+                    TryExtractResultIndex(pointer),
+                    pointer + "/uriBaseId"));
+        }
+
+        private readonly record struct UriBaseResolutionLeg(string Uri);
 
         private Region? ResolveRegion(
             SarifRegionWire? region,

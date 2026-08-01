@@ -29,6 +29,32 @@ public sealed class CliInvocationTests
         }
         """;
 
+    private const string ExternalBaseFindingSarif =
+        """
+        {
+          "version": "2.1.0",
+          "runs": [{
+            "tool": { "driver": { "name": "Example Analyzer" } },
+            "results": [{
+              "ruleId": "EXAMPLE001",
+              "message": { "text": "Stable message" },
+              "partialFingerprints": {
+                "primaryLocationLineHash/v1": "stable-fingerprint"
+              },
+              "locations": [{
+                "physicalLocation": {
+                  "artifactLocation": {
+                    "uri": "src/example.cs",
+                    "uriBaseId": "EXPLICIT_ROOT"
+                  },
+                  "region": { "startLine": 2, "startColumn": 1 }
+                }
+              }]
+            }]
+          }]
+        }
+        """;
+
     [Fact]
     public void Compare_without_baseline_fails_with_an_actionable_error()
     {
@@ -215,6 +241,50 @@ public sealed class CliInvocationTests
         Assert.Equal(0, invocation.ExitCode);
         Assert.Contains(
             "\"kind\": \"context-snippet\"",
+            invocation.StandardOutput,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Explicit_repository_root_preserves_configured_uri_bases()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", ExternalBaseFindingSarif);
+        workspace.Write("candidate.sarif", ExternalBaseFindingSarif);
+        workspace.Write(
+            "regress.json",
+            """
+            {
+              "schemaVersion": "1",
+              "uriBaseMappings": [
+                { "id": "EXPLICIT_ROOT", "uri": "repo:/" }
+              ],
+              "policy": { "failOn": [] }
+            }
+            """);
+        workspace.Write(
+            "repository/src/example.cs",
+            "namespace Example;\ninternal sealed class ExampleType { }\n");
+
+        var invocation = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline",
+            "baseline.sarif",
+            "--candidate",
+            "candidate.sarif",
+            "--config",
+            "regress.json",
+            "--repo",
+            "repository");
+
+        Assert.Equal(0, invocation.ExitCode);
+        Assert.DoesNotContain(
+            "CANON0032",
+            invocation.StandardOutput + invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "configured-uri-base",
             invocation.StandardOutput,
             StringComparison.Ordinal);
     }

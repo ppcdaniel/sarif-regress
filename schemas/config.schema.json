@@ -19,6 +19,13 @@
       "minLength": 1,
       "maxLength": 4194304
     },
+    "uriBaseMappings": {
+      "type": "array",
+      "maxItems": 250000,
+      "items": {
+        "$ref": "#/$defs/uriBaseMapping"
+      }
+    },
     "pathRebases": {
       "type": "array",
       "maxItems": 250000,
@@ -58,6 +65,25 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 4194304
+    },
+    "uriBaseMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "uri"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "uri": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "uriBaseId": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
     },
     "pathRebase": {
       "type": "object",
