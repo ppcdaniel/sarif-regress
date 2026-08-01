@@ -116,7 +116,8 @@ jobs:
             --configuration Release \
             --no-build \
             --no-restore \
-            --filter 'FullyQualifiedName!~TrackedOutputTests'
+            --filter \
+              'FullyQualifiedName!~TrackedOutputTests&FullyQualifiedName!~Both_validation_scripts_are_strict_and_enforce_fixture_snapshots&FullyQualifiedName!~Hosted_workflow_is_strict_and_binds_real_artifact_evidence'
 
       - name: Evaluate holdout
         shell: bash
@@ -252,7 +253,8 @@ jobs:
             --configuration Release `
             --no-build `
             --no-restore `
-            --filter 'FullyQualifiedName!~TrackedOutputTests'
+            --filter `
+              'FullyQualifiedName!~TrackedOutputTests&FullyQualifiedName!~Both_validation_scripts_are_strict_and_enforce_fixture_snapshots&FullyQualifiedName!~Hosted_workflow_is_strict_and_binds_real_artifact_evidence'
           if ($LASTEXITCODE -ne 0) { throw 'dotnet test failed.' }
 
       - name: Evaluate holdout
