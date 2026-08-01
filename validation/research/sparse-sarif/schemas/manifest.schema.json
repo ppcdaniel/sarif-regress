@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/research/sparse-sarif/schemas/manifest.schema.json",
+  "title": "Sparse-SARIF research corpus manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "corpusId",
+    "producer",
+    "families",
+    "contamination",
+    "integrity"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "corpusId": {
+      "$ref": "#/$defs/stableId"
+    },
+    "producer": {
+      "$ref": "#/$defs/producer"
+    },
+    "families": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/family"
+      }
+    },
+    "contamination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scannerPath",
+        "scannerSha256",
+        "policyVersion"
+      ],
+      "properties": {
+        "scannerPath": {
+          "const": "tools/scan_contamination.py"
+        },
+        "scannerSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "policyVersion": {
+          "const": "sparse-sarif-contamination/v1"
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "files"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/integrityPath"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+    },
+    "httpsUrl": {
+      "type": "string",
+      "minLength": 9,
+      "maxLength": 2048,
+      "pattern": "^https://[^\\s]+$"
+    },
+    "integrityPath": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/relativePath"
+        },
+        {
+          "not": {
+            "pattern": "^(?:manifest\\.json|expected/)"
+          }
+        }
+      ]
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "name",
+        "version",
+        "sourceCommit",
+        "license",
+        "archive",
+        "helpSha256",
+        "javaVersion",
+        "captureCommand",
+        "captureEnvironment"
+      ],
+      "properties": {
+        "family": {
+          "const": "pmd"
+        },
+        "name": {
+          "const": "PMD"
+        },
+        "version": {
+          "const": "7.26.0"
+        },
+        "sourceCommit": {
+          "$ref": "#/$defs/gitCommit"
+        },
+        "license": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identifier",
+            "name",
+            "url"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9.-]+$"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "url": {
+              "$ref": "#/$defs/httpsUrl"
+            }
+          }
+        },
+        "archive": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "sizeBytes",
+            "sha256"
+          ],
+          "properties": {
+            "url": {
+              "$ref": "#/$defs/httpsUrl"
+            },
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1073741824
+            },
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          }
+        },
+        "helpSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "javaVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "captureCommand": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "captureEnvironment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runnerImage",
+            "runnerVersion",
+            "os"
+          ],
+          "properties": {
+            "runnerImage": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "runnerVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "os": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        }
+      }
+    },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelsPath",
+        "rulesetPath",
+        "baseline",
+        "candidate"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "labelsPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "rulesetPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "baseline": {
+          "$ref": "#/$defs/side"
+        },
+        "candidate": {
+          "$ref": "#/$defs/side"
+        }
+      }
+    },
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceRoot",
+        "sarifPath",
+        "sourceTreeSha256",
+        "rawCaptureSha256",
+        "projectedSarifSha256",
+        "resultCount"
+      ],
+      "properties": {
+        "sourceRoot": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sarifPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sourceTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "rawCaptureSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "projectedSarifSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "resultCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        }
+      }
+    }
+  }
+}

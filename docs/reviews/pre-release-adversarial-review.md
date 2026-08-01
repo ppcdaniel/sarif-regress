@@ -427,3 +427,122 @@ security, and supported-evidence documentation. A safe preview remains blocked u
 defines preview criteria; a stable release remains blocked by the exposed-holdout recall failure,
 PMD evidence gap, classification defect, licensing disposition, release notices/gates, and matcher
 safety findings.
+
+## Nightly research-infrastructure addendum
+
+This addendum records findings made on 2026-08-02 while the clean sparse-SARIF corpus and its
+pre-experiment controls were still uncommitted. The findings were recorded before remediation and
+do not revise the counts for the earlier PR #8/PR #13 review above. They block admission of the new
+research evidence, not the already frozen v2/v3/v3.1 records.
+
+### H-09 — The initial contamination scanner failed open on boundedness and label admission
+
+- **Evidence and code area:** the first versions of
+  `validation/research/sparse-sarif/tools/scan_contamination.py`, especially tree enumeration, JSON
+  parsing, label-token scanning, selector admission, and Windows filesystem checks. Separator-
+  normalized label IDs could evade detection; JSON depth was checked only after materialisation;
+  the aggregate byte limit diagnosed but continued admission; directory count/depth were
+  unbounded; embedded absolute paths and Windows reparse points could escape checks; SARIF keys and
+  values were not scanned for label IDs; equal/overlapping side roots were accepted; and labels
+  were not proved to uniquely and exhaustively partition the SARIF results. The original test
+  fixture itself assigned some endpoints more than once.
+- **Why it matters:** a scanner with these gaps can report that a corpus is clean while it contains
+  a direct label channel, an unlabelled or multiply labelled result, a swapped side, or an
+  input capable of exhausting the scanner before its limits take effect. Any PMD metric produced
+  after such admission would be scientifically unauditable.
+- **Smallest safe remediation:** fail before materialising over-depth JSON or admitting files past
+  any resource bound; use no-follow/reparse-aware enumeration and reads; scan normalized IDs and
+  marker text in source and SARIF; require distinct side roots and inputs; and resolve every natural
+  selector exactly once into a disjoint, exhaustive relationship/new/resolved/ambiguity partition.
+  Add a negative test for every former bypass and run the Windows junction test on hosted Windows.
+- **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the nightly hardening PR:**
+  yes until fixed. **Blocks release or matcher v4:** yes.
+- **Tracking:** [#24](https://github.com/ppcdaniel/sarif-regress/issues/24).
+
+### H-10 — An `implement-v4` decision was not bound to every fixed gate
+
+- **Evidence and code area:** the initial
+  `validation/research/sparse-sarif/schemas/experiment-report.schema.json` conditional and
+  `_scan_experiment_report`/`_scan_variant_projection` in the contamination scanner. A report only
+  needed some variant-shaped object with passing projection values. The selected variant was not
+  originally tied to that object, and aggregate-holdout precision/recall, development-corpus
+  status, and Semgrep/Gitleaks non-regression remained self-asserted projection fields rather than
+  values derived from structured evidence. A later draft distinguished the ten scenarios but
+  treated a mismatch or root swap caught only by the corpus-specific trusted source-tree hash as a
+  production-safe pass, even though ADR 0003 explicitly says that preflight is unavailable to an
+  ordinary caller and cannot by itself authorize a shipped design.
+- **Why it matters:** a schema-valid report could authorize matcher v4 even though the selected
+  variant failed or the original 75-pair holdout, development corpus, or existing producer results
+  were never demonstrated. This defeats the predeclared stop rule while making the report look
+  machine-enforced.
+- **Smallest safe remediation:** represent clean-PMD metrics, original-holdout metrics,
+  producer-regression results, development-corpus status, ambiguity/security outcomes,
+  determinism, and resource evidence separately. Bind every projected gate to those values, require
+  exactly one selected variant, and permit `implement-v4` only when that same variant passes all
+  thresholds with zero unexplained ingestion or structural failure. Record whether a scenario's
+  safety depends on corpus-only attestation and reject `implement-v4` when it does. Add negative
+  tests that forge each projected value independently.
+- **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the nightly hardening PR:**
+  yes until fixed. **Blocks release or matcher v4:** yes.
+- **Tracking:** [#25](https://github.com/ppcdaniel/sarif-regress/issues/25).
+
+### H-11 — The initial sparse-capture pipeline could attest unauthentic or ambient PMD output
+
+- **Evidence and code area:** the first uncommitted versions of
+  `.github/workflows/sparse-sarif-research.yml`, `tools/capture_pmd.sh`,
+  `tools/project_pmd_sarif.py`, and `tools/verify_pmd_capture.py` under the research corpus. The
+  workflow ran scanner tests without scanning the actual corpus; the verifier accepted a PMD
+  driver name/version even when its invocation failed or emitted error notifications; and the URI
+  projector rejected only the selected source-root prefix, allowing other POSIX/Windows paths,
+  file URIs, runner hostnames, and timestamps to survive. The shell execution constants and Python
+  evidence constants were not bound to one canonical command, and the archive download had no
+  transfer-time byte ceiling before its exact size/hash check.
+- **Why it matters:** contamination-free source is insufficient if a failed producer run, ambient
+  checkout data, or execution/evidence drift can be promoted as authentic SARIF. Retrying an
+  unbounded redirected download also exposes a hosted runner to avoidable disk exhaustion.
+- **Smallest safe remediation:** execute the actual source-only admission on both hosted systems;
+  require exactly one successful invocation and no execution/configuration errors; reject ambient
+  machine data outside explicitly typed portable values; derive execution and environment evidence
+  from one command/provenance contract; and impose a transfer-time ceiling while retaining the
+  exact post-download size, SHA-256, and safe-extraction checks. After first capture, replace the
+  upload-only bootstrap with strict comparison of deterministic projections, projection audits,
+  and raw hashes.
+- **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** yes until corrected and
+  recaptured. **Blocks release or matcher v4:** yes, because the clean-PMD evidence would otherwise
+  be unauditable.
+- **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
+
+### M-15 — The initial PMD URI projector did not establish its no-link input boundary
+
+- **Evidence and code area:** the first uncommitted
+  `validation/research/sparse-sarif/tools/project_pmd_sarif.py`, in `read_strict_json`,
+  `project_document`, and `_assert_source_file`. It resolved the supplied source root before asking
+  whether it was a link, walked source components by pathname, and checked JSON depth only after
+  parsing.
+- **Why it matters:** the intended workflow uses controlled fixtures and a pinned PMD binary, so
+  this is not a remote product exploit. It nevertheless fails the experiment's independent-root
+  security contract and could project through a symlink/junction or materialise an adversarially
+  deep capture before rejecting it.
+- **Smallest safe remediation:** preflight JSON nesting before parsing; reject symlink, junction,
+  reparse, and non-directory roots before canonical resolution; open files through anchored
+  no-follow handles (or an equivalently safe checked mechanism); and test link roots, linked parent
+  components, non-regular files, and deep JSON. The projection verifier must also prove that only
+  the enumerated URI JSON values changed and that result order is identical.
+- **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** until the capture tool is
+  corrected or removed. **Blocks release:** no independently; **blocks sparse-corpus evidence:**
+  yes.
+
+### M-16 — Whole-artifact capture checksums are not stable promotion targets
+
+- **Evidence and code area:** the bootstrap capture artifact includes `capture-environment.json` in
+  `checksums.sha256`. The environment document intentionally records the current source SHA and
+  GitHub-hosted image version. Both can differ on the commit that promotes the captured files or a
+  later exact-head recapture, even when raw PMD and projected SARIF bytes remain identical.
+- **Why it matters:** comparing that complete checksum set after promotion creates a self-invalidating
+  bootstrap loop and can encourage repeated regeneration until a workflow appears green.
+- **Smallest safe remediation:** preserve the first capture's environment and artifact identity as
+  provenance, but compare only deterministic projected SARIF, projection audits, and expected raw
+  hashes in strict mode. Verify each new run's HEAD/image evidence structurally and attest it
+  separately.
+- **Blocks merging PR #8/#13:** no. **Blocks the nightly hardening PR:** conversion from bootstrap to
+  strict mode. **Blocks release:** no independently; **blocks a deterministic research claim:** yes.

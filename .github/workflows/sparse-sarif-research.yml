@@ -1,0 +1,202 @@
+name: Sparse SARIF PMD research capture
+
+# BOOTSTRAP ONLY: this workflow uploads verified raw/projection evidence for
+# first promotion. After that promotion, replace upload-only acceptance with a
+# strict comparison of deterministic projections/audits and expected raw hashes.
+# Runner-environment evidence and its aggregate checksum remain separately
+# exact-head attested because source SHA and runner image version vary per run.
+
+on:
+  pull_request: {}
+
+permissions:
+  contents: read
+
+jobs:
+  admission:
+    name: Admit research corpus (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ubuntu
+            os: ubuntu-24.04
+          - label: windows
+            os: windows-2025
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact clean source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact Python runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Test and apply pre-capture contamination admission
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python -B \
+            validation/research/sparse-sarif/tools/test_scan_contamination.py \
+            -v
+          # Bootstrap admission intentionally uses source-only mode. The
+          # scanner's default mode remains manifest- and capture-required.
+          python -B \
+            validation/research/sparse-sarif/tools/scan_contamination.py \
+            --research-root validation/research/sparse-sarif \
+            --source-only
+          python -B - <<'PY'
+          from pathlib import Path
+
+          root = Path("validation/research/sparse-sarif/tools")
+          prohibited = sorted(root.rglob("__pycache__"))
+          prohibited.extend(sorted(root.rglob("*.pyc")))
+          prohibited.extend(sorted(root.rglob("*.pyo")))
+          if prohibited:
+              raise SystemExit(f"Python bytecode output is prohibited: {prohibited[0]}")
+          PY
+
+  capture:
+    name: Bootstrap authentic PMD research SARIF
+    needs: admission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CAPTURE_OUTPUT_ROOT: ${{ runner.temp }}/sparse-sarif-pmd-capture
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact clean source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact Python runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Admit actual source corpus before producer setup
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python3 -B \
+            validation/research/sparse-sarif/tools/scan_contamination.py \
+            --research-root validation/research/sparse-sarif \
+            --source-only
+
+      - name: Install exact Java runtime
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '17.0.19+10'
+
+      - name: Verify capture tools statically
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          bash -n validation/research/sparse-sarif/tools/capture_pmd.sh
+          python3 -B - <<'PY'
+          from pathlib import Path
+
+          root = Path("validation/research/sparse-sarif/tools")
+          names = (
+              "project_pmd_sarif.py",
+              "verify_pmd_capture.py",
+              "test_pmd_capture_tools.py",
+          )
+          for name in names:
+              path = root / name
+              compile(path.read_bytes(), str(path), "exec")
+          PY
+          (
+            cd validation/research/sparse-sarif/tools
+            python3 -B test_pmd_capture_tools.py -v
+          )
+          if find validation/research/sparse-sarif/tools \
+            \( -type d -name __pycache__ -o -type f -name '*.py[co]' \) \
+            -print -quit | grep -q .; then
+            echo 'Python bytecode output is prohibited.' >&2
+            exit 1
+          fi
+
+      - name: Bootstrap capture and verify authentic PMD SARIF
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          test "${ImageOS:-}" = 'ubuntu24'
+          [[ "${ImageVersion:-}" =~ ^[0-9]{8}\.[0-9]+\.[0-9]+$ ]]
+          ./validation/research/sparse-sarif/tools/capture_pmd.sh \
+            --output-root "${CAPTURE_OUTPUT_ROOT}" \
+            --source-sha "${EXPECTED_SOURCE_SHA}"
+          if find validation/research/sparse-sarif/tools \
+            \( -type d -name __pycache__ -o -type f -name '*.py[co]' \) \
+            -print -quit | grep -q .; then
+            echo 'Python bytecode output is prohibited.' >&2
+            exit 1
+          fi
+
+      - name: Verify post-capture source integrity
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Upload bootstrap raw and projected capture evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-sarif-pmd-bootstrap-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/sparse-sarif-pmd-capture
+          if-no-files-found: error
+          retention-days: 30

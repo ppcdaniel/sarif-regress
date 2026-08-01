@@ -1,0 +1,1389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/research/sparse-sarif/schemas/experiment-report.schema.json",
+  "title": "Sparse-SARIF repository-context experiment report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "corpusManifestSha256",
+    "implementation",
+    "fixedGates",
+    "variants",
+    "selectedVariant",
+    "decision",
+    "reasons"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "corpusManifestSha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "dependentRequired": {
+        "path": [
+          "sha256"
+        ],
+        "sha256": [
+          "path"
+        ]
+      }
+    },
+    "fixedGates": {
+      "$ref": "#/$defs/fixedGates"
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "sarif-only-control"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "exact-region-snippet"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "token-window"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "relative-context"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "agreement-only-combination"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false
+    },
+    "selectedVariant": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "decision": {
+      "enum": [
+        "implement-v4",
+        "document-limitation"
+      ]
+    },
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "implement-v4"
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "properties": {
+          "implementation": {
+            "required": [
+              "path",
+              "sha256"
+            ]
+          },
+          "selectedVariant": {
+            "type": "string"
+          },
+          "variants": {
+            "contains": {
+              "type": "object",
+              "required": [
+                "gateProjection"
+              ],
+              "properties": {
+                "gateProjection": {
+                  "type": "object",
+                  "required": [
+                    "pmdPrecision",
+                    "pmdRecall",
+                    "aggregatePrecision",
+                    "aggregateRecall",
+                    "silentlyMatchedAmbiguity",
+                    "sourceSideLeakage",
+                    "containmentRegressions",
+                    "rootConfusions",
+                    "unexplainedIngestionFailures",
+                    "structuralFailures",
+                    "developmentCorpusGreen",
+                    "semgrepNoRegression",
+                    "gitleaksNoRegression",
+                    "repeatedRunByteIdentical",
+                    "crossPlatformByteIdentical",
+                    "resourceBudgetsWithinLimits",
+                    "scenarioMatrixPassed",
+                    "corpusSpecificPreflightRequired"
+                  ],
+                  "properties": {
+                    "pmdPrecision": {
+                      "minimum": 0.95
+                    },
+                    "pmdRecall": {
+                      "minimum": 0.8
+                    },
+                    "aggregatePrecision": {
+                      "minimum": 0.95
+                    },
+                    "aggregateRecall": {
+                      "minimum": 0.9
+                    },
+                    "silentlyMatchedAmbiguity": {
+                      "const": 0
+                    },
+                    "sourceSideLeakage": {
+                      "const": 0
+                    },
+                    "containmentRegressions": {
+                      "const": 0
+                    },
+                    "rootConfusions": {
+                      "const": 0
+                    },
+                    "unexplainedIngestionFailures": {
+                      "const": 0
+                    },
+                    "structuralFailures": {
+                      "const": 0
+                    },
+                    "developmentCorpusGreen": {
+                      "const": true
+                    },
+                    "semgrepNoRegression": {
+                      "const": true
+                    },
+                    "gitleaksNoRegression": {
+                      "const": true
+                    },
+                    "repeatedRunByteIdentical": {
+                      "const": true
+                    },
+                    "crossPlatformByteIdentical": {
+                      "const": true
+                    },
+                    "resourceBudgetsWithinLimits": {
+                      "const": true
+                    },
+                    "scenarioMatrixPassed": {
+                      "const": true
+                    },
+                    "corpusSpecificPreflightRequired": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+    },
+    "evidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "dependentRequired": {
+        "path": [
+          "sha256"
+        ],
+        "sha256": [
+          "path"
+        ]
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000000
+    },
+    "fixedGates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumPmdPrecision",
+        "minimumPmdRecall",
+        "minimumAggregatePrecision",
+        "minimumAggregateRecall",
+        "maximumSilentlyMatchedAmbiguity",
+        "maximumSourceSideLeakage",
+        "maximumContainmentRegressions",
+        "maximumRootConfusions",
+        "maximumUnexplainedIngestionFailures",
+        "maximumStructuralFailures",
+        "requireDevelopmentCorpusGreen",
+        "requireExistingProducerNoRegression",
+        "requireCrossPlatformByteIdentity",
+        "requireResourceBudgets",
+        "requireScenarioMatrixGreen",
+        "requireCorpusIndependentEvidence"
+      ],
+      "properties": {
+        "minimumPmdPrecision": {
+          "const": 0.95
+        },
+        "minimumPmdRecall": {
+          "const": 0.8
+        },
+        "minimumAggregatePrecision": {
+          "const": 0.95
+        },
+        "minimumAggregateRecall": {
+          "const": 0.9
+        },
+        "maximumSilentlyMatchedAmbiguity": {
+          "const": 0
+        },
+        "maximumSourceSideLeakage": {
+          "const": 0
+        },
+        "maximumContainmentRegressions": {
+          "const": 0
+        },
+        "maximumRootConfusions": {
+          "const": 0
+        },
+        "maximumUnexplainedIngestionFailures": {
+          "const": 0
+        },
+        "maximumStructuralFailures": {
+          "const": 0
+        },
+        "requireDevelopmentCorpusGreen": {
+          "const": true
+        },
+        "requireExistingProducerNoRegression": {
+          "const": true
+        },
+        "requireCrossPlatformByteIdentity": {
+          "const": true
+        },
+        "requireResourceBudgets": {
+          "const": true
+        },
+        "requireScenarioMatrixGreen": {
+          "const": true
+        },
+        "requireCorpusIndependentEvidence": {
+          "const": true
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "truePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falsePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "precision": {
+          "$ref": "#/$defs/rate"
+        },
+        "recall": {
+          "$ref": "#/$defs/rate"
+        },
+        "f1": {
+          "$ref": "#/$defs/rate"
+        }
+      }
+    },
+    "familyMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "familyId",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "familyId": {
+          "$ref": "#/$defs/stableId"
+        },
+        "truePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falsePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "precision": {
+          "$ref": "#/$defs/rate"
+        },
+        "recall": {
+          "$ref": "#/$defs/rate"
+        },
+        "f1": {
+          "$ref": "#/$defs/rate"
+        }
+      }
+    },
+    "gateProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pmdPrecision",
+        "pmdRecall",
+        "aggregatePrecision",
+        "aggregateRecall",
+        "silentlyMatchedAmbiguity",
+        "sourceSideLeakage",
+        "containmentRegressions",
+        "rootConfusions",
+        "unexplainedIngestionFailures",
+        "structuralFailures",
+        "developmentCorpusGreen",
+        "semgrepNoRegression",
+        "gitleaksNoRegression",
+        "repeatedRunByteIdentical",
+        "crossPlatformByteIdentical",
+        "resourceBudgetsWithinLimits",
+        "scenarioMatrixPassed",
+        "corpusSpecificPreflightRequired"
+      ],
+      "properties": {
+        "pmdPrecision": {
+          "$ref": "#/$defs/rate"
+        },
+        "pmdRecall": {
+          "$ref": "#/$defs/rate"
+        },
+        "aggregatePrecision": {
+          "$ref": "#/$defs/rate"
+        },
+        "aggregateRecall": {
+          "$ref": "#/$defs/rate"
+        },
+        "silentlyMatchedAmbiguity": {
+          "$ref": "#/$defs/count"
+        },
+        "sourceSideLeakage": {
+          "$ref": "#/$defs/count"
+        },
+        "containmentRegressions": {
+          "$ref": "#/$defs/count"
+        },
+        "rootConfusions": {
+          "$ref": "#/$defs/count"
+        },
+        "unexplainedIngestionFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "structuralFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "developmentCorpusGreen": {
+          "type": "boolean"
+        },
+        "semgrepNoRegression": {
+          "type": "boolean"
+        },
+        "gitleaksNoRegression": {
+          "type": "boolean"
+        },
+        "repeatedRunByteIdentical": {
+          "type": "boolean"
+        },
+        "crossPlatformByteIdentical": {
+          "type": "boolean"
+        },
+        "resourceBudgetsWithinLimits": {
+          "type": "boolean"
+        },
+        "scenarioMatrixPassed": {
+          "type": "boolean"
+        },
+        "corpusSpecificPreflightRequired": {
+          "type": "boolean"
+        }
+      }
+    },
+    "producerEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerFamily",
+        "metrics",
+        "regressions"
+      ],
+      "properties": {
+        "producerFamily": {
+          "enum": [
+            "semgrep",
+            "gitleaks",
+            "pmd"
+          ]
+        },
+        "metrics": {
+          "$ref": "#/$defs/metrics"
+        },
+        "regressions": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "productionApplicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trustedTreeHashPreflightEnabled",
+        "scenariosWithoutTrustedTreeHashes",
+        "metricsWithoutTrustedTreeHashes",
+        "corpusSpecificPreflightRequired"
+      ],
+      "properties": {
+        "trustedTreeHashPreflightEnabled": {
+          "const": false
+        },
+        "scenariosWithoutTrustedTreeHashes": {
+          "$ref": "#/$defs/variant/properties/scenarios"
+        },
+        "metricsWithoutTrustedTreeHashes": {
+          "$ref": "#/$defs/metrics"
+        },
+        "corpusSpecificPreflightRequired": {
+          "type": "boolean"
+        },
+        "evidencePath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "evidenceSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "dependentRequired": {
+        "evidencePath": [
+          "evidenceSha256"
+        ],
+        "evidenceSha256": [
+          "evidencePath"
+        ]
+      }
+    },
+    "scenarioResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenarioId",
+        "assertionsPassed",
+        "preflightAccepted",
+        "acceptedRelationships",
+        "baselineReadsFromCandidateRoot",
+        "candidateReadsFromBaselineRoot",
+        "containmentViolations",
+        "unexplainedIngestionFailures",
+        "structuralFailures"
+      ],
+      "properties": {
+        "scenarioId": {
+          "enum": [
+            "exact-unchanged-source-location",
+            "region-drift-equivalent-token-context",
+            "file-method-movement-equivalent-token-context",
+            "repeated-context-ambiguity",
+            "missing-source-file",
+            "mismatched-source-snapshot",
+            "baseline-root-bound-to-candidate",
+            "candidate-root-bound-to-baseline",
+            "both-roots-swapped",
+            "same-observation-different-method-file"
+          ]
+        },
+        "assertionsPassed": {
+          "type": "boolean"
+        },
+        "preflightAccepted": {
+          "type": "boolean"
+        },
+        "acceptedRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "baselineReadsFromCandidateRoot": {
+          "$ref": "#/$defs/count"
+        },
+        "candidateReadsFromBaselineRoot": {
+          "$ref": "#/$defs/count"
+        },
+        "containmentViolations": {
+          "$ref": "#/$defs/count"
+        },
+        "unexplainedIngestionFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "structuralFailures": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "determinismPlatform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "firstOutputSha256",
+        "secondOutputSha256"
+      ],
+      "properties": {
+        "firstOutputSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "secondOutputSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "artifactPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "artifactSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "dependentRequired": {
+        "artifactPath": [
+          "artifactSha256"
+        ],
+        "artifactSha256": [
+          "artifactPath"
+        ]
+      }
+    },
+    "determinismComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byteIdentical"
+      ],
+      "properties": {
+        "byteIdentical": {
+          "type": "boolean"
+        },
+        "artifactPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "artifactSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "dependentRequired": {
+        "artifactPath": [
+          "artifactSha256"
+        ],
+        "artifactSha256": [
+          "artifactPath"
+        ]
+      }
+    },
+    "resourceCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operatingSystem",
+        "findingCount",
+        "dataset",
+        "candidateEdges",
+        "maximumComponentSize",
+        "elapsedMilliseconds",
+        "peakWorkingSetBytes",
+        "configuredCandidatePairLimit",
+        "configuredAssignmentComponentLimit",
+        "boundedRefusalObserved",
+        "runtimeBudgetEnforced",
+        "withinDocumentedLimits"
+      ],
+      "properties": {
+        "operatingSystem": {
+          "enum": [
+            "ubuntu",
+            "windows"
+          ]
+        },
+        "findingCount": {
+          "enum": [
+            1000,
+            10000,
+            100000
+          ]
+        },
+        "dataset": {
+          "enum": [
+            "unique",
+            "pathological"
+          ]
+        },
+        "candidateEdges": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "maximumComponentSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "elapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peakWorkingSetBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configuredCandidatePairLimit": {
+          "const": 1000000
+        },
+        "configuredAssignmentComponentLimit": {
+          "const": 12
+        },
+        "boundedRefusalObserved": {
+          "type": "boolean"
+        },
+        "runtimeBudgetEnforced": {
+          "type": "boolean"
+        },
+        "withinDocumentedLimits": {
+          "type": "boolean"
+        },
+        "artifactPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "artifactSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "dependentRequired": {
+        "artifactPath": [
+          "artifactSha256"
+        ],
+        "artifactSha256": [
+          "artifactPath"
+        ]
+      }
+    },
+    "resourceMatrix": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "ubuntu" }, "findingCount": { "const": 1000 }, "dataset": { "const": "unique" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "ubuntu" }, "findingCount": { "const": 1000 }, "dataset": { "const": "pathological" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "ubuntu" }, "findingCount": { "const": 10000 }, "dataset": { "const": "unique" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "ubuntu" }, "findingCount": { "const": 10000 }, "dataset": { "const": "pathological" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "ubuntu" }, "findingCount": { "const": 100000 }, "dataset": { "const": "unique" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "ubuntu" }, "findingCount": { "const": 100000 }, "dataset": { "const": "pathological" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "windows" }, "findingCount": { "const": 1000 }, "dataset": { "const": "unique" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "windows" }, "findingCount": { "const": 1000 }, "dataset": { "const": "pathological" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "windows" }, "findingCount": { "const": 10000 }, "dataset": { "const": "unique" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "windows" }, "findingCount": { "const": 10000 }, "dataset": { "const": "pathological" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "windows" }, "findingCount": { "const": 100000 }, "dataset": { "const": "unique" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/resourceCell" },
+            { "properties": { "operatingSystem": { "const": "windows" }, "findingCount": { "const": 100000 }, "dataset": { "const": "pathological" } } }
+          ]
+        }
+      ],
+      "items": false
+    },
+    "releaseEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "holdout",
+        "developmentCorpus"
+      ],
+      "properties": {
+        "holdout": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "relationshipCount",
+            "metrics",
+            "byProducer",
+            "ingestionFailures",
+            "structuralFailures"
+          ],
+          "properties": {
+            "reportPath": {
+              "$ref": "#/$defs/relativePath"
+            },
+            "reportSha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "relationshipCount": {
+              "const": 75
+            },
+            "metrics": {
+              "$ref": "#/$defs/metrics"
+            },
+            "byProducer": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "prefixItems": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/producerEvidence"
+                    },
+                    {
+                      "properties": {
+                        "producerFamily": {
+                          "const": "semgrep"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/producerEvidence"
+                    },
+                    {
+                      "properties": {
+                        "producerFamily": {
+                          "const": "gitleaks"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/producerEvidence"
+                    },
+                    {
+                      "properties": {
+                        "producerFamily": {
+                          "const": "pmd"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "items": false
+            },
+            "ingestionFailures": {
+              "$ref": "#/$defs/count"
+            },
+            "structuralFailures": {
+              "$ref": "#/$defs/count"
+            }
+          },
+          "dependentRequired": {
+            "reportPath": [
+              "reportSha256"
+            ],
+            "reportSha256": [
+              "reportPath"
+            ]
+          }
+        },
+        "developmentCorpus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "passed",
+            "regressions",
+            "silentlyMatchedAmbiguity"
+          ],
+          "properties": {
+            "reportPath": {
+              "$ref": "#/$defs/relativePath"
+            },
+            "reportSha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "passed": {
+              "type": "boolean"
+            },
+            "regressions": {
+              "$ref": "#/$defs/count"
+            },
+            "silentlyMatchedAmbiguity": {
+              "$ref": "#/$defs/count"
+            }
+          },
+          "dependentRequired": {
+            "reportPath": [
+              "reportSha256"
+            ],
+            "reportSha256": [
+              "reportPath"
+            ]
+          }
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "metrics",
+        "gateProjection",
+        "releaseEvidence",
+        "productionApplicability",
+        "scenarios",
+        "ambiguity",
+        "ingestion",
+        "security",
+        "determinism",
+        "resources"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "experimentEvidence": {
+          "$ref": "#/$defs/evidenceReference"
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "aggregate",
+            "byFamily"
+          ],
+          "properties": {
+            "aggregate": {
+              "$ref": "#/$defs/metrics"
+            },
+            "byFamily": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/familyMetrics"
+                    },
+                    {
+                      "properties": {
+                        "familyId": {
+                          "const": "pmd-clean-a"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/familyMetrics"
+                    },
+                    {
+                      "properties": {
+                        "familyId": {
+                          "const": "pmd-clean-b"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "items": false
+            }
+          }
+        },
+        "gateProjection": {
+          "$ref": "#/$defs/gateProjection"
+        },
+        "releaseEvidence": {
+          "$ref": "#/$defs/releaseEvidence"
+        },
+        "productionApplicability": {
+          "$ref": "#/$defs/productionApplicability"
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "exact-unchanged-source-location"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "region-drift-equivalent-token-context"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "file-method-movement-equivalent-token-context"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "repeated-context-ambiguity"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "missing-source-file"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "mismatched-source-snapshot"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "baseline-root-bound-to-candidate"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "candidate-root-bound-to-baseline"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "both-roots-swapped"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/scenarioResult"
+                },
+                {
+                  "properties": {
+                    "scenarioId": {
+                      "const": "same-observation-different-method-file"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "ambiguity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "labelledUnits",
+            "correctRefusals",
+            "incorrectAutoMatches"
+          ],
+          "properties": {
+            "labelledUnits": {
+              "const": 3
+            },
+            "correctRefusals": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "incorrectAutoMatches": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
+          }
+        },
+        "ingestion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "casesEvaluated",
+            "failures",
+            "structuralFailures"
+          ],
+          "properties": {
+            "casesEvaluated": {
+              "const": 4
+            },
+            "failures": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "structuralFailures": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            }
+          }
+        },
+        "security": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceSideLeakage",
+            "containmentRegressions",
+            "rootConfusions"
+          ],
+          "properties": {
+            "sourceSideLeakage": {
+              "$ref": "#/$defs/count"
+            },
+            "containmentRegressions": {
+              "$ref": "#/$defs/count"
+            },
+            "rootConfusions": {
+              "$ref": "#/$defs/count"
+            }
+          }
+        },
+        "determinism": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "repeatedRunByteIdentical",
+            "linuxWindowsByteIdentical",
+            "linux",
+            "windows",
+            "comparison"
+          ],
+          "properties": {
+            "repeatedRunByteIdentical": {
+              "type": "boolean"
+            },
+            "linuxWindowsByteIdentical": {
+              "type": "boolean"
+            },
+            "linux": {
+              "$ref": "#/$defs/determinismPlatform"
+            },
+            "windows": {
+              "$ref": "#/$defs/determinismPlatform"
+            },
+            "comparison": {
+              "$ref": "#/$defs/determinismComparison"
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "withinDocumentedLimits",
+            "cells"
+          ],
+          "properties": {
+            "withinDocumentedLimits": {
+              "type": "boolean"
+            },
+            "cells": {
+              "$ref": "#/$defs/resourceMatrix"
+            },
+            "evidencePath": {
+              "$ref": "#/$defs/relativePath"
+            },
+            "evidenceSha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          },
+          "dependentRequired": {
+            "evidencePath": [
+              "evidenceSha256"
+            ],
+            "evidenceSha256": [
+              "evidencePath"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
