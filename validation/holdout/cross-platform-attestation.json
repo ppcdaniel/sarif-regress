@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "2",
+  "repository": "ppcdaniel/sarif-regress",
+  "repositoryCommitSha": "f91dfbd4328fb5680b0a5197408b09132692ce8a",
+  "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
+  "evaluationMetadataSha256": "b5fd042cf47f967533325f868a5436d023073046f5e25ccb7690de5615cc2cc3",
+  "baseReports": {
+    "sarifRegressHoldoutSha256": "9c233bb0e6ff2e9862e5241fc62f992e4e81f736ee44cac17eca34b8bdefa00a",
+    "sarifMultitoolBaselineSha256": "a1b15d3da216a0a1309191da43f0ffb2d389375b1c2356aa80b5ae876fdf3d99",
+    "v2ToV3DeltaSha256": "3b53312b07e14d55a35471543707880eb8ce196ec1d9d19905e8a2d12770169b"
+  },
+  "githubActions": {
+    "workflowPath": ".github/workflows/holdout-validation.yml",
+    "runId": 30697017000,
+    "runAttempt": 1,
+    "runUrl": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30697017000",
+    "workflowHeadSha": "88f77f5aa68617011fdd9d40d366f60b14cfe032",
+    "conclusion": "success",
+    "coordinatorJobName": "Compare Linux and Windows normalized bytes"
+  },
+  "artifacts": {
+    "linux": {
+      "name": "holdout-linux",
+      "artifactId": 8817596343,
+      "archiveSha256": "bebf03a60de16bdaba72c050cf07ff00196634a832cb47d4cd40f0eb8e28199a",
+      "reportDigests": {
+        "sarifRegressHoldoutSha256": "9c233bb0e6ff2e9862e5241fc62f992e4e81f736ee44cac17eca34b8bdefa00a",
+        "sarifMultitoolBaselineSha256": "a1b15d3da216a0a1309191da43f0ffb2d389375b1c2356aa80b5ae876fdf3d99",
+        "v2ToV3DeltaSha256": "3b53312b07e14d55a35471543707880eb8ce196ec1d9d19905e8a2d12770169b"
+      }
+    },
+    "windows": {
+      "name": "holdout-windows",
+      "artifactId": 8817613268,
+      "archiveSha256": "03502f212ddc5541a799ad912e1544f0a28297c78912441faf1dd5f5240daf19",
+      "reportDigests": {
+        "sarifRegressHoldoutSha256": "9c233bb0e6ff2e9862e5241fc62f992e4e81f736ee44cac17eca34b8bdefa00a",
+        "sarifMultitoolBaselineSha256": "a1b15d3da216a0a1309191da43f0ffb2d389375b1c2356aa80b5ae876fdf3d99",
+        "v2ToV3DeltaSha256": "3b53312b07e14d55a35471543707880eb8ce196ec1d9d19905e8a2d12770169b"
+      }
+    }
+  },
+  "byteIdentity": {
+    "sarifRegressHoldout": true,
+    "sarifMultitoolBaseline": true,
+    "v2ToV3Delta": true
+  }
+}
