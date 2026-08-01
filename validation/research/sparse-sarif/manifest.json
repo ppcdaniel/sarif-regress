@@ -348,7 +348,7 @@
       },
       {
         "path": "experiment-implementation-manifest.json",
-        "sha256": "4a89f45e246ffea923ab82cc4440b6d2b2ea4b0a09457c3bf969d808083f583d"
+        "sha256": "8ac4c54a9e6718ca867b7113ccbffac722242614757f8398f590e79f906c49b1"
       },
       {
         "path": "schemas/experiment-gate-evidence.schema.json",

@@ -481,7 +481,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentRunner.cs",
-      "sha256": "8ed38923783e4bef31da34d868eee1122cca7e2bd59209161e42cd38b662324c"
+      "sha256": "80aac2bccc33b08c51316d3e5c40b3f91aef20313cc26ce440d6edb95bb73f5b"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/StableJson.cs",

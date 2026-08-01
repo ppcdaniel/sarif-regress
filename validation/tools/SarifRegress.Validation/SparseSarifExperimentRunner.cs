@@ -1141,7 +1141,7 @@ public sealed class SparseSarifExperimentRunner
         }
 
         return new SparseNaturalSelector(
-            finding.Rule.CanonicalId,
+            finding.Rule.OriginalId,
             path,
             new SparseRegionSelector(startLine, startColumn, endLine, endColumn),
             finding.Message.CanonicalText);
