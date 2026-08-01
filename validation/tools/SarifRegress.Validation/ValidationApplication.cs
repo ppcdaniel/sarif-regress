@@ -9,22 +9,22 @@ public sealed class ValidationApplication
     public const string SarifRegressReportFileName = "sarif-regress-holdout.json";
     public const string MultitoolReportFileName = "sarif-multitool-baseline.json";
     public const string ComparisonSummaryFileName = "comparison-summary.json";
-    public const string V2ToV3DeltaReportFileName = "v2-to-v3-delta.json";
+    public const string V3ToV31DeltaReportFileName = "v3-to-v3.1-delta.json";
     public const string ChecksumManifestFileName = "checksums.sha256";
 
     private const string ManifestRelativePath = "validation/holdout/manifest.json";
     private const string MetadataRelativePath =
         "validation/holdout/evaluation-metadata.json";
     private const string ExpectedRelativeRoot = "validation/expected";
-    private const string MatcherV2HistoryChecksumRelativePath =
-        "validation/history/matcher-v2/checksums.sha256";
-    private const string MatcherV2HistoryReportRelativePath =
-        "validation/history/matcher-v2/sarif-regress-holdout.json";
+    private const string MatcherV3HistoryChecksumRelativePath =
+        "validation/history/matcher-v3/checksums.sha256";
+    private const string MatcherV3HistoryReportRelativePath =
+        "validation/history/matcher-v3/sarif-regress-holdout.json";
 
     private readonly HoldoutManifestReader manifestReader;
     private readonly EvaluationMetadataReader metadataReader;
     private readonly CrossPlatformAttestationReader attestationReader;
-    private readonly MatcherV2HistoryReader matcherV2HistoryReader;
+    private readonly MatcherV3HistoryReader matcherV3HistoryReader;
     private readonly FrozenSourceVerifier sourceVerifier;
     private readonly SarifRegressHoldoutEvaluator sarifRegressEvaluator;
     private readonly SarifMultitoolEvaluator multitoolEvaluator;
@@ -36,7 +36,7 @@ public sealed class ValidationApplication
         HoldoutManifestReader? manifestReader = null,
         EvaluationMetadataReader? metadataReader = null,
         CrossPlatformAttestationReader? attestationReader = null,
-        MatcherV2HistoryReader? matcherV2HistoryReader = null,
+        MatcherV3HistoryReader? matcherV3HistoryReader = null,
         FrozenSourceVerifier? sourceVerifier = null,
         SarifRegressHoldoutEvaluator? sarifRegressEvaluator = null,
         SarifMultitoolEvaluator? multitoolEvaluator = null,
@@ -48,8 +48,8 @@ public sealed class ValidationApplication
         this.metadataReader = metadataReader ?? new EvaluationMetadataReader(this.limits);
         this.attestationReader = attestationReader
             ?? new CrossPlatformAttestationReader(this.limits);
-        this.matcherV2HistoryReader = matcherV2HistoryReader
-            ?? new MatcherV2HistoryReader(this.limits);
+        this.matcherV3HistoryReader = matcherV3HistoryReader
+            ?? new MatcherV3HistoryReader(this.limits);
         this.sourceVerifier = sourceVerifier ?? new FrozenSourceVerifier(limits: this.limits);
         this.sarifRegressEvaluator = sarifRegressEvaluator
             ?? new SarifRegressHoldoutEvaluator();
@@ -85,7 +85,7 @@ public sealed class ValidationApplication
                 metadata.Identity.SourceTreeSha256,
                 cancellationToken)
             .ConfigureAwait(false);
-        MatcherV2HistorySnapshot matcherV2 = matcherV2HistoryReader.Read(
+        MatcherV3HistorySnapshot matcherV3 = matcherV3HistoryReader.Read(
             repositoryRoot);
         if (options.Command == ValidationCommand.ValidateStructure)
         {
@@ -112,13 +112,13 @@ public sealed class ValidationApplication
         byte[] sarifRegressBytes = StableReportSerializer.Serialize(sarifRegress);
         byte[] multitoolBytes = StableReportSerializer.Serialize(multitool);
         string sarifRegressSha256 = Sha256(sarifRegressBytes);
-        var deltaInputHashes = new MatcherDeltaInputHashes(
-            matcherV2.HistoryChecksumManifestSha256,
-            matcherV2.ReportSha256,
+        var deltaInputHashes = new MatcherV3ToV31InputHashes(
+            matcherV3.HistoryChecksumManifestSha256,
+            matcherV3.ReportSha256,
             sarifRegressSha256,
             holdout.ManifestSha256);
-        MatcherV2ToV3DeltaReport delta = MatcherV2ToV3DeltaBuilder.Create(
-            matcherV2,
+        MatcherV3ToV31DeltaReport delta = MatcherV3ToV31DeltaBuilder.Create(
+            matcherV3,
             sarifRegress,
             deltaInputHashes,
             limits);
@@ -136,7 +136,7 @@ public sealed class ValidationApplication
             metadataSha256,
             sarifRegressSha256,
             Sha256(multitoolBytes),
-            matcherV2.ReportSha256,
+            matcherV3.ReportSha256,
             Sha256(deltaBytes));
         ValidatedCrossPlatformAttestation? attestation =
             options.CrossPlatformAttestationPath is null
@@ -150,7 +150,7 @@ public sealed class ValidationApplication
                         metadataSha256,
                         hashes.SarifRegressReportSha256,
                         hashes.SarifMultitoolBaselineReportSha256,
-                        hashes.V2ToV3DeltaReportSha256));
+                        hashes.V3ToV31DeltaReportSha256));
         ComparisonSummaryReport comparison = ComparisonSummaryBuilder.Create(
             sarifRegress,
             multitool,
@@ -166,7 +166,7 @@ public sealed class ValidationApplication
             StringComparer.Ordinal);
         normalizedBuilder.Add(SarifRegressReportFileName, sarifRegressBytes);
         normalizedBuilder.Add(MultitoolReportFileName, multitoolBytes);
-        normalizedBuilder.Add(V2ToV3DeltaReportFileName, deltaBytes);
+        normalizedBuilder.Add(V3ToV31DeltaReportFileName, deltaBytes);
         normalizedBuilder.Add(ComparisonSummaryFileName, comparisonBytes);
         ImmutableSortedDictionary<string, byte[]> normalized =
             normalizedBuilder.ToImmutable();
@@ -236,8 +236,8 @@ public sealed class ValidationApplication
                 "validation/schemas/sarif-multitool-baseline-report.schema.json",
             [ComparisonSummaryFileName] =
                 "validation/schemas/comparison-summary.schema.json",
-            [V2ToV3DeltaReportFileName] =
-                "validation/schemas/v2-to-v3-delta.schema.json",
+            [V3ToV31DeltaReportFileName] =
+                "validation/schemas/v3-to-v3.1-delta.schema.json",
         };
         foreach ((string name, byte[] bytes) in reports.OrderBy(
                      item => item.Key,
@@ -269,14 +269,14 @@ public sealed class ValidationApplication
                 StablePath.Resolve(repositoryRoot, MetadataRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
+            [MatcherV3HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
                 StablePath.Resolve(
                     repositoryRoot,
-                    MatcherV2HistoryChecksumRelativePath),
+                    MatcherV3HistoryChecksumRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
-                StablePath.Resolve(repositoryRoot, MatcherV2HistoryReportRelativePath),
+            [MatcherV3HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
+                StablePath.Resolve(repositoryRoot, MatcherV3HistoryReportRelativePath),
                 limits.MaximumSarifBytes,
                 repositoryRoot),
         };
@@ -312,14 +312,14 @@ public sealed class ValidationApplication
                 StablePath.Resolve(repositoryRoot, MetadataRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
+            [MatcherV3HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
                 StablePath.Resolve(
                     repositoryRoot,
-                    MatcherV2HistoryChecksumRelativePath),
+                    MatcherV3HistoryChecksumRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
-                StablePath.Resolve(repositoryRoot, MatcherV2HistoryReportRelativePath),
+            [MatcherV3HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
+                StablePath.Resolve(repositoryRoot, MatcherV3HistoryReportRelativePath),
                 limits.MaximumSarifBytes,
                 repositoryRoot),
         };

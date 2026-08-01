@@ -35,6 +35,7 @@ jobs:
     outputs:
       artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
       artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
+      mode: ${{ steps.attestation-mode.outputs.mode }}
 
     steps:
       - name: Check out repository
@@ -52,6 +53,34 @@ jobs:
           set -euo pipefail
           actual_source_sha="$(git rev-parse HEAD)"
           test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+
+      - name: Select attestation mode
+        id: attestation-mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly attestation='validation/holdout/cross-platform-attestation.json'
+          readonly regeneration_marker='validation/holdout/.regenerate-expected'
+          if [[ -e "${regeneration_marker}" || -L "${regeneration_marker}" ]]; then
+            if [[ "${GITHUB_EVENT_NAME}" != 'pull_request' \
+                || ! -f "${regeneration_marker}" \
+                || -L "${regeneration_marker}" \
+                || ! -f "${attestation}" \
+                || -L "${attestation}" ]]; then
+              echo 'The expected-output regeneration marker is valid only on a pull request with a regular committed attestation.' >&2
+              exit 1
+            fi
+            echo 'mode=regenerate' >> "${GITHUB_OUTPUT}"
+          elif [[ -f "${attestation}" && ! -L "${attestation}" ]]; then
+            echo 'mode=strict' >> "${GITHUB_OUTPUT}"
+          elif [[ "${GITHUB_EVENT_NAME}" == 'pull_request' \
+              && ! -e "${attestation}" \
+              && ! -L "${attestation}" ]]; then
+            echo 'mode=bootstrap' >> "${GITHUB_OUTPUT}"
+          else
+            echo 'The fixed cross-platform attestation is missing or is not a regular file; only a pull request may bootstrap it.' >&2
+            exit 1
+          fi
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -77,15 +106,51 @@ jobs:
           dotnet restore SarifRegress.slnx --locked-mode
 
       - name: Verify repository
+        if: steps.attestation-mode.outputs.mode == 'strict'
         shell: bash
         run: ./scripts/verify.sh
+
+      - name: Verify repository during attestation generation
+        if: steps.attestation-mode.outputs.mode != 'strict'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet format SarifRegress.slnx --no-restore --verify-no-changes
+          dotnet build \
+            SarifRegress.slnx \
+            --configuration Release \
+            --no-restore \
+            --warnaserror
+          dotnet test \
+            SarifRegress.slnx \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            --filter \
+              'FullyQualifiedName!~TrackedOutputTests&FullyQualifiedName!~Both_validation_scripts_are_strict_and_enforce_fixture_snapshots&FullyQualifiedName!~Hosted_workflow_is_strict_and_binds_real_artifact_evidence'
 
       - name: Evaluate holdout
         shell: bash
         run: |
           set -euo pipefail
           cd -- "${RUNNER_TEMP}"
-          "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh"
+          case '${{ steps.attestation-mode.outputs.mode }}' in
+            bootstrap)
+              "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh" \
+                --generate-cross-platform-attestation-candidate
+              ;;
+            regenerate)
+              "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh" \
+                --regenerate-attested-expected
+              ;;
+            strict)
+              "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh"
+              ;;
+            *)
+              echo 'Unknown holdout attestation mode.' >&2
+              exit 1
+              ;;
+          esac
 
       - name: Upload Linux evaluation evidence
         id: upload-evidence
@@ -104,6 +169,7 @@ jobs:
     outputs:
       artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
       artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
+      mode: ${{ steps.attestation-mode.outputs.mode }}
 
     steps:
       - name: Check out repository
@@ -121,6 +187,44 @@ jobs:
           set -euo pipefail
           actual_source_sha="$(git rev-parse HEAD)"
           test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+
+      - name: Select attestation mode
+        id: attestation-mode
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $attestation = 'validation/holdout/cross-platform-attestation.json'
+          $regenerationMarker = 'validation/holdout/.regenerate-expected'
+          if (Test-Path -LiteralPath $regenerationMarker) {
+            if ($env:GITHUB_EVENT_NAME -ne 'pull_request' -or
+                -not (Test-Path -LiteralPath $regenerationMarker -PathType Leaf) -or
+                -not (Test-Path -LiteralPath $attestation -PathType Leaf)) {
+              throw `
+                'The expected-output regeneration marker is valid only on a pull request with a regular committed attestation.'
+            }
+            $markerItem = Get-Item -LiteralPath $regenerationMarker -Force
+            $attestationItem = Get-Item -LiteralPath $attestation -Force
+            if (($markerItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
+                ($attestationItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+              throw 'The regeneration marker and attestation must not be reparse points.'
+            }
+            'mode=regenerate' | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+          elseif (Test-Path -LiteralPath $attestation -PathType Leaf) {
+            $item = Get-Item -LiteralPath $attestation -Force
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+              throw 'The fixed cross-platform attestation cannot be a reparse point.'
+            }
+            'mode=strict' | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+          elseif ($env:GITHUB_EVENT_NAME -eq 'pull_request' -and
+              -not (Test-Path -LiteralPath $attestation)) {
+            'mode=bootstrap' | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+          else {
+            throw `
+              'The fixed cross-platform attestation is missing or is not a regular file; only a pull request may bootstrap it.'
+          }
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -149,8 +253,31 @@ jobs:
           }
 
       - name: Verify repository
+        if: steps.attestation-mode.outputs.mode == 'strict'
         shell: pwsh
         run: .\scripts\verify.ps1
+
+      - name: Verify repository during attestation generation
+        if: steps.attestation-mode.outputs.mode != 'strict'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet format SarifRegress.slnx --no-restore --verify-no-changes
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet format failed.' }
+          dotnet build `
+            SarifRegress.slnx `
+            --configuration Release `
+            --no-restore `
+            --warnaserror
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet build failed.' }
+          dotnet test `
+            SarifRegress.slnx `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            --filter `
+              'FullyQualifiedName!~TrackedOutputTests&FullyQualifiedName!~Both_validation_scripts_are_strict_and_enforce_fixture_snapshots&FullyQualifiedName!~Hosted_workflow_is_strict_and_binds_real_artifact_evidence'
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet test failed.' }
 
       - name: Evaluate holdout
         shell: pwsh
@@ -158,7 +285,22 @@ jobs:
           $ErrorActionPreference = 'Stop'
           Push-Location -LiteralPath $env:RUNNER_TEMP
           try {
-            & (Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1')
+            switch ('${{ steps.attestation-mode.outputs.mode }}') {
+              'bootstrap' {
+                & (Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1') `
+                  -GenerateCrossPlatformAttestationCandidate
+              }
+              'regenerate' {
+                & (Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1') `
+                  -RegenerateAttestedExpected
+              }
+              'strict' {
+                & (Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1')
+              }
+              default {
+                throw 'Unknown holdout attestation mode.'
+              }
+            }
           }
           finally {
             Pop-Location
@@ -226,7 +368,7 @@ jobs:
           readonly reports=(
             'sarif-regress-holdout.json'
             'sarif-multitool-baseline.json'
-            'v2-to-v3-delta.json'
+            'v3-to-v3.1-delta.json'
             'comparison-summary.json'
             'checksums.sha256'
           )
@@ -261,8 +403,10 @@ jobs:
           CHECKED_OUT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.artifact_id }}
           LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.artifact_digest }}
+          LINUX_MODE: ${{ needs.linux.outputs.mode }}
           WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.artifact_id }}
           WINDOWS_ARTIFACT_DIGEST: ${{ needs.windows.outputs.artifact_digest }}
+          WINDOWS_MODE: ${{ needs.windows.outputs.mode }}
         run: |
           set -euo pipefail
           python3 -B - <<'PY'
@@ -332,6 +476,9 @@ jobs:
                   result[match.group(2)] = match.group(1)
               return result
 
+          if os.environ["LINUX_MODE"] != os.environ["WINDOWS_MODE"]:
+              raise SystemExit("Linux and Windows selected different attestation modes.")
+
           linux_artifact_id = required_decimal("LINUX_ARTIFACT_ID")
           windows_artifact_id = required_decimal("WINDOWS_ARTIFACT_ID")
           if linux_artifact_id == windows_artifact_id:
@@ -342,7 +489,7 @@ jobs:
           report_names = (
               "sarif-regress-holdout.json",
               "sarif-multitool-baseline.json",
-              "v2-to-v3-delta.json",
+              "v3-to-v3.1-delta.json",
           )
           report_hashes = {}
           for name in report_names:
@@ -377,21 +524,22 @@ jobs:
               if evaluation.get("holdoutManifestSha256") != manifest_sha256:
                   raise SystemExit(f"{name} does not identify the holdout manifest.")
 
-          matcher_v2_history_root = (
-              root / "validation" / "history" / "matcher-v2")
-          matcher_v2_history_manifest_hash = sha256(
-              matcher_v2_history_root / "checksums.sha256")
-          matcher_v2_report_hash = sha256(
-              matcher_v2_history_root / "sarif-regress-holdout.json")
+          matcher_v3_history_root = (
+              root / "validation" / "history" / "matcher-v3")
+          matcher_v3_history_manifest_hash = sha256(
+              matcher_v3_history_root / "checksums.sha256")
+          matcher_v3_report_hash = sha256(
+              matcher_v3_history_root / "sarif-regress-holdout.json")
           expected_delta_hashes = {
-              "matcherV2HistoryChecksumManifestSha256":
-                  matcher_v2_history_manifest_hash,
-              "matcherV2ReportSha256": matcher_v2_report_hash,
-              "matcherV3ReportSha256": report_hashes[report_names[0]],
+              "matcherV3HistoryChecksumManifestSha256":
+                  matcher_v3_history_manifest_hash,
+              "matcherV3ReportSha256": matcher_v3_report_hash,
+              "matcherV31ReportSha256": report_hashes[report_names[0]],
               "holdoutManifestSha256": manifest_sha256,
           }
           if delta_report.get("inputHashes") != expected_delta_hashes:
-              raise SystemExit("v2-to-v3-delta.json does not bind its exact inputs.")
+              raise SystemExit(
+                  "v3-to-v3.1-delta.json does not bind its exact inputs.")
           checksums = parse_checksum_manifest(verified / "checksums.sha256")
           required_checksums = {
               "validation/holdout/manifest.json": manifest_sha256,
@@ -400,12 +548,12 @@ jobs:
                   report_hashes[report_names[0]],
               "validation/expected/sarif-multitool-baseline.json":
                   report_hashes[report_names[1]],
-              "validation/expected/v2-to-v3-delta.json":
+              "validation/expected/v3-to-v3.1-delta.json":
                   report_hashes[report_names[2]],
-              "validation/history/matcher-v2/checksums.sha256":
-                  matcher_v2_history_manifest_hash,
-              "validation/history/matcher-v2/sarif-regress-holdout.json":
-                  matcher_v2_report_hash,
+              "validation/history/matcher-v3/checksums.sha256":
+                  matcher_v3_history_manifest_hash,
+              "validation/history/matcher-v3/sarif-regress-holdout.json":
+                  matcher_v3_report_hash,
           }
           for name, expected in required_checksums.items():
               if checksums.get(name) != expected:
@@ -418,8 +566,8 @@ jobs:
               "evaluationMetadataSha256": metadata_sha256,
               "sarifRegressReportSha256": report_hashes[report_names[0]],
               "sarifMultitoolBaselineReportSha256": report_hashes[report_names[1]],
-              "matcherV2ReportSha256": matcher_v2_report_hash,
-              "v2ToV3DeltaReportSha256": report_hashes[report_names[2]],
+              "matcherV3ReportSha256": matcher_v3_report_hash,
+              "v3ToV31DeltaReportSha256": report_hashes[report_names[2]],
           }
           if comparison_hashes != expected_comparison_hashes:
               raise SystemExit("comparison-summary.json does not bind the base inputs.")
@@ -434,10 +582,10 @@ jobs:
           base_report_digests = {
               "sarifRegressHoldoutSha256": report_hashes[report_names[0]],
               "sarifMultitoolBaselineSha256": report_hashes[report_names[1]],
-              "v2ToV3DeltaSha256": report_hashes[report_names[2]],
+              "v3ToV31DeltaSha256": report_hashes[report_names[2]],
           }
           candidate = {
-              "schemaVersion": "2",
+              "schemaVersion": "3",
               "repository": "ppcdaniel/sarif-regress",
               "repositoryCommitSha": frozen_commit,
               "holdoutManifestSha256": manifest_sha256,
@@ -472,7 +620,7 @@ jobs:
               "byteIdentity": {
                   "sarifRegressHoldout": True,
                   "sarifMultitoolBaseline": True,
-                  "v2ToV3Delta": True,
+                  "v3ToV31Delta": True,
               },
           }
           candidate_bytes = (
@@ -487,7 +635,7 @@ jobs:
               "cross-platform-attestation.json",
               "sarif-multitool-baseline.json",
               "sarif-regress-holdout.json",
-              "v2-to-v3-delta.json",
+              "v3-to-v3.1-delta.json",
           )
           coordinator_manifest = "".join(
               f"{sha256(verified / name)}  {name}\n"

@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Text;
+using System.Text.Json.Nodes;
 using SarifRegress.Validation;
 
 namespace SarifRegress.ValidationTests;
@@ -25,6 +27,29 @@ public sealed class StableReportSerializerTests
         AssertStable(() => StableReportSerializer.Serialize(sarifRegress));
         AssertStable(() => StableReportSerializer.Serialize(multitool));
         AssertStable(() => StableReportSerializer.Serialize(comparison));
+
+        string comparisonJson = Encoding.UTF8.GetString(
+            StableReportSerializer.Serialize(comparison));
+        Assert.Contains(
+            "\"schemaVersion\": \"3\"",
+            comparisonJson,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"matcherV3ReportSha256\"",
+            comparisonJson,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"v3ToV31DeltaReportSha256\"",
+            comparisonJson,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "matcherV2ReportSha256",
+            comparisonJson,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "v2ToV3DeltaReportSha256",
+            comparisonJson,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -45,6 +70,136 @@ public sealed class StableReportSerializerTests
             StringComparison.Ordinal);
         Assert.DoesNotContain('\\', text);
         AmbientDataGuard.Validate(bytes, ValidationTestRepository.FindRoot());
+    }
+
+    [Fact]
+    public void Matcher_v31_delta_is_byte_stable_schema_valid_and_semantically_sorted()
+    {
+        (SarifRegressHoldoutReport sarifRegress, _) = CreateReports();
+        EvaluationIdentity matcherV3Identity = sarifRegress.Evaluation with
+        {
+            MatcherAlgorithmVersion = "sarifregress/matcher/v3",
+        };
+        EvaluationIdentity matcherV31Identity = matcherV3Identity with
+        {
+            MatcherAlgorithmVersion = "sarifregress/matcher/v3.1",
+        };
+        var matcherV3 = new MatcherMetricsSnapshot(
+            matcherV3Identity,
+            sarifRegress.Aggregate,
+            sarifRegress.Producers);
+        var matcherV31 = new MatcherMetricsSnapshot(
+            matcherV31Identity,
+            sarifRegress.Aggregate,
+            sarifRegress.Producers);
+        var first = new MatcherV3ToV31RelationshipReference(
+            "test",
+            "producer",
+            "relationship-a",
+            "classification-mismatch",
+            "true-positive",
+            "modified",
+            "moved");
+        var second = first with { RelationshipId = "relationship-b" };
+        var report = new MatcherV3ToV31DeltaReport(
+            new MatcherV3ToV31InputHashes(
+                Hash('a'),
+                Hash('b'),
+                Hash('c'),
+                matcherV31Identity.HoldoutManifestSha256),
+            matcherV3,
+            matcherV31,
+            [
+                new MatcherV3ToV31AlgorithmVersionChange(
+                    "matcher",
+                    matcherV3Identity.MatcherAlgorithmVersion,
+                    matcherV31Identity.MatcherAlgorithmVersion,
+                    Changed: true),
+            ],
+            new MatcherCorrespondenceIdentityDelta(
+                new MatcherCorrespondenceIdentity(1, 0, 0),
+                new MatcherCorrespondenceIdentity(1, 0, 0),
+                Unchanged: true),
+            new MatcherV3ToV31ClassificationMismatchDelta(
+                MatcherV3Count: 2,
+                MatcherV31Count: 0,
+                Fixed: [second, first],
+                Introduced: []),
+            new MatcherV3ToV31CaseDelta(
+                Fixed: [new MatcherDeltaCaseReference("test", "producer")],
+                Regressed: [],
+                StillFailing: []),
+            new MatcherV3ToV31RelationshipDelta(
+                Fixed: [second, first],
+                Regressed: [],
+                StillFailing: []),
+            NewlyIntroducedFalseMatches: [],
+            AmbiguityChanges: new MatcherV3ToV31AmbiguityDelta(
+                MatcherV3CorrectRefusals: 0,
+                MatcherV31CorrectRefusals: 0,
+                MatcherV3UnexpectedRefusals: 0,
+                MatcherV31UnexpectedRefusals: 0,
+                MatcherV3IncorrectAutoMatches: 0,
+                MatcherV31IncorrectAutoMatches: 0,
+                Fixed: [],
+                Regressed: [],
+                StillFailing: [],
+                UnexpectedRefusalsResolved: [],
+                UnexpectedRefusalsIntroduced: []),
+            IngestionSuccessChanges: new MatcherV3ToV31IngestionDelta(
+                MatcherV3Failures: 0,
+                MatcherV31Failures: 0,
+                NewlySuccessful: [],
+                NewlyFailed: [],
+                StillFailing: []),
+            RemainingFailures: [],
+            ChangedDecisionCount: 2,
+            ChangedDecisionTraceCount: 2,
+            ChangedDecisionWithoutTraceCount: 0,
+            ChangedDecisionsWithoutTrace: [],
+            EveryChangedDecisionHasTrace: true);
+        MatcherV3ToV31DeltaReport permuted = report with
+        {
+            ClassificationMismatchChanges =
+                report.ClassificationMismatchChanges with
+                {
+                    Fixed = [first, second],
+                },
+            Relationships = report.Relationships with
+            {
+                Fixed = [first, second],
+            },
+        };
+
+        byte[] bytes = StableReportSerializer.Serialize(report);
+
+        AssertStable(() => StableReportSerializer.Serialize(report));
+        Assert.Equal(bytes, StableReportSerializer.Serialize(permuted));
+        JsonNode node = JsonNode.Parse(bytes)
+            ?? throw new InvalidDataException("The serialized delta is null.");
+        string root = ValidationTestRepository.FindRoot();
+        _ = new JsonSchemaValidator().ValidateNode(
+            Path.Combine(
+                root,
+                "validation",
+                "schemas",
+                "v3-to-v3.1-delta.schema.json"),
+            node,
+            "v3-to-v3.1-delta.json",
+            root);
+        string text = Encoding.UTF8.GetString(bytes);
+        Assert.True(
+            text.IndexOf("\"relationshipId\": \"relationship-a\"", StringComparison.Ordinal)
+            < text.IndexOf("\"relationshipId\": \"relationship-b\"", StringComparison.Ordinal));
+        Assert.Contains(
+            "\"correspondenceIdentity\"",
+            text,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"classificationMismatchChanges\"",
+            text,
+            StringComparison.Ordinal);
+        AmbientDataGuard.Validate(bytes, root);
     }
 
     [Fact]

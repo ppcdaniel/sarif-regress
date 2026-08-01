@@ -27,8 +27,8 @@ public sealed class TrackedOutputTests
         "comparison-summary.json",
         "comparison-summary.schema.json")]
     [InlineData(
-        "v2-to-v3-delta.json",
-        "v2-to-v3-delta.schema.json")]
+        "v3-to-v3.1-delta.json",
+        "v3-to-v3.1-delta.schema.json")]
     public void Tracked_normalized_output_is_schema_valid_and_free_of_ambient_data(
         string reportName,
         string schemaName)
@@ -163,9 +163,9 @@ public sealed class TrackedOutputTests
             "validation/expected/comparison-summary.json",
             "validation/expected/sarif-multitool-baseline.json",
             "validation/expected/sarif-regress-holdout.json",
-            "validation/expected/v2-to-v3-delta.json",
-            "validation/history/matcher-v2/checksums.sha256",
-            "validation/history/matcher-v2/sarif-regress-holdout.json",
+            "validation/expected/v3-to-v3.1-delta.json",
+            "validation/history/matcher-v3/checksums.sha256",
+            "validation/history/matcher-v3/sarif-regress-holdout.json",
             "validation/holdout/cross-platform-attestation.json",
             "validation/holdout/evaluation-metadata.json",
             "validation/holdout/manifest.json",
@@ -243,40 +243,43 @@ public sealed class TrackedOutputTests
             Path.Combine(root, "validation", "history", "v2-to-v3-delta.json"),
             ValidationLimits.Default.MaximumSarifBytes);
 
-        Assert.Equal(
-            File.ReadAllBytes(Path.Combine(
-                root,
-                "validation",
-                "expected",
-                "checksums.sha256")),
-            File.ReadAllBytes(Path.Combine(
-                historyRoot,
-                "original-checksums.sha256")));
-        foreach (string reportName in new[]
-                 {
-                     "comparison-summary.json",
-                     "sarif-multitool-baseline.json",
-                     "sarif-regress-holdout.json",
-                 })
+        byte[] originalManifest = File.ReadAllBytes(Path.Combine(
+            historyRoot,
+            "original-checksums.sha256"));
+        IReadOnlyDictionary<string, string> originalChecksums =
+            ChecksumManifest.Parse(originalManifest);
+        Dictionary<string, string> archivedOriginals = new(StringComparer.Ordinal)
         {
-            Assert.Equal(
-                File.ReadAllBytes(Path.Combine(
-                    root,
-                    "validation",
-                    "expected",
-                    reportName)),
-                File.ReadAllBytes(Path.Combine(historyRoot, reportName)));
-        }
+            ["validation/expected/comparison-summary.json"] =
+                "validation/history/matcher-v3/comparison-summary.json",
+            ["validation/expected/sarif-multitool-baseline.json"] =
+                "validation/history/matcher-v3/sarif-multitool-baseline.json",
+            ["validation/expected/sarif-regress-holdout.json"] =
+                "validation/history/matcher-v3/sarif-regress-holdout.json",
+            ["validation/expected/v2-to-v3-delta.json"] =
+                "validation/history/v2-to-v3-delta.json",
+            ["validation/history/matcher-v2/checksums.sha256"] =
+                "validation/history/matcher-v2/checksums.sha256",
+            ["validation/history/matcher-v2/sarif-regress-holdout.json"] =
+                "validation/history/matcher-v2/sarif-regress-holdout.json",
+            ["validation/holdout/cross-platform-attestation.json"] =
+                "validation/history/matcher-v3/cross-platform-attestation.json",
+            ["validation/holdout/evaluation-metadata.json"] =
+                "validation/history/matcher-v3/evaluation-metadata.json",
+            ["validation/holdout/manifest.json"] =
+                "validation/holdout/manifest.json",
+        };
         Assert.Equal(
-            File.ReadAllBytes(Path.Combine(
-                root,
-                "validation",
-                "expected",
-                "v2-to-v3-delta.json")),
-            File.ReadAllBytes(Path.Combine(
-                root,
-                "validation",
-                "history",
-                "v2-to-v3-delta.json")));
+            archivedOriginals.Keys.Order(StringComparer.Ordinal).ToArray(),
+            originalChecksums.Keys.ToArray());
+        foreach ((string originalPath, string archivedPath) in archivedOriginals)
+        {
+            string actual = Convert.ToHexString(SHA256.HashData(
+                    File.ReadAllBytes(Path.Combine(
+                        root,
+                        archivedPath.Replace('/', Path.DirectorySeparatorChar)))))
+                .ToLowerInvariant();
+            Assert.Equal(originalChecksums[originalPath], actual);
+        }
     }
 }

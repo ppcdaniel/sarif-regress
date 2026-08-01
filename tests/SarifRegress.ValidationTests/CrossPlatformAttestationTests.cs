@@ -114,6 +114,48 @@ public sealed class CrossPlatformAttestationTests
     }
 
     [Fact]
+    public void Reader_schema_rejects_obsolete_v2_to_v3_delta_names()
+    {
+        string root = CreateRepository();
+        try
+        {
+            JsonObject document = CreateDocument();
+            JsonObject byteIdentity = document["byteIdentity"]!.AsObject();
+            byteIdentity["v2ToV3Delta"] = byteIdentity["v3ToV31Delta"]!.DeepClone();
+            _ = byteIdentity.Remove("v3ToV31Delta");
+            RenameDeltaDigest(document["baseReports"]!.AsObject());
+            JsonObject artifacts = document["artifacts"]!.AsObject();
+            RenameDeltaDigest(
+                artifacts["linux"]!.AsObject()["reportDigests"]!.AsObject());
+            RenameDeltaDigest(
+                artifacts["windows"]!.AsObject()["reportDigests"]!.AsObject());
+
+            string path = WriteAttestation(root, document);
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(() =>
+                new CrossPlatformAttestationReader().Read(
+                    root,
+                    path,
+                    CreateExpectation()));
+            Assert.Contains(
+                "does not satisfy schema",
+                exception.Message,
+                StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+
+        static void RenameDeltaDigest(JsonObject digests)
+        {
+            digests["v2ToV3DeltaSha256"] =
+                digests["v3ToV31DeltaSha256"]!.DeepClone();
+            _ = digests.Remove("v3ToV31DeltaSha256");
+        }
+    }
+
+    [Fact]
     public void Reader_rejects_any_path_other_than_the_fixed_committed_input()
     {
         string root = CreateRepository();
@@ -176,7 +218,7 @@ public sealed class CrossPlatformAttestationTests
 
     private static JsonObject CreateDocument() => new()
     {
-        ["schemaVersion"] = "2",
+        ["schemaVersion"] = "3",
         ["repository"] = "ppcdaniel/sarif-regress",
         ["repositoryCommitSha"] = FrozenCommit,
         ["holdoutManifestSha256"] = ManifestSha,
@@ -210,7 +252,7 @@ public sealed class CrossPlatformAttestationTests
         {
             ["sarifRegressHoldout"] = true,
             ["sarifMultitoolBaseline"] = true,
-            ["v2ToV3Delta"] = true,
+            ["v3ToV31Delta"] = true,
         },
     };
 
@@ -229,7 +271,7 @@ public sealed class CrossPlatformAttestationTests
     {
         ["sarifRegressHoldoutSha256"] = SarifRegressSha,
         ["sarifMultitoolBaselineSha256"] = MultitoolSha,
-        ["v2ToV3DeltaSha256"] = DeltaSha,
+        ["v3ToV31DeltaSha256"] = DeltaSha,
     };
 
     private static void Mutate(JsonObject document, string mutation)
@@ -262,7 +304,7 @@ public sealed class CrossPlatformAttestationTests
                     SarifRegressSha;
                 break;
             case "linux-delta":
-                linux["reportDigests"]!.AsObject()["v2ToV3DeltaSha256"] =
+                linux["reportDigests"]!.AsObject()["v3ToV31DeltaSha256"] =
                     MultitoolSha;
                 break;
             case "run-url":
@@ -285,7 +327,7 @@ public sealed class CrossPlatformAttestationTests
                 linux["archiveSha256"] = new string('0', 64);
                 break;
             case "delta-byte-identity":
-                document["byteIdentity"]!.AsObject()["v2ToV3Delta"] = false;
+                document["byteIdentity"]!.AsObject()["v3ToV31Delta"] = false;
                 break;
             default:
                 throw new InvalidOperationException(

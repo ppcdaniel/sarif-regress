@@ -200,7 +200,7 @@ public sealed class DeterminismAndSafetyTests
                 script,
                 StringComparison.Ordinal);
             Assert.Contains(
-                "v2-to-v3-delta.json",
+                "v3-to-v3.1-delta.json",
                 script,
                 StringComparison.Ordinal);
             if (relativePath.EndsWith(".sh", StringComparison.Ordinal))
@@ -316,16 +316,19 @@ public sealed class DeterminismAndSafetyTests
             "Push-Location -LiteralPath $env:RUNNER_TEMP",
             workflow,
             StringComparison.Ordinal);
-        Assert.Contains("v2-to-v3-delta.json", workflow, StringComparison.Ordinal);
         Assert.Contains(
-            "matcherV2HistoryChecksumManifestSha256",
+            "v3-to-v3.1-delta.json",
             workflow,
             StringComparison.Ordinal);
-        Assert.Contains("matcherV2ReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "matcherV3HistoryChecksumManifestSha256",
+            workflow,
+            StringComparison.Ordinal);
         Assert.Contains("matcherV3ReportSha256", workflow, StringComparison.Ordinal);
-        Assert.Contains("v2ToV3DeltaReportSha256", workflow, StringComparison.Ordinal);
-        Assert.Contains("v2ToV3DeltaSha256", workflow, StringComparison.Ordinal);
-        Assert.Contains("v2ToV3Delta", workflow, StringComparison.Ordinal);
+        Assert.Contains("matcherV31ReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v3ToV31DeltaReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v3ToV31DeltaSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v3ToV31Delta", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain(
             "--cross-platform-byte-identity",
             workflow,

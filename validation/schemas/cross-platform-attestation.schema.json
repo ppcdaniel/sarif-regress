@@ -17,7 +17,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "2"
+      "const": "3"
     },
     "repository": {
       "const": "ppcdaniel/sarif-regress"
@@ -81,7 +81,7 @@
       "required": [
         "sarifRegressHoldout",
         "sarifMultitoolBaseline",
-        "v2ToV3Delta"
+        "v3ToV31Delta"
       ],
       "properties": {
         "sarifRegressHoldout": {
@@ -90,7 +90,7 @@
         "sarifMultitoolBaseline": {
           "const": true
         },
-        "v2ToV3Delta": {
+        "v3ToV31Delta": {
           "const": true
         }
       }
@@ -111,7 +111,7 @@
       "required": [
         "sarifRegressHoldoutSha256",
         "sarifMultitoolBaselineSha256",
-        "v2ToV3DeltaSha256"
+        "v3ToV31DeltaSha256"
       ],
       "properties": {
         "sarifRegressHoldoutSha256": {
@@ -120,7 +120,7 @@
         "sarifMultitoolBaselineSha256": {
           "$ref": "#/$defs/sha256"
         },
-        "v2ToV3DeltaSha256": {
+        "v3ToV31DeltaSha256": {
           "$ref": "#/$defs/sha256"
         }
       }

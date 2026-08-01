@@ -23,7 +23,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "2"
+      "const": "3"
     },
     "reportKind": {
       "const": "holdout-external-baseline-comparison"
@@ -510,8 +510,8 @@
         "evaluationMetadataSha256",
         "sarifRegressReportSha256",
         "sarifMultitoolBaselineReportSha256",
-        "matcherV2ReportSha256",
-        "v2ToV3DeltaReportSha256"
+        "matcherV3ReportSha256",
+        "v3ToV31DeltaReportSha256"
       ],
       "properties": {
         "holdoutManifestSha256": {
@@ -526,10 +526,10 @@
         "sarifMultitoolBaselineReportSha256": {
           "$ref": "#/$defs/sha256"
         },
-        "matcherV2ReportSha256": {
+        "matcherV3ReportSha256": {
           "$ref": "#/$defs/sha256"
         },
-        "v2ToV3DeltaReportSha256": {
+        "v3ToV31DeltaReportSha256": {
           "$ref": "#/$defs/sha256"
         }
       }
