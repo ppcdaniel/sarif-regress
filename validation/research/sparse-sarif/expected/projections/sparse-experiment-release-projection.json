@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "kind": "sparse-experiment-release-projection/v1",
-  "corpusManifestSha256": "2f0d9e6cfd8eca2527e095389a0cc66cc81bf697eeed804a91798141ad9494ef",
-  "implementationManifestSha256": "9cf28a92a4ba1c915029c096441c6066496b555fed715b7fcae092c82a086c90",
+  "corpusManifestSha256": "f9696478b0247d6b1d5ddc2f6ea24fddcbbf888d5fc15f83de475a73dbc163fd",
+  "implementationManifestSha256": "c2765f2b3cd5a3961ae46deb1866bbff5b5e3a63dbe53783167d79f68e0ac348",
   "variants": [
     {
       "id": "sarif-only-control",

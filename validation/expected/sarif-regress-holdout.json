@@ -1,11 +1,11 @@
 {
-  "schemaVersion": "2",
-  "reportKind": "sarif-regress-independent-holdout",
+  "schemaVersion": "3",
+  "reportKind": "sarif-regress-exposed-holdout-regression",
   "evaluation": {
-    "repositoryCommitSha": "863210dfda02690b0d9ee579f5d7fd7a45545b1e",
-    "sourceTreeSha256": "fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f",
+    "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+    "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
     "sarifRegressToolVersion": "0.1.0",
-    "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+    "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
     "fingerprintAlgorithmVersions": [
       {
         "name": "derived-fingerprint",
@@ -164,7 +164,7 @@
         "producerInputTreeSha256": "059fcfe68af567e7c97a746e4174afff67932532368973e40a3dc3d8f612fbf3",
         "configSha256": "68b03ba1cfa51168e345f90c25dc7390fcb706a4e7c83de7ae2334c0a5dea190"
       },
-      "engineReportSha256": "a6f4e612ac9440beedf16c2ad57937a30759e82f2086da399d0a2cede1717295",
+      "engineReportSha256": "d66621caf4bbc7156a312bf3e02195adbe22cfd0c3e145600f557b1b44033bc1",
       "metrics": {
         "groundTruthUnits": 33,
         "labelledRelationships": 25,
@@ -213,7 +213,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -335,7 +335,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -474,7 +474,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -596,7 +596,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -735,7 +735,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -829,7 +829,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -930,7 +930,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1024,7 +1024,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1118,7 +1118,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1212,7 +1212,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1306,7 +1306,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1400,7 +1400,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1494,7 +1494,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1588,7 +1588,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1682,7 +1682,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1776,7 +1776,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1870,7 +1870,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -1964,7 +1964,7 @@
                 "precedenceTier": "weak-contextual",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-collision",
@@ -2057,7 +2057,7 @@
                 "precedenceTier": "weak-contextual",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-collision",
@@ -2150,7 +2150,7 @@
                 "precedenceTier": "weak-contextual",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-collision",
@@ -2243,7 +2243,7 @@
                 "precedenceTier": "weak-contextual",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-collision",
@@ -2336,7 +2336,7 @@
                 "precedenceTier": "weak-contextual",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-collision",
@@ -2429,7 +2429,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -2523,7 +2523,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -2617,7 +2617,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -2711,7 +2711,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -2805,7 +2805,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -2899,7 +2899,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -2993,7 +2993,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -3087,7 +3087,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3133,7 +3133,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3179,7 +3179,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3225,7 +3225,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3271,7 +3271,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3317,7 +3317,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3402,7 +3402,7 @@
         "producerInputTreeSha256": "00b679637c742175232888f1b0eafdab0b412e1ccd42b821ffcd42b6e7061a1b",
         "configSha256": "523998dd56b67601c0c03b0d4840082fab210289e58237681ffb7be8824efcf5"
       },
-      "engineReportSha256": "23ff489f130e1b8b93727512e891f852fb04c30534e5988ab0e494dbe5dda3f9",
+      "engineReportSha256": "793ccae5f3f758d64daccff4d61ba6e9443696872bc220da239983b2365cdf19",
       "metrics": {
         "groundTruthUnits": 33,
         "labelledRelationships": 25,
@@ -3451,7 +3451,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3472,7 +3472,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3510,7 +3510,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3531,7 +3531,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3569,7 +3569,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3590,7 +3590,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3628,7 +3628,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3649,7 +3649,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3687,7 +3687,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3708,7 +3708,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3746,7 +3746,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3767,7 +3767,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3805,7 +3805,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3826,7 +3826,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3864,7 +3864,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3885,7 +3885,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3923,7 +3923,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3944,7 +3944,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -3982,7 +3982,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4003,7 +4003,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4041,7 +4041,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4062,7 +4062,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4100,7 +4100,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4121,7 +4121,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4159,7 +4159,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4180,7 +4180,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4218,7 +4218,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4239,7 +4239,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4277,7 +4277,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4298,7 +4298,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4336,7 +4336,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4357,7 +4357,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4395,7 +4395,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4423,7 +4423,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4468,7 +4468,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4489,7 +4489,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4527,7 +4527,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4548,7 +4548,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4586,7 +4586,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4607,7 +4607,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4645,7 +4645,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4666,7 +4666,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4704,7 +4704,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4725,7 +4725,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4763,7 +4763,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4784,7 +4784,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4822,7 +4822,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4843,7 +4843,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4881,7 +4881,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4902,7 +4902,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4940,7 +4940,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4961,7 +4961,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -4999,7 +4999,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5020,7 +5020,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5058,7 +5058,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5096,7 +5096,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5134,7 +5134,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5172,7 +5172,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5210,7 +5210,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5248,7 +5248,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -5386,7 +5386,7 @@
         "producerInputTreeSha256": "72f47ce7413da4642c14532401fe622b489fbb9abbeb7e3e191fd1fe69ac5eb8",
         "configSha256": "1e975d0afeb1b43b5ce24981e5e3455167d604f4091d8ac80629fdcb9de7bbc1"
       },
-      "engineReportSha256": "6c30eabfbc9d70af02332562f28c9f4b51d99dfde49032e3b8861de9079f4b16",
+      "engineReportSha256": "bfdece755f201e5bbf67c4a44eee71efab95cf0e44968184ca13f55cb48d44e3",
       "metrics": {
         "groundTruthUnits": 33,
         "labelledRelationships": 25,
@@ -5435,7 +5435,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -5564,7 +5564,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -5710,7 +5710,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -5839,7 +5839,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": true,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -5985,7 +5985,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6078,7 +6078,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6171,7 +6171,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6256,7 +6256,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6349,7 +6349,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6442,7 +6442,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6535,7 +6535,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6628,7 +6628,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6721,7 +6721,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6814,7 +6814,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -6907,7 +6907,7 @@
                 "precedenceTier": "strong-moved",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-snippet",
@@ -6992,7 +6992,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7085,7 +7085,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7178,7 +7178,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7271,7 +7271,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7364,7 +7364,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7457,7 +7457,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7550,7 +7550,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7643,7 +7643,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7736,7 +7736,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7829,7 +7829,7 @@
                 "precedenceTier": "exact-canonical",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "canonical-path",
@@ -7922,7 +7922,7 @@
                 "precedenceTier": "strong-moved",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-snippet",
@@ -8007,7 +8007,7 @@
                 "precedenceTier": "strong-moved",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-snippet",
@@ -8092,7 +8092,7 @@
                 "precedenceTier": "strong-moved",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-snippet",
@@ -8177,7 +8177,7 @@
                 "precedenceTier": "strong-moved",
                 "displayConfidence": "high",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "context-snippet",
@@ -8262,7 +8262,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -8307,7 +8307,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -8352,7 +8352,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -8397,7 +8397,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -8442,7 +8442,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",
@@ -8487,7 +8487,7 @@
                 "precedenceTier": "refuse",
                 "displayConfidence": "low",
                 "ambiguous": false,
-                "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+                "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
                 "evidence": [
                   {
                     "kind": "assignment-outcome",

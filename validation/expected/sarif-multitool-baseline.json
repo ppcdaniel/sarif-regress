@@ -2,10 +2,10 @@
   "schemaVersion": "1",
   "reportKind": "sarif-multitool-normalized-baseline",
   "evaluation": {
-    "repositoryCommitSha": "863210dfda02690b0d9ee579f5d7fd7a45545b1e",
-    "sourceTreeSha256": "fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f",
+    "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+    "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
     "sarifRegressToolVersion": "0.1.0",
-    "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+    "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
     "fingerprintAlgorithmVersions": [
       {
         "name": "derived-fingerprint",

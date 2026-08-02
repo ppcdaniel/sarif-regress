@@ -29,7 +29,7 @@
     "releaseRecommendation": { "const": "blocked" },
     "matcherV4Implemented": { "const": false },
     "sourceHeadSha": { "$ref": "#/$defs/gitSha" },
-    "matcherAlgorithmVersion": { "const": "sarifregress/matcher/v3.1" },
+    "matcherAlgorithmVersion": { "const": "sarifregress/matcher/v3.2" },
     "corpusManifestSha256": { "$ref": "#/$defs/sha256" },
     "implementationManifestSha256": { "$ref": "#/$defs/sha256" },
     "workflowArtifacts": {
@@ -199,7 +199,7 @@
         "sourceBackedVariantsRequireCorpusSpecificPreflight": { "const": true }
       }
     },
-    "blockedCompositeValidationIssue": { "const": 28 },
+    "blockedCompositeValidationIssue": { "const": 27 },
     "reasons": {
       "type": "array",
       "minItems": 5,

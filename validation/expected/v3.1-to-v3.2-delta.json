@@ -1,163 +1,11 @@
 {
   "schemaVersion": "1",
-  "reportKind": "matcher-v3-to-v3.1-delta",
+  "reportKind": "matcher-v3.1-to-v3.2-delta",
   "inputHashes": {
-    "matcherV3HistoryChecksumManifestSha256": "39f880e379dc08dc94945bf31eda2c72b13a0f281f54e3e0528b7d04ba677a0c",
-    "matcherV3ReportSha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99",
+    "matcherV31HistoryChecksumManifestSha256": "d6b154b440541fa429b1ad1c7b4c6005e0b9e382cb8bcd5544e235617506b22b",
     "matcherV31ReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
+    "matcherV32ReportSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
     "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379"
-  },
-  "matcherV3": {
-    "evaluation": {
-      "repositoryCommitSha": "29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b",
-      "sourceTreeSha256": "4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486",
-      "sarifRegressToolVersion": "0.1.0",
-      "matcherAlgorithmVersion": "sarifregress/matcher/v3",
-      "fingerprintAlgorithmVersions": [
-        {
-          "name": "derived-fingerprint",
-          "version": "rule-path-context/v2"
-        },
-        {
-          "name": "derived-fingerprint-compare",
-          "version": "sarifregress/derived-fingerprint-compare/v2"
-        },
-        {
-          "name": "embedded-snippet",
-          "version": "embedded-snippet/v1"
-        },
-        {
-          "name": "producer-fingerprint-common",
-          "version": "sarifregress/producer-fingerprint-common-version/v1"
-        }
-      ],
-      "outputSchemaVersion": "1",
-      "configurationSchemaVersion": "1",
-      "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379"
-    },
-    "aggregate": {
-      "groundTruthUnits": 99,
-      "labelledRelationships": 75,
-      "labelledMatches": 50,
-      "truePositives": 50,
-      "falsePositives": 0,
-      "falseNegatives": 25,
-      "classificationMismatches": 5,
-      "expectedNewClassifications": 9,
-      "newClassifications": 36,
-      "correctNewClassifications": 9,
-      "incorrectNewClassifications": 0,
-      "newClassificationAccuracy": 1,
-      "expectedResolvedClassifications": 9,
-      "resolvedClassifications": 36,
-      "correctResolvedClassifications": 9,
-      "incorrectResolvedClassifications": 0,
-      "resolvedClassificationAccuracy": 1,
-      "ambiguousClassifications": 8,
-      "correctAmbiguityRefusals": 4,
-      "unexpectedAmbiguityRefusals": 0,
-      "incorrectlyAutoMatchedAmbiguousCases": 0,
-      "ingestionFailures": 0,
-      "structuralFailures": 0,
-      "precision": 1,
-      "recall": 0.666667,
-      "f1": 0.800000
-    },
-    "producers": [
-      {
-        "producerId": "gitleaks",
-        "metrics": {
-          "groundTruthUnits": 33,
-          "labelledRelationships": 25,
-          "labelledMatches": 25,
-          "truePositives": 25,
-          "falsePositives": 0,
-          "falseNegatives": 0,
-          "classificationMismatches": 5,
-          "expectedNewClassifications": 3,
-          "newClassifications": 3,
-          "correctNewClassifications": 3,
-          "incorrectNewClassifications": 0,
-          "newClassificationAccuracy": 1,
-          "expectedResolvedClassifications": 3,
-          "resolvedClassifications": 3,
-          "correctResolvedClassifications": 3,
-          "incorrectResolvedClassifications": 0,
-          "resolvedClassificationAccuracy": 1,
-          "ambiguousClassifications": 4,
-          "correctAmbiguityRefusals": 2,
-          "unexpectedAmbiguityRefusals": 0,
-          "incorrectlyAutoMatchedAmbiguousCases": 0,
-          "ingestionFailures": 0,
-          "structuralFailures": 0,
-          "precision": 1,
-          "recall": 1,
-          "f1": 1
-        }
-      },
-      {
-        "producerId": "pmd",
-        "metrics": {
-          "groundTruthUnits": 33,
-          "labelledRelationships": 25,
-          "labelledMatches": 0,
-          "truePositives": 0,
-          "falsePositives": 0,
-          "falseNegatives": 25,
-          "classificationMismatches": 0,
-          "expectedNewClassifications": 3,
-          "newClassifications": 30,
-          "correctNewClassifications": 3,
-          "incorrectNewClassifications": 0,
-          "newClassificationAccuracy": 1,
-          "expectedResolvedClassifications": 3,
-          "resolvedClassifications": 30,
-          "correctResolvedClassifications": 3,
-          "incorrectResolvedClassifications": 0,
-          "resolvedClassificationAccuracy": 1,
-          "ambiguousClassifications": 0,
-          "correctAmbiguityRefusals": 0,
-          "unexpectedAmbiguityRefusals": 0,
-          "incorrectlyAutoMatchedAmbiguousCases": 0,
-          "ingestionFailures": 0,
-          "structuralFailures": 0,
-          "precision": 1,
-          "recall": 0,
-          "f1": 0
-        }
-      },
-      {
-        "producerId": "semgrep",
-        "metrics": {
-          "groundTruthUnits": 33,
-          "labelledRelationships": 25,
-          "labelledMatches": 25,
-          "truePositives": 25,
-          "falsePositives": 0,
-          "falseNegatives": 0,
-          "classificationMismatches": 0,
-          "expectedNewClassifications": 3,
-          "newClassifications": 3,
-          "correctNewClassifications": 3,
-          "incorrectNewClassifications": 0,
-          "newClassificationAccuracy": 1,
-          "expectedResolvedClassifications": 3,
-          "resolvedClassifications": 3,
-          "correctResolvedClassifications": 3,
-          "incorrectResolvedClassifications": 0,
-          "resolvedClassificationAccuracy": 1,
-          "ambiguousClassifications": 4,
-          "correctAmbiguityRefusals": 2,
-          "unexpectedAmbiguityRefusals": 0,
-          "incorrectlyAutoMatchedAmbiguousCases": 0,
-          "ingestionFailures": 0,
-          "structuralFailures": 0,
-          "precision": 1,
-          "recall": 1,
-          "f1": 1
-        }
-      }
-    ]
   },
   "matcherV31": {
     "evaluation": {
@@ -311,129 +159,281 @@
       }
     ]
   },
+  "matcherV32": {
+    "evaluation": {
+      "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
+      "sarifRegressToolVersion": "0.1.0",
+      "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
+      "fingerprintAlgorithmVersions": [
+        {
+          "name": "derived-fingerprint",
+          "version": "rule-path-context/v2"
+        },
+        {
+          "name": "derived-fingerprint-compare",
+          "version": "sarifregress/derived-fingerprint-compare/v2"
+        },
+        {
+          "name": "embedded-snippet",
+          "version": "embedded-snippet/v1"
+        },
+        {
+          "name": "producer-fingerprint-common",
+          "version": "sarifregress/producer-fingerprint-common-version/v1"
+        }
+      ],
+      "outputSchemaVersion": "1",
+      "configurationSchemaVersion": "1",
+      "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379"
+    },
+    "aggregate": {
+      "groundTruthUnits": 99,
+      "labelledRelationships": 75,
+      "labelledMatches": 50,
+      "truePositives": 50,
+      "falsePositives": 0,
+      "falseNegatives": 25,
+      "classificationMismatches": 0,
+      "expectedNewClassifications": 9,
+      "newClassifications": 36,
+      "correctNewClassifications": 9,
+      "incorrectNewClassifications": 0,
+      "newClassificationAccuracy": 1,
+      "expectedResolvedClassifications": 9,
+      "resolvedClassifications": 36,
+      "correctResolvedClassifications": 9,
+      "incorrectResolvedClassifications": 0,
+      "resolvedClassificationAccuracy": 1,
+      "ambiguousClassifications": 8,
+      "correctAmbiguityRefusals": 4,
+      "unexpectedAmbiguityRefusals": 0,
+      "incorrectlyAutoMatchedAmbiguousCases": 0,
+      "ingestionFailures": 0,
+      "structuralFailures": 0,
+      "precision": 1,
+      "recall": 0.666667,
+      "f1": 0.800000
+    },
+    "producers": [
+      {
+        "producerId": "gitleaks",
+        "metrics": {
+          "groundTruthUnits": 33,
+          "labelledRelationships": 25,
+          "labelledMatches": 25,
+          "truePositives": 25,
+          "falsePositives": 0,
+          "falseNegatives": 0,
+          "classificationMismatches": 0,
+          "expectedNewClassifications": 3,
+          "newClassifications": 3,
+          "correctNewClassifications": 3,
+          "incorrectNewClassifications": 0,
+          "newClassificationAccuracy": 1,
+          "expectedResolvedClassifications": 3,
+          "resolvedClassifications": 3,
+          "correctResolvedClassifications": 3,
+          "incorrectResolvedClassifications": 0,
+          "resolvedClassificationAccuracy": 1,
+          "ambiguousClassifications": 4,
+          "correctAmbiguityRefusals": 2,
+          "unexpectedAmbiguityRefusals": 0,
+          "incorrectlyAutoMatchedAmbiguousCases": 0,
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        }
+      },
+      {
+        "producerId": "pmd",
+        "metrics": {
+          "groundTruthUnits": 33,
+          "labelledRelationships": 25,
+          "labelledMatches": 0,
+          "truePositives": 0,
+          "falsePositives": 0,
+          "falseNegatives": 25,
+          "classificationMismatches": 0,
+          "expectedNewClassifications": 3,
+          "newClassifications": 30,
+          "correctNewClassifications": 3,
+          "incorrectNewClassifications": 0,
+          "newClassificationAccuracy": 1,
+          "expectedResolvedClassifications": 3,
+          "resolvedClassifications": 30,
+          "correctResolvedClassifications": 3,
+          "incorrectResolvedClassifications": 0,
+          "resolvedClassificationAccuracy": 1,
+          "ambiguousClassifications": 0,
+          "correctAmbiguityRefusals": 0,
+          "unexpectedAmbiguityRefusals": 0,
+          "incorrectlyAutoMatchedAmbiguousCases": 0,
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "precision": 1,
+          "recall": 0,
+          "f1": 0
+        }
+      },
+      {
+        "producerId": "semgrep",
+        "metrics": {
+          "groundTruthUnits": 33,
+          "labelledRelationships": 25,
+          "labelledMatches": 25,
+          "truePositives": 25,
+          "falsePositives": 0,
+          "falseNegatives": 0,
+          "classificationMismatches": 0,
+          "expectedNewClassifications": 3,
+          "newClassifications": 3,
+          "correctNewClassifications": 3,
+          "incorrectNewClassifications": 0,
+          "newClassificationAccuracy": 1,
+          "expectedResolvedClassifications": 3,
+          "resolvedClassifications": 3,
+          "correctResolvedClassifications": 3,
+          "incorrectResolvedClassifications": 0,
+          "resolvedClassificationAccuracy": 1,
+          "ambiguousClassifications": 4,
+          "correctAmbiguityRefusals": 2,
+          "unexpectedAmbiguityRefusals": 0,
+          "incorrectlyAutoMatchedAmbiguousCases": 0,
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        }
+      }
+    ]
+  },
   "algorithmVersionChanges": [
     {
       "name": "decision-evidence.assignment-outcome",
-      "matcherV3Version": "sarifregress/assignment-outcome/v1",
       "matcherV31Version": "sarifregress/assignment-outcome/v1",
+      "matcherV32Version": "sarifregress/assignment-outcome/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.canonical-path",
-      "matcherV3Version": "sarifregress/path-evidence/v1",
       "matcherV31Version": "sarifregress/path-evidence/v1",
+      "matcherV32Version": "sarifregress/path-evidence/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.context-collision",
-      "matcherV3Version": "sarifregress/evidence-occurrence/v1",
       "matcherV31Version": "sarifregress/evidence-occurrence/v1",
+      "matcherV32Version": "sarifregress/evidence-occurrence/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.context-snippet",
-      "matcherV3Version": "sarifregress/context-evidence/v2",
       "matcherV31Version": "sarifregress/context-evidence/v2",
+      "matcherV32Version": "sarifregress/context-evidence/v2",
       "changed": false
     },
     {
       "name": "decision-evidence.derived-fingerprint",
-      "matcherV3Version": "sarifregress/derived-fingerprint-compare/v2",
       "matcherV31Version": "sarifregress/derived-fingerprint-compare/v2",
+      "matcherV32Version": "sarifregress/derived-fingerprint-compare/v2",
       "changed": false
     },
     {
       "name": "decision-evidence.derived-fingerprint-collision",
-      "matcherV3Version": "sarifregress/evidence-occurrence/v1",
       "matcherV31Version": "sarifregress/evidence-occurrence/v1",
+      "matcherV32Version": "sarifregress/evidence-occurrence/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.message",
-      "matcherV3Version": "sarifregress/message-evidence/v1",
       "matcherV31Version": "sarifregress/message-evidence/v1",
+      "matcherV32Version": "sarifregress/message-evidence/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.path-alias",
-      "matcherV3Version": "sarifregress/path-alias/v1",
       "matcherV31Version": "sarifregress/path-alias/v1",
+      "matcherV32Version": "sarifregress/path-alias/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.producer-fingerprint",
-      "matcherV3Version": "sarifregress/producer-fingerprint-common-version/v1",
       "matcherV31Version": "sarifregress/producer-fingerprint-common-version/v1",
+      "matcherV32Version": "sarifregress/producer-fingerprint-common-version/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.region",
-      "matcherV3Version": "sarifregress/region-evidence/v1",
       "matcherV31Version": "sarifregress/region-evidence/v1",
+      "matcherV32Version": "sarifregress/region-evidence/v1",
       "changed": false
     },
     {
       "name": "decision-evidence.rule-identity",
-      "matcherV3Version": "sarifregress/rule-identity/v2",
       "matcherV31Version": "sarifregress/rule-identity/v2",
+      "matcherV32Version": "sarifregress/rule-identity/v2",
       "changed": false
     },
     {
       "name": "decision-transformation.classification-message-location-template",
-      "matcherV3Version": null,
       "matcherV31Version": "sarifregress/message-location-template/v1",
-      "changed": true
+      "matcherV32Version": "sarifregress/message-location-template/v1",
+      "changed": false
     },
     {
       "name": "decision-transformation.configured-path-rebase",
-      "matcherV3Version": "cross-platform-path/v1",
       "matcherV31Version": "cross-platform-path/v1",
+      "matcherV32Version": "cross-platform-path/v1",
       "changed": false
     },
     {
       "name": "decision-transformation.configured-uri-base",
-      "matcherV3Version": "sarifregress/configured-uri-base/v1",
       "matcherV31Version": "sarifregress/configured-uri-base/v1",
+      "matcherV32Version": "sarifregress/configured-uri-base/v1",
       "changed": false
     },
     {
       "name": "derived-fingerprint",
-      "matcherV3Version": "rule-path-context/v2",
       "matcherV31Version": "rule-path-context/v2",
+      "matcherV32Version": "rule-path-context/v2",
       "changed": false
     },
     {
       "name": "derived-fingerprint-compare",
-      "matcherV3Version": "sarifregress/derived-fingerprint-compare/v2",
       "matcherV31Version": "sarifregress/derived-fingerprint-compare/v2",
+      "matcherV32Version": "sarifregress/derived-fingerprint-compare/v2",
       "changed": false
     },
     {
       "name": "embedded-snippet",
-      "matcherV3Version": "embedded-snippet/v1",
       "matcherV31Version": "embedded-snippet/v1",
+      "matcherV32Version": "embedded-snippet/v1",
       "changed": false
     },
     {
       "name": "matcher",
-      "matcherV3Version": "sarifregress/matcher/v3",
       "matcherV31Version": "sarifregress/matcher/v3.1",
+      "matcherV32Version": "sarifregress/matcher/v3.2",
       "changed": true
     },
     {
       "name": "producer-fingerprint-common",
-      "matcherV3Version": "sarifregress/producer-fingerprint-common-version/v1",
       "matcherV31Version": "sarifregress/producer-fingerprint-common-version/v1",
+      "matcherV32Version": "sarifregress/producer-fingerprint-common-version/v1",
       "changed": false
     }
   ],
   "correspondenceIdentity": {
-    "matcherV3": {
+    "matcherV31": {
       "truePositives": 50,
       "falsePositives": 0,
       "falseNegatives": 25
     },
-    "matcherV31": {
+    "matcherV32": {
       "truePositives": 50,
       "falsePositives": 0,
       "falseNegatives": 25
@@ -441,64 +441,13 @@
     "unchanged": true
   },
   "classificationMismatchChanges": {
-    "matcherV3Count": 5,
     "matcherV31Count": 0,
-    "fixed": [
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-014",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-015",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-016",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-017",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-018",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      }
-    ],
+    "matcherV32Count": 0,
+    "fixed": [],
     "introduced": []
   },
   "cases": {
-    "fixed": [
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks"
-      }
-    ],
+    "fixed": [],
     "regressed": [],
     "stillFailing": [
       {
@@ -508,308 +457,6 @@
     ]
   },
   "relationships": {
-    "fixed": [
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-014",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-015",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-016",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-017",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      },
-      {
-        "caseId": "gitleaks",
-        "producerId": "gitleaks",
-        "relationshipId": "gitleaks-match-018",
-        "matcherV3Outcome": "classification-mismatch",
-        "matcherV31Outcome": "true-positive",
-        "matcherV3State": "modified",
-        "matcherV31State": "moved"
-      }
-    ],
-    "regressed": [],
-    "stillFailing": [
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-ambiguous-001",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-ambiguous-002",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-001",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-002",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-003",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-004",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-005",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-006",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-007",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-008",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-009",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-010",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-011",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-012",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-013",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-014",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-015",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-016",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-017",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-018",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-019",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-020",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-021",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-022",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-023",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-024",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      },
-      {
-        "caseId": "pmd",
-        "producerId": "pmd",
-        "relationshipId": "pmd-match-025",
-        "matcherV3Outcome": "missed-match",
-        "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
-      }
-    ]
-  },
-  "newlyIntroducedFalseMatches": [],
-  "ambiguityChanges": {
-    "matcherV3CorrectRefusals": 4,
-    "matcherV31CorrectRefusals": 4,
-    "matcherV3UnexpectedRefusals": 0,
-    "matcherV31UnexpectedRefusals": 0,
-    "matcherV3IncorrectAutoMatches": 0,
-    "matcherV31IncorrectAutoMatches": 0,
     "fixed": [],
     "regressed": [],
     "stillFailing": [
@@ -817,27 +464,283 @@
         "caseId": "pmd",
         "producerId": "pmd",
         "relationshipId": "pmd-ambiguous-001",
-        "matcherV3Outcome": "missed-match",
         "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
       },
       {
         "caseId": "pmd",
         "producerId": "pmd",
         "relationshipId": "pmd-ambiguous-002",
-        "matcherV3Outcome": "missed-match",
         "matcherV31Outcome": "missed-match",
-        "matcherV3State": "not-reported",
-        "matcherV31State": "not-reported"
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-001",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-002",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-003",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-004",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-005",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-006",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-007",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-008",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-009",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-010",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-011",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-012",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-013",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-014",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-015",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-016",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-017",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-018",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-019",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-020",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-021",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-022",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-023",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-024",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-match-025",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      }
+    ]
+  },
+  "newlyIntroducedFalseMatches": [],
+  "ambiguityChanges": {
+    "matcherV31CorrectRefusals": 4,
+    "matcherV32CorrectRefusals": 4,
+    "matcherV31UnexpectedRefusals": 0,
+    "matcherV32UnexpectedRefusals": 0,
+    "matcherV31IncorrectAutoMatches": 0,
+    "matcherV32IncorrectAutoMatches": 0,
+    "fixed": [],
+    "regressed": [],
+    "stillFailing": [
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-ambiguous-001",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
+      },
+      {
+        "caseId": "pmd",
+        "producerId": "pmd",
+        "relationshipId": "pmd-ambiguous-002",
+        "matcherV31Outcome": "missed-match",
+        "matcherV32Outcome": "missed-match",
+        "matcherV31State": "not-reported",
+        "matcherV32State": "not-reported"
       }
     ],
     "unexpectedRefusalsResolved": [],
     "unexpectedRefusalsIntroduced": []
   },
   "ingestionSuccessChanges": {
-    "matcherV3Failures": 0,
     "matcherV31Failures": 0,
+    "matcherV32Failures": 0,
     "newlySuccessful": [],
     "newlyFailed": [],
     "stillFailing": []
@@ -847,248 +750,248 @@
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-ambiguous-001",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-ambiguous-002",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-001",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-002",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-003",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-004",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-005",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-006",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-007",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-008",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-009",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-010",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-011",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-012",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-013",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-014",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-015",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-016",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-017",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-018",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-019",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-020",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-021",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-022",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-023",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-024",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     },
     {
       "caseId": "pmd",
       "producerId": "pmd",
       "relationshipId": "pmd-match-025",
-      "matcherV3Outcome": "missed-match",
       "matcherV31Outcome": "missed-match",
-      "matcherV3State": "not-reported",
-      "matcherV31State": "not-reported"
+      "matcherV32Outcome": "missed-match",
+      "matcherV31State": "not-reported",
+      "matcherV32State": "not-reported"
     }
   ],
-  "changedDecisionCount": 5,
-  "changedDecisionTraceCount": 5,
+  "changedDecisionCount": 0,
+  "changedDecisionTraceCount": 0,
   "changedDecisionWithoutTraceCount": 0,
   "changedDecisionsWithoutTrace": [],
   "everyChangedDecisionHasTrace": true

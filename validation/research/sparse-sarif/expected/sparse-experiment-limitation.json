@@ -4,87 +4,87 @@
   "decision": "document-limitation",
   "releaseRecommendation": "blocked",
   "matcherV4Implemented": false,
-  "sourceHeadSha": "94c906d485f55bb1900f159caa1abd73d71ee56c",
-  "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
-  "corpusManifestSha256": "2f0d9e6cfd8eca2527e095389a0cc66cc81bf697eeed804a91798141ad9494ef",
-  "implementationManifestSha256": "9cf28a92a4ba1c915029c096441c6066496b555fed715b7fcae092c82a086c90",
+  "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+  "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
+  "corpusManifestSha256": "f9696478b0247d6b1d5ddc2f6ea24fddcbbf888d5fc15f83de475a73dbc163fd",
+  "implementationManifestSha256": "c2765f2b3cd5a3961ae46deb1866bbff5b5e3a63dbe53783167d79f68e0ac348",
   "workflowArtifacts": [
     {
       "role": "sparse-candidate",
-      "runId": 30725861186,
-      "sourceHeadSha": "94c906d485f55bb1900f159caa1abd73d71ee56c",
-      "name": "sparse-experiment-candidate-94c906d485f55bb1900f159caa1abd73d71ee56c",
-      "artifactId": 8826317540,
-      "digest": "ee29b1621833985e6aeb7661db4d542ca64d7fe9856ee651a52df184ed61ecda"
+      "runId": 30761620623,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-experiment-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837655726,
+      "digest": "0a05d9cf69a1e4dcb11d99fb14e0afef55fd052045509bb0a7ead3ddf2119de1"
     },
     {
       "role": "pmd-recapture",
-      "runId": 30725861186,
-      "sourceHeadSha": "94c906d485f55bb1900f159caa1abd73d71ee56c",
-      "name": "sparse-sarif-pmd-capture-94c906d485f55bb1900f159caa1abd73d71ee56c",
-      "artifactId": 8826305910,
-      "digest": "2997aef344883897af2a6093934562ab0edfd370b484aaa678f64bd321b14ee9"
+      "runId": 30761620623,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-sarif-pmd-capture-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837641900,
+      "digest": "e7218ed07983fd4940f3a9b43cf1789512f81e04f2053e303a3db4e834a1c1b9"
     },
     {
       "role": "release",
-      "runId": 30725861186,
-      "sourceHeadSha": "94c906d485f55bb1900f159caa1abd73d71ee56c",
-      "name": "holdout-cross-platform",
-      "artifactId": 8826334090,
-      "digest": "52e54f89fca4d61490b4d1a23b4672c0126d6c0e299a6746b540a194ebd1f276"
+      "runId": 30761620623,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "holdout-v3.2-cross-platform-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837663843,
+      "digest": "1524d42042a91e829551327dd0f0d77eb2ad42b4a70ad09c7c02c434ecf1ebfd"
     },
     {
       "role": "determinism",
-      "runId": 30725861139,
-      "sourceHeadSha": "94c906d485f55bb1900f159caa1abd73d71ee56c",
-      "name": "cross-platform-determinism",
-      "artifactId": 8826317130,
-      "digest": "8d10fd3cf6364a7d156d1cad38b69041d9f3bab4401dd61dcaef0291e5ef1f29"
+      "runId": 30761620626,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-determinism-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837655464,
+      "digest": "2727b7fda2483886fa9106e2b9b53e5723aac723ea43575dfdfaa758407738e7"
     },
     {
       "role": "resources",
-      "runId": 30725861161,
-      "sourceHeadSha": "94c906d485f55bb1900f159caa1abd73d71ee56c",
-      "name": "benchmark-cross-platform",
-      "artifactId": 8826319165,
-      "digest": "303493931beed0dfa3e5479d9e8c3d732828efb6ef98abcffbf77215e0439475"
+      "runId": 30761620637,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-resource-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837650617,
+      "digest": "306953185113f04be26766cb65491d69808e6b594fc2f8190f6833f7d4d81e24"
     }
   ],
   "evidenceFiles": [
     {
       "kind": "sparse-experiment-observations/v1",
       "path": "expected/sparse-experiment-observations.json",
-      "sha256": "505a4b102c69f03c02da4df7b25ce7db2e2b878384a2fb519bc5c95ccfc2ccd4"
+      "sha256": "ff490ba21d5c3f8243a477d140f7bc65dd6cfefd68e407da611303fc01df0db2"
     },
     {
       "kind": "sparse-experiment-gates/v1",
       "path": "expected/sparse-experiment-gate-evidence.json",
-      "sha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+      "sha256": "4c88856e256b7b38cbfefccbf9a63a112a4736877cd606395d95ee8e2d17abdc"
     },
     {
       "kind": "sparse-experiment-workflow-provenance/v1",
       "path": "expected/sparse-experiment-workflow-provenance.json",
-      "sha256": "b847c0d56329f618b3dc2c0704d696be26b7ece9af6cffd9ceb79129f9b4db52"
+      "sha256": "3f91856620633447f75a436c3556154369e73af7d15b05a4c0a800714c8bba76"
     },
     {
       "kind": "sparse-experiment-resource-observations/v1",
       "path": "expected/sparse-experiment-resource-observations.json",
-      "sha256": "eedc126412da8e55b9b132dc80804306f4eb41e04f82ae83e9e7d4ed648da89e"
+      "sha256": "3aaea4252e3124d4a09a658945c35c5f11274a5b61d4b85eaec8d925b48e4fa4"
     },
     {
       "kind": "sparse-experiment-release-projection/v1",
       "path": "expected/projections/sparse-experiment-release-projection.json",
-      "sha256": "ac600681bb0b392d7f418f3aaafc21ec3e2cabfb120a468031c1a852d6d56ee8"
+      "sha256": "92d7405ba1df1f1fecce3739cffad6cb4d9eb5826694521f8b18e6266aa6cbee"
     },
     {
       "kind": "sparse-experiment-determinism-projection/v1",
       "path": "expected/projections/sparse-experiment-determinism-projection.json",
-      "sha256": "86b4cf56a687fa4cd1cf5f45ef344fa9fff9fb0db9f330393355b218c4e48742"
+      "sha256": "6c8a2ea416726364122ef051f0898c33616a2365123036a61feaeb62ce011515"
     },
     {
       "kind": "sparse-experiment-resource-projection/v1",
       "path": "expected/projections/sparse-experiment-resource-projection.json",
-      "sha256": "727c94e269c293e0b4eee80237165cd0975a3d03eb55b3eecec43356a2911b58"
+      "sha256": "504b72d66912e81d9ea294a14a7227489976e7d02867bba27626d2a577221fac"
     }
   ],
   "cleanPmd": {
@@ -218,7 +218,7 @@
     "sourceContextProjectionBenchmarked": false,
     "sourceBackedVariantsRequireCorpusSpecificPreflight": true
   },
-  "blockedCompositeValidationIssue": 28,
+  "blockedCompositeValidationIssue": 27,
   "reasons": [
     "Best clean-PMD recall is 0.473684, below the fixed 0.80 PMD gate.",
     "The 75-relationship exposed holdout remains at 0.666667 recall, below the fixed 0.90 aggregate gate.",
@@ -226,6 +226,6 @@
     "Relative-context and agreement-only-combination also fail the family-B no-trusted-hash mismatched-snapshot scenario.",
     "The 1k, 10k, and 100k resource matrix did not execute source-context projection.",
     "Preflight validation and later source reads do not share one immutable snapshot handle.",
-    "Issue 28 prevents promotion through the composite experiment-report validator without falsifying the SARIF-only control."
+    "Issue 27 prevents composite promotion until every supporting projection is derived from and cross-bound to authenticated full evidence."
   ]
 }

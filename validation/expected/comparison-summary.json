@@ -1,11 +1,11 @@
 {
-  "schemaVersion": "3",
+  "schemaVersion": "4",
   "reportKind": "holdout-external-baseline-comparison",
   "evaluation": {
-    "repositoryCommitSha": "863210dfda02690b0d9ee579f5d7fd7a45545b1e",
-    "sourceTreeSha256": "fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f",
+    "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+    "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
     "sarifRegressToolVersion": "0.1.0",
-    "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+    "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
     "fingerprintAlgorithmVersions": [
       {
         "name": "derived-fingerprint",
@@ -30,11 +30,11 @@
   },
   "reportHashes": {
     "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
-    "evaluationMetadataSha256": "2c7adc51f1e32e3a38e32a96750d690481f8ed59397c5cbc8ff12e9418dd0ca8",
-    "sarifRegressReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
-    "sarifMultitoolBaselineReportSha256": "25908f899f38e64aefe4550adbe0bdfc009ef63fc1a19ea323122c2f5554ec4f",
-    "matcherV3ReportSha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99",
-    "v3ToV31DeltaReportSha256": "f0d40f0bdede57db33d359b67beaa4112447336d2ab0583a026289b55dcd2c2e"
+    "evaluationMetadataSha256": "e170ba6f7203e2414f4b27b725996f177c1a04045522b42fe57038782bbf5915",
+    "sarifRegressReportSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
+    "sarifMultitoolBaselineReportSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
+    "matcherV31ReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
+    "v31ToV32DeltaReportSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
   },
   "thresholds": {
     "minimumPrecision": 0.95,
@@ -58,7 +58,7 @@
     "noUnexplainedIngestionFailures": true,
     "noStructuralFailures": true,
     "completeLabelGraphSatisfied": false,
-    "crossPlatformByteIdentity": true,
+    "crossPlatformByteIdentity": false,
     "evaluationCompleted": true,
     "everyChangedDecisionExplained": true
   },
@@ -1421,6 +1421,7 @@
   "recommendationReasons": [
     "recall-below-threshold",
     "per-producer-recall-below-threshold",
-    "complete-label-graph-failed"
+    "complete-label-graph-failed",
+    "cross-platform-determinism-failed"
   ]
 }
