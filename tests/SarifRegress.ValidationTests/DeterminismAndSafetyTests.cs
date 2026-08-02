@@ -513,7 +513,33 @@ public sealed class DeterminismAndSafetyTests
             "sourceContextProjectionBenchmarked\": False",
             benchmarks,
             StringComparison.Ordinal);
+        Assert.Contains("projection_evidence", benchmarks, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "copy.deepcopy(full_variants)",
+            benchmarks,
+            StringComparison.Ordinal);
         Assert.DoesNotContain("if-no-files-found: warn", benchmarks, StringComparison.Ordinal);
+
+        string resourceProjection = File.ReadAllText(Path.Combine(
+            ValidationTestRepository.FindRoot(),
+            "validation",
+            "research",
+            "sparse-sarif",
+            "expected",
+            "projections",
+            "sparse-experiment-resource-projection.json"));
+        Assert.DoesNotContain(
+            "elapsedMilliseconds",
+            resourceProjection,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "peakWorkingSetBytes",
+            resourceProjection,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "sparse-experiment-resource-observations.json",
+            resourceProjection,
+            StringComparison.Ordinal);
 
         foreach (string workflow in new[] { holdout, determinism, benchmarks })
         {

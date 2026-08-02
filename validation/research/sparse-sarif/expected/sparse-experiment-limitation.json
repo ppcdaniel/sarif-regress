@@ -84,7 +84,7 @@
     {
       "kind": "sparse-experiment-resource-projection/v1",
       "path": "expected/projections/sparse-experiment-resource-projection.json",
-      "sha256": "e286d4f3a6c6a056580f1388455a5c9a43c5d36a4f1dea22bfd59d4c3e04417d"
+      "sha256": "727c94e269c293e0b4eee80237165cd0975a3d03eb55b3eecec43356a2911b58"
     }
   ],
   "cleanPmd": {

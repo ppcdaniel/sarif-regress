@@ -696,3 +696,30 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   policy. No alternate publication path was used, no control evidence was changed, and no composite
   experiment report was promoted. The already authenticated `94c906d...` projections remain bound
   to the unchanged scanner and corpus manifest; #28 tracks the blocker.
+
+### H-15 — The stable resource projection embedded volatile benchmark measurements
+
+- **Evidence and code area:** exact-head extended benchmark run `30726918341` passed all twelve
+  Linux/Windows 1k, 10k, and 100k unique/pathological measurement jobs and byte-compared every
+  application-emitted deterministic report. Its coordinator then failed in
+  `.github/workflows/benchmarks.yml` because
+  `validation/research/sparse-sarif/expected/projections/sparse-experiment-resource-projection.json`
+  copied per-run `elapsedMilliseconds` and `peakWorkingSetBytes` values. A second valid hosted run
+  necessarily observed different timing and memory values.
+- **Why it matters:** an artifact described and enforced as a stable byte projection cannot include
+  scheduler- and runner-dependent observations. After the first evidence promotion, all later
+  successful resource runs would fail exact reproduction even when limits, bounded refusals, and
+  deterministic application bytes were unchanged.
+- **Smallest safe remediation:** retain exact time and peak-memory measurements in the per-run
+  artifact and continue enforcing fixed hosted budgets, but make the committed projection reference
+  only the stable structural observations record and its digest. Add a regression check proving that
+  different passing measurements yield the same stable projection.
+- **Blocks PR #8/#13:** no. **Blocks the nightly hardening PR:** yes until a fresh exact-head run
+  reproduces the corrected projection. **Blocks release:** yes because resource evidence is not yet
+  repeatable.
+- **Tracking:** [#29](https://github.com/ppcdaniel/sarif-regress/issues/29).
+- **Pre-commit disposition:** corrected locally. Full per-run artifacts retain exact timing and
+  peak-memory values; the committed projection now carries only stable pass/fail facts plus the
+  path and digest of the structural observation record. Replaying the corrected coordinator over
+  run `30726918341` reproduces the committed projection despite different measurements. Hosted
+  exact-head verification remains required before closure.

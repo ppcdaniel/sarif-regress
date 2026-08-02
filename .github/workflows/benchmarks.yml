@@ -471,6 +471,18 @@ jobs:
               {"id": variant_id, "value": copy.deepcopy(evidence)}
               for variant_id in variant_ids
           ]
+          projection_evidence = {
+              "withinDocumentedLimits": evidence["withinDocumentedLimits"],
+              "sourceContextProjectionBenchmarked": evidence[
+                  "sourceContextProjectionBenchmarked"
+              ],
+              "evidencePath": evidence["evidencePath"],
+              "evidenceSha256": evidence["evidenceSha256"],
+          }
+          projection_variants = [
+              {"id": variant_id, "value": copy.deepcopy(projection_evidence)}
+              for variant_id in variant_ids
+          ]
           corpus_hash = hashlib.sha256(
               (research / "manifest.json").read_bytes()
           ).hexdigest()
@@ -489,7 +501,7 @@ jobs:
               "kind": "sparse-experiment-resource-projection/v1",
               "corpusManifestSha256": corpus_hash,
               "implementationManifestSha256": implementation_hash,
-              "variants": copy.deepcopy(full_variants),
+              "variants": projection_variants,
           }
           for name, value in (
               ("sparse-experiment-resource-values.json", full),
