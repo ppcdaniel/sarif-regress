@@ -66,6 +66,33 @@
       "items": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "sparse-experiment-resource-projection/v1"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "variants": {
+            "contains": {
+              "required": ["value"],
+              "properties": {
+                "value": {
+                  "$ref": "#/$defs/resourceProjectionValueV1"
+                }
+              }
+            },
+            "minContains": 5
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "sha256": {
       "type": "string",
@@ -88,6 +115,36 @@
         "value": {
           "type": "object",
           "minProperties": 1
+        }
+      }
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+    },
+    "resourceProjectionValueV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "withinDocumentedLimits",
+        "sourceContextProjectionBenchmarked",
+        "evidencePath",
+        "evidenceSha256"
+      ],
+      "properties": {
+        "withinDocumentedLimits": {
+          "type": "boolean"
+        },
+        "sourceContextProjectionBenchmarked": {
+          "type": "boolean"
+        },
+        "evidencePath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "evidenceSha256": {
+          "$ref": "#/$defs/sha256"
         }
       }
     }

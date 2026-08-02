@@ -2,8 +2,9 @@
 
 ## Outcome
 
-Matcher v3.1 retains matcher v3's general Semgrep ingestion and repeated-context Gitleaks fixes and
-corrects the five exposed-holdout Gitleaks classification mismatches. It does not add a
+Matcher v3.2 retains matcher v3's general Semgrep ingestion and repeated-context Gitleaks fixes,
+retains v3.1's correction for the five exposed-holdout Gitleaks classification mismatches, and
+closes two unsafe weak-evidence admission paths. It does not add a
 sparse-SARIF continuity rule for PMD. A clean side-specific source-context experiment reached only
 `9 TP / 0 FP / 10 FN` and failed the fixed recall and production-safety gates, so matcher v4 was
 not created.
@@ -27,17 +28,21 @@ The implementation is stacked on the still-open independent-validation PR:
 | Historical matcher-v3 source-tree SHA-256 | `4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486` |
 | Evaluated matcher-v3.1 implementation | `863210dfda02690b0d9ee579f5d7fd7a45545b1e` |
 | Matcher-v3.1 source-tree SHA-256 | `fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f` |
+| Matcher-v3.2 branch | `agent/nightly-release-hardening` |
+| Matcher-v3.2 evidence state | `candidate-unbound`; exact hosted promotion pending |
 | Authenticated sparse-evidence source head | `94c906d485f55bb1900f159caa1abd73d71ee56c` |
-| Matcher | `sarifregress/matcher/v3.1` |
+| Matcher | `sarifregress/matcher/v3.2` |
 | Product output/configuration schemas | `1` / `1` |
 | Holdout manifest SHA-256 | `b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379` |
 
 The holdout labels, source transformations, difficult cases, Microsoft SARIF Multitool pin, and
 quality thresholds are byte-unchanged. Matcher v2's first run is the independent baseline. Once
-those labels informed implementation, v3 and v3.1 became exposed-holdout regression evidence, not
+those labels informed implementation, v3, v3.1, and v3.2 became exposed-holdout regression evidence, not
 new independent validation. The original v2 reports remain under
 `validation/history/matcher-v2/`; matcher-v3 and v3.1 records are preserved separately with
-deterministic deltas.
+deterministic deltas. The
+[machine-readable interpretation erratum](../validation/holdout/interpretation-erratum.json)
+hash-binds those legacy labels to this corrected interpretation without rewriting either report.
 
 ## Original matcher-v2 failures
 
@@ -307,6 +312,28 @@ is in
 [`validation/research/gitleaks-classification/analysis.json`](../validation/research/gitleaks-classification/analysis.json).
 The later clean sparse-SARIF experiment failed its fixed gates, so matcher v4 was not created.
 
+## Matcher-v3.2 admission safety correction
+
+The adversarial review found two independent precision risks after v3.1 evidence was frozen.
+Collided snippet or token context could still admit an edge even when another available context
+representation contradicted it, and a shared code-flow anchor could act as primary identity. Matcher
+v3.2 applies general, producer-neutral corrections without changing holdout labels, thresholds, or
+resource limits:
+
+- any context conflict vetoes collision-only and weak-message admission;
+- code-flow evidence cannot admit an edge;
+- a shared code-flow anchor can rank an already admissible edge only when the same path/context
+  anchor occurs in exactly one finding on each input side within its automatic-producer/rule bucket;
+- repeated anchors produce one bounded finding-local degradation record under
+  `sarifregress/code-flow-occurrence/v1`; and
+- equal-optimum ambiguity remains refused by the unchanged assignment layer.
+
+The active comparison summary advances to schema version `4` because v3.2 replaces the v3 report
+hash fields with v3.1 and v3.1-to-v3.2 delta hashes. Frozen v3.1 schema-3 bytes remain under
+`validation/history/matcher-v3.1/`. Until both fail-closed hosted promotion stages complete, the
+interpretation erratum marks the v3.2 report `candidate-unbound`; no candidate artifact is release
+evidence.
+
 ## External baseline
 
 Microsoft SARIF Multitool remains pinned at 5.5.0 and is not ground truth.
@@ -355,7 +382,7 @@ code, inspect secret values semantically, or use machine learning.
 
 The fixed aggregate thresholds are precision at least 0.95 and recall at
 least 0.90; each producer requires precision at least 0.95 and recall at
-least 0.80. Matcher v3.1 passes every precision, classification, ambiguity,
+least 0.80. The last bound matcher v3.1 report passes every precision, classification, ambiguity,
 ingestion, structural, trace, and determinism condition, but fails aggregate
 recall, PMD recall, and the complete label graph. The recommendation therefore
 remains `blocked`.
@@ -411,12 +438,13 @@ committed fixtures.
 
 Run the remaining commands from the repository root.
 
-The matcher-v2 and matcher-v3 history anchors can be checked without running
+The matcher-v2, matcher-v3, and matcher-v3.1 history anchors can be checked without running
 the analyzers:
 
 ```sh
 sha256sum -c validation/history/matcher-v2/checksums.sha256
 sha256sum -c validation/history/matcher-v3/checksums.sha256
+sha256sum -c validation/history/matcher-v3.1/checksums.sha256
 ```
 
 Clean sparse admission and the preserved limitation evidence can be checked with:

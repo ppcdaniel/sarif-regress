@@ -16,7 +16,7 @@ Release status: **blocked**.
 - General, bounded `uriBaseMappings` for missing external URI bases, with SARIF-defined bases taking
   precedence and unknown bases failing closed.
 - Collision-aware context occurrence evidence and deterministic matcher-v2-to-v3 and
-  matcher-v3-to-v3.1 history.
+  matcher-v3-to-v3.1 history, plus a frozen v3.1-to-v3.2 comparison path.
 - A contamination-resistant, authentic PMD `7.26.0` sparse-SARIF research corpus with two fixture
   families and explicit one-to-many/many-to-one ambiguity.
 - Pre-release adversarial review, release decision record, security policy, release checklist, and
@@ -25,7 +25,9 @@ Release status: **blocked**.
 ### Changed
 
 - Matcher identity advanced from `sarifregress/matcher/v2` to v3 for URI-base and context-collision
-  behavior, then to `sarifregress/matcher/v3.1` for classification-only path-template handling.
+  behavior, then to `sarifregress/matcher/v3.1` for classification-only path-template handling, and
+  to `sarifregress/matcher/v3.2` for precision-preserving context-conflict and code-flow admission
+  safety.
 - Current reports retain configuration schema `1`, output schema `1`, and derived fingerprint
   `rule-path-context/v2`.
 - Pull-request workflows select and verify the exact pull-request head; all external Actions remain
@@ -40,6 +42,9 @@ Release status: **blocked**.
 - Five Gitleaks pure moves whose messages echoed the changed path are classified as moved under a
   bounded producer-neutral post-correspondence rule. Gitleaks remains
   `25 TP / 0 FP / 0 FN`, and classification mismatches fall from five to zero.
+- Conflicting context now vetoes collision-only/weak admission, and code-flow anchors can only rank
+  already admissible edges when unique on both input sides; neither change adds a producer-specific
+  rule or raises a graph/resource limit.
 
 ### Security
 

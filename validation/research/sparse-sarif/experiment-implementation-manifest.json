@@ -201,7 +201,7 @@
     },
     {
       "path": "src/SarifRegress.Core/ProductInformation.cs",
-      "sha256": "f274b992262bbc2622406c0ffc2f299fcc33eeb333f4446d8f72bba517450c48"
+      "sha256": "065f96248a937771c2f4db04f08dc4517cbd59fe888749c1f9169645c1bdf399"
     },
     {
       "path": "src/SarifRegress.Core/Reporting/ReportContracts.cs",
@@ -229,7 +229,11 @@
     },
     {
       "path": "src/SarifRegress.Match/CandidateEdgeFactory.cs",
-      "sha256": "3f46c138a3628e03affc62943f1fc2d20de9822a5b8c1a00f40e28a0d13cca53"
+      "sha256": "2e7d5350f2dbae902cb17efa4310e8d2c22858a50c3743bceb5d23fc2f760c77"
+    },
+    {
+      "path": "src/SarifRegress.Match/CodeFlowAnchorOccurrenceIndex.cs",
+      "sha256": "dfe935bcf97095a8275dad949676a9ba6414534f64cf32e7774cbfb2fa2b9c08"
     },
     {
       "path": "src/SarifRegress.Match/ContextFingerprintOccurrenceIndex.cs",
@@ -237,11 +241,11 @@
     },
     {
       "path": "src/SarifRegress.Match/FindingMatcher.cs",
-      "sha256": "bfb7f21739becb55785fc5357e83df3a0bc7986e95b1cf7cb897d3212786c680"
+      "sha256": "bf4e5d57f56a3af53a0baa2da5eb72e33ef21d048c7eb57664a079cee138a760"
     },
     {
       "path": "src/SarifRegress.Match/MatchingAlgorithms.cs",
-      "sha256": "96049215a1c8b3b90161657137c015685ca265be9b93c0f4836cb33cab464511"
+      "sha256": "1e454aae5a58255ef23645156d7f54c7f81ab6797c4c2988ed9fc1977dacb96f"
     },
     {
       "path": "src/SarifRegress.Match/MessageLocationTemplateClassifier.cs",
@@ -405,11 +409,11 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ComparisonSummary.cs",
-      "sha256": "291038dec12bf3eb28876cd24de5cab6dd0f2716c35c9e688583b98f360ff7cb"
+      "sha256": "00e5e80f828d407cd0dc04391ebf1b4eb06b6b56cdd559c7a70ae41b0987669c"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/CrossPlatformAttestation.cs",
-      "sha256": "aa938b2d740776a3618583abccc80d94f486c106c3898d932c67e2baf8a4c63d"
+      "sha256": "ba5fc8b75cc4953c32f65b1cfa5bbbfe5ee7c7617310983a2421a06476ca4b5e"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/DecisionTraceProjection.cs",
@@ -440,6 +444,10 @@
       "sha256": "b875d6ea4130ace049728a7acde98b63888d644014fcbccc936f29d27d1aefc8"
     },
     {
+      "path": "validation/tools/SarifRegress.Validation/HoldoutInterpretationErratum.cs",
+      "sha256": "5ceb080a050db28a458db4b2dafe18a528225da54d32c54fca016fb51f9959f3"
+    },
+    {
       "path": "validation/tools/SarifRegress.Validation/HoldoutManifest.cs",
       "sha256": "e9671901bd0968ed27a1f522523bc801a88f4ce9e30c14d069d41a3a968dbb3b"
     },
@@ -450,6 +458,10 @@
     {
       "path": "validation/tools/SarifRegress.Validation/MatcherV2ToV3DeltaReport.cs",
       "sha256": "da5e38fa4e5122cf986e235d32ef264d69cd9653320d76f09cc934fad5b06b79"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/MatcherV31ToV32DeltaReport.cs",
+      "sha256": "3c7e6ced18aff24ca00766437b23d34553250d63cd596ec85d9a427614d0d639"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/MatcherV3ToV31DeltaReport.cs",
@@ -497,11 +509,11 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/StableReportSerializer.cs",
-      "sha256": "f93ecb8b120ea8deae903dab25aa345c2870f1fb94f2b81ffa7e718e702f7161"
+      "sha256": "6304caaa9f48efc74f51a3a83d0b54d13d79d4c212f536c5300ac0c4b66a5826"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationApplication.cs",
-      "sha256": "22a0afbbfaf0d0d2ac67538e6cf0bcaafc94d492eaaf9afad2c1e67a471e1a01"
+      "sha256": "5bd568ffc76bf9aba6f2a3fe580a4169dbf178ef4ce0efaa6c4535b135322065"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationLimits.cs",
@@ -509,7 +521,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationOptions.cs",
-      "sha256": "04f94db36b8ecda252ee7ccc0eef2c63d4c0f2f85ccd09b0f7084da72bbea096"
+      "sha256": "fbbce921168f36c83a889bc61e69a54f2a16bf4ebab077bb2eebde4111df5c13"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/packages.lock.json",

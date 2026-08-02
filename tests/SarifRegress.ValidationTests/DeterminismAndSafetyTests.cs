@@ -200,7 +200,7 @@ public sealed class DeterminismAndSafetyTests
                 script,
                 StringComparison.Ordinal);
             Assert.Contains(
-                "v3-to-v3.1-delta.json",
+                "v3.1-to-v3.2-delta.json",
                 script,
                 StringComparison.Ordinal);
             if (relativePath.EndsWith(".sh", StringComparison.Ordinal))
@@ -317,20 +317,20 @@ public sealed class DeterminismAndSafetyTests
             workflow,
             StringComparison.Ordinal);
         Assert.Contains(
-            "v3-to-v3.1-delta.json",
+            "v3.1-to-v3.2-delta.json",
             workflow,
             StringComparison.Ordinal);
         Assert.Contains(
-            "matcherV3HistoryChecksumManifestSha256",
+            "matcherV31HistoryChecksumManifestSha256",
             workflow,
             StringComparison.Ordinal);
-        Assert.Contains("matcherV3ReportSha256", workflow, StringComparison.Ordinal);
         Assert.Contains("matcherV31ReportSha256", workflow, StringComparison.Ordinal);
-        Assert.Contains("v3ToV31DeltaReportSha256", workflow, StringComparison.Ordinal);
-        Assert.Contains("v3ToV31DeltaSha256", workflow, StringComparison.Ordinal);
-        Assert.Contains("v3ToV31Delta", workflow, StringComparison.Ordinal);
+        Assert.Contains("matcherV32ReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v31ToV32DeltaReportSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v31ToV32DeltaSha256", workflow, StringComparison.Ordinal);
+        Assert.Contains("v31ToV32Delta", workflow, StringComparison.Ordinal);
         Assert.Contains(
-            "\"schemaVersion\": \"3\"",
+            "\"schemaVersion\": \"4\"",
             workflow,
             StringComparison.Ordinal);
         Assert.DoesNotContain(
@@ -361,12 +361,54 @@ public sealed class DeterminismAndSafetyTests
             "attestation-mode",
             workflow,
             StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "TrackedOutputTests",
+        Assert.Contains(
+            "--filter 'FullyQualifiedName!~TrackedOutputTests'",
             workflow,
             StringComparison.Ordinal);
-        Assert.DoesNotContain("LINUX_MODE", workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain("WINDOWS_MODE", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "holdout-v3.2-cross-platform-candidate-${{ github.event.pull_request.head.sha || github.sha }}",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "create_matcher_v32_bootstrap_attestation.py",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "detect_matcher_v32_evidence_stage.py",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains("stage1|stage2|normal", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "holdout-v3.2-final-cross-platform-candidate-${{ github.event.pull_request.head.sha || github.sha }}",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "workflowConclusion",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "coordinatorJobConclusion",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "\"conclusion\": \"success\"",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains("  bootstrap-refuse:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "Refuse cross-platform promotion candidate as final evidence",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains("LINUX_MODE", workflow, StringComparison.Ordinal);
+        Assert.Contains("WINDOWS_MODE", workflow, StringComparison.Ordinal);
+        Assert.Contains(
+            "artifact-ids: ${{ needs.linux.outputs.candidate_artifact_id }}",
+            workflow,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "artifact-ids: ${{ needs.windows.outputs.candidate_artifact_id }}",
+            workflow,
+            StringComparison.Ordinal);
         Assert.Contains("  sparse-experiment-linux:\n", workflow, StringComparison.Ordinal);
         Assert.Contains("  sparse-experiment-windows:\n", workflow, StringComparison.Ordinal);
         Assert.Contains("  sparse-experiment-compare:\n", workflow, StringComparison.Ordinal);
@@ -407,6 +449,10 @@ public sealed class DeterminismAndSafetyTests
             "workflows",
             "holdout-bootstrap.yml")));
 
+        string sparseCapture = SliceWorkflowJob(
+            workflow,
+            "sparse-capture",
+            "recapture-attestation");
         string linuxExperiment = SliceWorkflowJob(
             workflow,
             "sparse-experiment-linux",
@@ -427,6 +473,22 @@ public sealed class DeterminismAndSafetyTests
         Assert.Contains("artifact-ids:", experimentCoordinator, StringComparison.Ordinal);
         Assert.Contains("digest-mismatch: error", experimentCoordinator, StringComparison.Ordinal);
         Assert.Contains("cmp --silent", experimentCoordinator, StringComparison.Ordinal);
+        AssertCandidateUploadPrecedesCommittedEvidenceVerification(
+            sparseCapture,
+            "Upload raw and projected capture evidence",
+            "Compare staged evidence with promoted corpus");
+        AssertCandidateUploadPrecedesCommittedEvidenceVerification(
+            experimentCoordinator,
+            "Upload authenticated sparse experiment candidate",
+            "Verify committed sparse experiment evidence");
+        AssertCandidateUploadPrecedesCommittedEvidenceVerification(
+            workflow,
+            "Upload sparse release projection candidate",
+            "Verify committed sparse release projection");
+        Assert.Contains(
+            "sparse-release-candidate-${{ github.event.pull_request.head.sha || github.sha }}",
+            workflow,
+            StringComparison.Ordinal);
         Assert.DoesNotContain("if: always()", linuxExperiment, StringComparison.Ordinal);
         Assert.DoesNotContain("if: always()", windowsExperiment, StringComparison.Ordinal);
         Assert.DoesNotContain("if: always()", experimentCoordinator, StringComparison.Ordinal);
@@ -468,11 +530,20 @@ public sealed class DeterminismAndSafetyTests
             "sparse-experiment-release-projection.json",
             holdout,
             StringComparison.Ordinal);
+        Assert.DoesNotContain("always()", holdout, StringComparison.Ordinal);
         Assert.DoesNotContain("if-no-files-found: warn", holdout, StringComparison.Ordinal);
         Assert.Contains("for run_id in 1 2", determinism, StringComparison.Ordinal);
         Assert.Contains("foreach ($runId in @(1, 2))", determinism, StringComparison.Ordinal);
         Assert.Contains(
             "sparse-experiment-determinism-projection.json",
+            determinism,
+            StringComparison.Ordinal);
+        AssertCandidateUploadPrecedesCommittedEvidenceVerification(
+            determinism,
+            "Upload sparse determinism projection candidate",
+            "Verify committed sparse determinism projection");
+        Assert.Contains(
+            "sparse-determinism-candidate-${{ github.event.pull_request.head.sha || github.sha }}",
             determinism,
             StringComparison.Ordinal);
         Assert.Contains("          - 1000\n", benchmarks, StringComparison.Ordinal);
@@ -492,6 +563,14 @@ public sealed class DeterminismAndSafetyTests
             StringComparison.Ordinal);
         Assert.Contains(
             "sparse-experiment-resource-values.json",
+            benchmarks,
+            StringComparison.Ordinal);
+        AssertCandidateUploadPrecedesCommittedEvidenceVerification(
+            benchmarks,
+            "Upload sparse resource evidence candidate",
+            "Verify committed sparse resource evidence");
+        Assert.Contains(
+            "sparse-resource-candidate-${{ github.event.pull_request.head.sha || github.sha }}",
             benchmarks,
             StringComparison.Ordinal);
         Assert.Contains("math.ceil(", benchmarks, StringComparison.Ordinal);
@@ -635,6 +714,23 @@ public sealed class DeterminismAndSafetyTests
         Assert.True(start >= 0, $"Workflow job '{jobName}' was not found.");
         Assert.True(end > start, $"Workflow job '{nextJobName}' was not found after '{jobName}'.");
         return workflow[start..end];
+    }
+
+    private static void AssertCandidateUploadPrecedesCommittedEvidenceVerification(
+        string workflow,
+        string uploadStepName,
+        string verificationStepName)
+    {
+        int upload = workflow.IndexOf(
+            $"- name: {uploadStepName}",
+            StringComparison.Ordinal);
+        int verification = workflow.IndexOf(
+            $"- name: {verificationStepName}",
+            StringComparison.Ordinal);
+        Assert.True(upload >= 0, $"Workflow step '{uploadStepName}' was not found.");
+        Assert.True(
+            verification > upload,
+            $"Workflow step '{verificationStepName}' must run after '{uploadStepName}'.");
     }
 
     private static void WritePortableTree(string root)

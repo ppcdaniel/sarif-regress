@@ -5,15 +5,31 @@ namespace SarifRegress.Validation;
 /// <summary>Writes every project-owned report with explicit property and ordinal array order.</summary>
 public static class StableReportSerializer
 {
-    /// <summary>Serializes the frozen SarifRegress holdout report.</summary>
+    /// <summary>
+    /// Serializes historical matcher reports with their exact v2 envelope and
+    /// active matcher-v3.2 evidence with the corrected exposed-holdout envelope.
+    /// </summary>
     public static byte[] Serialize(SarifRegressHoldoutReport report)
     {
         ArgumentNullException.ThrowIfNull(report);
+        (string schemaVersion, string reportKind) =
+            report.Evaluation.MatcherAlgorithmVersion switch
+            {
+                "sarifregress/matcher/v2" or
+                "sarifregress/matcher/v3" or
+                "sarifregress/matcher/v3.1" =>
+                    ("2", "sarif-regress-independent-holdout"),
+                "sarifregress/matcher/v3.2" =>
+                    ("3", "sarif-regress-exposed-holdout-regression"),
+                _ => throw new InvalidDataException(
+                    "The holdout report serializer has no envelope for matcher "
+                    + $"algorithm '{report.Evaluation.MatcherAlgorithmVersion}'."),
+            };
         return StableJson.Serialize(writer =>
         {
             writer.WriteStartObject();
-            writer.WriteString("schemaVersion", "2");
-            writer.WriteString("reportKind", "sarif-regress-independent-holdout");
+            writer.WriteString("schemaVersion", schemaVersion);
+            writer.WriteString("reportKind", reportKind);
             WriteEvaluation(writer, report.Evaluation);
             writer.WritePropertyName("aggregate");
             WriteHoldoutMetrics(writer, report.Aggregate);
@@ -92,7 +108,7 @@ public static class StableReportSerializer
         return StableJson.Serialize(writer =>
         {
             writer.WriteStartObject();
-            writer.WriteString("schemaVersion", "3");
+            writer.WriteString("schemaVersion", "4");
             writer.WriteString("reportKind", "holdout-external-baseline-comparison");
             WriteEvaluation(writer, report.Evaluation);
             writer.WritePropertyName("reportHashes");
@@ -355,6 +371,92 @@ public static class StableReportSerializer
                 report.ChangedDecisionWithoutTraceCount);
             writer.WriteStartArray("changedDecisionsWithoutTrace");
             WriteV31DeltaRelationships(writer, report.ChangedDecisionsWithoutTrace);
+            writer.WriteEndArray();
+            writer.WriteBoolean(
+                "everyChangedDecisionHasTrace",
+                report.EveryChangedDecisionHasTrace);
+            writer.WriteEndObject();
+        });
+    }
+
+    /// <summary>Serializes the immutable matcher-v3.1 to matcher-v3.2 decision delta.</summary>
+    public static byte[] Serialize(MatcherV31ToV32DeltaReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        return StableJson.Serialize(writer =>
+        {
+            writer.WriteStartObject();
+            writer.WriteString("schemaVersion", "1");
+            writer.WriteString("reportKind", "matcher-v3.1-to-v3.2-delta");
+            writer.WritePropertyName("inputHashes");
+            writer.WriteStartObject();
+            writer.WriteString(
+                "matcherV31HistoryChecksumManifestSha256",
+                report.InputHashes.MatcherV31HistoryChecksumManifestSha256);
+            writer.WriteString(
+                "matcherV31ReportSha256",
+                report.InputHashes.MatcherV31ReportSha256);
+            writer.WriteString(
+                "matcherV32ReportSha256",
+                report.InputHashes.MatcherV32ReportSha256);
+            writer.WriteString(
+                "holdoutManifestSha256",
+                report.InputHashes.HoldoutManifestSha256);
+            writer.WriteEndObject();
+            writer.WritePropertyName("matcherV31");
+            WriteMatcherMetricsSnapshot(writer, report.MatcherV31);
+            writer.WritePropertyName("matcherV32");
+            WriteMatcherMetricsSnapshot(writer, report.MatcherV32);
+            writer.WriteStartArray("algorithmVersionChanges");
+            foreach (MatcherV31ToV32AlgorithmVersionChange change in
+                     report.AlgorithmVersionChanges.OrderBy(
+                         item => item.Name,
+                         StringComparer.Ordinal))
+            {
+                writer.WriteStartObject();
+                writer.WriteString("name", change.Name);
+                WriteNullableString(
+                    writer,
+                    "matcherV31Version",
+                    change.MatcherV31Version);
+                WriteNullableString(
+                    writer,
+                    "matcherV32Version",
+                    change.MatcherV32Version);
+                writer.WriteBoolean("changed", change.Changed);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WritePropertyName("correspondenceIdentity");
+            WriteV32CorrespondenceIdentityDelta(writer, report.CorrespondenceIdentity);
+            writer.WritePropertyName("classificationMismatchChanges");
+            WriteV32ClassificationMismatchDelta(
+                writer,
+                report.ClassificationMismatchChanges);
+            writer.WritePropertyName("cases");
+            WriteV32CaseDelta(writer, report.Cases);
+            writer.WritePropertyName("relationships");
+            WriteV32RelationshipDelta(writer, report.Relationships);
+            writer.WriteStartArray("newlyIntroducedFalseMatches");
+            WriteV32DeltaRelationships(writer, report.NewlyIntroducedFalseMatches);
+            writer.WriteEndArray();
+            writer.WritePropertyName("ambiguityChanges");
+            WriteV32AmbiguityDelta(writer, report.AmbiguityChanges);
+            writer.WritePropertyName("ingestionSuccessChanges");
+            WriteV32IngestionDelta(writer, report.IngestionSuccessChanges);
+            writer.WriteStartArray("remainingFailures");
+            WriteV32DeltaRelationships(writer, report.RemainingFailures);
+            writer.WriteEndArray();
+            writer.WriteNumber("changedDecisionCount", report.ChangedDecisionCount);
+            writer.WriteNumber(
+                "changedDecisionTraceCount",
+                report.ChangedDecisionTraceCount);
+            writer.WriteNumber(
+                "changedDecisionWithoutTraceCount",
+                report.ChangedDecisionWithoutTraceCount);
+            writer.WriteStartArray("changedDecisionsWithoutTrace");
+            WriteV32DeltaRelationships(writer, report.ChangedDecisionsWithoutTrace);
             writer.WriteEndArray();
             writer.WriteBoolean(
                 "everyChangedDecisionHasTrace",
@@ -695,6 +797,161 @@ public static class StableReportSerializer
         }
     }
 
+    private static void WriteV32CorrespondenceIdentityDelta(
+        Utf8JsonWriter writer,
+        MatcherV31ToV32CorrespondenceIdentityDelta value)
+    {
+        writer.WriteStartObject();
+        writer.WritePropertyName("matcherV31");
+        WriteV32CorrespondenceIdentity(writer, value.MatcherV31);
+        writer.WritePropertyName("matcherV32");
+        WriteV32CorrespondenceIdentity(writer, value.MatcherV32);
+        writer.WriteBoolean("unchanged", value.Unchanged);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteV32CorrespondenceIdentity(
+        Utf8JsonWriter writer,
+        MatcherV31ToV32CorrespondenceIdentity value)
+    {
+        writer.WriteStartObject();
+        writer.WriteNumber("truePositives", value.TruePositives);
+        writer.WriteNumber("falsePositives", value.FalsePositives);
+        writer.WriteNumber("falseNegatives", value.FalseNegatives);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteV32ClassificationMismatchDelta(
+        Utf8JsonWriter writer,
+        MatcherV31ToV32ClassificationMismatchDelta value)
+    {
+        writer.WriteStartObject();
+        writer.WriteNumber("matcherV31Count", value.MatcherV31Count);
+        writer.WriteNumber("matcherV32Count", value.MatcherV32Count);
+        writer.WriteStartArray("fixed");
+        WriteV32DeltaRelationships(writer, value.Fixed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("introduced");
+        WriteV32DeltaRelationships(writer, value.Introduced);
+        writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteV32CaseDelta(
+        Utf8JsonWriter writer,
+        MatcherV31ToV32CaseDelta value)
+    {
+        writer.WriteStartObject();
+        writer.WriteStartArray("fixed");
+        WriteDeltaCases(writer, value.Fixed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("regressed");
+        WriteDeltaCases(writer, value.Regressed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("stillFailing");
+        WriteDeltaCases(writer, value.StillFailing);
+        writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteV32RelationshipDelta(
+        Utf8JsonWriter writer,
+        MatcherV31ToV32RelationshipDelta value)
+    {
+        writer.WriteStartObject();
+        writer.WriteStartArray("fixed");
+        WriteV32DeltaRelationships(writer, value.Fixed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("regressed");
+        WriteV32DeltaRelationships(writer, value.Regressed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("stillFailing");
+        WriteV32DeltaRelationships(writer, value.StillFailing);
+        writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteV32AmbiguityDelta(
+        Utf8JsonWriter writer,
+        MatcherV31ToV32AmbiguityDelta value)
+    {
+        writer.WriteStartObject();
+        writer.WriteNumber(
+            "matcherV31CorrectRefusals",
+            value.MatcherV31CorrectRefusals);
+        writer.WriteNumber(
+            "matcherV32CorrectRefusals",
+            value.MatcherV32CorrectRefusals);
+        writer.WriteNumber(
+            "matcherV31UnexpectedRefusals",
+            value.MatcherV31UnexpectedRefusals);
+        writer.WriteNumber(
+            "matcherV32UnexpectedRefusals",
+            value.MatcherV32UnexpectedRefusals);
+        writer.WriteNumber(
+            "matcherV31IncorrectAutoMatches",
+            value.MatcherV31IncorrectAutoMatches);
+        writer.WriteNumber(
+            "matcherV32IncorrectAutoMatches",
+            value.MatcherV32IncorrectAutoMatches);
+        writer.WriteStartArray("fixed");
+        WriteV32DeltaRelationships(writer, value.Fixed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("regressed");
+        WriteV32DeltaRelationships(writer, value.Regressed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("stillFailing");
+        WriteV32DeltaRelationships(writer, value.StillFailing);
+        writer.WriteEndArray();
+        writer.WriteStartArray("unexpectedRefusalsResolved");
+        WriteV32DeltaRelationships(writer, value.UnexpectedRefusalsResolved);
+        writer.WriteEndArray();
+        writer.WriteStartArray("unexpectedRefusalsIntroduced");
+        WriteV32DeltaRelationships(writer, value.UnexpectedRefusalsIntroduced);
+        writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteV32IngestionDelta(
+        Utf8JsonWriter writer,
+        MatcherV31ToV32IngestionDelta value)
+    {
+        writer.WriteStartObject();
+        writer.WriteNumber("matcherV31Failures", value.MatcherV31Failures);
+        writer.WriteNumber("matcherV32Failures", value.MatcherV32Failures);
+        writer.WriteStartArray("newlySuccessful");
+        WriteDeltaCases(writer, value.NewlySuccessful);
+        writer.WriteEndArray();
+        writer.WriteStartArray("newlyFailed");
+        WriteDeltaCases(writer, value.NewlyFailed);
+        writer.WriteEndArray();
+        writer.WriteStartArray("stillFailing");
+        WriteDeltaCases(writer, value.StillFailing);
+        writer.WriteEndArray();
+        writer.WriteEndObject();
+    }
+
+    private static void WriteV32DeltaRelationships(
+        Utf8JsonWriter writer,
+        IEnumerable<MatcherV31ToV32RelationshipReference> values)
+    {
+        foreach (MatcherV31ToV32RelationshipReference value in values
+                     .OrderBy(item => item.CaseId, StringComparer.Ordinal)
+                     .ThenBy(item => item.RelationshipId, StringComparer.Ordinal)
+                     .ThenBy(item => item.ProducerId, StringComparer.Ordinal))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("caseId", value.CaseId);
+            writer.WriteString("producerId", value.ProducerId);
+            writer.WriteString("relationshipId", value.RelationshipId);
+            writer.WriteString("matcherV31Outcome", value.MatcherV31Outcome);
+            writer.WriteString("matcherV32Outcome", value.MatcherV32Outcome);
+            writer.WriteString("matcherV31State", value.MatcherV31State);
+            writer.WriteString("matcherV32State", value.MatcherV32State);
+            writer.WriteEndObject();
+        }
+    }
+
     private static void WriteHoldoutMetrics(Utf8JsonWriter writer, HoldoutMetrics value)
     {
         writer.WriteStartObject();
@@ -1031,11 +1288,11 @@ public static class StableReportSerializer
             "sarifMultitoolBaselineReportSha256",
             value.SarifMultitoolBaselineReportSha256);
         writer.WriteString(
-            "matcherV3ReportSha256",
-            value.MatcherV3ReportSha256);
+            "matcherV31ReportSha256",
+            value.MatcherV31ReportSha256);
         writer.WriteString(
-            "v3ToV31DeltaReportSha256",
-            value.V3ToV31DeltaReportSha256);
+            "v31ToV32DeltaReportSha256",
+            value.V31ToV32DeltaReportSha256);
         writer.WriteEndObject();
     }
 

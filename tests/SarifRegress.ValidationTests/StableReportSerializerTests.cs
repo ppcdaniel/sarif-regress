@@ -31,15 +31,15 @@ public sealed class StableReportSerializerTests
         string comparisonJson = Encoding.UTF8.GetString(
             StableReportSerializer.Serialize(comparison));
         Assert.Contains(
-            "\"schemaVersion\": \"3\"",
+            "\"schemaVersion\": \"4\"",
             comparisonJson,
             StringComparison.Ordinal);
         Assert.Contains(
-            "\"matcherV3ReportSha256\"",
+            "\"matcherV31ReportSha256\"",
             comparisonJson,
             StringComparison.Ordinal);
         Assert.Contains(
-            "\"v3ToV31DeltaReportSha256\"",
+            "\"v31ToV32DeltaReportSha256\"",
             comparisonJson,
             StringComparison.Ordinal);
         Assert.DoesNotContain(
@@ -49,6 +49,64 @@ public sealed class StableReportSerializerTests
         Assert.DoesNotContain(
             "v2ToV3DeltaReportSha256",
             comparisonJson,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Holdout_report_envelope_distinguishes_history_from_exposed_v32_evidence()
+    {
+        (SarifRegressHoldoutReport historical, _) = CreateReports();
+        string historicalJson = Encoding.UTF8.GetString(
+            StableReportSerializer.Serialize(historical));
+        Assert.Contains(
+            "\"schemaVersion\": \"2\"",
+            historicalJson,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"reportKind\": \"sarif-regress-independent-holdout\"",
+            historicalJson,
+            StringComparison.Ordinal);
+
+        SarifRegressHoldoutReport active = historical with
+        {
+            Evaluation = historical.Evaluation with
+            {
+                MatcherAlgorithmVersion = "sarifregress/matcher/v3.2",
+            },
+        };
+        string activeJson = Encoding.UTF8.GetString(
+            StableReportSerializer.Serialize(active));
+        Assert.Contains(
+            "\"schemaVersion\": \"3\"",
+            activeJson,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"reportKind\": \"sarif-regress-exposed-holdout-regression\"",
+            activeJson,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "sarif-regress-independent-holdout",
+            activeJson,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Holdout_report_envelope_fails_closed_for_unknown_matcher_version()
+    {
+        (SarifRegressHoldoutReport report, _) = CreateReports();
+        SarifRegressHoldoutReport unknown = report with
+        {
+            Evaluation = report.Evaluation with
+            {
+                MatcherAlgorithmVersion = "sarifregress/matcher/v999",
+            },
+        };
+
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(
+            () => StableReportSerializer.Serialize(unknown));
+        Assert.Contains(
+            "no envelope",
+            exception.Message,
             StringComparison.Ordinal);
     }
 

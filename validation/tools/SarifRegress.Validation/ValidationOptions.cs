@@ -77,7 +77,7 @@ public static class ValidationOptionsParser
         + "--output-root PATH\n\n"
         + "evaluate reads the committed frozen evaluation metadata and writes "
         + "sarif-regress-holdout.json, sarif-multitool-baseline.json, "
-        + "v3-to-v3.1-delta.json, comparison-summary.json, and "
+        + "v3.1-to-v3.2-delta.json, comparison-summary.json, and "
         + "checksums.sha256. Raw Multitool SARIF is written only below output-root/raw.\n"
         + "When --compare-expected is true, --expected-root is required and all five "
         + "project-owned deterministic outputs are compared byte-for-byte. The optional "

@@ -6,7 +6,7 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
 
 ## Current decision
 
-- [x] Product version is `0.1.0`; matcher is `sarifregress/matcher/v3.1`.
+- [x] Product version is `0.1.0`; matcher is `sarifregress/matcher/v3.2`.
 - [x] Matcher v4 was not created after the sparse experiment failed fixed gates.
 - [x] Release recommendation is documented as **blocked**.
 - [ ] All release-blocking issues and Medium dispositions in `docs/release-readiness.md` are closed
@@ -28,8 +28,8 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
 ## Scientific and product evidence
 
 - [x] Frozen matcher-v2 result remains `0 TP / 0 FP / 75 FN`.
-- [x] Current v3.1 exposed-holdout result is `50 TP / 0 FP / 25 FN`, precision `1.0`, recall
-  `0.666667`, F1 `0.8`.
+- [x] Last bound v3.1 exposed-holdout result is `50 TP / 0 FP / 25 FN`, precision `1.0`, recall
+  `0.666667`, F1 `0.8`; v3.2 must reproduce or improve this without a false match before promotion.
 - [x] Semgrep and Gitleaks each remain `25 TP / 0 FP / 0 FN`; Gitleaks classification mismatches
   are zero.
 - [x] Legacy PMD remains `0 TP / 0 FP / 25 FN`; the clean sparse best result is
@@ -43,7 +43,7 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
   #28's SARIF-only preflight derivation before claiming a composite `experiment-report.json`; do
   not change source evidence, resource measurements, or gates to satisfy either validator defect.
 - [ ] Any “independent” claim refers only to the original matcher-v2 holdout or a genuinely new
-  blinded corpus; v3/v3.1 is labelled exposed/post-hoc regression evidence.
+  blinded corpus; v3/v3.1/v3.2 is labelled exposed/post-hoc regression evidence.
 
 ## Security and dependency disposition
 
@@ -155,7 +155,7 @@ Windows execution. At minimum run:
 - [ ] Zero labelled ambiguity is auto-matched and no unexplained ingestion/structural failure
   remains.
 - [ ] A SemVer prerelease identifier is used.
-- [ ] Notes explicitly call v3/v3.1 exposed-holdout evidence and sparse SARIF unsupported.
+- [ ] Notes explicitly call v3/v3.1/v3.2 exposed-holdout evidence and sparse SARIF unsupported.
 
 ## Stable decision
 

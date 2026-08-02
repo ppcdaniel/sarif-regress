@@ -148,7 +148,7 @@
   ],
   "contamination": {
     "scannerPath": "tools/scan_contamination.py",
-    "scannerSha256": "2f7865fefff4d3405d2c7f69126e75d94edba1f7d4d8bd2b9ac623f1a89fe128",
+    "scannerSha256": "38814cedfebb0cd1cf0f2d70e2be972d5fdf44a20319b6babb6c5fd0de7d76e2",
     "policyVersion": "sparse-sarif-contamination/v1"
   },
   "integrity": {
@@ -348,7 +348,7 @@
       },
       {
         "path": "experiment-implementation-manifest.json",
-        "sha256": "9cf28a92a4ba1c915029c096441c6066496b555fed715b7fcae092c82a086c90"
+        "sha256": "1cd73b501ca6c3849243d29e85b92677d68691e3147899609751e47721047732"
       },
       {
         "path": "schemas/experiment-gate-evidence.schema.json",
@@ -364,11 +364,11 @@
       },
       {
         "path": "schemas/experiment-report.schema.json",
-        "sha256": "4288be5d87541654989a39ed120c0bd343c2b2727d67751b78520f5ecd1adf8d"
+        "sha256": "73a95953b161710d6c5ce84907dda255269f7d29fb26783470f55cdc09fd6555"
       },
       {
         "path": "schemas/experiment-supporting-evidence.schema.json",
-        "sha256": "6c38c573b0f14fe8350597082f4802bf3d6e0224a549202948e1f8a6081f7325"
+        "sha256": "98ef9fa9c20cb476d2661bfcf517224da6370f26274ab1cbfe8b917db9bece32"
       },
       {
         "path": "schemas/labels.schema.json",
@@ -404,7 +404,7 @@
       },
       {
         "path": "tools/scan_contamination.py",
-        "sha256": "2f7865fefff4d3405d2c7f69126e75d94edba1f7d4d8bd2b9ac623f1a89fe128"
+        "sha256": "38814cedfebb0cd1cf0f2d70e2be972d5fdf44a20319b6babb6c5fd0de7d76e2"
       },
       {
         "path": "tools/test_pmd_capture_tools.py",
@@ -416,7 +416,7 @@
       },
       {
         "path": "tools/test_scan_contamination.py",
-        "sha256": "6f02d24fba7e311c7961661816d4cd6dd32a5af0102bda29707aac3334107e96"
+        "sha256": "b88fe38161d713d293ea43741f4b4b0939dc64da04d76039fb49f4f57e8e162d"
       },
       {
         "path": "tools/verify_pmd_capture.py",

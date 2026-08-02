@@ -51,10 +51,15 @@ public sealed class FindingMatcher
         var contextFingerprintOccurrences = ContextFingerprintOccurrenceIndex.Create(
             baselineFindings,
             candidateFindings);
+        var codeFlowAnchorOccurrences = CodeFlowAnchorOccurrenceIndex.Create(
+            baselineFindings,
+            candidateFindings,
+            configuration.Matching.PathCaseSensitivity);
         var edgeFactory = new CandidateEdgeFactory(
             configuration,
             fingerprintOccurrences,
-            contextFingerprintOccurrences);
+            contextFingerprintOccurrences,
+            codeFlowAnchorOccurrences);
         var candidateBuckets = CandidateBucketIndex.Create(
             candidateFindings,
             configuration.RuleAliases);
@@ -70,6 +75,7 @@ public sealed class FindingMatcher
             configuration,
             graph,
             contextFingerprintOccurrences,
+            codeFlowAnchorOccurrences,
             fingerprintOccurrences.Diagnostics);
     }
 
@@ -513,6 +519,7 @@ public sealed class FindingMatcher
         SarifRegressConfiguration configuration,
         CandidateGraph graph,
         ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences,
         ImmutableArray<Diagnostic> fingerprintDiagnostics)
     {
         if (graph.PreflightRefusal is not null)
@@ -662,7 +669,8 @@ public sealed class FindingMatcher
             ambiguousBaselineIndexes,
             ambiguousCandidateIndexes,
             diagnosticsByNode,
-            contextFingerprintOccurrences);
+            contextFingerprintOccurrences,
+            codeFlowAnchorOccurrences);
 
         return new MatchResult(
             decisions,
@@ -1003,7 +1011,8 @@ public sealed class FindingMatcher
         IReadOnlySet<int> ambiguousBaselineIndexes,
         IReadOnlySet<int> ambiguousCandidateIndexes,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
-        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences)
     {
         var allRetainedEdgesWereSelected =
             ambiguousBaselineIndexes.Count == 0
@@ -1033,7 +1042,8 @@ public sealed class FindingMatcher
                     incidentEdgeIndex?.ForBaseline(baselineIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode,
-                    contextFingerprintOccurrences));
+                    contextFingerprintOccurrences,
+                    codeFlowAnchorOccurrences));
                 continue;
             }
 
@@ -1048,7 +1058,8 @@ public sealed class FindingMatcher
                     incidentEdgeIndex?.ForMatch(baselineIndex, candidateIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode,
-                    contextFingerprintOccurrences));
+                    contextFingerprintOccurrences,
+                    codeFlowAnchorOccurrences));
                 continue;
             }
 
@@ -1061,7 +1072,8 @@ public sealed class FindingMatcher
                 incidentEdgeIndex?.ForBaseline(baselineIndex)
                     ?? ImmutableArray<MatchEdge>.Empty,
                 diagnosticsByNode,
-                contextFingerprintOccurrences));
+                contextFingerprintOccurrences,
+                codeFlowAnchorOccurrences));
         }
 
         for (var candidateIndex = 0; candidateIndex < candidateFindings.Length; candidateIndex++)
@@ -1082,7 +1094,8 @@ public sealed class FindingMatcher
                     incidentEdgeIndex?.ForCandidate(candidateIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode,
-                    contextFingerprintOccurrences)
+                    contextFingerprintOccurrences,
+                    codeFlowAnchorOccurrences)
                 : CreateUnmatchedDecision(
                     FindingClassification.New,
                     baseline: null,
@@ -1092,7 +1105,8 @@ public sealed class FindingMatcher
                     incidentEdgeIndex?.ForCandidate(candidateIndex)
                         ?? ImmutableArray<MatchEdge>.Empty,
                     diagnosticsByNode,
-                    contextFingerprintOccurrences));
+                    contextFingerprintOccurrences,
+                    codeFlowAnchorOccurrences));
         }
 
         return decisions
@@ -1114,7 +1128,8 @@ public sealed class FindingMatcher
         SarifRegressConfiguration configuration,
         ImmutableArray<MatchEdge> incidentEdges,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
-        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences)
     {
         ClassificationResult classification = Classify(
             selectedEdge,
@@ -1129,6 +1144,7 @@ public sealed class FindingMatcher
         var evidence = OrderEvidence(
             selectedEdge.Evidence.Concat(GetDegradationEvidence(
                 contextFingerprintOccurrences,
+                codeFlowAnchorOccurrences,
                 selectedEdge.Baseline,
                 selectedEdge.Candidate)));
         var transformations = OrderTransformations(
@@ -1168,13 +1184,15 @@ public sealed class FindingMatcher
         SarifRegressConfiguration configuration,
         ImmutableArray<MatchEdge> incidentEdges,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
-        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences)
     {
         var sourceReference = (baseline ?? candidate)!.SourceReference;
         var evidence = incidentEdges
             .SelectMany(edge => edge.Evidence)
             .Concat(GetDegradationEvidence(
                 contextFingerprintOccurrences,
+                codeFlowAnchorOccurrences,
                 baseline,
                 candidate));
         var transformations = incidentEdges
@@ -1215,7 +1233,8 @@ public sealed class FindingMatcher
         SarifRegressConfiguration configuration,
         ImmutableArray<MatchEdge> incidentEdges,
         IReadOnlyDictionary<int, List<Diagnostic>> diagnosticsByNode,
-        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences)
     {
         var sourceReference = (baseline ?? candidate)!.SourceReference;
         var outcome = incidentEdges.IsEmpty
@@ -1227,6 +1246,7 @@ public sealed class FindingMatcher
             .SelectMany(edge => edge.Evidence)
             .Concat(GetDegradationEvidence(
                 contextFingerprintOccurrences,
+                codeFlowAnchorOccurrences,
                 baseline,
                 candidate))
             .Append(new EvidenceRecord(
@@ -1268,6 +1288,7 @@ public sealed class FindingMatcher
 
     private static IEnumerable<EvidenceRecord> GetDegradationEvidence(
         ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences,
         Finding? baseline,
         Finding? candidate)
     {
@@ -1275,12 +1296,16 @@ public sealed class FindingMatcher
             ? Enumerable.Empty<EvidenceRecord>()
             : contextFingerprintOccurrences.GetDegradationEvidence(
                 InputKind.Baseline,
-                baseline);
+                baseline).Concat(codeFlowAnchorOccurrences.GetDegradationEvidence(
+                    InputKind.Baseline,
+                    baseline));
         return candidate is null
             ? evidence
             : evidence.Concat(contextFingerprintOccurrences.GetDegradationEvidence(
                 InputKind.Candidate,
-                candidate));
+                candidate)).Concat(codeFlowAnchorOccurrences.GetDegradationEvidence(
+                    InputKind.Candidate,
+                    candidate));
     }
 
     private static ImmutableArray<EvidenceRecord> OrderEvidence(
@@ -1424,6 +1449,10 @@ public sealed class FindingMatcher
         string.Equals(
             evidence.AlgorithmVersion,
             MatchingAlgorithms.EvidenceOccurrenceVersion,
+            StringComparison.Ordinal)
+        || string.Equals(
+            evidence.AlgorithmVersion,
+            MatchingAlgorithms.CodeFlowOccurrenceVersion,
             StringComparison.Ordinal);
 
     private static ImmutableArray<TransformationRecord> TakeTransformationsAtMost(

@@ -100,9 +100,56 @@ full repository-relative path. The path-neutral message template is recorded as 
 `sarifregress/message-location-template/v1`. This transform cannot admit, score, or assign an edge.
 Matcher v3 history remains immutable; the minor matcher revision distinguishes the observable
 classification change without claiming the separately gated sparse-SARIF matcher-v4 design.
-The current product emits `sarifregress/matcher/v3.1`. No matcher-v4 or side-specific-source
+
+Matcher v3.2 makes two precision-preserving admission changes. Collided context cannot admit a
+candidate edge when another available context representation conflicts, including when weak
+message matching is enabled. A refused pair's values are not copied into a finding-level trace:
+the bounded trace records the finding-local collision degradation plus `no-admissible-*`, which is
+the stable public explanation for this veto. Code-flow anchors are supporting evidence only: they
+cannot admit an edge, and a shared anchor contributes to ranking only when its path/context
+identity occurs in exactly one finding on each input side within the same automatic-producer/rule
+bucket. Repeated anchors emit one bounded lossy finding-local
+`code-flow-anchor-collision` summary under
+`sarifregress/code-flow-occurrence/v1`; the existing code-flow anchor and set hashes remain v1
+because their bytes are unchanged.
+
+The current product emits `sarifregress/matcher/v3.2`. No matcher-v4 or side-specific-source
 evidence identifier exists, and validation-only sparse research algorithm names never enter stable
 product comparison JSON.
+
+The active matcher-v3.2 validation report uses schema version `3` and report kind
+`sarif-regress-exposed-holdout-regression`. That envelope makes the erratum's interpretation
+machine-readable instead of repeating the historical independent-holdout claim. Historical
+matcher-v2, matcher-v3, and matcher-v3.1 bytes retain their schema-v2
+`sarif-regress-independent-holdout` envelope and remain checksum-anchored; the stable serializer
+selects that legacy envelope only for those exact historical matcher identifiers.
+
+The active validation comparison summary uses schema version `4`. Matcher v3.2 replaces the
+v3-to-v3.1 report-hash fields with matcher-v3.1 and v3.1-to-v3.2 bindings; because those are closed
+contract renames, the frozen matcher-v3.1 comparison remains schema version `3` and is validated
+only against its archived schema.
+
+The active cross-platform attestation schema is version `4`. Its GitHub Actions identity records
+`workflowConclusion` and `coordinatorJobConclusion` separately. Normal evidence requires both to be
+`success`. A matcher-v3.2 stage-1 candidate records `workflowConclusion: failure` and
+`coordinatorJobConclusion: success`, because a dedicated refusal job deliberately fails the workflow
+after the coordinator authenticates and uploads the candidate. The generic legacy `conclusion`
+property is rejected.
+
+Matcher-v3.2 evidence uses two fail-closed promotion stages. `candidate-unbound` generates and
+cross-compares the exact reports and truthful candidate attestation, then refuses final status. Once
+the report digest and that candidate attestation are committed, a bound comparison whose
+`crossPlatformByteIdentity` remains `false` selects stage 2. Both operating systems rerun the real
+evaluator, tolerate only the expected tracked-output mismatch, and cross-compare the resulting
+attested comparison and checksum bytes before another deliberate refusal. Only promotion of those
+stage-2 bytes changes the mode to normal strict validation. Producer artifacts are downloaded by
+their upload output IDs, and their API metadata must bind the expected archive digest, current run,
+and exact workflow head before their contents are compared.
+
+An attestation document is not, by itself, proof that its linked Actions run has finished with the
+recorded workflow conclusion. Candidate failure is guaranteed by the explicit refusal job. Normal
+success is accepted for release only after the reusable holdout workflow has completed successfully
+and the release gate has rebound the run ID, attempt, exact head, artifact IDs, names, and digests.
 
 ## HTML and canonical SARIF
 

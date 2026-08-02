@@ -13,7 +13,7 @@ emits stable JSON with optional offline HTML and canonical SARIF projections. Ma
 explainable, local, and intended for the same producer family unless an explicit rule alias is
 provided.
 
-The candidate is product version `0.1.0`, matcher `sarifregress/matcher/v3.1`, configuration schema
+The candidate is product version `0.1.0`, matcher `sarifregress/matcher/v3.2`, configuration schema
 `1`, output schema `1`, and derived fingerprint `rule-path-context/v2`. The SDK is pinned to
 `10.0.302`.
 
@@ -24,11 +24,13 @@ then frozen. It recorded `0 TP / 0 FP / 75 FN`, recall `0`, F1 `0`, two Semgrep 
 failures, an oversized Gitleaks ambiguity component, and no PMD sparse-continuity path. This frozen
 failure is the independent baseline.
 
-The same labels were then exposed to diagnose and implement matcher v3 and v3.1. Their metrics are
+The same labels were then exposed to diagnose and implement matcher v3, v3.1, and v3.2. Their metrics are
 useful regression evidence because labels and thresholds remained frozen, but they are not a new
 out-of-sample or independent generalisation result. A clean two-family PMD research corpus was
 authored separately and contamination-scanned for source-context research; its experiment still
-failed the fixed recall and production-safety gates.
+failed the fixed recall and production-safety gates. The
+[machine-readable interpretation erratum](../validation/holdout/interpretation-erratum.json)
+hash-binds the exact legacy reports to this qualification and changes no metric.
 
 ## Exposed-holdout results
 
@@ -48,6 +50,12 @@ producer-neutral location-token rule proves when the canonical message delta is 
 delimited old/new repository-relative path substitution. The five evaluated source files were
 byte-identical moves, but source-byte identity is not a classifier precondition. Correspondence
 remains `50 TP / 0 FP / 25 FN`.
+
+Matcher v3.2 is a precision-preserving safety revision. Conflicting context vetoes collided or weak
+context admission, and code-flow anchors can rank an already admissible edge only when the anchor is
+unique on both input sides; they cannot create an edge. Frozen v2, v3, and v3.1 bytes remain
+unchanged. The v3.2 report is promoted through two fail-closed hosted stages before it can be used as
+release evidence.
 
 ## Sparse PMD result and unsupported profile
 

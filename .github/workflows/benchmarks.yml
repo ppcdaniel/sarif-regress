@@ -472,8 +472,8 @@ jobs:
               for variant_id in variant_ids
           ]
           # Stable coordinator bytes intentionally exclude volatile timing and
-          # memory. Issue #27 tracks deriving and cross-binding this subset in
-          # the future composite evidence contract.
+          # memory. Composite admission derives this subset from, and cross-binds
+          # it to, the full evidence contract.
           projection_evidence = {
               "withinDocumentedLimits": evidence["withinDocumentedLimits"],
               "sourceContextProjectionBenchmarked": evidence[
@@ -518,23 +518,6 @@ jobs:
           (verified / "sparse-experiment-resource-observations.json").write_bytes(
               stable_observation_bytes
           )
-          expected_root = research / "expected"
-          expected_projection = (
-              expected_root
-              / "projections"
-              / "sparse-experiment-resource-projection.json"
-          )
-          if (
-              (verified / "sparse-experiment-resource-projection.json").read_bytes()
-              != expected_projection.read_bytes()
-              or (
-                  verified / "sparse-experiment-resource-observations.json"
-              ).read_bytes()
-              != (
-                  expected_root / "sparse-experiment-resource-observations.json"
-              ).read_bytes()
-          ):
-              raise SystemExit("Committed sparse resource evidence differs.")
           files = sorted(
               path for path in verified.iterdir()
               if path.is_file() and path.name != "checksums.sha256"
@@ -546,6 +529,26 @@ jobs:
               ).encode("ascii")
           )
           PY
+
+      - name: Upload sparse resource evidence candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-resource-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Verify committed sparse resource evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-resource-projection.json \
+            validation/research/sparse-sarif/expected/projections/sparse-experiment-resource-projection.json
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-resource-observations.json \
+            validation/research/sparse-sarif/expected/sparse-experiment-resource-observations.json
 
       - name: Upload verified cross-platform evidence
         id: upload-verified-benchmarks

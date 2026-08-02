@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "2",
+  "kind": "holdout-interpretation-erratum/v2",
+  "interpretationPolicy": {
+    "independentClaimScope": "matcher-v2-first-evaluation-only",
+    "futureIndependentClaimRequirement": "new-untouched-or-blinded-corpus"
+  },
+  "independentBaseline": {
+    "matcherAlgorithmVersion": "sarifregress/matcher/v2",
+    "interpretation": "independent-first-evaluation",
+    "artifacts": [
+      {
+        "path": "validation/history/matcher-v2/sarif-regress-holdout.json",
+        "sha256": "d53225fbafeda78048726d201b230c6c24f0f8f68348e827b096f754406110cf"
+      }
+    ]
+  },
+  "corrections": [
+    {
+      "matcherAlgorithmVersion": "sarifregress/matcher/v3",
+      "legacyClaims": [
+        "frozen-independent-holdout-evaluation",
+        "sarif-regress-independent-holdout"
+      ],
+      "correctedInterpretation": "exposed-holdout-regression-evidence",
+      "reasonCode": "implementation-informed-by-frozen-holdout",
+      "metricsChanged": false,
+      "artifacts": [
+        {
+          "path": "validation/history/matcher-v3/metadata.json",
+          "sha256": "4f27bd223d23bd85eebafdce4e3bed180a9f673f7aed2b0f16ad9cb8740662a2"
+        },
+        {
+          "path": "validation/history/matcher-v3/sarif-regress-holdout.json",
+          "sha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99"
+        }
+      ]
+    },
+    {
+      "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+      "legacyClaims": [
+        "sarif-regress-independent-holdout"
+      ],
+      "correctedInterpretation": "exposed-holdout-regression-evidence",
+      "reasonCode": "implementation-informed-by-frozen-holdout",
+      "metricsChanged": false,
+      "artifacts": [
+        {
+          "path": "validation/history/matcher-v3.1/sarif-regress-holdout.json",
+          "sha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e"
+        }
+      ]
+    }
+  ],
+  "currentReportBinding": {
+    "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
+    "status": "candidate-unbound"
+  },
+  "integrity": {
+    "historicalArtifactsRewritten": false,
+    "holdoutLabelsChanged": false,
+    "qualityThresholdsChanged": false
+  }
+}

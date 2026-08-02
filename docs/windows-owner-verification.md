@@ -345,7 +345,7 @@ $Holdout.producers |
     } | Format-Table
 ```
 
-The exposed-holdout regression expectations for matcher v3.1 are Semgrep
+The exposed-holdout regression expectations for matcher v3.2 are Semgrep
 `25 TP / 0 FP / 0 FN`, Gitleaks
 `25 TP / 0 FP / 0 FN`, zero classification mismatches, zero ingestion failures, and zero labelled
 ambiguity silently matched. The aggregate remains `50 TP / 0 FP / 25 FN` because PMD contributes

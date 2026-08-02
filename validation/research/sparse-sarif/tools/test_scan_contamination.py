@@ -26,6 +26,7 @@ from scan_contamination import (
     EXPERIMENT_IMPLEMENTATION_ROOT_FILES,
     EXPERIMENT_IMPLEMENTATION_ROOTS,
     EXPERIMENT_OBSERVATIONS_KIND,
+    EXPERIMENT_RESOURCE_OBSERVATIONS_KIND,
     EXPERIMENT_SUPPORTING_ARTIFACT_NAMES,
     EXPERIMENT_SUPPORTING_PROJECTION_KINDS,
     FAIL_CLOSED_SCENARIOS,
@@ -35,6 +36,7 @@ from scan_contamination import (
     PMD_RELEASE_URL,
     PMD_SOURCE_COMMIT,
     PROJECTION_ALGORITHM_VERSION,
+    MAX_EXPERIMENT_CANDIDATE_PAIRS_PER_FINDING,
     RESOURCE_CELL_KEYS,
     Scanner,
     scan_research_root,
@@ -78,6 +80,24 @@ def _write_supporting_projection(
     projection_path = (
         f"expected/projections/sparse-experiment-{role}-projection.json"
     )
+    variants = document["variants"]
+    if role == "resources":
+        assert isinstance(variants, list)
+        variants = [
+            {
+                "id": variant["id"],
+                "value": {
+                    key: variant["value"][key]
+                    for key in (
+                        "withinDocumentedLimits",
+                        "sourceContextProjectionBenchmarked",
+                        "evidencePath",
+                        "evidenceSha256",
+                    )
+                },
+            }
+            for variant in variants
+        ]
     projection = {
         "schemaVersion": "1",
         "kind": EXPERIMENT_SUPPORTING_PROJECTION_KINDS[role],
@@ -85,7 +105,7 @@ def _write_supporting_projection(
         "implementationManifestSha256": document[
             "implementationManifestSha256"
         ],
-        "variants": document["variants"],
+        "variants": variants,
     }
     absolute_path = root / projection_path
     _write_json(absolute_path, projection)
@@ -460,6 +480,169 @@ def _complete_limitation_report() -> dict[str, object]:
     return _experiment_report(variants, None, "document-limitation")
 
 
+def _write_bound_reference(
+    root: Path,
+    relative_path: str,
+    value: object,
+    path_key: str,
+    digest_key: str,
+) -> dict[str, str]:
+    path = root / relative_path
+    _write_json(path, value)
+    return {
+        path_key: relative_path,
+        digest_key: hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+
+
+def _stable_resource_observation_cells(
+    cells: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    projected = []
+    for cell in cells:
+        finding_count = cell["findingCount"]
+        assert isinstance(finding_count, int)
+        refused = cell["boundedRefusalObserved"]
+        assert isinstance(refused, bool)
+        projected.append(
+            {
+                "operatingSystem": cell["operatingSystem"],
+                "findingCount": finding_count,
+                "dataset": cell["dataset"],
+                "candidateEdges": cell["candidateEdges"],
+                "observedMaximumComponentFindingCount": (
+                    2 * finding_count
+                    if refused
+                    else cell["maximumComponentSize"]
+                ),
+                "maximumAdmittedAssignmentComponentSize": cell[
+                    "maximumComponentSize"
+                ],
+                "configuredCandidatePairsPerFindingLimit": (
+                    MAX_EXPERIMENT_CANDIDATE_PAIRS_PER_FINDING
+                ),
+                "configuredCandidatePairLimit": cell[
+                    "configuredCandidatePairLimit"
+                ],
+                "configuredAssignmentComponentLimit": cell[
+                    "configuredAssignmentComponentLimit"
+                ],
+                "boundedRefusalObserved": refused,
+                "runtimeBudgetEnforced": cell["runtimeBudgetEnforced"],
+                "withinDocumentedLimits": cell["withinDocumentedLimits"],
+            }
+        )
+    return projected
+
+
+def _bind_supporting_references(
+    root: Path,
+    report: dict[str, object],
+    manifest_sha256: str,
+    implementation_sha256: str,
+) -> None:
+    variants = report["variants"]
+    assert isinstance(variants, list)
+    first = variants[0]
+
+    release = first["releaseEvidence"]
+    holdout_payload = {
+        key: value
+        for key, value in release["holdout"].items()
+        if key not in {"reportPath", "reportSha256"}
+    }
+    holdout_reference = _write_bound_reference(
+        root,
+        "expected/supporting/release/holdout.json",
+        holdout_payload,
+        "reportPath",
+        "reportSha256",
+    )
+    development_payload = {
+        key: value
+        for key, value in release["developmentCorpus"].items()
+        if key not in {"reportPath", "reportSha256"}
+    }
+    development_reference = _write_bound_reference(
+        root,
+        "expected/supporting/release/development.json",
+        development_payload,
+        "reportPath",
+        "reportSha256",
+    )
+
+    determinism_references: dict[str, dict[str, str]] = {}
+    for name in ("linux", "windows", "comparison"):
+        determinism_payload = {
+            key: value
+            for key, value in first["determinism"][name].items()
+            if key not in {"artifactPath", "artifactSha256"}
+        }
+        determinism_references[name] = _write_bound_reference(
+            root,
+            f"expected/supporting/determinism/{name}.json",
+            determinism_payload,
+            "artifactPath",
+            "artifactSha256",
+        )
+
+    resource_cells = first["resources"]["cells"]
+    resource_references: dict[tuple[object, object, object], dict[str, str]] = {}
+    for cell in resource_cells:
+        identity = (
+            cell["operatingSystem"],
+            cell["findingCount"],
+            cell["dataset"],
+        )
+        relative_path = (
+            "expected/supporting/resources/"
+            f"{identity[0]}-{identity[1]}-{identity[2]}.json"
+        )
+        resource_references[identity] = _write_bound_reference(
+            root,
+            relative_path,
+            {
+                key: value
+                for key, value in cell.items()
+                if key not in {"artifactPath", "artifactSha256"}
+            },
+            "artifactPath",
+            "artifactSha256",
+        )
+
+    observations = {
+        "schemaVersion": "1",
+        "kind": EXPERIMENT_RESOURCE_OBSERVATIONS_KIND,
+        "corpusManifestSha256": manifest_sha256,
+        "implementationManifestSha256": implementation_sha256,
+        "cells": _stable_resource_observation_cells(resource_cells),
+    }
+    observations_reference = _write_bound_reference(
+        root,
+        "expected/supporting/resources/structural-observations.json",
+        observations,
+        "evidencePath",
+        "evidenceSha256",
+    )
+
+    for variant in variants:
+        variant_release = variant["releaseEvidence"]
+        variant_release["holdout"].update(holdout_reference)
+        variant_release["developmentCorpus"].update(development_reference)
+        variant_determinism = variant["determinism"]
+        for name, reference in determinism_references.items():
+            variant_determinism[name].update(reference)
+        variant_resources = variant["resources"]
+        variant_resources.update(observations_reference)
+        for cell in variant_resources["cells"]:
+            identity = (
+                cell["operatingSystem"],
+                cell["findingCount"],
+                cell["dataset"],
+            )
+            cell.update(resource_references[identity])
+
+
 def _bind_experiment_evidence(
     root: Path,
     report_path: Path,
@@ -613,6 +796,12 @@ def _bind_experiment_evidence(
     report["evidence"]["gates"]["sha256"] = hashlib.sha256(
         gates_path.read_bytes()
     ).hexdigest()
+    _bind_supporting_references(
+        root,
+        report,
+        manifest_sha256,
+        implementation_sha256,
+    )
     supporting = {
         "release": "releaseEvidence",
         "determinism": "determinism",
@@ -1269,6 +1458,22 @@ class ContaminationScannerTests(unittest.TestCase):
                 "manifestPath"
             ]["const"],
         )
+        self.assertTrue(
+            {"artifactPath", "artifactSha256"}
+            <= set(report["$defs"]["determinismPlatform"]["required"])
+        )
+        self.assertTrue(
+            {"artifactPath", "artifactSha256"}
+            <= set(report["$defs"]["resourceCell"]["required"])
+        )
+        self.assertTrue(
+            {"evidencePath", "evidenceSha256"}
+            <= set(
+                report["$defs"]["variant"]["properties"]["resources"][
+                    "required"
+                ]
+            )
+        )
         self.assertFalse(observations["additionalProperties"])
         self.assertFalse(observations["$defs"]["family"]["additionalProperties"])
         self.assertTrue(
@@ -1295,6 +1500,30 @@ class ContaminationScannerTests(unittest.TestCase):
                 "projectionSha256",
             }
             <= set(supporting["required"])
+        )
+        self.assertTrue(
+            {"reportPath", "reportSha256"}
+            <= set(supporting["$defs"]["holdout"]["required"])
+        )
+        self.assertTrue(
+            {"reportPath", "reportSha256"}
+            <= set(supporting["$defs"]["development"]["required"])
+        )
+        self.assertTrue(
+            {"artifactPath", "artifactSha256"}
+            <= set(supporting["$defs"]["artifactReference"]["required"])
+        )
+        self.assertTrue(
+            {"artifactPath", "artifactSha256"}
+            <= set(supporting["$defs"]["comparison"]["required"])
+        )
+        self.assertTrue(
+            {"artifactPath", "artifactSha256"}
+            <= set(supporting["$defs"]["resourceCell"]["required"])
+        )
+        self.assertTrue(
+            {"evidencePath", "evidenceSha256"}
+            <= set(supporting["$defs"]["resourceEvidence"]["required"])
         )
         self.assertEqual(
             [
@@ -2195,6 +2424,47 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("EXPERIMENT001", codes)
         self.assertIn("EXPERIMENT010", codes)
 
+    def test_sarif_only_control_does_not_require_source_preflight(self) -> None:
+        control = _experiment_variant("sarif-only-control")
+        control["metrics"] = {
+            "aggregate": _metrics(0, 0, 19),
+            "byFamily": [
+                {"familyId": "pmd-clean-a", **_metrics(0, 0, 8)},
+                {"familyId": "pmd-clean-b", **_metrics(0, 0, 11)},
+            ],
+        }
+        control["classification"]["matchedRelationships"] = 0
+        production = control["productionApplicability"]
+        production["metricsWithoutTrustedTreeHashes"] = _metrics(0, 0, 19)
+        production["corpusSpecificPreflightRequired"] = False
+        release = control["releaseEvidence"]["holdout"]
+        release["metrics"] = _metrics(50, 0, 25)
+        release["byProducer"][2]["metrics"] = _metrics(0, 0, 25)
+
+        bindings = Scanner._computed_gate_bindings(control)
+
+        self.assertIsNotNone(bindings)
+        assert bindings is not None
+        self.assertEqual(0.0, bindings["pmdRecall"])
+        self.assertFalse(bindings["corpusSpecificPreflightRequired"])
+        self.assertEqual(
+            0,
+            sum(
+                family[read_key]
+                for scenario_key in ("scenarios", "scenariosWithoutTrustedTreeHashes")
+                for scenario in (
+                    control["scenarios"]
+                    if scenario_key == "scenarios"
+                    else production[scenario_key]
+                )
+                for family in scenario["families"]
+                for read_key in (
+                    "baselineReadsFromCandidateRoot",
+                    "candidateReadsFromBaselineRoot",
+                )
+            ),
+        )
+
     def test_complete_predeclared_experiment_matrix_is_accepted(self) -> None:
         variants = _complete_experiment_variants()
         for variant in variants:
@@ -2298,23 +2568,33 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertNotIn("EXPERIMENT014", codes)
 
     def test_release_report_hash_is_bound_to_admitted_report_bytes(self) -> None:
-        variants = _complete_experiment_variants()
-        selected = variants[-1]
-        selected["releaseEvidence"]["holdout"]["reportPath"] = "manifest.json"
-        selected["releaseEvidence"]["holdout"]["reportSha256"] = "0" * 64
+        report_path = self.root / "expected/experiment-report.json"
         report = _experiment_report(
-            variants,
+            _complete_experiment_variants(),
             "agreement-only-combination",
             "implement-v4",
         )
-        implementation_path = "tools/scan_contamination.py"
-        report["implementation"]["path"] = implementation_path
-        report["implementation"]["sha256"] = hashlib.sha256(
-            (self.root / implementation_path).read_bytes()
-        ).hexdigest()
-        _write_json(self.root / "expected/experiment-report.json", report)
+        _write_json(report_path, report)
         _refresh(self.root)
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        reference = report["evidence"]["release"]
+        evidence_path = self.root / reference["path"]
+        document = json.loads(evidence_path.read_text(encoding="utf-8"))
+        for value in (
+            report["variants"][-1]["releaseEvidence"]["holdout"],
+            document["variants"][-1]["value"]["holdout"],
+        ):
+            value["reportSha256"] = "0" * 64
+        _write_supporting_projection(self.root, "release", document)
+        _write_json(evidence_path, document)
+        reference["sha256"] = hashlib.sha256(
+            evidence_path.read_bytes()
+        ).hexdigest()
+        _write_json(report_path, report)
+        _refresh_expected_checksums(self.root)
+
         codes = _codes(self.root)
+
         self.assertIn("EXPERIMENT014", codes)
         self.assertIn("EXPERIMENT008", codes)
 
@@ -2705,6 +2985,90 @@ class ContaminationScannerTests(unittest.TestCase):
         self.assertIn("EXPERIMENT026", codes)
         self.assertIn("EXPERIMENT019", codes)
 
+    def test_supporting_role_references_are_mandatory(self) -> None:
+        report_path = self.root / "expected/experiment-report.json"
+        report = _complete_limitation_report()
+        _write_json(report_path, report)
+        _refresh(self.root)
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        reference = report["evidence"]["release"]
+        evidence_path = self.root / reference["path"]
+        document = json.loads(evidence_path.read_text(encoding="utf-8"))
+        for value in (
+            report["variants"][0]["releaseEvidence"]["holdout"],
+            document["variants"][0]["value"]["holdout"],
+        ):
+            value.pop("reportPath")
+            value.pop("reportSha256")
+        _write_supporting_projection(self.root, "release", document)
+        _write_json(evidence_path, document)
+        reference["sha256"] = hashlib.sha256(
+            evidence_path.read_bytes()
+        ).hexdigest()
+        _write_json(report_path, report)
+        _refresh_expected_checksums(self.root)
+
+        codes = _codes(self.root)
+
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
+    def test_resource_projection_excludes_volatile_measurements(self) -> None:
+        report_path = self.root / "expected/experiment-report.json"
+        report = _complete_limitation_report()
+        _write_json(report_path, report)
+        _refresh(self.root)
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        reference = report["evidence"]["resources"]
+        evidence_path = self.root / reference["path"]
+        document = json.loads(evidence_path.read_text(encoding="utf-8"))
+        report["variants"][0]["resources"]["cells"][0][
+            "elapsedMilliseconds"
+        ] += 1
+        document["variants"][0]["value"]["cells"][0][
+            "elapsedMilliseconds"
+        ] += 1
+        _write_json(evidence_path, document)
+        reference["sha256"] = hashlib.sha256(
+            evidence_path.read_bytes()
+        ).hexdigest()
+        _write_json(report_path, report)
+        _refresh_expected_checksums(self.root)
+
+        experiment_codes = {
+            code for code in _codes(self.root) if code.startswith("EXPERIMENT")
+        }
+
+        self.assertEqual(set(), experiment_codes)
+
+    def test_resource_projection_cross_binds_structural_observations(self) -> None:
+        report_path = self.root / "expected/experiment-report.json"
+        report = _complete_limitation_report()
+        _write_json(report_path, report)
+        _refresh(self.root)
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        reference = report["evidence"]["resources"]
+        evidence_path = self.root / reference["path"]
+        document = json.loads(evidence_path.read_text(encoding="utf-8"))
+        report["variants"][0]["resources"]["cells"][0][
+            "maximumComponentSize"
+        ] = 2
+        document["variants"][0]["value"]["cells"][0][
+            "maximumComponentSize"
+        ] = 2
+        _write_json(evidence_path, document)
+        reference["sha256"] = hashlib.sha256(
+            evidence_path.read_bytes()
+        ).hexdigest()
+        _write_json(report_path, report)
+        _refresh_expected_checksums(self.root)
+
+        codes = _codes(self.root)
+
+        self.assertIn("EXPERIMENT029", codes)
+        self.assertIn("EXPERIMENT026", codes)
+        self.assertIn("EXPERIMENT019", codes)
+
     def test_supporting_projection_digest_must_match_exact_bytes(self) -> None:
         report = _complete_limitation_report()
         _write_json(self.root / "expected/experiment-report.json", report)
@@ -2758,6 +3122,32 @@ class ContaminationScannerTests(unittest.TestCase):
         codes = _codes(self.root)
         self.assertIn("EXPERIMENT022", codes)
         self.assertIn("EXPERIMENT019", codes)
+
+    def test_implementation_manifest_preflight_rejects_stale_hash_without_report(
+        self,
+    ) -> None:
+        self.assertFalse((self.root / "expected/experiment-report.json").exists())
+        implementation_path = self.root / "experiment-implementation-manifest.json"
+        implementation = json.loads(
+            implementation_path.read_text(encoding="utf-8")
+        )
+        implementation["files"][0]["sha256"] = "f" * 64
+        _write_json(implementation_path, implementation)
+        _refresh(self.root)
+
+        self.assertIn("EXPERIMENT022", _codes(self.root))
+
+    def test_implementation_manifest_preflight_rejects_new_source_without_report(
+        self,
+    ) -> None:
+        self.assertFalse((self.root / "expected/experiment-report.json").exists())
+        extra = (
+            self.root.parents[2]
+            / "src/SarifRegress.Core/UnexpectedImplementation.cs"
+        )
+        extra.write_text("// unexpected admitted source\n", encoding="utf-8")
+
+        self.assertIn("EXPERIMENT022", _codes(self.root))
 
     def test_implementation_manifest_digest_must_match_repo_file_bytes(self) -> None:
         report = _complete_limitation_report()

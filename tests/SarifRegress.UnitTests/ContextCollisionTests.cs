@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Findings;
 using SarifRegress.Core.Matching;
@@ -290,6 +291,169 @@ public sealed class ContextCollisionTests
         Assert.DoesNotContain(
             result.Decisions,
             decision => decision.Baseline is not null && decision.Candidate is not null);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    public void Collided_context_cannot_hide_a_conflicting_available_channel(
+        bool snippetIsCollided,
+        bool pathIsAliased)
+    {
+        const string baselineTargetPath = "src/old/replacement.txt";
+        var candidateTargetPath = pathIsAliased
+            ? "src/new/replacement.txt"
+            : baselineTargetPath;
+        var baseline = new[]
+        {
+            MixedContextFinding(
+                InputKind.Baseline,
+                "baseline:target",
+                baselineTargetPath,
+                "Replacement finding.",
+                snippetIsCollided,
+                conflictingValue: "baseline-target"),
+            MixedContextFinding(
+                InputKind.Baseline,
+                "baseline:collider",
+                "src/colliders/baseline.txt",
+                "Unrelated baseline collider.",
+                snippetIsCollided,
+                conflictingValue: "baseline-collider"),
+        };
+        var candidate = new[]
+        {
+            MixedContextFinding(
+                InputKind.Candidate,
+                "candidate:target",
+                candidateTargetPath,
+                "Replacement finding.",
+                snippetIsCollided,
+                conflictingValue: "candidate-target"),
+            MixedContextFinding(
+                InputKind.Candidate,
+                "candidate:collider",
+                "src/colliders/candidate.txt",
+                "Unrelated candidate collider.",
+                snippetIsCollided,
+                conflictingValue: "candidate-collider"),
+        };
+        PathAlias[]? aliases = pathIsAliased
+            ? [new PathAlias("src/old/", "src/new/")]
+            : null;
+        var configuration = MatchingTestData.Configuration(
+            allowWeakMessageSimilarity: true,
+            pathAliases: aliases);
+
+        var ordered = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            configuration);
+        var reversed = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline.Reverse().ToArray()),
+            MatchingTestData.Input(InputKind.Candidate, candidate.Reverse().ToArray()),
+            configuration);
+
+        Assert.Equal(ProjectResult(ordered), ProjectResult(reversed));
+        Assert.Equal(0, ordered.CandidateEdgeCount);
+        Assert.Equal(
+            2,
+            ordered.Decisions.Count(
+                decision => decision.Classification == FindingClassification.Resolved));
+        Assert.Equal(
+            2,
+            ordered.Decisions.Count(
+                decision => decision.Classification == FindingClassification.New));
+        Assert.DoesNotContain(
+            ordered.Decisions,
+            decision => decision.Baseline is not null && decision.Candidate is not null);
+
+        var targetDecisions = ordered.Decisions
+            .Where(decision =>
+                (decision.Baseline?.FindingKey ?? decision.Candidate?.FindingKey)!
+                    .EndsWith(":target", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Equal(2, targetDecisions.Length);
+        Assert.All(
+            targetDecisions,
+            decision =>
+            {
+                Assert.Contains(
+                    decision.Decision.Evidence,
+                    evidence => evidence.Kind == "context-collision"
+                        && evidence.AlgorithmVersion
+                            == "sarifregress/evidence-occurrence/v1");
+                Assert.Contains(
+                    decision.Decision.Evidence,
+                    evidence => evidence.Kind == "assignment-outcome"
+                        && evidence.PrecedenceTier == PrecedenceTier.Refuse);
+            });
+    }
+
+    [Fact]
+    public void Collided_derived_fingerprint_cannot_hide_conflicting_raw_context()
+    {
+        var duplicate = MatchingTestData.DerivedFingerprint("collided-derived-context");
+        var baseline = new[]
+        {
+            MatchingTestData.Finding(
+                InputKind.Baseline,
+                "baseline:target",
+                path: "src/replacement.txt",
+                message: "Replacement target.",
+                derivedFingerprints: [duplicate],
+                contextHash: "baseline-context"),
+            MatchingTestData.Finding(
+                InputKind.Baseline,
+                "baseline:collider",
+                path: "src/baseline-collider.txt",
+                derivedFingerprints: [duplicate],
+                contextHash: "baseline-collider-context"),
+        };
+        var candidate = new[]
+        {
+            MatchingTestData.Finding(
+                InputKind.Candidate,
+                "candidate:target",
+                path: "src/replacement.txt",
+                message: "Replacement target.",
+                derivedFingerprints: [duplicate],
+                contextHash: "candidate-context"),
+            MatchingTestData.Finding(
+                InputKind.Candidate,
+                "candidate:collider",
+                path: "src/candidate-collider.txt",
+                derivedFingerprints: [duplicate],
+                contextHash: "candidate-collider-context"),
+        };
+
+        var result = matcher.Match(
+            MatchingTestData.Input(InputKind.Baseline, baseline),
+            MatchingTestData.Input(InputKind.Candidate, candidate),
+            MatchingTestData.Configuration(allowWeakMessageSimilarity: true));
+
+        Assert.Equal(0, result.CandidateEdgeCount);
+        Assert.Equal(
+            2,
+            result.Decisions.Count(
+                decision => decision.Classification == FindingClassification.Resolved));
+        Assert.Equal(
+            2,
+            result.Decisions.Count(
+                decision => decision.Classification == FindingClassification.New));
+        Assert.All(
+            result.Decisions,
+            decision =>
+            {
+                Assert.Contains(
+                    decision.Decision.Evidence,
+                    evidence => evidence.Kind == "derived-fingerprint-collision");
+                Assert.Contains(
+                    decision.Decision.Evidence,
+                    evidence => evidence.Kind == "assignment-outcome");
+            });
     }
 
     [Fact]
@@ -719,6 +883,24 @@ public sealed class ContextCollisionTests
             startLine: startLine,
             derivedFingerprints: derivedFingerprints,
             contextHash: contextHash);
+
+    private static Finding MixedContextFinding(
+        InputKind input,
+        string key,
+        string path,
+        string message,
+        bool snippetIsCollided,
+        string conflictingValue) =>
+        MatchingTestData.Finding(
+            input,
+            key,
+            path: path,
+            message: message,
+            producerFamily: "acme-audit",
+            toolName: "Acme Audit",
+            ruleId: "audit/shared-rule",
+            contextHash: snippetIsCollided ? SharedContext : conflictingValue,
+            tokenWindowHash: snippetIsCollided ? conflictingValue : SharedContext);
 
     private static string InputPrefix(InputKind input) =>
         input == InputKind.Baseline ? "baseline" : "candidate";

@@ -1,0 +1,23 @@
+{
+  "$schema": "schemas/release-gate-policy.schema.json",
+  "schemaVersion": "1",
+  "policyKind": "release-channel-readiness",
+  "criteriaDocument": "docs/release-readiness.md#preview-and-stable-criteria",
+  "channels": {
+    "preview": {
+      "recommendation": "blocked",
+      "reasonIds": [
+        "open-release-blockers"
+      ]
+    },
+    "stable": {
+      "recommendation": "blocked",
+      "reasonIds": [
+        "aggregate-recall-below-threshold",
+        "complete-label-graph-failed",
+        "open-release-blockers",
+        "per-producer-recall-below-threshold"
+      ]
+    }
+  }
+}

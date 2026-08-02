@@ -142,21 +142,27 @@ root; or safe URI-base resolution combined with another qualifying identity sign
 path interpretation, not identity proof. Side-specific baseline/candidate roots are research-only
 and are not shipped. Findings with no reliable fingerprint, no embedded snippet, no trusted source
 snapshot, and only non-unique rule/path/message/location evidence are intentionally left unmatched.
-This is the endorsed evidence profile, not a claim that every current edge is already proven to
-obey it: open matcher-safety issues remain release blockers.
+Matcher v3.2 enforces the two previously open safety boundaries: conflicting context vetoes
+collided or weak admission, and code-flow anchors cannot admit an edge. Exact-head hosted evidence
+is still required before those issue dispositions are closed.
 
 The public corpus gates precision at `0.95`, recall at `0.90`, exact classifications and diagnostics,
 zero silently matched labelled ambiguity, and byte-identical approved Windows/Linux reports.
 
 The [independent matcher-v2 holdout](docs/independent-validation.md)
-and [v3/v3.1 generalisation report](docs/real-producer-generalisation.md)
+and [v3/v3.1/v3.2 generalisation report](docs/real-producer-generalisation.md)
 preserve 75 known relationships from Gitleaks 8.30.1, PMD 7.26.0, and Semgrep 1.172.0. Matcher v2's
 `0 TP / 0 FP / 75 FN` run is the independent baseline. After those labels informed implementation,
-v3/v3.1 provide exposed-holdout regression evidence: Semgrep and Gitleaks each recover all 25
-identities, v3.1 has zero classification mismatches, and the aggregate remains
+v3/v3.1/v3.2 provide exposed-holdout regression evidence: Semgrep and Gitleaks each recover all 25
+identities, v3.1 corrects the five classification mismatches, and v3.2 tightens context and
+code-flow admission without changing the frozen labels or thresholds. The aggregate remains
 `50 TP / 0 FP / 25 FN` (precision `1.0`, recall `0.666667`, F1 `0.8`). A separately designed clean
 PMD research corpus reached at best `9 TP / 0 FP / 10 FN` (recall `0.473684`) and failed the fixed
-recall and production-safety gates. Matcher v4 was not created and release remains **blocked**.
+recall and production-safety gates. The
+[hash-bound interpretation erratum](validation/holdout/interpretation-erratum.json) qualifies the
+legacy v3/v3.1 report labels without changing their metrics or frozen bytes and marks v3.2
+candidate bytes unbound until hosted promotion completes. Matcher v4 was not
+created and release remains **blocked**.
 
 ## Commands
 
@@ -198,7 +204,7 @@ for packaging and release verification.
 | Configuration | [Guide](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/configuration.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/config.schema.json) |
 | JSON, HTML, and SARIF output | [Output contract](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/output-contract.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/output.schema.json) |
 | Security and resource limits | [Security](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/security.md) · [Budgets](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/resource-budgets.md) |
-| Evaluation and interoperability | [Corpus](docs/corpus.md) · [Independent holdout](docs/independent-validation.md) · [v3/v3.1 generalisation](docs/real-producer-generalisation.md) · [Side-specific-context ADR](docs/decisions/0003-side-specific-repository-context-experiment.md) · [Frozen clean-corpus protocol](validation/research/sparse-sarif/README.md) · [Limitation record](validation/research/sparse-sarif/expected/sparse-experiment-limitation.json) · [GitHub profile](docs/github-compatibility.md) |
+| Evaluation and interoperability | [Corpus](docs/corpus.md) · [Independent holdout](docs/independent-validation.md) · [v3/v3.1/v3.2 generalisation](docs/real-producer-generalisation.md) · [Side-specific-context ADR](docs/decisions/0003-side-specific-repository-context-experiment.md) · [Frozen clean-corpus protocol](validation/research/sparse-sarif/README.md) · [Limitation record](validation/research/sparse-sarif/expected/sparse-experiment-limitation.json) · [GitHub profile](docs/github-compatibility.md) |
 
 The composite sparse `expected/experiment-report.json` is intentionally absent while issue #27
 tracks full-resource-to-stable-projection derivation/cross-binding and issue #28 blocks its

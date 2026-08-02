@@ -24,6 +24,8 @@ internal static class MatchingAlgorithms
     public const string RegionVersion = "sarifregress/region-evidence/v1";
     public const string CodeFlowAnchorVersion = "sarifregress/code-flow-anchor/v1";
     public const string CodeFlowSetVersion = "sarifregress/code-flow-set/v1";
+    public const string CodeFlowOccurrenceVersion =
+        "sarifregress/code-flow-occurrence/v1";
     public const string RelatedLocationSetVersion =
         "sarifregress/related-location-set/v1";
     public const string AssignmentOutcomeVersion =

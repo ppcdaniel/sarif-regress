@@ -235,7 +235,7 @@ fi
 readonly normalized_reports=(
   'sarif-regress-holdout.json'
   'sarif-multitool-baseline.json'
-  'v3-to-v3.1-delta.json'
+  'v3.1-to-v3.2-delta.json'
   'comparison-summary.json'
   'checksums.sha256'
 )

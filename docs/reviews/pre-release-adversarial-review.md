@@ -36,18 +36,18 @@ Severity means:
 
 ## Summary
 
-Counts include every recorded finding, including findings later remediated. The original review and
-research-infrastructure addendum remain separately visible so historical severity is not rewritten
-by disposition.
+Counts include every recorded finding, including findings later remediated. The original review,
+research-infrastructure addendum, and matcher-v3.2 promotion addendum remain separately visible so
+historical severity is not rewritten by disposition.
 
-| Severity | Original review | Addendum | Total | Current effect |
-|---|---:|---:|---:|---|
-| Blocker | 1 | 0 | 1 | B-01 is resolved by exact-head evidence; the historical finding remains counted |
-| High | 9 | 7 | 16 | Mixed resolved and open findings; licensing, release, matcher-safety, and composite-evidence blockers remain |
-| Medium | 14 | 8 | 22 | Metric semantics, context/output/package hardening, compatibility, and research-evidence durability |
-| Low | 3 | 0 | 3 | Version authority, public constructor compatibility, and unused restore path |
+| Severity | Original review | Research addendum | Promotion addendum | Total | Current effect |
+|---|---:|---:|---:|---:|---|
+| Blocker | 1 | 0 | 2 | 3 | Historical and pre-push promotion defects remain counted after remediation |
+| High | 9 | 7 | 2 | 18 | Mixed resolved and open findings; licensing, release, and composite-evidence blockers remain |
+| Medium | 14 | 8 | 1 | 23 | Metric semantics, context/output/package hardening, compatibility, and research-evidence durability |
+| Low | 3 | 0 | 0 | 3 | Version authority, public constructor compatibility, and unused restore path |
 
-Total recorded findings: 42.
+Total recorded findings: 47.
 
 ## Blocker findings
 
@@ -128,6 +128,10 @@ Total recorded findings: 42.
 - **Blocks release:** yes for a generalisation claim.
 - **Tracking:** [#16](https://github.com/ppcdaniel/sarif-regress/issues/16); #12 remains the
   umbrella.
+- **Disposition:** addressed in the hardening work by a strict
+  [hash-bound interpretation erratum](../../validation/holdout/interpretation-erratum.json) and
+  corrected current prose. The frozen matcher-v2 and matcher-v3 histories are unchanged; issue
+  closure still requires exact-head verification.
 
 ### H-03 — Required validation uses binaries with unresolved maintenance terms
 
@@ -201,6 +205,9 @@ Total recorded findings: 42.
 - **Blocks merging PR #13:** yes.
 - **Blocks release:** yes.
 - **Tracking:** [#20](https://github.com/ppcdaniel/sarif-regress/issues/20).
+- **Disposition:** matcher v3.2 carries an explicit conflict bit into admission and vetoes collided
+  derived/context and weak-message edges when another available context representation conflicts.
+  Closure remains contingent on exact-head hosted regression evidence.
 
 ### H-07 — Code-flow anchors can act as unbounded primary identity
 
@@ -218,6 +225,10 @@ Total recorded findings: 42.
 - **Blocks merging PR #13:** no if tracked independently.
 - **Blocks release:** yes.
 - **Tracking:** [#21](https://github.com/ppcdaniel/sarif-regress/issues/21).
+- **Disposition:** matcher v3.2 removes code flow from edge admission and occurrence-counts anchor
+  identities independently on both input sides; only a one-per-side anchor can rank an edge already
+  admitted by independent evidence. Repeated anchors retain one bounded degradation trace. Closure
+  remains contingent on exact-head hosted regression evidence.
 
 ### H-08 — Candidate-edge bounds are applied after full edge materialisation
 
@@ -806,3 +817,87 @@ research evidence, not the frozen v2/v3/v3.1 records.
   record outside the future byte-reproduction gate, or explicitly limit the duration of the raw
   performance-audit claim.
 - **Blocks PR #8/#13:** no. **Blocks release:** only a durable historical-performance claim.
+
+## Matcher-v3.2 promotion addendum
+
+This addendum records an independent pre-push review of the matcher-v3.2 safety revision and its
+two-stage evidence bootstrap. None of these defects reached a release, tag, package publication, or
+merged pull request.
+
+### B-02 — Stage-2 finalization omitted a required evaluation identity
+
+- **Evidence and code area:** `.github/workflows/holdout-validation.yml`, stage-2 finalization file
+  inventory. The verified producer bundle always included `evaluation-metadata.json`, but the
+  coordinator's exact expected-name set omitted it.
+- **Why it matters:** every stage-2 coordinator would fail before producing promotable bound
+  comparison/checksum bytes, so the fail-closed protocol could never reach normal verification.
+- **Smallest safe remediation:** include `evaluation-metadata.json` in the exact stage-2 set and add
+  an executable workflow invariant test.
+- **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the hardening PR and
+  release:** yes.
+- **Tracking:** existing release-gate issue #19.
+- **Disposition:** fixed locally; the stage detector test asserts the exact file set. Hosted stage-2
+  execution remains required.
+
+### B-03 — Candidate-unbound CI validated frozen bytes against future schemas
+
+- **Evidence and code area:** `tests/SarifRegress.ValidationTests/TrackedOutputTests.cs` and active
+  schemas under `validation/schemas/`. The candidate-unbound tree still contained frozen matcher
+  v3.1 expected outputs, while the test unconditionally selected active matcher-v3.2 schemas.
+- **Why it matters:** ordinary CI would fail before stage 1 even though the deliberate bootstrap
+  state was internally valid. Weakening the active schema would instead make incompatible evidence
+  appear valid.
+- **Smallest safe remediation:** make tracked-output validation branch only on the typed erratum
+  status: archived v3.1 schemas/checksums for `candidate-unbound`, active v3.2 contracts after a
+  bound promotion.
+- **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the hardening PR and
+  release:** yes.
+- **Tracking:** [#30](https://github.com/ppcdaniel/sarif-regress/issues/30).
+- **Disposition:** fixed locally without changing frozen v3.1 bytes; hosted CI remains required.
+
+### H-17 — Attestation-bearing artifacts were uploaded before a later fallible step
+
+- **Evidence and code area:** `.github/workflows/holdout-validation.yml`, bootstrap coordinator.
+  The cross-platform artifact asserted `coordinatorJobConclusion: success`, then a later sparse
+  projection upload could still fail the same job. Normal compare also did not depend on the sparse
+  comparison job.
+- **Why it matters:** an artifact could contain a success claim even though its coordinator or the
+  standalone holdout graph later concluded failure. The release verifier added another control, but
+  the document itself would be misleading.
+- **Smallest safe remediation:** upload the sparse projection first, make the attestation-bearing
+  upload the final stage-specific step, and make normal compare depend on sparse comparison while
+  leaving bootstrap dependencies able to generate candidates.
+- **Blocks merging PR #8/#13:** no. **Blocks the hardening PR and release:** yes.
+- **Tracking:** existing release-gate issue #19.
+- **Disposition:** fixed locally and covered by workflow-order/dependency assertions; hosted stage 1,
+  stage 2, and normal runs remain required.
+
+### H-18 — Comparison field renames reused schema version 3
+
+- **Evidence and code area:** `StableReportSerializer.Serialize(ComparisonSummaryReport)` and
+  `validation/schemas/comparison-summary.schema.json`. The v3.2 summary replaced v3/v3.1 hash keys
+  with v3.1/v3.2 keys while still emitting schema version `3` under a closed object contract.
+- **Why it matters:** consumers cannot distinguish two incompatible schema-3 meanings, violating
+  the documented rule that field removal or rename requires a version change.
+- **Smallest safe remediation:** emit/require comparison schema `4`, retain the archived v3.1
+  schema-3 bytes, and make bootstrap/release verifiers reject the wrong envelope.
+- **Blocks merging PR #8/#13:** no. **Blocks the hardening PR and release:** yes.
+- **Tracking:** [#30](https://github.com/ppcdaniel/sarif-regress/issues/30).
+- **Disposition:** fixed locally; static release/stage tests pass and hosted .NET evidence remains
+  required.
+
+### M-23 — Pre-push checksum and research manifests became stale during integration
+
+- **Evidence and code area:** `validation/expected/checksums.sha256`,
+  `validation/research/sparse-sarif/experiment-implementation-manifest.json`, and the corpus
+  integrity list. Concurrent safety/schema edits changed bound files before their mechanical
+  manifests were refreshed.
+- **Why it matters:** tracked-output and sparse admission jobs would fail before executable evidence;
+  blindly staging the tree would also obscure whether frozen history changed.
+- **Smallest safe remediation:** regenerate only the affected manifests, verify every referenced
+  byte, re-run the contamination scanner, and separately prove v2/v3 histories and label hashes are
+  unchanged.
+- **Blocks merging PR #8/#13:** no. **Blocks the hardening PR:** yes until refreshed. **Blocks
+  release:** no independently.
+- **Disposition:** resolved locally; all active/history/research checksum graphs, exact
+  implementation inventory, contamination admission, and frozen label hashes pass.

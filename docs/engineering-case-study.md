@@ -43,6 +43,8 @@ Ground truth comes from controlled source transformations rather than matcher ou
 v3 reports are retained as immutable histories; later work adds deltas rather than rewriting them.
 Matcher v2's first evaluation is the independent result. Because that holdout then informed v3 and
 v3.1, their figures are exposed-holdout regression evidence, not a new out-of-sample validation.
+The [hash-bound interpretation erratum](../validation/holdout/interpretation-erratum.json) records
+that correction without changing historical metrics or evidence bytes.
 
 Labels are not matcher input. The evaluator scores correspondence TP/FP/FN, post-correspondence
 classification mismatch, expected/correct/incorrect labelled new and resolved counts, ambiguity
@@ -233,7 +235,7 @@ not created, and the product retained the shared `--repo` contract.
 
 ## 11. Final supported evidence profile
 
-The endorsed matcher-v3.1 evidence profile supports an automatic-correspondence release claim when
+The endorsed matcher-v3.2 evidence profile supports an automatic-correspondence release claim when
 the input supplies enough independently bounded evidence to admit an edge, such as:
 
 - a reliable producer fingerprint that is not degraded by a collision;
@@ -243,10 +245,11 @@ the input supplies enough independently bounded evidence to admit an edge, such 
   combined with another qualifying identity signal; or
 - an explicit rule alias, still combined with qualifying path and context evidence.
 
-This is the supported claim boundary, not a proof that every current edge obeys it. Open issues #20
-and #21 show that collided context can survive a conflicting context channel and that a code-flow
-anchor can admit an edge without independent identity. Those paths fall outside the endorsed
-profile and help keep the pre-release build blocked.
+Matcher v3.2 turns two review findings into explicit implementation boundaries: conflicting context
+vetoes collided or weak admission, and code-flow anchors cannot admit an edge and can rank only when
+unique on both input sides. Issues #20 and #21 remain open until exact-head hosted evidence confirms
+those changes; the release remains blocked independently by PMD recall and the other readiness
+findings.
 
 `--repo` and configuration `repoRoot` bind both inputs to one shared root. The experiment did
 **not** establish that independently supplied baseline and candidate roots satisfy the production

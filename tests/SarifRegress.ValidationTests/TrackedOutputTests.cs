@@ -16,39 +16,64 @@ public sealed class TrackedOutputTests
         "producerInputTreeSha256",
     ];
 
-    [Theory]
-    [InlineData(
-        "sarif-regress-holdout.json",
-        "sarif-regress-holdout-report.schema.json")]
-    [InlineData(
-        "sarif-multitool-baseline.json",
-        "sarif-multitool-baseline-report.schema.json")]
-    [InlineData(
-        "comparison-summary.json",
-        "comparison-summary.schema.json")]
-    [InlineData(
-        "v3-to-v3.1-delta.json",
-        "v3-to-v3.1-delta.schema.json")]
-    public void Tracked_normalized_output_is_schema_valid_and_free_of_ambient_data(
-        string reportName,
-        string schemaName)
+    [Fact]
+    public void Tracked_normalized_outputs_use_the_schema_for_the_explicit_evidence_stage()
     {
         string root = ValidationTestRepository.FindRoot();
-        string reportPath = Path.Combine(
-            root,
-            "validation",
-            "expected",
-            reportName);
-        byte[] bytes = File.ReadAllBytes(reportPath);
+        HoldoutInterpretationErratumSnapshot interpretation =
+            new HoldoutInterpretationErratumReader().Read(root);
+        bool candidateUnbound = string.Equals(
+            interpretation.CurrentReportBindingStatus,
+            "candidate-unbound",
+            StringComparison.Ordinal);
+        string schemaRoot = candidateUnbound
+            ? Path.Combine(
+                root,
+                "validation",
+                "history",
+                "matcher-v3.1",
+                "schemas")
+            : Path.Combine(root, "validation", "schemas");
+        (string ReportName, string SchemaName)[] schemaChecks = candidateUnbound
+            ? [
+                (
+                    "sarif-regress-holdout.json",
+                    "sarif-regress-holdout-report.schema.json"),
+                (
+                    "sarif-multitool-baseline.json",
+                    "sarif-multitool-baseline-report.schema.json"),
+                ("comparison-summary.json", "comparison-summary.schema.json"),
+                ("v3-to-v3.1-delta.json", "v3-to-v3.1-delta.schema.json"),
+            ]
+            : [
+                (
+                    "sarif-regress-holdout.json",
+                    "sarif-regress-holdout-report.schema.json"),
+                (
+                    "sarif-multitool-baseline.json",
+                    "sarif-multitool-baseline-report.schema.json"),
+                ("comparison-summary.json", "comparison-summary.schema.json"),
+                ("v3.1-to-v3.2-delta.json", "v3.1-to-v3.2-delta.schema.json"),
+            ];
 
-        _ = new JsonSchemaValidator().ValidateFile(
-            Path.Combine(root, "validation", "schemas", schemaName),
-            reportPath,
-            ValidationLimits.Default.MaximumSarifBytes);
-        AmbientDataGuard.Validate(bytes, root);
-        Assert.Equal((byte)'\n', bytes[^1]);
-        Assert.DoesNotContain((byte)'\r', bytes);
-        Assert.NotEqual(0xEF, bytes[0]);
+        foreach ((string reportName, string schemaName) in schemaChecks)
+        {
+            string reportPath = Path.Combine(
+                root,
+                "validation",
+                "expected",
+                reportName);
+            byte[] bytes = File.ReadAllBytes(reportPath);
+
+            _ = new JsonSchemaValidator().ValidateFile(
+                Path.Combine(schemaRoot, schemaName),
+                reportPath,
+                ValidationLimits.Default.MaximumSarifBytes);
+            AmbientDataGuard.Validate(bytes, root);
+            Assert.Equal((byte)'\n', bytes[^1]);
+            Assert.DoesNotContain((byte)'\r', bytes);
+            Assert.NotEqual(0xEF, bytes[0]);
+        }
     }
 
     [Fact]
@@ -158,18 +183,40 @@ public sealed class TrackedOutputTests
             root,
             "validation",
             "expected");
-        string[] checksummedPaths =
-        [
-            "validation/expected/comparison-summary.json",
-            "validation/expected/sarif-multitool-baseline.json",
-            "validation/expected/sarif-regress-holdout.json",
-            "validation/expected/v3-to-v3.1-delta.json",
-            "validation/history/matcher-v3/checksums.sha256",
-            "validation/history/matcher-v3/sarif-regress-holdout.json",
-            "validation/holdout/cross-platform-attestation.json",
-            "validation/holdout/evaluation-metadata.json",
-            "validation/holdout/manifest.json",
-        ];
+        HoldoutInterpretationErratumSnapshot interpretation =
+            new HoldoutInterpretationErratumReader().Read(root);
+        string[] checksummedPaths = string.Equals(
+            interpretation.CurrentReportBindingStatus,
+            "candidate-unbound",
+            StringComparison.Ordinal)
+            ? [
+                "validation/expected/comparison-summary.json",
+                "validation/expected/sarif-multitool-baseline.json",
+                "validation/expected/sarif-regress-holdout.json",
+                "validation/expected/v3-to-v3.1-delta.json",
+                "validation/history/matcher-v3/checksums.sha256",
+                "validation/history/matcher-v3/sarif-regress-holdout.json",
+                "validation/holdout/cross-platform-attestation.json",
+                "validation/holdout/evaluation-metadata.json",
+                "validation/holdout/interpretation-erratum.checksums.sha256",
+                "validation/holdout/interpretation-erratum.json",
+                "validation/holdout/manifest.json",
+                "validation/schemas/interpretation-erratum.schema.json",
+            ]
+            : [
+                "validation/expected/comparison-summary.json",
+                "validation/expected/sarif-multitool-baseline.json",
+                "validation/expected/sarif-regress-holdout.json",
+                "validation/expected/v3.1-to-v3.2-delta.json",
+                "validation/history/matcher-v3.1/checksums.sha256",
+                "validation/history/matcher-v3.1/sarif-regress-holdout.json",
+                "validation/holdout/cross-platform-attestation.json",
+                "validation/holdout/evaluation-metadata.json",
+                "validation/holdout/interpretation-erratum.checksums.sha256",
+                "validation/holdout/interpretation-erratum.json",
+                "validation/holdout/manifest.json",
+                "validation/schemas/interpretation-erratum.schema.json",
+            ];
         byte[] manifest = File.ReadAllBytes(Path.Combine(
             expectedRoot,
             "checksums.sha256"));

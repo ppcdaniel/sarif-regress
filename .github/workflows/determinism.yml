@@ -410,14 +410,6 @@ jobs:
                   "utf-8"
               )
           )
-          expected_projection = (
-              research
-              / "expected"
-              / "projections"
-              / "sparse-experiment-determinism-projection.json"
-          )
-          if projection_path.read_bytes() != expected_projection.read_bytes():
-              raise SystemExit("Committed sparse determinism projection differs.")
           files = sorted(
               path for path in verified.iterdir()
               if path.is_file() and path.name != "checksums.sha256"
@@ -429,6 +421,23 @@ jobs:
               ).encode("ascii")
           )
           PY
+
+      - name: Upload sparse determinism projection candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-determinism-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Verify committed sparse determinism projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-determinism-projection.json \
+            validation/research/sparse-sarif/expected/projections/sparse-experiment-determinism-projection.json
 
       - name: Upload verified cross-platform report
         id: upload-verified-determinism

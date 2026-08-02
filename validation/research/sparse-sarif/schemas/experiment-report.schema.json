@@ -890,7 +890,9 @@
       "additionalProperties": false,
       "required": [
         "firstOutputSha256",
-        "secondOutputSha256"
+        "secondOutputSha256",
+        "artifactPath",
+        "artifactSha256"
       ],
       "properties": {
         "firstOutputSha256": {
@@ -919,7 +921,9 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "byteIdentical"
+        "byteIdentical",
+        "artifactPath",
+        "artifactSha256"
       ],
       "properties": {
         "byteIdentical": {
@@ -956,7 +960,9 @@
         "configuredAssignmentComponentLimit",
         "boundedRefusalObserved",
         "runtimeBudgetEnforced",
-        "withinDocumentedLimits"
+        "withinDocumentedLimits",
+        "artifactPath",
+        "artifactSha256"
       ],
       "properties": {
         "operatingSystem": {
@@ -1125,7 +1131,9 @@
             "metrics",
             "byProducer",
             "ingestionFailures",
-            "structuralFailures"
+            "structuralFailures",
+            "reportPath",
+            "reportSha256"
           ],
           "properties": {
             "reportPath": {
@@ -1212,7 +1220,9 @@
           "required": [
             "passed",
             "regressions",
-            "silentlyMatchedAmbiguity"
+            "silentlyMatchedAmbiguity",
+            "reportPath",
+            "reportSha256"
           ],
           "properties": {
             "reportPath": {
@@ -1592,7 +1602,9 @@
           "required": [
             "withinDocumentedLimits",
             "sourceContextProjectionBenchmarked",
-            "cells"
+            "cells",
+            "evidencePath",
+            "evidenceSha256"
           ],
           "properties": {
             "withinDocumentedLimits": {

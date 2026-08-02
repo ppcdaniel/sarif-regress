@@ -4,21 +4,25 @@ Audit date: 2026-08-02
 
 Planned version: `0.1.0`
 
-Product matcher: `sarifregress/matcher/v3.1`
+Product matcher: `sarifregress/matcher/v3.2`
 
 Recommendation: **blocked; do not tag, publish, or create a release**
 
 This document is the release decision record, not a claim that the current branch has been
-released. It distinguishes the frozen independent matcher-v2 baseline from matcher-v3/v3.1 results
+released. It distinguishes the frozen independent matcher-v2 baseline from matcher-v3/v3.1/v3.2 results
 obtained after that holdout had informed implementation. The latter are valid exposed-holdout
-regression evidence, but are not a second independent validation.
+regression evidence, but are not a second independent validation. The
+[machine-readable interpretation erratum](../validation/holdout/interpretation-erratum.json)
+binds that qualification to the exact v2, v3, and v3.1 report bytes and refuses to treat an unbound
+v3.2 candidate as release evidence.
 
 ## Evidence snapshot
 
-The current product and checked-in reports use .NET SDK `10.0.302`, configuration schema `1`,
-output schema `1`, derived fingerprint `rule-path-context/v2`, and matcher
-`sarifregress/matcher/v3.1`. The 75-relationship holdout labels and quality thresholds were not
-changed.
+The current product uses .NET SDK `10.0.302`, configuration schema `1`, output schema `1`, derived
+fingerprint `rule-path-context/v2`, and matcher `sarifregress/matcher/v3.2`. Until fail-closed
+promotion completes, the last bound checked-in reports remain matcher v3.1 and the interpretation
+erratum marks v3.2 `candidate-unbound`. The 75-relationship holdout labels and quality thresholds
+were not changed.
 
 | Dataset | TP | FP | FN | Precision | Recall | F1 | Interpretation |
 |---|---:|---:|---:|---:|---:|---:|---|
@@ -70,7 +74,7 @@ nor resource evidence was falsified.
 
 ## Supported evidence profile
 
-The endorsed v3.1 evidence profile is conservative and intended for same-producer-family
+The endorsed v3.2 evidence profile is conservative and intended for same-producer-family
 comparisons. A correspondence is supported as a release claim when the input supplies enough
 independently bounded evidence to admit an edge, such as:
 
@@ -82,15 +86,15 @@ independently bounded evidence to admit an edge, such as:
 - an explicit rule alias for cross-producer rule identity, still combined with qualifying path and
   context evidence.
 
-This profile is not yet a complete implementation invariant. Open issues #20 and #21 show that
-collided context can survive conflicting context and that a code-flow anchor can admit an edge
-without independent identity. Those cases fall outside the endorsed profile and are a reason the
-pre-release build remains blocked.
+Matcher v3.2 makes this profile an implementation invariant for the two previously open gaps:
+conflicting context vetoes collided or weak admission, and code-flow anchors cannot admit edges and
+rank only when unique on both sides. Issues #20 and #21 remain open until exact-head hosted evidence
+confirms the revision on both operating systems.
 
 `--repo` and configuration `repoRoot` bind both inputs to one shared root. Independently supplied
 baseline and candidate roots could become a supported evidence source only after a future design
 passes the fixed security, determinism, resource, precision, and recall gates. They are not shipped
-in v3.1.
+in v3.2.
 
 The unsupported SARIF-only profile has all of these properties:
 
@@ -110,17 +114,22 @@ continuity proof.
 | CLI commands | `compare`, `validate`, `canonicalise`, `corpus run`, `bench` | No command removed; exit codes `0`, `1`, `3`, and `4` retained; `2` reserved |
 | Repository option | shared `--repo` only | Backward compatible; no side-specific options shipped |
 | Configuration | schema `1` | Reader/schema remain version 1, but `uriBaseMappings` added behavior to the existing version; document this pre-release compatibility limitation |
-| Stable comparison JSON | output schema `1` | No field removal or reinterpretation claimed |
+| Product comparison JSON | output schema `1` | No field removal or reinterpretation claimed |
+| Holdout validation report | evidence schema `3` | Exposed-holdout report kind; historical v2/v3/v3.1 schema-2 bytes are frozen |
+| External comparison summary | evidence schema `4` | v3.1 and v3.1-to-v3.2 hashes replace schema-3 fields; historical schema-3 bytes are frozen |
+| Cross-platform attestation | evidence schema `4` | Workflow and coordinator conclusions are recorded separately |
 | Product version | `0.1.0` | Unreleased |
 | Matcher v2 | `sarifregress/matcher/v2` | Frozen independent baseline: `0/0/75` |
 | Matcher v3 | `sarifregress/matcher/v3` | Exposed-holdout regression: `50/0/25`, five Gitleaks classification mismatches |
 | Matcher v3.1 | `sarifregress/matcher/v3.1` | Same correspondence metrics; zero classification mismatches |
+| Matcher v3.2 | `sarifregress/matcher/v3.2` | Precision-preserving context-conflict and code-flow admission safety revision; promotion is fail-closed |
 | Matcher v4 | absent | Correct outcome of failed fixed gates |
 
 Current matching evidence identifiers include `sarifregress/rule-identity/v2`,
 `sarifregress/rule-alias/v2`, `sarifregress/derived-fingerprint-compare/v2`,
-`sarifregress/context-evidence/v2`, `sarifregress/evidence-occurrence/v1`, and the v3.1
-classification explanation `sarifregress/message-location-template/v1`. Historical reports retain
+`sarifregress/context-evidence/v2`, `sarifregress/evidence-occurrence/v1`, the v3.1
+classification explanation `sarifregress/message-location-template/v1`, and the v3.2
+`sarifregress/code-flow-occurrence/v1` degradation record. Historical reports retain
 the identifiers that were current when their bytes were frozen.
 
 ## Build, package, and reproducibility audit
@@ -141,6 +150,14 @@ still requires its own connector-confirmed workflow disposition.
 Issues #14 (exact-head workflow execution) and #29 (volatile resource projection) were closed on
 that exact head and those runs. Issues #27 and #28 remain open for composite evidence promotion;
 their status does not invalidate the individually authenticated role evidence described above.
+
+Matcher-v3.2 promotion is deliberately two-stage. The first failed workflow authenticates the
+unbound report bytes and records the failed workflow separately from its successful coordinator.
+After those bytes are hash-bound, the second failed workflow regenerates the real attested
+comparison/checksum bytes on Ubuntu and Windows. Only a subsequent strict run with the promoted
+stage-2 bytes can produce the normal reusable-workflow artifact consumed by the release gate. Every
+download is by upload output ID and is checked against its expected name, archive digest, current run,
+and exact head through the Actions artifact API. Neither bootstrap stage is release evidence.
 
 After running a package script, the intended source-tree installation check is:
 
@@ -221,10 +238,10 @@ checks, bounded explanations, escaped JSON/HTML, an offline Content Security Pol
 multi-output writes, safe capture archive extraction, immutable Action pins, and least-privilege
 workflow defaults.
 
-The security claims must remain qualified by these unresolved findings:
+The security claims must remain qualified by these unresolved or not-yet-verified findings:
 
-- collided context can be admitted despite another context conflict (#20);
-- a shared code-flow anchor can act as primary identity without independent evidence (#21);
+- matcher-v3.2 context-conflict and code-flow admission fixes still need exact-head hosted closure
+  evidence (#20 and #21);
 - candidate edges are fully materialised before the retained-edge cap (#22);
 - repository roots are reopened by path rather than held as one immutable directory identity;
 - `corpus run --json-out` can target an input under the corpus root;
@@ -247,16 +264,17 @@ not treated as closed evidence until its acceptance criteria and final exact-hea
 | #7 / PR #8 | Independent holdout infrastructure remains an open, unmerged draft stack dependency |
 | #11 / #12 / PR #13 | Sparse SARIF remains unsupported; aggregate and PMD recall miss fixed gates; the matcher work remains draft and unmerged |
 | PR #23 | Nightly hardening, release audit, and limitation evidence remain draft and unmerged |
-| #16 | Current claims must distinguish independent v2 from exposed v3/v3.1 evidence |
+| #16 | Claim wording is corrected and hash-bound; exact-head closure evidence remains pending |
 | #17 | Owner-specific disposition for validation dependency maintenance terms is absent |
 | #18 | Release bundle and package do not contain verified project/runtime/dependency notices |
-| #19 | Tagged release workflow does not enforce authenticated holdout `releaseRecommendation` |
-| #20 | Conflicting context does not veto collision-only admission |
-| #21 | Code-flow anchors can admit identity without an independent signal |
+| #19 | Authenticated release gating is implemented; exact-head hosted refusal/acceptance evidence remains pending |
+| #20 | Matcher-v3.2 context-conflict veto is implemented; exact-head hosted closure evidence remains pending |
+| #21 | Matcher-v3.2 makes code flow ranking-only and occurrence-aware; exact-head hosted closure evidence remains pending |
 | #22 | Global candidate-edge memory behavior is not bounded before object materialisation |
 | #25 | Sparse decision/evidence gate tracking remains open; no v4 may be authorised |
 | #27 | Composite evidence needs an explicit full-resource-to-stable-projection derivation and cross-binding |
 | #28 | Composite validation incorrectly requires source preflight for the SARIF-only control |
+| #30 | Validation schema compatibility fix is implemented; exact-head CI and both promotion stages remain pending |
 
 The untracked Medium findings listed in the adversarial review also require release disposition:
 lifecycle metric naming, vacuous precision, repository-root lifetime, corpus output/input aliasing,

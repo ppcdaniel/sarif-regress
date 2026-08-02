@@ -128,6 +128,10 @@ EXPERIMENT_VARIANT_IDS: Final = (
     "relative-context",
     "agreement-only-combination",
 )
+EXPERIMENT_VARIANT_USES_SOURCE_CONTEXT: Final = {
+    variant_id: variant_id != "sarif-only-control"
+    for variant_id in EXPERIMENT_VARIANT_IDS
+}
 EXPERIMENT_SCENARIO_IDS: Final = (
     "exact-unchanged-source-location",
     "region-drift-equivalent-token-context",
@@ -142,6 +146,7 @@ EXPERIMENT_SCENARIO_IDS: Final = (
 )
 FAIL_CLOSED_SCENARIOS: Final = frozenset(EXPERIMENT_SCENARIO_IDS[4:9])
 MAX_EXPERIMENT_CANDIDATE_EDGES: Final = 1_000_000
+MAX_EXPERIMENT_CANDIDATE_PAIRS_PER_FINDING: Final = 256
 MAX_EXPERIMENT_COMPONENT_SIZE: Final = 12
 RESOURCE_RUNTIME_BUDGETS: Final = {
     1_000: (10_000, 512 * 1024 * 1024),
@@ -157,6 +162,9 @@ RESOURCE_CELL_KEYS: Final = tuple(
 EXPERIMENT_REPORT_SCHEMA_VERSION: Final = "2"
 EXPERIMENT_OBSERVATIONS_KIND: Final = "sparse-experiment-observations/v1"
 EXPERIMENT_GATES_KIND: Final = "sparse-experiment-gates/v1"
+EXPERIMENT_RESOURCE_OBSERVATIONS_KIND: Final = (
+    "sparse-experiment-resource-observations/v1"
+)
 EXPERIMENT_IMPLEMENTATION_KIND: Final = (
     "sparse-experiment-implementation-manifest/v1"
 )
@@ -326,6 +334,7 @@ class Scanner:
             self._add("MANIFEST001", "manifest.json", "missing or invalid manifest object")
             return self._ordered_findings()
         self._scan_integrity(manifest)
+        self._scan_implementation_manifest_preflight()
         self._scan_manifest(manifest)
         return self._ordered_findings()
 
@@ -3403,6 +3412,15 @@ class Scanner:
         assert isinstance(projection_path, str)
         projection = self.json_documents.get(projection_path)
         expected_kind = EXPERIMENT_SUPPORTING_PROJECTION_KINDS.get(role)
+        projected_variants = document.get("variants")
+        if role == "resources":
+            projected_variants = self._derive_resource_projection_variants_v1(
+                report_path,
+                evidence_path,
+                document,
+            )
+            if projected_variants is None:
+                return False
         expected_projection = {
             "schemaVersion": "1",
             "kind": expected_kind,
@@ -3410,7 +3428,7 @@ class Scanner:
             "implementationManifestSha256": document.get(
                 "implementationManifestSha256"
             ),
-            "variants": document.get("variants"),
+            "variants": projected_variants,
         }
         if not isinstance(projection, dict) or projection != expected_projection:
             self._add(
@@ -3420,6 +3438,143 @@ class Scanner:
             )
             return False
         return True
+
+    def _derive_resource_projection_variants_v1(
+        self,
+        report_path: str,
+        evidence_path: str,
+        document: Mapping[str, object],
+    ) -> list[dict[str, object]] | None:
+        """Derive the stable v1 projection from full volatile resource evidence."""
+
+        variants = document.get("variants")
+        if not isinstance(variants, list):
+            return None
+
+        projected: list[dict[str, object]] = []
+        for index, variant in enumerate(variants):
+            if not isinstance(variant, dict) or not isinstance(
+                variant.get("id"), str
+            ):
+                return None
+            value = variant.get("value")
+            if not isinstance(value, dict):
+                return None
+            if not self._resource_observations_are_cross_bound_v1(
+                report_path,
+                evidence_path,
+                document,
+                value,
+                index,
+            ):
+                return None
+            projected.append(
+                {
+                    "id": variant["id"],
+                    "value": {
+                        "withinDocumentedLimits": value.get(
+                            "withinDocumentedLimits"
+                        ),
+                        "sourceContextProjectionBenchmarked": value.get(
+                            "sourceContextProjectionBenchmarked"
+                        ),
+                        "evidencePath": value.get("evidencePath"),
+                        "evidenceSha256": value.get("evidenceSha256"),
+                    },
+                }
+            )
+        return projected
+
+    def _resource_observations_are_cross_bound_v1(
+        self,
+        report_path: str,
+        supporting_evidence_path: str,
+        document: Mapping[str, object],
+        value: Mapping[str, object],
+        variant_index: int,
+    ) -> bool:
+        """Bind a full resource matrix to its deterministic structural subset."""
+
+        if Scanner._resource_matrix_passes(value) is None:
+            return False
+        observations_path = value.get("evidencePath")
+        if observations_path == supporting_evidence_path or not self._evidence_reference_bound(
+            report_path,
+            f"resource variant {variant_index} structural observations",
+            value,
+            "evidencePath",
+            "evidenceSha256",
+        ):
+            return False
+        assert isinstance(observations_path, str)
+        cells = value.get("cells")
+        if not isinstance(cells, list):
+            return False
+        projected_cells = Scanner._project_resource_observation_cells_v1(cells)
+        expected = {
+            "schemaVersion": "1",
+            "kind": EXPERIMENT_RESOURCE_OBSERVATIONS_KIND,
+            "corpusManifestSha256": document.get("corpusManifestSha256"),
+            "implementationManifestSha256": document.get(
+                "implementationManifestSha256"
+            ),
+            "cells": projected_cells,
+        }
+        if self.json_documents.get(observations_path) != expected:
+            self._add(
+                "EXPERIMENT029",
+                report_path,
+                "resource structural observations are not the deterministic "
+                "v1 projection of full evidence",
+            )
+            return False
+        return True
+
+    @staticmethod
+    def _project_resource_observation_cells_v1(
+        cells: list[object],
+    ) -> list[dict[str, object]]:
+        """Project volatile resource cells onto reproducible structural fields."""
+
+        projected: list[dict[str, object]] = []
+        for cell in cells:
+            assert isinstance(cell, dict)
+            finding_count = cell["findingCount"]
+            assert isinstance(finding_count, int)
+            refused = cell["boundedRefusalObserved"]
+            assert isinstance(refused, bool)
+            observed_component_size = (
+                2 * finding_count if refused else cell["maximumComponentSize"]
+            )
+            projected.append(
+                {
+                    "operatingSystem": cell["operatingSystem"],
+                    "findingCount": finding_count,
+                    "dataset": cell["dataset"],
+                    "candidateEdges": cell["candidateEdges"],
+                    "observedMaximumComponentFindingCount": (
+                        observed_component_size
+                    ),
+                    "maximumAdmittedAssignmentComponentSize": cell[
+                        "maximumComponentSize"
+                    ],
+                    "configuredCandidatePairsPerFindingLimit": (
+                        MAX_EXPERIMENT_CANDIDATE_PAIRS_PER_FINDING
+                    ),
+                    "configuredCandidatePairLimit": cell[
+                        "configuredCandidatePairLimit"
+                    ],
+                    "configuredAssignmentComponentLimit": cell[
+                        "configuredAssignmentComponentLimit"
+                    ],
+                    "boundedRefusalObserved": refused,
+                    "runtimeBudgetEnforced": cell["runtimeBudgetEnforced"],
+                    "withinDocumentedLimits": cell[
+                        "withinDocumentedLimits"
+                    ],
+                }
+            )
+        return projected
 
     def _supporting_artifact_references_are_valid(
         self,
@@ -3472,7 +3627,7 @@ class Scanner:
                         for cell_index, cell in enumerate(cells)
                     )
         return all(
-            self._optional_experiment_reference_is_valid(
+            self._required_experiment_reference_is_valid(
                 report_path,
                 owner,
                 value,
@@ -3482,7 +3637,7 @@ class Scanner:
             for owner, value, path_key, hash_key in references
         )
 
-    def _optional_experiment_reference_is_valid(
+    def _required_experiment_reference_is_valid(
         self,
         report_path: str,
         owner: str,
@@ -3492,8 +3647,6 @@ class Scanner:
     ) -> bool:
         if not isinstance(value, dict):
             return False
-        if value.get(path_key) is None and value.get(hash_key) is None:
-            return True
         return self._evidence_reference_bound(
             report_path,
             owner,
@@ -3534,6 +3687,18 @@ class Scanner:
             if payload is None or hashlib.sha256(payload).hexdigest() != digest:
                 return False
         return True
+
+    def _scan_implementation_manifest_preflight(self) -> None:
+        relative = "experiment-implementation-manifest.json"
+        document = self.json_documents.get(relative)
+        if not isinstance(document, dict) or not self._implementation_manifest_is_valid(
+            document
+        ):
+            self._add(
+                "EXPERIMENT022",
+                relative,
+                "implementation manifest is missing, hash-invalid, or has the wrong typed contract",
+            )
 
     def _expected_implementation_paths(self) -> list[str] | None:
         paths = list(EXPERIMENT_IMPLEMENTATION_ROOT_FILES)
@@ -4255,6 +4420,7 @@ class Scanner:
     def _computed_gate_bindings(
         variant: Mapping[str, object],
     ) -> dict[str, object] | None:
+        variant_id = variant.get("id")
         metrics = variant.get("metrics")
         pmd = metrics.get("aggregate") if isinstance(metrics, dict) else None
         families = metrics.get("byFamily") if isinstance(metrics, dict) else None
@@ -4307,13 +4473,22 @@ class Scanner:
             or type(production.get("corpusSpecificPreflightRequired")) is not bool
         ):
             return None
-        corpus_specific_preflight_required = not (
+        consumes_source_context = EXPERIMENT_VARIANT_USES_SOURCE_CONTEXT.get(
+            variant_id,
+            True,
+        )
+        no_hash_environment_safe = (
             no_hash_evidence["passed"] is True
             and no_hash_evidence["sourceSideLeakage"] == 0
             and no_hash_evidence["containmentViolations"] == 0
             and no_hash_evidence["rootConfusions"] == 0
             and no_hash_evidence["unexplainedIngestionFailures"] == 0
             and no_hash_evidence["structuralFailures"] == 0
+        )
+        if not consumes_source_context and not no_hash_environment_safe:
+            return None
+        corpus_specific_preflight_required = consumes_source_context and not (
+            no_hash_environment_safe
             and float(no_hash_metrics["precision"]) >= 0.95
             and float(no_hash_metrics["recall"]) >= 0.8
         )

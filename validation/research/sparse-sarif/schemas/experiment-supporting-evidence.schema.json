@@ -214,7 +214,7 @@
     "holdout": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["relationshipCount", "metrics", "byProducer", "ingestionFailures", "structuralFailures"],
+      "required": ["relationshipCount", "metrics", "byProducer", "ingestionFailures", "structuralFailures", "reportPath", "reportSha256"],
       "properties": {
         "relationshipCount": { "const": 75 },
         "metrics": { "$ref": "#/$defs/metrics" },
@@ -242,7 +242,7 @@
     "development": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["passed", "regressions", "silentlyMatchedAmbiguity"],
+      "required": ["passed", "regressions", "silentlyMatchedAmbiguity", "reportPath", "reportSha256"],
       "properties": {
         "passed": { "type": "boolean" },
         "regressions": { "$ref": "#/$defs/count" },
@@ -266,7 +266,7 @@
     },
     "artifactReference": {
       "type": "object",
-      "required": ["firstOutputSha256", "secondOutputSha256"],
+      "required": ["firstOutputSha256", "secondOutputSha256", "artifactPath", "artifactSha256"],
       "properties": {
         "firstOutputSha256": { "$ref": "#/$defs/sha256" },
         "secondOutputSha256": { "$ref": "#/$defs/sha256" },
@@ -282,7 +282,7 @@
     "comparison": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["byteIdentical"],
+      "required": ["byteIdentical", "artifactPath", "artifactSha256"],
       "properties": {
         "byteIdentical": { "type": "boolean" },
         "artifactPath": { "$ref": "#/$defs/relativePath" },
@@ -308,7 +308,7 @@
     "resourceCell": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["operatingSystem", "findingCount", "dataset", "candidateEdges", "maximumComponentSize", "elapsedMilliseconds", "peakWorkingSetBytes", "configuredCandidatePairLimit", "configuredAssignmentComponentLimit", "boundedRefusalObserved", "runtimeBudgetEnforced", "withinDocumentedLimits"],
+      "required": ["operatingSystem", "findingCount", "dataset", "candidateEdges", "maximumComponentSize", "elapsedMilliseconds", "peakWorkingSetBytes", "configuredCandidatePairLimit", "configuredAssignmentComponentLimit", "boundedRefusalObserved", "runtimeBudgetEnforced", "withinDocumentedLimits", "artifactPath", "artifactSha256"],
       "properties": {
         "operatingSystem": { "enum": ["ubuntu", "windows"] },
         "findingCount": { "enum": [1000, 10000, 100000] },
@@ -338,7 +338,7 @@
     "resourceEvidence": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["withinDocumentedLimits", "sourceContextProjectionBenchmarked", "cells"],
+      "required": ["withinDocumentedLimits", "sourceContextProjectionBenchmarked", "cells", "evidencePath", "evidenceSha256"],
       "properties": {
         "withinDocumentedLimits": { "type": "boolean" },
         "sourceContextProjectionBenchmarked": { "type": "boolean" },

@@ -48,6 +48,84 @@ public sealed class CrossPlatformAttestationTests
         }
     }
 
+    [Fact]
+    public void Reader_accepts_exact_head_bootstrap_artifact_names()
+    {
+        string root = CreateRepository();
+        try
+        {
+            JsonObject document = CreateDocument();
+            JsonObject artifacts = document["artifacts"]!.AsObject();
+            artifacts["linux"]!.AsObject()["name"] =
+                $"holdout-v3.2-candidate-linux-{WorkflowHead}";
+            artifacts["windows"]!.AsObject()["name"] =
+                $"holdout-v3.2-candidate-windows-{WorkflowHead}";
+            document["githubActions"]!.AsObject()["workflowConclusion"] =
+                "failure";
+            string path = WriteAttestation(root, document);
+
+            _ = new CrossPlatformAttestationReader().Read(
+                root,
+                path,
+                CreateExpectation());
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Reader_rejects_bootstrap_artifacts_that_claim_workflow_success()
+    {
+        string root = CreateRepository();
+        try
+        {
+            JsonObject document = CreateDocument();
+            JsonObject artifacts = document["artifacts"]!.AsObject();
+            artifacts["linux"]!.AsObject()["name"] =
+                $"holdout-v3.2-candidate-linux-{WorkflowHead}";
+            artifacts["windows"]!.AsObject()["name"] =
+                $"holdout-v3.2-candidate-windows-{WorkflowHead}";
+            string path = WriteAttestation(root, document);
+
+            Assert.Throws<InvalidDataException>(() =>
+                new CrossPlatformAttestationReader().Read(
+                    root,
+                    path,
+                    CreateExpectation()));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Reader_schema_rejects_legacy_undifferentiated_conclusion()
+    {
+        string root = CreateRepository();
+        try
+        {
+            JsonObject document = CreateDocument();
+            JsonObject actions = document["githubActions"]!.AsObject();
+            _ = actions.Remove("workflowConclusion");
+            _ = actions.Remove("coordinatorJobConclusion");
+            actions["conclusion"] = "success";
+            string path = WriteAttestation(root, document);
+
+            Assert.Throws<InvalidDataException>(() =>
+                new CrossPlatformAttestationReader().Read(
+                    root,
+                    path,
+                    CreateExpectation()));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     [Theory]
     [InlineData("frozen-commit")]
     [InlineData("manifest")]
@@ -59,7 +137,9 @@ public sealed class CrossPlatformAttestationTests
     [InlineData("run-url")]
     [InlineData("workflow-head")]
     [InlineData("workflow-conclusion")]
+    [InlineData("coordinator-conclusion")]
     [InlineData("coordinator-job")]
+    [InlineData("candidate-artifact-name")]
     [InlineData("duplicate-artifact-id")]
     [InlineData("zero-archive-digest")]
     [InlineData("delta-byte-identity")]
@@ -114,15 +194,15 @@ public sealed class CrossPlatformAttestationTests
     }
 
     [Fact]
-    public void Reader_schema_rejects_obsolete_v2_to_v3_delta_names()
+    public void Reader_schema_rejects_obsolete_v3_to_v31_delta_names()
     {
         string root = CreateRepository();
         try
         {
             JsonObject document = CreateDocument();
             JsonObject byteIdentity = document["byteIdentity"]!.AsObject();
-            byteIdentity["v2ToV3Delta"] = byteIdentity["v3ToV31Delta"]!.DeepClone();
-            _ = byteIdentity.Remove("v3ToV31Delta");
+            byteIdentity["v3ToV31Delta"] = byteIdentity["v31ToV32Delta"]!.DeepClone();
+            _ = byteIdentity.Remove("v31ToV32Delta");
             RenameDeltaDigest(document["baseReports"]!.AsObject());
             JsonObject artifacts = document["artifacts"]!.AsObject();
             RenameDeltaDigest(
@@ -149,9 +229,9 @@ public sealed class CrossPlatformAttestationTests
 
         static void RenameDeltaDigest(JsonObject digests)
         {
-            digests["v2ToV3DeltaSha256"] =
-                digests["v3ToV31DeltaSha256"]!.DeepClone();
-            _ = digests.Remove("v3ToV31DeltaSha256");
+            digests["v3ToV31DeltaSha256"] =
+                digests["v31ToV32DeltaSha256"]!.DeepClone();
+            _ = digests.Remove("v31ToV32DeltaSha256");
         }
     }
 
@@ -218,7 +298,7 @@ public sealed class CrossPlatformAttestationTests
 
     private static JsonObject CreateDocument() => new()
     {
-        ["schemaVersion"] = "3",
+        ["schemaVersion"] = "4",
         ["repository"] = "ppcdaniel/sarif-regress",
         ["repositoryCommitSha"] = FrozenCommit,
         ["holdoutManifestSha256"] = ManifestSha,
@@ -233,7 +313,8 @@ public sealed class CrossPlatformAttestationTests
                 "https://github.com/ppcdaniel/sarif-regress/actions/runs/"
                 + "30654077180"),
             ["workflowHeadSha"] = WorkflowHead,
-            ["conclusion"] = "success",
+            ["workflowConclusion"] = "success",
+            ["coordinatorJobConclusion"] = "success",
             ["coordinatorJobName"] =
                 "Compare Linux and Windows normalized bytes",
         },
@@ -252,7 +333,7 @@ public sealed class CrossPlatformAttestationTests
         {
             ["sarifRegressHoldout"] = true,
             ["sarifMultitoolBaseline"] = true,
-            ["v3ToV31Delta"] = true,
+            ["v31ToV32Delta"] = true,
         },
     };
 
@@ -271,7 +352,7 @@ public sealed class CrossPlatformAttestationTests
     {
         ["sarifRegressHoldoutSha256"] = SarifRegressSha,
         ["sarifMultitoolBaselineSha256"] = MultitoolSha,
-        ["v3ToV31DeltaSha256"] = DeltaSha,
+        ["v31ToV32DeltaSha256"] = DeltaSha,
     };
 
     private static void Mutate(JsonObject document, string mutation)
@@ -304,7 +385,7 @@ public sealed class CrossPlatformAttestationTests
                     SarifRegressSha;
                 break;
             case "linux-delta":
-                linux["reportDigests"]!.AsObject()["v3ToV31DeltaSha256"] =
+                linux["reportDigests"]!.AsObject()["v31ToV32DeltaSha256"] =
                     MultitoolSha;
                 break;
             case "run-url":
@@ -315,10 +396,19 @@ public sealed class CrossPlatformAttestationTests
                 actions["workflowHeadSha"] = new string('0', 40);
                 break;
             case "workflow-conclusion":
-                actions["conclusion"] = "failure";
+                actions["workflowConclusion"] = "failure";
+                break;
+            case "coordinator-conclusion":
+                actions["coordinatorJobConclusion"] = "failure";
                 break;
             case "coordinator-job":
                 actions["coordinatorJobName"] = "compare";
+                break;
+            case "candidate-artifact-name":
+                linux["name"] =
+                    $"holdout-v3.2-candidate-linux-{FrozenCommit}";
+                windows["name"] =
+                    $"holdout-v3.2-candidate-windows-{FrozenCommit}";
                 break;
             case "duplicate-artifact-id":
                 windows["artifactId"] = linux["artifactId"]!.GetValue<long>();
@@ -327,7 +417,7 @@ public sealed class CrossPlatformAttestationTests
                 linux["archiveSha256"] = new string('0', 64);
                 break;
             case "delta-byte-identity":
-                document["byteIdentity"]!.AsObject()["v3ToV31Delta"] = false;
+                document["byteIdentity"]!.AsObject()["v31ToV32Delta"] = false;
                 break;
             default:
                 throw new InvalidOperationException(

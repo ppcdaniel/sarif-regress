@@ -32,7 +32,7 @@ public sealed class MatchingEngineTests
         var decision = Assert.Single(result.Decisions);
         Assert.Equal(FindingClassification.Unchanged, decision.Classification);
         Assert.Equal(
-            "sarifregress/matcher/v3.1",
+            "sarifregress/matcher/v3.2",
             ProductInformation.MatcherAlgorithmVersion);
         Assert.Equal(
             ProductInformation.MatcherAlgorithmVersion,
@@ -470,7 +470,7 @@ public sealed class MatchingEngineTests
     }
 
     [Fact]
-    public void Code_flow_anchor_is_supporting_evidence_and_not_a_primary_identity()
+    public void Code_flow_anchor_cannot_admit_an_edge_without_independent_identity()
     {
         var baseline = MatchingTestData.Finding(
             InputKind.Baseline,
@@ -487,12 +487,15 @@ public sealed class MatchingEngineTests
             MatchingTestData.Input(InputKind.Baseline, baseline),
             MatchingTestData.Input(InputKind.Candidate, candidate));
 
-        var decision = Assert.Single(result.Decisions);
-        Assert.Equal(FindingClassification.Moved, decision.Classification);
-        Assert.Equal(PrecedenceTier.PathProblem, decision.Decision.PrecedenceTier);
-        Assert.Contains(
-            decision.Decision.Evidence,
-            evidence => evidence.Kind == "code-flow");
+        Assert.Equal(0, result.CandidateEdgeCount);
+        Assert.Collection(
+            result.Decisions,
+            decision => Assert.Equal(
+                FindingClassification.Resolved,
+                decision.Classification),
+            decision => Assert.Equal(
+                FindingClassification.New,
+                decision.Classification));
     }
 
     [Fact]
