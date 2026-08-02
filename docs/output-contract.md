@@ -100,6 +100,9 @@ full repository-relative path. The path-neutral message template is recorded as 
 `sarifregress/message-location-template/v1`. This transform cannot admit, score, or assign an edge.
 Matcher v3 history remains immutable; the minor matcher revision distinguishes the observable
 classification change without claiming the separately gated sparse-SARIF matcher-v4 design.
+The current product emits `sarifregress/matcher/v3.1`. No matcher-v4 or side-specific-source
+evidence identifier exists, and validation-only sparse research algorithm names never enter stable
+product comparison JSON.
 
 ## HTML and canonical SARIF
 
@@ -120,6 +123,14 @@ silently extend comparison output schema version `1`.
   each case's exact stable comparison or invalid-diagnostic artifact plus SHA-256;
 - benchmark output separates deterministic operation/hash fields from explicitly advisory runtime
   observations and records the applicable published budget evaluation.
+
+The sparse repository-context experiment is a validation-only contract, not an extension of
+product output schema `1`. Its checked-in decision uses root schema
+`sparse-experiment-limitation/v1` and references separately authenticated observations, gates,
+workflow provenance, resources, and coordinator projections. A composite
+`expected/experiment-report.json` is intentionally absent while issue #27 tracks derivation and
+cross-binding of the stable resource subset and issue #28 prevents its validator from representing
+the SARIF-only control correctly; it must not be claimed as emitted or validated.
 
 `canonicalise` emits deterministic SARIF rather than comparison JSON. See [cli.md](cli.md) for
 stream and file behavior.

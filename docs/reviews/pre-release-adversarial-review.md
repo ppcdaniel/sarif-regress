@@ -20,8 +20,10 @@ checksum manifests were hashed and verified before any edit.
 Locally available static checks passed: JSON parsing with duplicate-key rejection, Python syntax,
 workflow YAML parsing, shell syntax, checksum verification, and `git diff --check`. The pinned
 .NET SDK `10.0.302` was present but CoreCLR could not start (`0x8007000E`, exit 137), so this review
-does not claim local executable or Windows evidence. Successful historical Actions runs are useful
-evidence, but finding B-01 limits what they prove about an exact pull-request head.
+does not claim local executable or Windows evidence. Successful historical Actions runs were useful
+integration evidence, but at the time of review B-01 limited what they proved about an exact
+pull-request head. That boundary was subsequently resolved on
+`9debc7d4007b5ea1448fcec07e0ad781512298c7`; see the B-01 disposition.
 
 Severity means:
 
@@ -34,12 +36,18 @@ Severity means:
 
 ## Summary
 
-| Severity | Count | Merge/release effect |
-|---|---:|---|
-| Blocker | 1 | Prior hosted checks do not prove the exact PR head |
-| High | 9 | PR #13 matcher safety and evidence wording; PR #8 validator terms; release gates/notices |
-| Medium | 14 | Metric semantics, context security, output/package hardening, compatibility, maintainability |
-| Low | 3 | Version authority, public constructor compatibility, unused restore path |
+Counts include every recorded finding, including findings later remediated. The original review and
+research-infrastructure addendum remain separately visible so historical severity is not rewritten
+by disposition.
+
+| Severity | Original review | Addendum | Total | Current effect |
+|---|---:|---:|---:|---|
+| Blocker | 1 | 0 | 1 | B-01 is resolved by exact-head evidence; the historical finding remains counted |
+| High | 9 | 7 | 16 | Mixed resolved and open findings; licensing, release, matcher-safety, and composite-evidence blockers remain |
+| Medium | 14 | 8 | 22 | Metric semantics, context/output/package hardening, compatibility, and research-evidence durability |
+| Low | 3 | 0 | 3 | Version authority, public constructor compatibility, and unused restore path |
+
+Total recorded findings: 42.
 
 ## Blocker findings
 
@@ -50,8 +58,9 @@ Severity means:
   `pull_request` but do not set `actions/checkout`'s `ref`. GitHub therefore checks out the
   pull-request merge ref. The holdout attestation checks only the shape of `GITHUB_SHA`; it does not
   compare the checked-out commit with `github.event.pull_request.head.sha`. The committed v3
-  attestation binds product commit `29ea23e...` and generation-workflow commit `cc1016e...`, not
-  final PR #13 head `733e383...`.
+  attestation binds product commit `29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b` and
+  generation-workflow commit `cc1016e71d5c31acf73c4dbed3cb7b59c5dc1e74`, not final PR #13
+  head `733e383858fa940faca5b6f8f087832e9ee582cf`.
 - **Why it matters:** successful run metadata names the PR head, but the compiled and tested tree may
   include the current base through a generated merge commit. That is valuable integration evidence,
   not the required exact-head evidence. Claims that PR #8 or PR #13 passed on its exact head are not
@@ -64,13 +73,22 @@ Severity means:
 - **Blocks merging PR #13:** yes.
 - **Blocks release:** yes.
 - **Tracking:** [#14](https://github.com/ppcdaniel/sarif-regress/issues/14).
+- **Disposition:** resolved on exact head
+  `9debc7d4007b5ea1448fcec07e0ad781512298c7`; issue #14 is closed. All four pull-request
+  workflows explicitly selected the PR head and asserted `git rev-parse HEAD` equality before
+  evidence generation. CI run `30727269212`, holdout/sparse run `30727269210`, determinism run
+  `30727269224`, and benchmark run `30727269219` all completed successfully on that SHA, including
+  Ubuntu/Windows verification, both package jobs, sparse authentication, cross-platform byte
+  comparison, and all 1k/10k/100k benchmark cells. This does not retroactively convert older
+  merge-ref runs or the standalone PR #8/#13 heads into exact-head evidence.
 
 ## High findings
 
 ### H-01 — Path-templated messages turn pure Gitleaks moves into modifications
 
 - **Evidence and code area:** `validation/holdout/cases/gitleaks/labels.json` relationships
-  `gitleaks-match-014` through `-018`; `producer-input/notes.md`; source-transformation checks in
+  `gitleaks-match-014` through `-018`; `validation/holdout/cases/gitleaks/notes.md`;
+  source-transformation checks in
   `validation/tools/capture/verify_source_transformations.py`; message comparison in
   `src/SarifRegress.Match/CandidateEdgeFactory.cs`; classification ordering in
   `src/SarifRegress.Match/FindingMatcher.cs` (`Classify`).
@@ -88,6 +106,9 @@ Severity means:
 - **Blocks release:** yes.
 - **Tracking:** [#15](https://github.com/ppcdaniel/sarif-regress/issues/15); #12 reports the
   aggregate count.
+- **Disposition:** resolved by matcher v3.1; issue #15 is closed. Exact-head holdout run
+  `30727269210` preserved `50 TP / 0 FP / 25 FN`, reduced the five Gitleaks classification
+  mismatches to zero, and preserved deliberate ambiguity refusal.
 
 ### H-02 — Matcher-v3 is post-hoc regression evidence but is labelled independent
 
@@ -234,6 +255,11 @@ Severity means:
 - **Blocks merging PR #13:** no.
 - **Blocks release:** yes, until the Phase 4 limitation evidence is bound and reproduced.
 - **Tracking:** [#27](https://github.com/ppcdaniel/sarif-regress/issues/27).
+- **Disposition:** partially remediated, still open. Release and determinism projections are
+  authenticated and byte-compared. The stable resource projection correctly omits volatile timing
+  and peak-memory values, but the composite scanner still requires projection payloads to equal the
+  full supporting evidence. Issue #27 now tracks an explicit full-evidence-to-stable-projection
+  derivation and cross-binding; issue #28 independently blocks composite promotion.
 
 ## Medium findings
 
@@ -436,26 +462,30 @@ unused manifest or clearly mark it as non-authoritative. It does not affect the 
 - Producer and baseline acquisitions pin exact versions, sizes, hashes, and provenance. No producer
   binaries or archives are committed or released. All external GitHub Actions use full commit SHAs,
   workflows default to `contents: read`, and checkout credentials are not persisted.
-- Historical v2/v3 checksum manifests verify. Historical successful Ubuntu/Windows runs are real
-  merge-ref integration evidence; B-01 prevents treating them as exact-head evidence.
+- Historical v2/v3 checksum manifests verify. Earlier successful Ubuntu/Windows runs remain valid
+  merge-ref integration evidence. The current workflows additionally produced successful
+  exact-head evidence on `9debc7d4007b5ea1448fcec07e0ad781512298c7`; B-01 and issue #14
+  are resolved.
 
 ## Required disposition before release
 
-At minimum, B-01 and every High finding require either a verified fix or a focused open issue with a
-release-blocking disposition. Medium findings that are not fixed must appear in release readiness,
-security, and supported-evidence documentation. A safe preview remains blocked until the project
-defines preview criteria; a stable release remains blocked by the exposed-holdout recall failure,
-PMD evidence gap, classification defect, licensing disposition, release notices/gates, and matcher
-safety findings.
+At minimum, every unresolved High finding requires either a verified fix or a focused open issue
+with a release-blocking disposition. B-01 and H-01 are resolved and remain counted historically.
+Medium findings that are not fixed must appear in release-readiness, security, and
+supported-evidence documentation. A safe preview remains blocked until preview criteria are
+defined. A stable release remains blocked by exposed-holdout recall, the PMD evidence gap,
+licensing disposition, release notices/gates, unresolved matcher-safety findings, and composite
+research-evidence issues #27 and #28.
 
 ## Nightly research-infrastructure addendum
 
 This addendum records findings made on 2026-08-02 while the clean sparse-SARIF corpus and its
-pre-experiment controls were still uncommitted. The findings were recorded before remediation and
-do not revise the counts for the earlier PR #8/PR #13 review above. They block admission of the new
-research evidence, not the already frozen v2/v3/v3.1 records.
+pre-experiment controls were still uncommitted. The split summary above preserves the original
+review counts and reports the addendum and whole-document totals separately. Findings remain
+counted after remediation; each disposition records current status. These findings concern the new
+research evidence, not the frozen v2/v3/v3.1 records.
 
-### H-09 — The initial contamination scanner failed open on boundedness and label admission
+### H-10 — The initial contamination scanner failed open on boundedness and label admission
 
 - **Evidence and code area:** the first versions of
   `validation/research/sparse-sarif/tools/scan_contamination.py`, especially tree enumeration, JSON
@@ -479,10 +509,11 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   yes until fixed. **Blocks release or matcher v4:** yes.
 - **Tracking:** [#24](https://github.com/ppcdaniel/sarif-regress/issues/24).
 - **Disposition:** remediated. Seventy-seven scanner mutation/contract tests and the real corpus
-  passed on exact head `2f4499a...` on hosted Ubuntu and Windows. Windows executed the junction test;
+  passed on exact head `2f4499a51f621ee8c1fb3816752205d7e5b224bf` on hosted Ubuntu and
+  Windows. Windows executed the junction test;
   the one local skip remains an operating-system boundary, not an untested hosted path.
 
-### H-10 — An `implement-v4` decision was not bound to every fixed gate
+### H-11 — An `implement-v4` decision was not bound to every fixed gate
 
 - **Evidence and code area:** the initial
   `validation/research/sparse-sarif/schemas/experiment-report.schema.json` conditional and
@@ -513,7 +544,7 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   hash-valid irrelevant file for every evidence role is rejected. This restriction is not a
   substitute for the Phase 4 experiment.
 
-### H-11 — The initial sparse-capture pipeline could attest unauthentic or ambient PMD output
+### H-12 — The initial sparse-capture pipeline could attest unauthentic or ambient PMD output
 
 - **Evidence and code area:** the first uncommitted versions of
   `.github/workflows/sparse-sarif-research.yml`, `tools/capture_pmd.sh`,
@@ -539,7 +570,8 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   be unauditable.
 - **Tracking:** [#26](https://github.com/ppcdaniel/sarif-regress/issues/26).
 - **Disposition:** remediated. Thirty-four capture/projector mutation tests pass. On exact head
-  `2f4499a...`, hosted PMD capture verified the canonical PMD/curl arrays, environment evidence,
+  `2f4499a51f621ee8c1fb3816752205d7e5b224bf`, hosted PMD capture verified the canonical PMD/curl
+  arrays, environment evidence,
   projection mutations, raw hashes, and promoted bytes; the retained artifact was then downloaded
   by ID and independently reverified.
 
@@ -564,7 +596,7 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   yes.
 - **Disposition:** remediated with anchored no-follow handles, lexical JSON depth rejection, a
   complete URI-only mutation audit, and ambient-data refusal. Hosted capture and strict replay
-  passed on exact head `2f4499a...`.
+  passed on exact head `2f4499a51f621ee8c1fb3816752205d7e5b224bf`.
 
 ### M-16 — Whole-artifact capture checksums are not stable promotion targets
 
@@ -583,7 +615,7 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Disposition:** the strict workflow compares only stable projected/audit/raw identities and
   independently authenticates each newly uploaded artifact. Exact-head run `30719295884` passed.
 
-### H-12 — Promoted capture provenance was structurally recorded but not authenticated
+### H-13 — Promoted capture provenance was structurally recorded but not authenticated
 
 - **Evidence and code area:** the first promotion draft in
   `.github/workflows/holdout-validation.yml`, `validation/research/sparse-sarif/manifest.json`, and
@@ -591,7 +623,7 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   source SHA, and runner image, but the routine workflow verified only the manifest shape and
   artifact content contract. It never retrieved artifact `8823830998` from run `30717611507`,
   compared GitHub's authoritative metadata, or proved that the current sources, labels, and
-  rulesets were unchanged from capture source `3a398396...`.
+  rulesets were unchanged from capture source `3a398396213cac416f1b1237c605dd2d119d572f`.
 - **Why it matters:** a locally edited provenance object could remain shape-valid and internally
   cross-consistent without proving that the asserted GitHub run or artifact supplied the promoted
   raw bytes. That weakens independent auditability even when every committed projection hash is
@@ -609,7 +641,7 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   the historical artifact ID/name/digest/run/head; the downloaded content and frozen source inputs
   were reverified. The canonical manifest now records the subsequently attested exact-head capture.
 
-### H-13 — Exact-head recapture was verified before upload but not after upload
+### H-14 — Exact-head recapture was verified before upload but not after upload
 
 - **Evidence and code area:** the first strict form of
   `.github/workflows/holdout-validation.yml` compared the runner staging directory with the promoted
@@ -653,7 +685,12 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Smallest safe remediation:** distinguish the already promoted authentic capture, the pending
   strict exact-head recapture, and the still-pending repository-context experiment.
 - **Blocks PR #8/#13/release:** no independently. **Blocks accepting the corpus documentation:** yes.
-- **Pre-commit disposition:** remediated locally.
+- **Disposition:** preserved as a historical pre-experiment artifact. `README.md` is itself
+  integrity-bound by the frozen corpus manifest; changing its bytes without regenerating the
+  observation, gate, projection, provenance, and limitation chain makes corpus admission fail.
+  Current results are therefore recorded in ADR 0003, the root status documentation, and
+  `expected/sparse-experiment-limitation.json`. A future corpus-manifest advance must update the
+  README and regenerate every dependent evidence byte together.
 
 ### M-19 — A permanent CI gate cannot depend on the 30-day promotion artifact
 
@@ -673,9 +710,10 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   Routine CI retains reproducible PMD recapture plus post-upload authentication without depending
   on the 30-day historical artifact.
 
-### H-14 — The evidence scanner made source preflight depend on SARIF-only recall
+### H-15 — The evidence scanner made source preflight depend on SARIF-only recall
 
-- **Evidence and code area:** on exact head `94c906d...`, all four hosted evidence workflows passed,
+- **Evidence and code area:** on exact head `94c906d485f55bb1900f159caa1abd73d71ee56c`, all four hosted
+  evidence workflows passed,
   but promotion of their authenticated projections failed in
   `validation/research/sparse-sarif/tools/scan_contamination.py`,
   `_computed_gate_bindings`. The `sarif-only-control` correctly recorded no repository preflight;
@@ -694,10 +732,11 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Disposition:** open. A focused correction and real-shape regression test passed locally, but
   publication was refused because the existing scanner itself contains producer-specific research
   policy. No alternate publication path was used, no control evidence was changed, and no composite
-  experiment report was promoted. The already authenticated `94c906d...` projections remain bound
-  to the unchanged scanner and corpus manifest; #28 tracks the blocker.
+  experiment report was promoted. The already authenticated
+  `94c906d485f55bb1900f159caa1abd73d71ee56c` projections remain bound to the unchanged scanner and
+  corpus manifest; #28 tracks the blocker.
 
-### H-15 — The stable resource projection embedded volatile benchmark measurements
+### H-16 — The stable resource projection embedded volatile benchmark measurements
 
 - **Evidence and code area:** exact-head extended benchmark run `30726918341` passed all twelve
   Linux/Windows 1k, 10k, and 100k unique/pathological measurement jobs and byte-compared every
@@ -718,8 +757,52 @@ research evidence, not the already frozen v2/v3/v3.1 records.
   reproduces the corrected projection. **Blocks release:** yes because resource evidence is not yet
   repeatable.
 - **Tracking:** [#29](https://github.com/ppcdaniel/sarif-regress/issues/29).
-- **Pre-commit disposition:** corrected locally. Full per-run artifacts retain exact timing and
+- **Disposition:** resolved on exact head `9debc7d4007b5ea1448fcec07e0ad781512298c7` by run
+  `30727269219`; issue #29 is closed. Full per-run artifacts retain exact timing and
   peak-memory values; the committed projection now carries only stable pass/fail facts plus the
   path and digest of the structural observation record. Replaying the corrected coordinator over
-  run `30726918341` reproduces the committed projection despite different measurements. Hosted
-  exact-head verification remains required before closure.
+  run `30726918341` and then executing the hosted exact-head matrix reproduced the committed
+  projection despite different measurements. All twelve benchmark cells and cross-platform byte
+  comparison passed without changing thresholds or product limits.
+
+### M-20 — The composite scanner expects the stable resource projection to equal volatile evidence
+
+- **Evidence and code area:** `.github/workflows/benchmarks.yml` now correctly separates the full
+  `sparse-experiment-resource-values.json` artifact from the stable committed projection. However,
+  `_scan_supporting_evidence_projection` in
+  `validation/research/sparse-sarif/tools/scan_contamination.py` still requires the projection's
+  ordered variants to equal the full resource-evidence variants, whose schema requires timing and
+  peak-memory cells.
+- **Why it matters:** after issue #28 is fixed, a scientifically correct full resource artifact and
+  stable projection would still be rejected by composite promotion.
+- **Smallest safe remediation:** version an explicit stable resource subset, derive it from the full
+  authenticated evidence, cross-bind the structural observation digest, and test the exact
+  transformation. Update the integrity-bound scanner/manifest and regenerate all projections.
+- **Blocks PR #8/#13:** no. **Blocks the nightly hardening PR:** no because no composite report is
+  claimed. **Blocks composite promotion/release evidence:** yes; tracked in #27.
+
+### M-21 — The resource-projection schema and unit guard are under-constrained
+
+- **Evidence and code area:** `schemas/sparse-experiment-projection.schema.json` permits any non-empty
+  variant value. `DeterminismAndSafetyTests.cs` rejects the two current volatile field names and the
+  exact former deep-copy expression, but does not execute a reusable projection function over two
+  distinct measurement matrices or cross-check the evidence digest.
+- **Why it matters:** a renamed volatile field or another construction route could pass the static
+  guard. The hosted coordinator would catch the current regression, but the local contract is less
+  precise than its documentation.
+- **Smallest safe remediation:** extract and version projection construction, schema the stable
+  value shape, and test byte equality for different passing measurements plus digest binding.
+- **Blocks PR #8/#13:** no. **Blocks release:** no independently; it must be dispositioned with #27.
+
+### M-22 — Full runtime measurements expire with 30-day workflow artifacts
+
+- **Evidence and code area:** both per-cell and coordinator benchmark artifacts use
+  `retention-days: 30`; the committed structural record intentionally excludes exact timing and
+  peak-memory values.
+- **Why it matters:** the current run proves fixed budgets, but after artifact expiry a future
+  reviewer can verify only the stable pass/structure record, not recompute the historical runtime
+  conclusion from raw measurements.
+- **Smallest safe remediation:** preserve one immutable, head/run-bound historical full-values
+  record outside the future byte-reproduction gate, or explicitly limit the duration of the raw
+  performance-audit claim.
+- **Blocks PR #8/#13:** no. **Blocks release:** only a durable historical-performance claim.

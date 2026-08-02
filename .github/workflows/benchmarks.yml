@@ -471,6 +471,9 @@ jobs:
               {"id": variant_id, "value": copy.deepcopy(evidence)}
               for variant_id in variant_ids
           ]
+          # Stable coordinator bytes intentionally exclude volatile timing and
+          # memory. Issue #27 tracks deriving and cross-binding this subset in
+          # the future composite evidence contract.
           projection_evidence = {
               "withinDocumentedLimits": evidence["withinDocumentedLimits"],
               "sourceContextProjectionBenchmarked": evidence[

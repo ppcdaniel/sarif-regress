@@ -136,17 +136,27 @@ Automatic matching is intended for the same producer family while allowing tool-
 Cross-producer rule equivalence requires an explicit alias and still needs qualifying path and
 context evidence. GitHub code-scanning compatibility checks are advisory, not an ingestion emulator.
 
+The supported automatic-evidence profile includes a reliable non-colliding producer fingerprint;
+reliable embedded context or bounded token context read from the one shared approved repository
+root; or safe URI-base resolution combined with another qualifying identity signal. URI mapping is
+path interpretation, not identity proof. Side-specific baseline/candidate roots are research-only
+and are not shipped. Findings with no reliable fingerprint, no embedded snippet, no trusted source
+snapshot, and only non-unique rule/path/message/location evidence are intentionally left unmatched.
+This is the endorsed evidence profile, not a claim that every current edge is already proven to
+obey it: open matcher-safety issues remain release blockers.
+
 The public corpus gates precision at `0.95`, recall at `0.90`, exact classifications and diagnostics,
 zero silently matched labelled ambiguity, and byte-identical approved Windows/Linux reports.
 
-The [independent matcher-v2 holdout](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/independent-validation.md)
-and [matcher-v3 generalisation report](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/real-producer-generalisation.md)
-preserve 75 known relationships from Gitleaks 8.30.1, PMD 7.26.0, and Semgrep 1.172.0. Matcher v3
-recovers all Semgrep and Gitleaks identities with no false matches or silent ambiguity choices
-(`50 TP / 0 FP / 25 FN`, precision `1.0`, recall `0.666667`, F1 `0.8`), but remains
-**release blocked** because no safe sparse-SARIF rule met the PMD precision gate. The original v2
-failure, unchanged labels, deterministic delta, and Microsoft SARIF Multitool baseline all remain
-published.
+The [independent matcher-v2 holdout](docs/independent-validation.md)
+and [v3/v3.1 generalisation report](docs/real-producer-generalisation.md)
+preserve 75 known relationships from Gitleaks 8.30.1, PMD 7.26.0, and Semgrep 1.172.0. Matcher v2's
+`0 TP / 0 FP / 75 FN` run is the independent baseline. After those labels informed implementation,
+v3/v3.1 provide exposed-holdout regression evidence: Semgrep and Gitleaks each recover all 25
+identities, v3.1 has zero classification mismatches, and the aggregate remains
+`50 TP / 0 FP / 25 FN` (precision `1.0`, recall `0.666667`, F1 `0.8`). A separately designed clean
+PMD research corpus reached at best `9 TP / 0 FP / 10 FN` (recall `0.473684`) and failed the fixed
+recall and production-safety gates. Matcher v4 was not created and release remains **blocked**.
 
 ## Commands
 
@@ -188,7 +198,12 @@ for packaging and release verification.
 | Configuration | [Guide](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/configuration.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/config.schema.json) |
 | JSON, HTML, and SARIF output | [Output contract](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/output-contract.md) · [Schema](https://github.com/ppcdaniel/sarif-regress/blob/main/schemas/output.schema.json) |
 | Security and resource limits | [Security](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/security.md) · [Budgets](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/resource-budgets.md) |
-| Evaluation and interoperability | [Corpus](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/corpus.md) · [Independent holdout](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/independent-validation.md) · [Matcher-v3 generalisation](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/real-producer-generalisation.md) · [GitHub profile](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/github-compatibility.md) |
+| Evaluation and interoperability | [Corpus](docs/corpus.md) · [Independent holdout](docs/independent-validation.md) · [v3/v3.1 generalisation](docs/real-producer-generalisation.md) · [Side-specific-context ADR](docs/decisions/0003-side-specific-repository-context-experiment.md) · [Frozen clean-corpus protocol](validation/research/sparse-sarif/README.md) · [Limitation record](validation/research/sparse-sarif/expected/sparse-experiment-limitation.json) · [GitHub profile](docs/github-compatibility.md) |
+
+The composite sparse `expected/experiment-report.json` is intentionally absent while issue #27
+tracks full-resource-to-stable-projection derivation/cross-binding and issue #28 blocks its
+scientifically correct SARIF-only control. The typed limitation record and individually
+authenticated role projections are preserved instead; they do not authorize matcher v4.
 
 The supplied [architecture](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/architecture.md)
 is the source of truth. SarifRegress is not a hosted service, general SARIF viewer, or automatic

@@ -1,8 +1,8 @@
 # ADR 0003: Side-specific repository-context experiment
 
-- **Status:** Proposed; pre-experiment, research only
+- **Status:** Accepted safe stop; research complete; no matcher v4
 - **Date:** 2026-08-02
-- **Scope:** Sparse SARIF without fingerprints or snippets; issues #11 and #12
+- **Scope:** Sparse SARIF without fingerprints or snippets; issues #11, #12, #27, and #28
 
 ## Context
 
@@ -18,14 +18,27 @@ matcher context would expose ground truth. They must not be supplied to this exp
 historical v2/v3/v3.1 holdout reports must not be rewritten.
 
 The clean corpus under `validation/research/sparse-sarif/` was frozen before capture or matcher
-output. It provides independently authored baseline and candidate source trees, labels held outside
-the matching path, collision cases, and explicit one-to-many and many-to-one ambiguity.
+output. It provides two separately designed baseline/candidate fixture families, labels held outside
+the matching path, collision cases, and explicit one-to-many and many-to-one ambiguity. This is
+controlled research designed after the legacy PMD failure was known and frozen before its first
+scored run; it is not a second independent holdout.
 
 ## Decision
 
-Build a research harness with two side-bound repository ingestors. Do not add CLI options,
+Build and evaluate a research harness with two side-bound repository ingestors. Do not add CLI options,
 configuration fields, matcher evidence tiers, algorithm versions, or product output fields before
 the experiment passes every fixed gate.
+
+The experiment ran at source head `94c906d485f55bb1900f159caa1abd73d71ee56c`. Its original
+supporting artifacts came from holdout/sparse run `30725861186`, determinism run `30725861139`, and
+resource run `30725861161`. After the stable resource projection excluded volatile measurements,
+exact-head runs `30727269210`, `30727269224`, and `30727269219` independently reproduced the
+release, determinism, and resource projections. The checked-in decision is
+`expected/sparse-experiment-limitation.json`; it records `document-limitation` and
+`matcherV4Implemented: false`. The composite `expected/experiment-report.json` was not promoted:
+issue #27 requires an explicit full-resource-to-stable-projection derivation and cross-binding,
+while issue #28's validator incorrectly requires source preflight for the SARIF-only control. No
+control or resource evidence was changed to satisfy either contract gap.
 
 At the pre-capture checkpoint, the contamination policy rejects every `implement-v4` report even
 when its projected booleans and hashes appear green. That decision cannot become admissible until
@@ -34,15 +47,17 @@ original-holdout, development, resource, security, and cross-platform evidence f
 hash-valid file cannot satisfy more than one evidence role. This fail-closed restriction may be
 relaxed only by a separately reviewed experiment-evidence change; it is not a gate waiver.
 
-Each hosted supporting-evidence role also requires one role-level coordinator projection and its
-SHA-256. The projection is a closed, role-specific JSON document containing the admitted corpus
-and implementation hashes and the complete ordered five-variant semantic payload. The scanner
-reads and hashes those bytes and requires the payload to equal the supporting document; a missing
-reference, digest mismatch, different role, partial payload, or unrelated hash-valid file fails the
-role. One projection per role avoids a large collection of per-value attestations while binding
-every claimed value to coordinator output. Workflow run/head/artifact identities remain in the
-wrapper rather than the projection, because artifact IDs and digests do not exist until upload and
-would otherwise make a coordinator projection self-referential and unstable across strict reruns.
+The intended composite contract gives each hosted supporting-evidence role one coordinator
+projection and SHA-256. Release and determinism projections are closed, role-specific documents
+whose admitted corpus/implementation hashes and complete ordered five-variant semantic payloads
+equal their supporting documents. The resource role now deliberately projects only stable
+pass/structure references while its supporting artifact retains volatile timing and peak-memory
+cells. The current scanner has not yet implemented or cross-bound that derivation and still expects
+full payload equality; issue #27 tracks this gap. A missing reference, digest mismatch, wrong role,
+or unrelated hash-valid file still fails closed. Workflow run/head/artifact identities remain in
+the wrapper rather than the projection, because artifact IDs and digests do not exist until upload
+and would otherwise make a coordinator projection self-referential and unstable across strict
+reruns.
 
 This local binding is necessary but is not a signature: a repository editor could replace a
 projection and its digest together. Final evidence therefore additionally requires an
@@ -51,7 +66,7 @@ byte-compare the platform outputs, emit the role projection, and compare its byt
 committed projection. Connector-confirmed workflow success and artifact identity close that
 external trust step; the repository-only scanner does not claim to authenticate GitHub.
 
-The harness will construct two independent `FileSystemRepositoryContext` instances using the
+The harness constructed two independent `FileSystemRepositoryContext` instances using the
 existing product security primitive:
 
 | Side | SARIF input | Only permitted source context |
@@ -64,7 +79,7 @@ candidate read through the baseline ingestor, no baseline read through the candi
 no cache keyed by relative path alone. Any cache key must include the logical side and the bound
 source-tree identity. Context instances and opened handles are disposed independently.
 
-For the research corpus, the harness will preflight each root against the manifest's side-specific
+For the research corpus, the harness preflighted each root against the manifest's side-specific
 source-tree SHA-256 before ingestion. This detects missing, mismatched, or swapped snapshots without
 consulting labels. A production caller normally has no trusted expected tree hash; therefore an
 experiment that is safe only because of this corpus-specific preflight is insufficient to ship a
@@ -259,7 +274,7 @@ corpus, resource, security, and byte-determinism suites are separate mandatory g
 
 ## Fixed safety gates
 
-Thresholds are fixed before any result is observed and will not be lowered or reinterpreted:
+Thresholds were fixed before any result was observed and were not lowered or reinterpreted:
 
 - PMD precision >= `0.95`;
 - PMD recall >= `0.80`;
@@ -292,6 +307,30 @@ variant's resource gate. Each source variant therefore records
 bounded source-projection benchmark is executed. Green generic matcher cells cannot promote that
 field or authorize matcher v4.
 
+## Results and gate decision
+
+| Variant | TP | FP | FN | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| SARIF-only control | 0 | 0 | 19 | `1.0` by empty-acceptance convention | `0` | `0` |
+| Exact-region snippet | 2 | 0 | 17 | `1.0` | `0.105263` | `0.190476` |
+| Token window | 4 | 0 | 15 | `1.0` | `0.210526` | `0.347826` |
+| Relative context | 9 | 0 | 10 | `1.0` | `0.473684` | `0.642857` |
+| Agreement-only combination | 9 | 0 | 10 | `1.0` | `0.473684` | `0.642857` |
+
+All three labelled ambiguity units, covering nine endpoints, were refused. Classification
+mismatches, ingestion failures, and structural failures were zero. Semgrep and Gitleaks did not
+regress, and each supporting role projection was independently authenticated and byte-identical
+across hosted Ubuntu and Windows. Those facts do not constitute the still-missing composite
+cross-binding tracked by #27.
+
+No variant passed all gates. Best PMD recall was `0.473684`, below `0.80`; the non-substitutable
+legacy aggregate remained `50 TP / 0 FP / 25 FN`, recall `0.666667`, below `0.90`. All four
+source-backed variants failed the three no-trusted-hash wrong-root scenarios. Relative context and
+the agreement-only combination also failed family B's no-trusted-hash mismatched-snapshot scenario.
+The preflight and later source reads did not share one immutable snapshot handle, physical root
+identity was not proved, and source projection was not benchmarked. These are recall, root-binding,
+snapshot-lifetime, and resource-evidence failures; they are not precision or ambiguity failures.
+
 ## Stop conditions
 
 Stop the experiment and do not ship when any of the following occurs:
@@ -311,52 +350,36 @@ multiple times, or silently choose an equal optimum.
 
 ## Consequences
 
-If every gate passes, a separate implementation may introduce side-specific contexts, advance the
-matcher to `sarifregress/matcher/v4`, version affected evidence algorithms, and regenerate complete
-reports and deltas. That decision requires hosted exact-head Ubuntu and Windows evidence; this ADR
-does not claim it.
+The safe-stop branch was selected. No side-specific product context, CLI/configuration field,
+matcher evidence tier, or matcher-v4 identifier was added. The product remains
+`sarifregress/matcher/v3.1` with one shared `--repo`/`repoRoot`.
 
-If any gate fails, matcher v4 is not created. The experiment and failure evidence are preserved,
-and documentation will state the supported evidence profile and this unsupported SARIF-only
-profile: no reliable fingerprints, no embedded snippets, no trustworthy source snapshots, and
-non-unique rule/path/message/location observations. A safe limitation is the required outcome in
-that case.
+The checked-in decision record is schema version `1`, kind
+`sparse-experiment-limitation/v1`. It has no `selectedVariant` field. It binds the label-neutral
+observations, post-label gate evidence, authenticated workflow provenance, stable resource
+observations, and three coordinator projections through exact SHA-256 references. Exact timing and
+peak-memory measurements remain in per-run resource artifacts; the stable resource projection
+contains only reproducible pass/fail and structural evidence references.
 
-A limitation report uses schema version 2, binds the label-neutral observations, independently
-scored gate evidence, and the exact implementation manifest, and sets `selectedVariant` to null.
-The observation artifact contains natural selectors for accepted pairs, new/resolved findings,
-ambiguity endpoints, and each family's scenario outcomes, but contains no label IDs. Only after
-those bytes are closed does the evaluator read labels and emit full correspondence metrics,
-classification mismatches, correct/missed/incorrect new and resolved counts, ambiguity refusal,
-ingestion, security, and affected-endpoint scenario facts. The report must equal that scored
-evidence; a digest-only or self-asserted projection is insufficient.
-Release, determinism, and resource projections are accepted only inside typed committed
-attestations that bind the corpus and implementation-manifest hashes and record one shared source
-head. Each attestation contains an ordered `workflow.artifacts` array of exact artifact names,
-distinct nonzero IDs, and nonzero archive digests. Release and determinism each bind their two
-platform artifacts and coordinator artifact. Resource evidence binds all twelve
-`1k/10k/100k x unique/pathological x Linux/Windows` matrix artifacts plus the cross-platform
-coordinator; a single per-platform artifact cannot stand in for that matrix. The scanner validates
-this structure and the role semantics but cannot authenticate GitHub's artifact service; those
-fields may be populated only from connector-confirmed successful runs, and final strict
-reproduction remains an external trust-boundary check.
+The planned composite schema-version-2 `experiment-report.json` is intentionally absent. Issue #27
+requires the scanner to derive a versioned stable resource subset from full authenticated runtime
+evidence and cross-bind its structural-observation digest. Issue #28 separately tracks a validator
+defect that derives source-preflight requirements from the SARIF-only control's
+`0 TP / 0 FP / 19 FN` recall even though that control never reads a repository. Focused fixes must
+update the integrity-bound scanner and implementation manifest and regenerate every exact-head
+projection. Closing both issues would make the composite report representable; it would not change
+any metric, pass a safety gate, or authorize matcher v4.
 
-The implementation manifest is not a hand-picked source list. It is the exact ordinal closure of
-all `.cs`, `.csproj`, and `packages.lock.json` files below the CLI, Core, Match, Report, SARIF, and
-validation-harness projects, plus `Directory.Build.props`, `Directory.Packages.props`, and
-`global.json`. The scanner independently enumerates that set, rejects missing or extra entries,
-and re-hashes every regular file through a contained handle. POSIX reads use the anchored
-directory-descriptor path; the Windows fallback rejects every reparse component and confirms the
-opened handle remains below the admitted repository root before and after the bounded read.
+The supported product evidence profile remains at least one reliable bounded identity source: a
+non-colliding producer fingerprint; reliable embedded source context or bounded token context from
+the existing shared root; or safe URI-base resolution combined with another qualifying signal.
+Explicit rule aliases still require qualifying path and context evidence.
 
-The integrity graph is acyclic: observations bind the corpus and implementation manifest; scored
-gates bind the exact observations bytes; each supporting attestation binds the corpus and
-implementation manifest; and the report references those already-closed artifacts. None of those
-artifacts embeds the report hash or the expected-output checksum manifest that later covers it.
-It may name a best-observed research variant in prose, but that is not a shipping selection. The
-machine-readable reasons must include at least one failure recomputed from bound evidence. Report
-precision for zero accepted pairs is exactly `1.0` under the existing convention, while an explicit
-`acceptedPairs = TP + FP` denominator prevents that convention from being presented as evidence of
-successful matching. No global boolean can authorize matcher v4; each required evidence role must
-have its own parser and cross-reference validator, including a future product-implementation role
-that this research-only ADR intentionally does not provide.
+The unsupported SARIF-only profile has all of these properties: no reliable fingerprints, no
+embedded snippets, no independently trusted source snapshots, and non-unique
+rule/path/message/location observations. Those findings remain unmatched rather than guessed.
+
+A future side-specific design may be reconsidered only after immutable or equivalently stable
+source snapshots, physical root identity, one-side fault isolation, bounded source-projection
+resources, the original aggregate validation universe, and every fixed precision/recall/ambiguity
+gate are satisfied on a predeclared exact head. This ADR grants no implementation authority.
