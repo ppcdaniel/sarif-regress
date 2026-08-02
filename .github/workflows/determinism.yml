@@ -404,11 +404,20 @@ jobs:
                   for variant_id in variant_ids
               ],
           }
-          (verified / "sparse-experiment-determinism-projection.json").write_bytes(
+          projection_path = verified / "sparse-experiment-determinism-projection.json"
+          projection_path.write_bytes(
               (json.dumps(projection, ensure_ascii=False, indent=2) + "\n").encode(
                   "utf-8"
               )
           )
+          expected_projection = (
+              research
+              / "expected"
+              / "projections"
+              / "sparse-experiment-determinism-projection.json"
+          )
+          if projection_path.read_bytes() != expected_projection.read_bytes():
+              raise SystemExit("Committed sparse determinism projection differs.")
           files = sorted(
               path for path in verified.iterdir()
               if path.is_file() and path.name != "checksums.sha256"

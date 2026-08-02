@@ -1,0 +1,333 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-release-projection/v1",
+  "corpusManifestSha256": "2f0d9e6cfd8eca2527e095389a0cc66cc81bf697eeed804a91798141ad9494ef",
+  "implementationManifestSha256": "9cf28a92a4ba1c915029c096441c6066496b555fed715b7fcae092c82a086c90",
+  "variants": [
+    {
+      "id": "sarif-only-control",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0
+        }
+      }
+    },
+    {
+      "id": "exact-region-snippet",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0
+        }
+      }
+    },
+    {
+      "id": "token-window",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0
+        }
+      }
+    },
+    {
+      "id": "relative-context",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0
+        }
+      }
+    },
+    {
+      "id": "agreement-only-combination",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0
+        }
+      }
+    }
+  ]
+}

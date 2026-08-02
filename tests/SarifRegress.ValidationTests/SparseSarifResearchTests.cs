@@ -7,6 +7,62 @@ namespace SarifRegress.ValidationTests;
 public sealed class SparseSarifResearchTests
 {
     [Fact]
+    public void Authenticated_sparse_limitation_evidence_satisfies_its_schemas()
+    {
+        string root = ValidationTestRepository.FindRoot();
+        string researchRoot = Path.Combine(
+            root,
+            "validation",
+            "research",
+            "sparse-sarif");
+        string researchSchemaRoot = Path.Combine(researchRoot, "schemas");
+        string expectedRoot = Path.Combine(researchRoot, "expected");
+        string rootSchemaRoot = Path.Combine(root, "schemas");
+        var validator = new JsonSchemaValidator();
+        (string Schema, string Instance)[] checks =
+        [
+            (
+                Path.Combine(researchSchemaRoot, "experiment-observations.schema.json"),
+                Path.Combine(expectedRoot, "sparse-experiment-observations.json")),
+            (
+                Path.Combine(researchSchemaRoot, "experiment-gate-evidence.schema.json"),
+                Path.Combine(expectedRoot, "sparse-experiment-gate-evidence.json")),
+            (
+                Path.Combine(researchSchemaRoot, "resource-observations.schema.json"),
+                Path.Combine(expectedRoot, "sparse-experiment-resource-observations.json")),
+            (
+                Path.Combine(
+                    rootSchemaRoot,
+                    "sparse-experiment-workflow-provenance.schema.json"),
+                Path.Combine(expectedRoot, "sparse-experiment-workflow-provenance.json")),
+            (
+                Path.Combine(rootSchemaRoot, "sparse-experiment-limitation.schema.json"),
+                Path.Combine(expectedRoot, "sparse-experiment-limitation.json")),
+        ];
+        foreach ((string schema, string instance) in checks)
+        {
+            _ = validator.ValidateFile(
+                schema,
+                instance,
+                ValidationLimits.Default.MaximumManifestBytes);
+        }
+
+        string projectionSchema = Path.Combine(
+            rootSchemaRoot,
+            "sparse-experiment-projection.schema.json");
+        foreach (string role in new[] { "release", "determinism", "resource" })
+        {
+            _ = validator.ValidateFile(
+                projectionSchema,
+                Path.Combine(
+                    expectedRoot,
+                    "projections",
+                    $"sparse-experiment-{role}-projection.json"),
+                ValidationLimits.Default.MaximumManifestBytes);
+        }
+    }
+
+    [Fact]
     public void Tracked_sparse_research_contracts_satisfy_their_schemas()
     {
         string root = ValidationTestRepository.FindRoot();

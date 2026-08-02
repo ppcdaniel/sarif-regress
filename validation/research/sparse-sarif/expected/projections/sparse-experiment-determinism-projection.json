@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-determinism-projection/v1",
+  "corpusManifestSha256": "2f0d9e6cfd8eca2527e095389a0cc66cc81bf697eeed804a91798141ad9494ef",
+  "implementationManifestSha256": "9cf28a92a4ba1c915029c096441c6066496b555fed715b7fcae092c82a086c90",
+  "variants": [
+    {
+      "id": "sarif-only-control",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "windows": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "comparison": {
+          "byteIdentical": true
+        }
+      }
+    },
+    {
+      "id": "exact-region-snippet",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "windows": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "comparison": {
+          "byteIdentical": true
+        }
+      }
+    },
+    {
+      "id": "token-window",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "windows": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "comparison": {
+          "byteIdentical": true
+        }
+      }
+    },
+    {
+      "id": "relative-context",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "windows": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "comparison": {
+          "byteIdentical": true
+        }
+      }
+    },
+    {
+      "id": "agreement-only-combination",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "windows": {
+          "firstOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb",
+          "secondOutputSha256": "cb3881dc65f5d874eafb444804efd5d8d19e4d92d001f1b37c0ccb42d11bc3cb"
+        },
+        "comparison": {
+          "byteIdentical": true
+        }
+      }
+    }
+  ]
+}

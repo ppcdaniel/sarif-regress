@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/sparse-experiment-projection.schema.json",
+  "title": "Authenticated sparse-experiment coordinator projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "corpusManifestSha256",
+    "implementationManifestSha256",
+    "variants"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": {
+      "enum": [
+        "sparse-experiment-release-projection/v1",
+        "sparse-experiment-determinism-projection/v1",
+        "sparse-experiment-resource-projection/v1"
+      ]
+    },
+    "corpusManifestSha256": { "$ref": "#/$defs/sha256" },
+    "implementationManifestSha256": { "$ref": "#/$defs/sha256" },
+    "variants": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "sarif-only-control" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "exact-region-snippet" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "token-window" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "relative-context" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            {
+              "properties": {
+                "id": { "const": "agreement-only-combination" }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "value"],
+      "properties": {
+        "id": {
+          "enum": [
+            "sarif-only-control",
+            "exact-region-snippet",
+            "token-window",
+            "relative-context",
+            "agreement-only-combination"
+          ]
+        },
+        "value": {
+          "type": "object",
+          "minProperties": 1
+        }
+      }
+    }
+  }
+}

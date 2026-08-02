@@ -883,6 +883,7 @@ jobs:
           assert_candidate_root "${linux_root}"
           assert_candidate_root "${windows_root}"
           readonly candidate_root="${SPARSE_VERIFIED_ROOT}/candidate"
+          readonly expected_root="${GITHUB_WORKSPACE}/validation/research/sparse-sarif/expected"
           test ! -e "${SPARSE_VERIFIED_ROOT}"
           mkdir -p -- "${candidate_root}"
           for name in \
@@ -890,6 +891,7 @@ jobs:
             sparse-experiment-observations.json
           do
             cmp --silent -- "${linux_root}/${name}" "${windows_root}/${name}"
+            cmp --silent -- "${linux_root}/${name}" "${expected_root}/${name}"
             cp -- "${linux_root}/${name}" "${candidate_root}/${name}"
           done
           assert_candidate_root "${candidate_root}"
@@ -1336,6 +1338,14 @@ jobs:
               )
           )
           PY
+
+      - name: Verify committed sparse release projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-release-projection.json \
+            validation/research/sparse-sarif/expected/projections/sparse-experiment-release-projection.json
 
       - name: Create cross-platform artifact attestation projection
         shell: bash

@@ -503,6 +503,23 @@ jobs:
           (verified / "sparse-experiment-resource-observations.json").write_bytes(
               stable_observation_bytes
           )
+          expected_root = research / "expected"
+          expected_projection = (
+              expected_root
+              / "projections"
+              / "sparse-experiment-resource-projection.json"
+          )
+          if (
+              (verified / "sparse-experiment-resource-projection.json").read_bytes()
+              != expected_projection.read_bytes()
+              or (
+                  verified / "sparse-experiment-resource-observations.json"
+              ).read_bytes()
+              != (
+                  expected_root / "sparse-experiment-resource-observations.json"
+              ).read_bytes()
+          ):
+              raise SystemExit("Committed sparse resource evidence differs.")
           files = sorted(
               path for path in verified.iterdir()
               if path.is_file() and path.name != "checksums.sha256"
