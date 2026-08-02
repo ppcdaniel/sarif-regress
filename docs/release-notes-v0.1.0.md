@@ -72,9 +72,9 @@ evidence are incomplete. Matcher v4 was therefore not implemented. There are no
 The role projections were individually authenticated on the exact evidence head, and the typed
 `sparse-experiment-limitation/v1` safe-stop record is preserved. They are not a composite
 cross-binding. A composite `experiment-report.json` was not promoted because issue #27 still needs
-an explicit full-resource-to-stable-projection derivation/cross-binding and issue #28's validator
-incorrectly requires repository preflight for the SARIF-only `0/0/19` control, which reads no
-source. The limitation record names `blockedCompositeValidationIssue: 28`; no source or resource
+an explicit full-resource-to-stable-projection derivation/cross-binding. Issue #28's invalid source
+preflight derivation for the SARIF-only `0/0/19` control was corrected without changing the
+control. The limitation record names `blockedCompositeValidationIssue: 27`; no source or resource
 evidence was changed.
 
 Automatic matching is not supported when all of the following are true: no reliable fingerprint,
@@ -103,10 +103,11 @@ These are report-determinism and bounded-input guarantees, not a claim that inde
 produce byte-identical packages. Local Windows execution was not performed by the agent. The owner
 must complete the separate clean-Windows checklist.
 
-Open release-blocking security findings include conflicting collision evidence, code-flow-anchor
-admission, global edge-object materialisation, repository-root lifetime, corpus output/input
-aliasing, package cleanup through filesystem links, and an output-directory TOCTOU boundary. See
-`docs/release-readiness.md` and `SECURITY.md`.
+Open release-blocking security findings include global edge-object materialisation,
+repository-root lifetime, corpus output/input aliasing, package cleanup through filesystem links,
+and an output-directory TOCTOU boundary. Matcher v3.2 closes the conflicting-context and
+code-flow-admission gaps without raising graph limits. See `docs/release-readiness.md` and
+`SECURITY.md`.
 
 ## Packaging
 
@@ -116,14 +117,13 @@ The source can build:
 - a self-contained `linux-x64` single-file executable; and
 - a self-contained `win-x64` single-file executable.
 
-Package scripts generate SHA-256 manifests. Hosted smoke tests have checked checksum verification,
+Package scripts generate SHA-256 manifests. Hosted smoke tests checked checksum verification,
 standalone startup, local-feed tool installation, installed package byte identity, and installed
-tool startup on Linux and Windows at exact implementation/evidence head
-`9debc7d4007b5ea1448fcec07e0ad781512298c7` in run
-`30727269212`. A final exact documentation head,
-real comparison through each distribution form, independent package-byte reproducibility check,
-and verified licence/notice inclusion remain outstanding. No asset is available for installation
-from a public feed or release page.
+tool startup on Linux and Windows at exact matcher-v3.2 source head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479` in CI run `30761620627`. Real comparison through each
+distribution form, an independent package-byte reproducibility check, and verified licence/notice
+inclusion remain outstanding. No asset is available for installation from a public feed or release
+page.
 
 ## Compatibility
 
@@ -138,5 +138,6 @@ from a public feed or release page.
 ## Release recommendation
 
 **Do not release 0.1.0.** Aggregate recall is below `0.90`, PMD recall is below `0.80`, and open
-security, licence, notice, package-smoke, release-gating, and evidence-claim findings remain. A
-preview also remains blocked until the preview criteria in `docs/release-readiness.md` pass.
+security, licence, notice, distribution-comparison, release-gating, reproducibility, and
+evidence-claim findings remain. A preview also remains blocked until the preview criteria in
+`docs/release-readiness.md` pass.

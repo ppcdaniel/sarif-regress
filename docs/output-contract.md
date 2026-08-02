@@ -176,8 +176,9 @@ product output schema `1`. Its checked-in decision uses root schema
 `sparse-experiment-limitation/v1` and references separately authenticated observations, gates,
 workflow provenance, resources, and coordinator projections. A composite
 `expected/experiment-report.json` is intentionally absent while issue #27 tracks derivation and
-cross-binding of the stable resource subset and issue #28 prevents its validator from representing
-the SARIF-only control correctly; it must not be claimed as emitted or validated.
+cross-binding of the stable resource subset. The SARIF-only control preflight defect tracked in
+issue #28 is corrected without changing its `0/0/19` result; the absent composite must not be
+claimed as emitted or validated.
 
 `canonicalise` emits deterministic SARIF rather than comparison JSON. See [cli.md](cli.md) for
 stream and file behavior.

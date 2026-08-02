@@ -41,8 +41,9 @@ with 25 labelled relationships per producer. Across all three producers it conta
 relationships and 99 ground-truth units, including new, resolved, and deliberate ambiguity cases.
 Ground truth comes from controlled source transformations rather than matcher output. The v2 and
 v3 reports are retained as immutable histories; later work adds deltas rather than rewriting them.
-Matcher v2's first evaluation is the independent result. Because that holdout then informed v3 and
-v3.1, their figures are exposed-holdout regression evidence, not a new out-of-sample validation.
+Matcher v2's first evaluation is the independent result. Because that holdout then informed v3,
+v3.1, and v3.2, their figures are exposed-holdout regression evidence, not a new out-of-sample
+validation.
 The [hash-bound interpretation erratum](../validation/holdout/interpretation-erratum.json) records
 that correction without changing historical metrics or evidence bytes.
 
@@ -132,10 +133,12 @@ The Gitleaks holdout recovered all 25 identity relationships with `0 FP`, while 
 ambiguity remained refused. Input order and asymmetric duplicate tests protect deterministic
 behavior.
 
-This fixed the tested v2 collision pattern, not every possible conflict. The adversarial review
-found that collided context can still be admitted despite a conflicting context channel, and a
-shared code-flow anchor can qualify an edge without an independent identity signal. Both remain
-release blockers.
+This fixed the tested v2 collision pattern but did not initially cover every possible conflict.
+The adversarial review found that collided context could still be admitted despite a conflicting
+context channel, and that a shared code-flow anchor could qualify an edge without independent
+identity. Matcher v3.2 closes both paths: a context conflict vetoes collided or weak admission, and
+code-flow evidence can rank only an independently admitted edge when its anchor is unique on both
+input sides.
 
 **Interpretation.** A collision is a property of an evidence value in its comparison scope, not a
 property of the first endpoint that happens to use it. Computing reliability before graph
@@ -161,13 +164,14 @@ relationships.
 identity when similar findings move through the same coordinates. The precision gate was fixed at
 `0.95`, so the result was a stop condition, not an invitation to add fixture-specific rules.
 
-## 9. Matcher v3 and v3.1 results
+## 9. Matcher v3, v3.1, and v3.2 results
 
 | Version | TP | FP | FN | Precision | Recall | F1 | Classification mismatches |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Matcher v2 | 0 | 0 | 75 | no accepted pairs | `0` | `0` | 0 |
 | Matcher v3 | 50 | 0 | 25 | `1.0` | `0.666667` | `0.800000` | 5 |
 | Matcher v3.1 | 50 | 0 | 25 | `1.0` | `0.666667` | `0.800000` | 0 |
+| Matcher v3.2 | 50 | 0 | 25 | `1.0` | `0.666667` | `0.800000` | 0 |
 
 **Tested fact.** Matcher v3 recovered all 25 correspondence relationships for both Semgrep and
 Gitleaks: each was `25 TP / 0 FP / 0 FN`; PMD remained `0 TP / 0 FP / 25 FN`. No labelled
@@ -182,7 +186,8 @@ correspondence logic did not change.
 
 **Interpretation.** Versioning v3.1 rather than rewriting v3 preserves an important distinction:
 identity assignment was already right, while lifecycle classification needed a narrower general
-rule.
+rule. Versioning v3.2 likewise preserves that evidence history while recording a precision-safety
+change whose measured correspondence and classification totals are unchanged.
 
 ## 10. Side-specific repository-context experiment
 
@@ -225,10 +230,10 @@ not prove independent single-side fallback resistance or physical identity acros
 aliases.
 
 Individually authenticated role projections and `sparse-experiment-limitation/v1` preserve this
-safe stop. Issue #27 requires an explicit full-resource-to-stable-projection derivation and
-cross-binding, while issue #28 prevents the composite validator from representing the SARIF-only
-control without falsely requiring source preflight. No composite report was promoted, and neither
-source nor resource evidence was changed.
+safe stop. Issue #27 still requires an explicit full-resource-to-stable-projection derivation and
+cross-binding. The SARIF-only control preflight defect tracked in issue #28 was corrected without
+changing its evidence. No composite report was promoted, and neither source nor resource evidence
+was changed.
 
 **Decision.** No `--baseline-repo` or `--candidate-repo` product options were added, matcher v4 was
 not created, and the product retained the shared `--repo` contract.
@@ -247,9 +252,8 @@ the input supplies enough independently bounded evidence to admit an edge, such 
 
 Matcher v3.2 turns two review findings into explicit implementation boundaries: conflicting context
 vetoes collided or weak admission, and code-flow anchors cannot admit an edge and can rank only when
-unique on both input sides. Issues #20 and #21 remain open until exact-head hosted evidence confirms
-those changes; the release remains blocked independently by PMD recall and the other readiness
-findings.
+unique on both input sides. Exact-head run `30761620623` confirmed both changes on hosted Ubuntu and
+Windows; the release remains blocked independently by PMD recall and the other readiness findings.
 
 `--repo` and configuration `repoRoot` bind both inputs to one shared root. The experiment did
 **not** establish that independently supplied baseline and candidate roots satisfy the production
@@ -263,11 +267,12 @@ result and a documented limitation, not an ingestion error.
 ## 12. Determinism and security engineering
 
 **Tested fact.** Project-owned matcher-v3 and v3.1 reports were reproduced on hosted Ubuntu and
-Windows product heads and compared byte-for-byte. Stable output excludes ambient absolute
-repository paths. The 1k, 10k, and 100k SARIF-only benchmark cells retained the configured limits
-and oversized pathological buckets were refused. Ubuntu enforced its calibrated runtime and memory
-budgets; Windows recorded observations and byte-identical deterministic projections without
-applying the Ubuntu-calibrated runtime ceilings. Source-context projection was not benchmarked.
+Windows product heads, and matcher-v3.2 candidate reports were byte-compared on exact head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479`. Stable output excludes ambient absolute repository
+paths. The 1k, 10k, and 100k SARIF-only benchmark cells retained the configured limits and oversized
+pathological buckets were refused. Ubuntu enforced its calibrated runtime and memory budgets;
+Windows recorded observations and byte-identical deterministic projections without applying the
+Ubuntu-calibrated runtime ceilings. Source-context projection was not benchmarked.
 These facts do not by themselves attest a later documentation head; only a fresh exact-head run
 confirmed through the GitHub connector can do that.
 
@@ -277,8 +282,9 @@ other reparse points; and fails closed if the safe platform primitive is unavail
 writes are staged transactionally for ordinary failures, explanations are bounded, and HTML is
 escaped offline output derived from stable JSON. These positive controls do not close every threat:
 repository roots are reopened between reads, and hostile-parent output TOCTOU, corpus output/input
-aliasing, package cleanup through filesystem links, conflicting matcher evidence, code-flow-anchor
-admission, and pre-cap edge materialisation remain release blockers.
+aliasing, package cleanup through filesystem links, and pre-cap edge materialisation remain release
+blockers. Matcher v3.2's conflicting-context veto and ranking-only code-flow behavior passed the
+exact-head Ubuntu and Windows product suites.
 
 **Interpretation.** Determinism is part of correctness because assignment ties and diagnostics can
 otherwise change with input order, dictionary enumeration, platform path syntax, or checkout
@@ -296,7 +302,7 @@ not used as a behavior target.
 
 | Tool or producer | TP | FP | FN | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
-| SarifRegress v3.1 aggregate | 50 | 0 | 25 | `1.0` | `0.666667` | `0.800000` |
+| SarifRegress v3.2 aggregate | 50 | 0 | 25 | `1.0` | `0.666667` | `0.800000` |
 | Multitool aggregate (72 comparable) | 47 | 17 | 25 | `0.734375` | `0.652778` | `0.691177` |
 | Multitool Gitleaks | 17 | 0 | 7 | `1.0` | `0.708333` | `0.829268` |
 | Multitool PMD | 11 | 14 | 13 | `0.44` | `0.458333` | `0.448979` |
@@ -322,9 +328,9 @@ The release recommendation remains **blocked**.
   TOCTOU, single-side fallback, and source-projection resource-evidence gaps.
 - Sparse findings in the unsupported evidence profile remain new/resolved rather than automatically
   paired.
-- Product security findings, incomplete verified licence/notice distribution, release gating,
-  package smoke coverage, and binary reproducibility remain blocking; the authoritative inventory
-  is `docs/release-readiness.md`.
+- Product security findings, incomplete verified licence/notice distribution, authenticated
+  release gating, real-comparison coverage through each distribution form, and binary
+  reproducibility remain blocking; the authoritative inventory is `docs/release-readiness.md`.
 
 Semgrep and Gitleaks are reproducible against the frozen exposed holdout, but those regression
 results are not a second independent validation and do not justify a broad claim over all SARIF

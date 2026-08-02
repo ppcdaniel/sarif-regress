@@ -28,8 +28,8 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
 ## Scientific and product evidence
 
 - [x] Frozen matcher-v2 result remains `0 TP / 0 FP / 75 FN`.
-- [x] Last bound v3.1 exposed-holdout result is `50 TP / 0 FP / 25 FN`, precision `1.0`, recall
-  `0.666667`, F1 `0.8`; v3.2 must reproduce or improve this without a false match before promotion.
+- [x] Bound v3.2 exposed-holdout result is `50 TP / 0 FP / 25 FN`, precision `1.0`, recall
+  `0.666667`, F1 `0.8`; it adds no false match relative to v3.1.
 - [x] Semgrep and Gitleaks each remain `25 TP / 0 FP / 0 FN`; Gitleaks classification mismatches
   are zero.
 - [x] Legacy PMD remains `0 TP / 0 FP / 25 FN`; the clean sparse best result is
@@ -39,9 +39,9 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
 - [ ] Exact final-head holdout report and comparison summary reproduce byte-for-byte.
 - [ ] Exact final-head sparse observations, gate evidence, limitation record, and every supporting
   projection authenticate and reproduce byte-for-byte.
-- [ ] Resolve issue #27's full-resource-to-stable-projection derivation/cross-binding and issue
-  #28's SARIF-only preflight derivation before claiming a composite `experiment-report.json`; do
-  not change source evidence, resource measurements, or gates to satisfy either validator defect.
+- [ ] Resolve issue #27's full-resource-to-stable-projection derivation/cross-binding before
+  claiming a composite `experiment-report.json`; issue #28's SARIF-only preflight derivation is
+  corrected without changing source evidence, resource measurements, or gates.
 - [ ] Any “independent” claim refers only to the original matcher-v2 holdout or a genuinely new
   blinded corpus; v3/v3.1/v3.2 is labelled exposed/post-hoc regression evidence.
 

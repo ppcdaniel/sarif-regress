@@ -1,6 +1,6 @@
 # Release readiness
 
-Audit date: 2026-08-02
+Audit date: 2026-08-03
 
 Planned version: `0.1.0`
 
@@ -13,16 +13,16 @@ released. It distinguishes the frozen independent matcher-v2 baseline from match
 obtained after that holdout had informed implementation. The latter are valid exposed-holdout
 regression evidence, but are not a second independent validation. The
 [machine-readable interpretation erratum](../validation/holdout/interpretation-erratum.json)
-binds that qualification to the exact v2, v3, and v3.1 report bytes and refuses to treat an unbound
-v3.2 candidate as release evidence.
+binds that qualification to the exact v2, v3, v3.1, and active v3.2 report bytes. The two hosted
+bootstrap stages remain promotion evidence, not release evidence.
 
 ## Evidence snapshot
 
 The current product uses .NET SDK `10.0.302`, configuration schema `1`, output schema `1`, derived
-fingerprint `rule-path-context/v2`, and matcher `sarifregress/matcher/v3.2`. Until fail-closed
-promotion completes, the last bound checked-in reports remain matcher v3.1 and the interpretation
-erratum marks v3.2 `candidate-unbound`. The 75-relationship holdout labels and quality thresholds
-were not changed.
+fingerprint `rule-path-context/v2`, and matcher `sarifregress/matcher/v3.2`. The interpretation
+erratum hash-binds the active v3.2 exposed-holdout report generated on exact source head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479`. The 75-relationship holdout labels and quality
+thresholds were not changed.
 
 | Dataset | TP | FP | FN | Precision | Recall | F1 | Interpretation |
 |---|---:|---:|---:|---:|---:|---:|---|
@@ -64,13 +64,13 @@ not execute source projection. Separate `--baseline-repo` and `--candidate-repo`
 remain a design experiment and are not part of the CLI or configuration contract.
 
 Authenticated workflow artifacts and individually reproduced role projections are bound to source
-head `94c906d485f55bb1900f159caa1abd73d71ee56c`. The checked-in
+head `4cc6faf0167d7da385c1d204cba97d1f34ccb479`. The checked-in
 `sparse-experiment-limitation/v1` record names decision `document-limitation`, confirms that matcher
-v4 was not implemented, and records `blockedCompositeValidationIssue: 28`. Those artifacts are not
+v4 was not implemented, and records `blockedCompositeValidationIssue: 27`. Those artifacts are not
 the still-missing composite cross-binding. Issue #27 requires an explicit derivation from full
-resource evidence to the stable projection; issue #28 incorrectly demands source preflight for the
-SARIF-only `0/0/19` control. No composite `experiment-report.json` was promoted, and neither source
-nor resource evidence was falsified.
+resource evidence to the stable projection. Issue #28's invalid source-preflight derivation for the
+SARIF-only `0/0/19` control is corrected without changing the control. No composite
+`experiment-report.json` was promoted, and neither source nor resource evidence was falsified.
 
 ## Supported evidence profile
 
@@ -86,10 +86,10 @@ independently bounded evidence to admit an edge, such as:
 - an explicit rule alias for cross-producer rule identity, still combined with qualifying path and
   context evidence.
 
-Matcher v3.2 makes this profile an implementation invariant for the two previously open gaps:
+Matcher v3.2 makes this profile an implementation invariant for the two reviewed gaps:
 conflicting context vetoes collided or weak admission, and code-flow anchors cannot admit edges and
-rank only when unique on both sides. Issues #20 and #21 remain open until exact-head hosted evidence
-confirms the revision on both operating systems.
+rank only when unique on both sides. Exact-head product suites on hosted Ubuntu and Windows covered
+both revisions during each bootstrap stage; final normal-mode verification is recorded separately.
 
 `--repo` and configuration `repoRoot` bind both inputs to one shared root. Independently supplied
 baseline and candidate roots could become a supported evidence source only after a future design
@@ -144,20 +144,35 @@ Ubuntu/Windows CI and package smoke in run `30727269212`, holdout/sparse validat
 `30727269210`, determinism in `30727269224`, and every extended benchmark cell in `30727269219`.
 Package checks covered checksum verification, self-contained `--help` startup, local-feed tool
 installation, installed-package byte identity, and installed-tool `--help` on both operating
-systems. This agent did not perform local Windows execution. A later documentation-only final head
-still requires its own connector-confirmed workflow disposition.
+systems. This agent did not perform local Windows execution. The final promotion head requires its
+own connector-confirmed normal-mode workflow disposition.
 
 Issues #14 (exact-head workflow execution) and #29 (volatile resource projection) were closed on
-that exact head and those runs. Issues #27 and #28 remain open for composite evidence promotion;
-their status does not invalidate the individually authenticated role evidence described above.
+that earlier exact head and those runs. Current matcher-v3.2 head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479` then passed hosted Ubuntu/Windows CI and package smoke
+in run `30761620627`. Holdout/sparse run `30761620623`, determinism run `30761620626`, and resource
+run `30761620637` authenticated and uploaded exact-head candidates before their expected stale-byte
+comparison or deliberate promotion refusal. Issue #28 is implemented and covered by the exact-head
+sparse admission path; issue #27 remains open for composite evidence promotion.
 
-Matcher-v3.2 promotion is deliberately two-stage. The first failed workflow authenticates the
-unbound report bytes and records the failed workflow separately from its successful coordinator.
-After those bytes are hash-bound, the second failed workflow regenerates the real attested
-comparison/checksum bytes on Ubuntu and Windows. Only a subsequent strict run with the promoted
-stage-2 bytes can produce the normal reusable-workflow artifact consumed by the release gate. Every
-download is by upload output ID and is checked against its expected name, archive digest, current run,
-and exact head through the Actions artifact API. Neither bootstrap stage is release evidence.
+On the stage-two promotion head `ac081e70ab2911c02bafffce5661eaec76a871fa`, CI run `30762486272`,
+determinism run `30762486305`, and benchmark run `30762486292` succeeded. Holdout run `30762486314`
+passed every product, PMD capture, sparse, schema, and coordinator job; its overall conclusion was
+`failure` solely because the final-promotion refusal ran as designed. Coordinator artifact
+`8837926338` (ZIP SHA-256
+`60994dadd6c7395bbe451b869ccf86714d9aa741bcd97392b25f6793815c0ea3`) reproduced all seven
+normalized files byte-identically across Ubuntu and Windows. Only `comparison-summary.json` and
+its checksum binding changed; the report, metrics, delta, metadata, and truthful stage-one
+attestation remained byte-identical.
+
+Matcher-v3.2 promotion used a deliberate two-stage protocol. The first failed workflow authenticated
+the unbound report bytes and recorded the failed workflow separately from its successful
+coordinator. After those bytes were hash-bound, the second failed workflow regenerated the real
+attested comparison/checksum bytes on Ubuntu and Windows. A subsequent strict run with the promoted
+stage-two bytes is the normal reusable-workflow evidence consumed by the release gate. Every
+download was selected by upload output ID and checked against its expected name, archive digest,
+current run, and exact head through the Actions artifact API. Neither bootstrap stage is release
+evidence.
 
 After running a package script, the intended source-tree installation check is:
 
@@ -240,23 +255,21 @@ workflow defaults.
 
 The security claims must remain qualified by these unresolved or not-yet-verified findings:
 
-- matcher-v3.2 context-conflict and code-flow admission fixes still need exact-head hosted closure
-  evidence (#20 and #21);
 - candidate edges are fully materialised before the retained-edge cap (#22);
 - repository roots are reopened by path rather than held as one immutable directory identity;
 - `corpus run --json-out` can target an input under the corpus root;
 - package cleanup can follow an `artifacts` symlink or junction;
 - transactional output still has a hostile-parent TOCTOU window; and
 - the sparse experiment's release/determinism/resource projections are exact-head authenticated,
-  but the composite scanner does not yet derive and cross-bind the stable resource subset from the
-  full volatile evidence (#27), and the SARIF-only control remains unrepresentable (#28).
+  and the scanner derives the stable resource subset from the full volatile shape, but no complete
+  composite report yet cross-binds every authenticated supporting byte (#27).
 
 See the top-level `SECURITY.md` for safe reporting. Do not attach private SARIF, source, secrets, or
 exploit payloads to a public issue.
 
 ## Open release blockers
 
-GitHub issue state was checked on 2026-08-02. A code change that appears to address an open issue is
+GitHub issue state was checked on 2026-08-03. A code change that appears to address an open issue is
 not treated as closed evidence until its acceptance criteria and final exact-head run are recorded.
 
 | Tracking | Blocker |
@@ -264,17 +277,16 @@ not treated as closed evidence until its acceptance criteria and final exact-hea
 | #7 / PR #8 | Independent holdout infrastructure remains an open, unmerged draft stack dependency |
 | #11 / #12 / PR #13 | Sparse SARIF remains unsupported; aggregate and PMD recall miss fixed gates; the matcher work remains draft and unmerged |
 | PR #23 | Nightly hardening, release audit, and limitation evidence remain draft and unmerged |
-| #16 | Claim wording is corrected and hash-bound; exact-head closure evidence remains pending |
+| #16 | Claim wording is corrected and hash-bound; final normal-mode closure evidence remains pending |
 | #17 | Owner-specific disposition for validation dependency maintenance terms is absent |
 | #18 | Release bundle and package do not contain verified project/runtime/dependency notices |
-| #19 | Authenticated release gating is implemented; exact-head hosted refusal/acceptance evidence remains pending |
-| #20 | Matcher-v3.2 context-conflict veto is implemented; exact-head hosted closure evidence remains pending |
-| #21 | Matcher-v3.2 makes code flow ranking-only and occurrence-aware; exact-head hosted closure evidence remains pending |
+| #19 | Authenticated release gating is implemented; final normal-mode acceptance evidence remains pending |
+| #20 | Matcher-v3.2 context-conflict veto passed both bootstrap stages; final normal-mode closure run remains pending |
+| #21 | Matcher-v3.2 ranking-only, occurrence-aware code flow passed both bootstrap stages; final normal-mode closure run remains pending |
 | #22 | Global candidate-edge memory behavior is not bounded before object materialisation |
 | #25 | Sparse decision/evidence gate tracking remains open; no v4 may be authorised |
 | #27 | Composite evidence needs an explicit full-resource-to-stable-projection derivation and cross-binding |
-| #28 | Composite validation incorrectly requires source preflight for the SARIF-only control |
-| #30 | Validation schema compatibility fix is implemented; exact-head CI and both promotion stages remain pending |
+| #30 | Schema 4 and archived-v3.1 compatibility passed both bootstrap stages; final normal-mode closure run remains pending |
 
 The untracked Medium findings listed in the adversarial review also require release disposition:
 lifecycle metric naming, vacuous precision, repository-root lifetime, corpus output/input aliasing,

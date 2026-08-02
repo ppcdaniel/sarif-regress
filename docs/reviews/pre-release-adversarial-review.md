@@ -207,7 +207,8 @@ Total recorded findings: 49.
 - **Tracking:** [#20](https://github.com/ppcdaniel/sarif-regress/issues/20).
 - **Disposition:** matcher v3.2 carries an explicit conflict bit into admission and vetoes collided
   derived/context and weak-message edges when another available context representation conflicts.
-  Closure remains contingent on exact-head hosted regression evidence.
+  Exact-head Ubuntu and Windows product suites passed in stage-one run `30761620623` and stage-two
+  run `30762486314`; issue closure remains contingent only on the final normal-mode run.
 
 ### H-07 — Code-flow anchors can act as unbounded primary identity
 
@@ -227,8 +228,9 @@ Total recorded findings: 49.
 - **Tracking:** [#21](https://github.com/ppcdaniel/sarif-regress/issues/21).
 - **Disposition:** matcher v3.2 removes code flow from edge admission and occurrence-counts anchor
   identities independently on both input sides; only a one-per-side anchor can rank an edge already
-  admitted by independent evidence. Repeated anchors retain one bounded degradation trace. Closure
-  remains contingent on exact-head hosted regression evidence.
+  admitted by independent evidence. Repeated anchors retain one bounded degradation trace.
+  Exact-head Ubuntu and Windows product suites passed in stage-one run `30761620623` and stage-two
+  run `30762486314`; issue closure remains contingent only on the final normal-mode run.
 
 ### H-08 — Candidate-edge bounds are applied after full edge materialisation
 
@@ -268,9 +270,9 @@ Total recorded findings: 49.
 - **Tracking:** [#27](https://github.com/ppcdaniel/sarif-regress/issues/27).
 - **Disposition:** partially remediated, still open. Release and determinism projections are
   authenticated and byte-compared. The stable resource projection correctly omits volatile timing
-  and peak-memory values, but the composite scanner still requires projection payloads to equal the
-  full supporting evidence. Issue #27 now tracks an explicit full-evidence-to-stable-projection
-  derivation and cross-binding; issue #28 independently blocks composite promotion.
+  and peak-memory values, and the scanner now derives that stable subset. Issue #27 remains open
+  until the full authenticated supporting bytes and structural digest are cross-bound in one
+  composite report. Issue #28 no longer blocks the safe-stop evidence.
 
 ## Medium findings
 
@@ -486,7 +488,8 @@ Medium findings that are not fixed must appear in release-readiness, security, a
 supported-evidence documentation. A safe preview remains blocked until preview criteria are
 defined. A stable release remains blocked by exposed-holdout recall, the PMD evidence gap,
 licensing disposition, release notices/gates, unresolved matcher-safety findings, and composite
-research-evidence issues #27 and #28.
+research-evidence issue #27. Issue #28's source-free control derivation is resolved; that fix did
+not change the failed sparse metrics or authorize matcher v4.
 
 ## Nightly research-infrastructure addendum
 
@@ -740,12 +743,12 @@ research evidence, not the frozen v2/v3/v3.1 records.
 - **Blocks PR #8/#13:** no. **Blocks the nightly hardening PR:** until corrected and regenerated.
   **Blocks release or matcher v4:** yes for reliance on the sparse experiment report.
 - **Tracking:** [#28](https://github.com/ppcdaniel/sarif-regress/issues/28).
-- **Disposition:** open. A focused correction and real-shape regression test passed locally, but
-  publication was refused because the existing scanner itself contains producer-specific research
-  policy. No alternate publication path was used, no control evidence was changed, and no composite
-  experiment report was promoted. The already authenticated
-  `94c906d485f55bb1900f159caa1abd73d71ee56c` projections remain bound to the unchanged scanner and
-  corpus manifest; #28 tracks the blocker.
+- **Disposition:** resolved without changing the control. The source-preflight requirement is now
+  derived from whether the predeclared variant consumes source context, and the real `0/0/19`
+  regression test remains source-free. Exact-head holdout/sparse run `30761620623` admitted the
+  refreshed manifests, reproduced the control and four source-backed variants on Ubuntu and
+  Windows, authenticated their artifacts, and uploaded the candidate before the expected stale
+  committed-evidence comparison. The limitation now records #27 as its remaining composite blocker.
 
 ### H-16 — The stable resource projection embedded volatile benchmark measurements
 
@@ -791,6 +794,11 @@ research evidence, not the frozen v2/v3/v3.1 records.
   transformation. Update the integrity-bound scanner/manifest and regenerate all projections.
 - **Blocks PR #8/#13:** no. **Blocks the nightly hardening PR:** no because no composite report is
   claimed. **Blocks composite promotion/release evidence:** yes; tracked in #27.
+- **Disposition:** the scanner now derives a versioned stable subset from the full resource shape,
+  validates its structural-observation digest, and has focused transformation tests. Exact-head
+  benchmark run `30761620637` generated the stable candidate after all twelve matrix jobs passed.
+  Issue #27 remains open because no single composite report yet cross-binds every authenticated
+  supporting byte.
 
 ### M-21 — The resource-projection schema and unit guard are under-constrained
 
@@ -836,8 +844,9 @@ merged pull request.
 - **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the hardening PR and
   release:** yes.
 - **Tracking:** existing release-gate issue #19.
-- **Disposition:** fixed locally; the stage detector test asserts the exact file set. Hosted stage-2
-  execution remains required.
+- **Disposition:** fixed and exercised in stage-two run `30762486314`. Its mode detector selected
+  `stage2` for both operating systems, the coordinator accepted the complete exact file set, and the
+  workflow reached only the deliberate final-refusal job.
 
 ### B-03 — Candidate-unbound CI validated frozen bytes against future schemas
 
@@ -853,7 +862,9 @@ merged pull request.
 - **Blocks merging PR #8:** no. **Blocks merging PR #13:** no. **Blocks the hardening PR and
   release:** yes.
 - **Tracking:** [#30](https://github.com/ppcdaniel/sarif-regress/issues/30).
-- **Disposition:** fixed locally without changing frozen v3.1 bytes; hosted CI remains required.
+- **Disposition:** fixed without changing frozen v3.1 bytes. Hosted CI runs `30761620627` and
+  `30762486272` passed the stage-aware validation tests on Ubuntu and Windows; both bootstrap
+  stages also reached their intended coordinators.
 
 ### H-17 — Attestation-bearing artifacts were uploaded before a later fallible step
 
@@ -869,8 +880,9 @@ merged pull request.
   leaving bootstrap dependencies able to generate candidates.
 - **Blocks merging PR #8/#13:** no. **Blocks the hardening PR and release:** yes.
 - **Tracking:** existing release-gate issue #19.
-- **Disposition:** fixed locally and covered by workflow-order/dependency assertions; hosted stage 1,
-  stage 2, and normal runs remain required.
+- **Disposition:** fixed and covered by workflow-order/dependency assertions. Stage-one run
+  `30761620623` and stage-two run `30762486314` both uploaded their attestation-bearing artifact
+  only from a successful coordinator after sparse comparison; normal-mode verification remains.
 
 ### H-18 — Comparison field renames reused schema version 3
 
@@ -883,8 +895,9 @@ merged pull request.
   schema-3 bytes, and make bootstrap/release verifiers reject the wrong envelope.
 - **Blocks merging PR #8/#13:** no. **Blocks the hardening PR and release:** yes.
 - **Tracking:** [#30](https://github.com/ppcdaniel/sarif-regress/issues/30).
-- **Disposition:** fixed locally; static release/stage tests pass and hosted .NET evidence remains
-  required.
+- **Disposition:** fixed. Schema 4, archived v3.1 schema 3, and wrong-envelope refusals passed hosted
+  Ubuntu and Windows tests in CI runs `30761620627` and `30762486272` and in both bootstrap product
+  jobs. Final normal-mode verification remains for issue closure.
 
 ### H-19 — Sparse implementation inventories had no supported deterministic refresh path
 
@@ -906,8 +919,11 @@ merged pull request.
 - **Blocks merging PR #8/#13:** no. **Blocks the hardening PR:** until the manifest is refreshed and
   hosted candidates are produced. **Blocks release:** yes for any current sparse-evidence claim.
 - **Tracking:** [#31](https://github.com/ppcdaniel/sarif-regress/issues/31).
-- **Disposition:** open. Failed run `30760917264` produced no sparse candidate artifact; no old
-  metric or evidence hash has been rebound to the changed implementation.
+- **Disposition:** the immediate evidence blocker is resolved. The exact 131-file implementation
+  inventory and 67-file corpus inventory were deterministically refreshed, the strict scanner
+  passed, and exact-head runs `30761620623`, `30761620626`, and `30761620637` produced authenticated
+  replacement candidates bound to those manifest hashes. Issue #31 remains open for a reusable
+  supported refresh command so future changes do not require a manual mechanical update.
 
 ### M-24 — The assignment-solver regression test depended on code-flow edge admission
 
@@ -925,9 +941,10 @@ merged pull request.
   admission-refusal tests responsible for the new safety contract.
 - **Blocks PR #8/#13/release:** no product defect independently. **Blocks the hardening PR:** until
   the test again isolates assignment behaviour and passes on both hosted operating systems.
-- **Disposition:** fixed locally by replacing only the trap's code-flow-only leg with a unique raw
-  context edge. The product matcher and expected two-pair assignment remain unchanged; hosted
-  Ubuntu and Windows execution is still required.
+- **Disposition:** resolved by replacing only the trap's code-flow-only leg with a unique raw
+  context edge. The product matcher and expected two-pair assignment remain unchanged. Exact-head
+  CI run `30761620627` passed all 545 tests on each operating system, and holdout run
+  `30761620623` independently passed the bootstrap product suites on Ubuntu and Windows.
 
 ### M-23 — Pre-push checksum and research manifests became stale during integration
 

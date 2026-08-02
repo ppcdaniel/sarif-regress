@@ -152,9 +152,10 @@ resolution combined with another qualifying identity signal. Explicit rule alias
 qualifying path and context evidence. When there is no reliable fingerprint, no embedded snippet,
 no trusted source snapshot, and only non-unique rule/path/message/location evidence, SarifRegress
 leaves findings unmatched. Missing source evidence never promotes path or message coincidence.
-This is the endorsed pre-release evidence profile; open matcher-safety issues #20 and #21 mean it is
-not yet a complete implementation invariant, so outputs outside the profile are not release-backed
-claims.
+This is the endorsed pre-release evidence profile. Matcher v3.2 makes its two reviewed admission
+boundaries implementation invariants: conflicting context vetoes collided or weak admission, and
+code-flow anchors cannot admit an edge. Exact-head hosted product tests on Ubuntu and Windows cover
+both boundaries. Outputs outside the supported profile are still not release-backed claims.
 
 `enableTokenWindows` opts into repository-backed `token-window/v1` evidence. The adapter derives a
 bounded sequence of terms around the finding region after normalising whitespace and ignoring

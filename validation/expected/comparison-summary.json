@@ -58,7 +58,7 @@
     "noUnexplainedIngestionFailures": true,
     "noStructuralFailures": true,
     "completeLabelGraphSatisfied": false,
-    "crossPlatformByteIdentity": false,
+    "crossPlatformByteIdentity": true,
     "evaluationCompleted": true,
     "everyChangedDecisionExplained": true
   },
@@ -1421,7 +1421,6 @@
   "recommendationReasons": [
     "recall-below-threshold",
     "per-producer-recall-below-threshold",
-    "complete-label-graph-failed",
-    "cross-platform-determinism-failed"
+    "complete-label-graph-failed"
   ]
 }

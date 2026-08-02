@@ -29,8 +29,9 @@ The implementation is stacked on the still-open independent-validation PR:
 | Evaluated matcher-v3.1 implementation | `863210dfda02690b0d9ee579f5d7fd7a45545b1e` |
 | Matcher-v3.1 source-tree SHA-256 | `fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f` |
 | Matcher-v3.2 branch | `agent/nightly-release-hardening` |
-| Matcher-v3.2 evidence state | `candidate-unbound`; exact hosted promotion pending |
-| Authenticated sparse-evidence source head | `94c906d485f55bb1900f159caa1abd73d71ee56c` |
+| Matcher-v3.2 evidence state | Stage-two comparison promoted; normal exact-head verification pending |
+| Authenticated sparse-evidence source head | `4cc6faf0167d7da385c1d204cba97d1f34ccb479` |
+| Stage-two promotion source head | `ac081e70ab2911c02bafffce5661eaec76a871fa` |
 | Matcher | `sarifregress/matcher/v3.2` |
 | Product output/configuration schemas | `1` / `1` |
 | Holdout manifest SHA-256 | `b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379` |
@@ -154,10 +155,11 @@ degraded collision evidence rather than being treated as a unique identity.
 The exact 13×13 reproduction and a 30×30 repeated-context test remain bounded
 and input-order invariant.
 
-Five accepted Gitleaks pairs still have a classification mismatch
+In the matcher-v3 result, five accepted Gitleaks pairs still have a classification mismatch
 (`gitleaks-match-014` through `-018`). Their identity is correct, so they
 are true-positive correspondence edges, but the complete label graph gate
-remains failed and the mismatches stay visible in the report.
+remains failed and the mismatches stay visible in that frozen report. Matcher v3.1's later general
+classification correction resolves all five without changing correspondence or labels.
 
 ## Phase 3: sparse SARIF safe stop
 
@@ -330,9 +332,11 @@ resource limits:
 
 The active comparison summary advances to schema version `4` because v3.2 replaces the v3 report
 hash fields with v3.1 and v3.1-to-v3.2 delta hashes. Frozen v3.1 schema-3 bytes remain under
-`validation/history/matcher-v3.1/`. Until both fail-closed hosted promotion stages complete, the
-interpretation erratum marks the v3.2 report `candidate-unbound`; no candidate artifact is release
-evidence.
+`validation/history/matcher-v3.1/`. The interpretation erratum now hash-binds the exact v3.2 report
+generated on source head `4cc6faf0167d7da385c1d204cba97d1f34ccb479`. Stage-two run `30762486314`
+on `ac081e70ab2911c02bafffce5661eaec76a871fa` reproduced seven normalized files byte-identically
+across Ubuntu and Windows, promoted only the resulting comparison and checksum binding, and then
+stopped at the deliberate final-promotion refusal. Neither bootstrap artifact is release evidence.
 
 ## External baseline
 
@@ -365,13 +369,21 @@ The 1,000-finding resource smoke remains part of normal CI. No assignment,
 candidate-pair, retained-edge, repository-containment, or source-read ceiling
 was increased.
 
-The later sparse experiment's original supporting artifacts are bound to source head
-`94c906d485f55bb1900f159caa1abd73d71ee56c`: holdout/sparse run `30725861186`, determinism run
-`30725861139`, and resource run `30725861161`. After removing volatile measurements from the stable
-resource projection, exact-head runs `30727269210`, `30727269224`, and `30727269219` independently
-reproduced the current release, determinism, and resource projection bytes. This is not the
-composite cross-binding tracked by #27. The 1k/10k/100k resource matrix passed for the SARIF-only
-matcher, but it did not execute source-context projection; that production gate remains unproved.
+The current sparse experiment role artifacts are bound to source head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479`: CI run `30761620627` succeeded; holdout/sparse run
+`30761620623`, determinism run `30761620626`, and resource run `30761620637` generated authenticated
+promotion candidates. Their coordinators authenticated exact artifact
+IDs, names, archive digests, run IDs, and heads, then reproduced the release, determinism, and
+stable resource projection bytes. The candidate workflows failed only at the expected stale
+committed-projection comparison or the deliberate promotion refusal. This is not the composite
+cross-binding tracked by #27. The 1k/10k/100k resource matrix passed for the SARIF-only matcher, but
+it did not execute source-context projection; that production gate remains unproved.
+
+On stage-two promotion head `ac081e70ab2911c02bafffce5661eaec76a871fa`, CI run `30762486272`,
+determinism run `30762486305`, and benchmark run `30762486292` succeeded. Holdout run `30762486314`
+passed every product, capture, sparse, schema, and coordinator job and concluded `failure` only at
+its deliberate final-refusal job. The coordinator artifact was authenticated before the two
+promotable files were accepted.
 
 Configured bases remain local, lexical, non-fetching, and fail closed.
 Occurrence indexing is bounded by the already ingested findings and stores
@@ -382,7 +394,7 @@ code, inspect secret values semantically, or use machine learning.
 
 The fixed aggregate thresholds are precision at least 0.95 and recall at
 least 0.90; each producer requires precision at least 0.95 and recall at
-least 0.80. The last bound matcher v3.1 report passes every precision, classification, ambiguity,
+least 0.80. The bound matcher v3.2 report passes every precision, classification, ambiguity,
 ingestion, structural, trace, and determinism condition, but fails aggregate
 recall, PMD recall, and the complete label graph. The recommendation therefore
 remains `blocked`.
@@ -398,8 +410,8 @@ The clean corpus does not change that universe. Its best variants reached only `
 scenarios; the tied best variants also failed family B's mismatched-snapshot scenario. Snapshot
 preflight and later reads are not one immutable operation, and source projection lacks bounded
 resource evidence. Issue #27 additionally requires an explicit full-resource-to-stable-projection
-derivation and cross-binding, while issue #28 prevents the current validator from representing the
-SARIF-only `0/0/19` control without falsely deriving source preflight. The typed
+derivation and cross-binding. Issue #28's incorrect source-preflight derivation for the SARIF-only
+`0/0/19` control is fixed without changing that control. The typed
 `sparse-experiment-limitation/v1` record and individually authenticated role projections are
 preserved without changing either source or resource evidence.
 
@@ -460,9 +472,8 @@ python3 -B validation/research/sparse-sarif/tools/scan_contamination.py \
 ```
 
 See `validation/research/sparse-sarif/README.md` for label-neutral execution and post-run scoring.
-No composite `expected/experiment-report.json` can currently be reproduced while issues #27 and
-#28 are open; the checked-in `sparse-experiment-limitation.json` is the authoritative safe-stop
-record.
+No composite `expected/experiment-report.json` is currently claimed while issue #27 remains open;
+the checked-in `sparse-experiment-limitation.json` is the authoritative safe-stop record.
 
 Extended deterministic datasets use:
 

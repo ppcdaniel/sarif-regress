@@ -501,14 +501,15 @@ if (
     $Limitation.kind -ne 'sparse-experiment-limitation/v1' -or
     $Limitation.decision -ne 'document-limitation' -or
     $Limitation.matcherV4Implemented -ne $false -or
-    $Limitation.sourceHeadSha -ne '94c906d485f55bb1900f159caa1abd73d71ee56c' -or
-    $Limitation.blockedCompositeValidationIssue -ne 28
+    $Limitation.sourceHeadSha -ne '4cc6faf0167d7da385c1d204cba97d1f34ccb479' -or
+    $Limitation.matcherAlgorithmVersion -ne 'sarifregress/matcher/v3.2' -or
+    $Limitation.blockedCompositeValidationIssue -ne 27
 ) {
     throw 'The sparse limitation record does not match the reviewed safe stop.'
 }
 $Limitation |
     Select-Object kind, decision, matcherV4Implemented, sourceHeadSha,
-        blockedCompositeValidationIssue |
+        matcherAlgorithmVersion, blockedCompositeValidationIssue |
     Format-List
 ```
 

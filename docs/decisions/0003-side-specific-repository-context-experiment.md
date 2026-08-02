@@ -40,6 +40,12 @@ issue #27 requires an explicit full-resource-to-stable-projection derivation and
 while issue #28's validator incorrectly requires source preflight for the SARIF-only control. No
 control or resource evidence was changed to satisfy either contract gap.
 
+The promotion addendum re-ran every role on matcher v3.2 source head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479` in runs `30761620623`, `30761620626`, and
+`30761620637`. The SARIF-only preflight defect was corrected and regression-tested without changing
+its `0 TP / 0 FP / 19 FN` evidence. The promoted limitation therefore records
+`blockedCompositeValidationIssue: 27`; #28 no longer blocks the safe-stop record.
+
 At the pre-capture checkpoint, the contamination policy rejects every `implement-v4` report even
 when its projected booleans and hashes appear green. That decision cannot become admissible until
 role-specific parsers independently validate and cross-reference the implementation, clean-PMD,
@@ -52,12 +58,13 @@ projection and SHA-256. Release and determinism projections are closed, role-spe
 whose admitted corpus/implementation hashes and complete ordered five-variant semantic payloads
 equal their supporting documents. The resource role now deliberately projects only stable
 pass/structure references while its supporting artifact retains volatile timing and peak-memory
-cells. The current scanner has not yet implemented or cross-bound that derivation and still expects
-full payload equality; issue #27 tracks this gap. A missing reference, digest mismatch, wrong role,
-or unrelated hash-valid file still fails closed. Workflow run/head/artifact identities remain in
-the wrapper rather than the projection, because artifact IDs and digests do not exist until upload
-and would otherwise make a coordinator projection self-referential and unstable across strict
-reruns.
+cells. The scanner now derives the stable resource subset and binds its structural-observation
+digest, but the retained limitation does not yet cross-bind every full authenticated supporting
+byte into one composite report; issue #27 tracks that remaining gap. A missing reference, digest
+mismatch, wrong role, or unrelated hash-valid file still fails closed. Workflow run/head/artifact
+identities remain in the wrapper rather than the projection, because artifact IDs and digests do
+not exist until upload and would otherwise make a coordinator projection self-referential and
+unstable across strict reruns.
 
 This local binding is necessary but is not a signature: a repository editor could replace a
 projection and its digest together. Final evidence therefore additionally requires an
@@ -351,8 +358,10 @@ multiple times, or silently choose an equal optimum.
 ## Consequences
 
 The safe-stop branch was selected. No side-specific product context, CLI/configuration field,
-matcher evidence tier, or matcher-v4 identifier was added. The product remains
-`sarifregress/matcher/v3.1` with one shared `--repo`/`repoRoot`.
+matcher evidence tier, or matcher-v4 identifier was added. At the experiment decision point the
+product remained `sarifregress/matcher/v3.1` with one shared `--repo`/`repoRoot`. The later v3.2
+revision did not change the experiment or add sparse evidence; it only hardened the existing
+context-conflict and code-flow admission boundaries.
 
 The checked-in decision record is schema version `1`, kind
 `sparse-experiment-limitation/v1`. It has no `selectedVariant` field. It binds the label-neutral
@@ -363,12 +372,11 @@ contains only reproducible pass/fail and structural evidence references.
 
 The planned composite schema-version-2 `experiment-report.json` is intentionally absent. Issue #27
 requires the scanner to derive a versioned stable resource subset from full authenticated runtime
-evidence and cross-bind its structural-observation digest. Issue #28 separately tracks a validator
-defect that derives source-preflight requirements from the SARIF-only control's
-`0 TP / 0 FP / 19 FN` recall even though that control never reads a repository. Focused fixes must
-update the integrity-bound scanner and implementation manifest and regenerate every exact-head
-projection. Closing both issues would make the composite report representable; it would not change
-any metric, pass a safety gate, or authorize matcher v4.
+evidence and cross-bind its structural-observation digest into the complete evidence graph. Issue
+#28's separate validator defect is corrected: source-preflight requirements are derived only for
+variants that consume source context, so the SARIF-only control remains source-free. Closing #27
+would make the composite report representable; it would not change any metric, pass a safety gate,
+or authorize matcher v4.
 
 The supported product evidence profile remains at least one reliable bounded identity source: a
 non-colliding producer fingerprint; reliable embedded source context or bounded token context from

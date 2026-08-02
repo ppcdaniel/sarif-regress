@@ -143,8 +143,11 @@ path interpretation, not identity proof. Side-specific baseline/candidate roots 
 and are not shipped. Findings with no reliable fingerprint, no embedded snippet, no trusted source
 snapshot, and only non-unique rule/path/message/location evidence are intentionally left unmatched.
 Matcher v3.2 enforces the two previously open safety boundaries: conflicting context vetoes
-collided or weak admission, and code-flow anchors cannot admit an edge. Exact-head hosted evidence
-is still required before those issue dispositions are closed.
+collided or weak admission, and code-flow anchors cannot admit an edge. Exact-head holdout run
+`30761620623` on `4cc6faf0167d7da385c1d204cba97d1f34ccb479` passed the Linux and Windows product
+suites and byte-compared candidate reports in its successful coordinator job. The workflow
+conclusion was `failure`, as designed, after a stale sparse-projection comparison and the deliberate
+stage-one promotion refusal; it was not release evidence.
 
 The public corpus gates precision at `0.95`, recall at `0.90`, exact classifications and diagnostics,
 zero silently matched labelled ambiguity, and byte-identical approved Windows/Linux reports.
@@ -160,9 +163,8 @@ code-flow admission without changing the frozen labels or thresholds. The aggreg
 PMD research corpus reached at best `9 TP / 0 FP / 10 FN` (recall `0.473684`) and failed the fixed
 recall and production-safety gates. The
 [hash-bound interpretation erratum](validation/holdout/interpretation-erratum.json) qualifies the
-legacy v3/v3.1 report labels without changing their metrics or frozen bytes and marks v3.2
-candidate bytes unbound until hosted promotion completes. Matcher v4 was not
-created and release remains **blocked**.
+legacy v3/v3.1 report labels without changing their metrics or frozen bytes and binds the exact
+matcher-v3.2 exposed-holdout report. Matcher v4 was not created and release remains **blocked**.
 
 ## Commands
 
@@ -207,9 +209,10 @@ for packaging and release verification.
 | Evaluation and interoperability | [Corpus](docs/corpus.md) · [Independent holdout](docs/independent-validation.md) · [v3/v3.1/v3.2 generalisation](docs/real-producer-generalisation.md) · [Side-specific-context ADR](docs/decisions/0003-side-specific-repository-context-experiment.md) · [Frozen clean-corpus protocol](validation/research/sparse-sarif/README.md) · [Limitation record](validation/research/sparse-sarif/expected/sparse-experiment-limitation.json) · [GitHub profile](docs/github-compatibility.md) |
 
 The composite sparse `expected/experiment-report.json` is intentionally absent while issue #27
-tracks full-resource-to-stable-projection derivation/cross-binding and issue #28 blocks its
-scientifically correct SARIF-only control. The typed limitation record and individually
-authenticated role projections are preserved instead; they do not authorize matcher v4.
+tracks full-resource-to-stable-projection derivation/cross-binding. Issue #28's SARIF-only
+preflight defect is corrected without changing control evidence. The typed limitation record and
+individually authenticated role projections are preserved instead; they do not authorize matcher
+v4.
 
 The supplied [architecture](https://github.com/ppcdaniel/sarif-regress/blob/main/docs/architecture.md)
 is the source of truth. SarifRegress is not a hosted service, general SARIF viewer, or automatic

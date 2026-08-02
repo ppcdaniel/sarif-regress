@@ -70,11 +70,11 @@ bounded benchmark result. These are production security/resource gaps, not permi
 to weak matching.
 
 The sparse research role projections authenticated on source head
-`94c906d485f55bb1900f159caa1abd73d71ee56c` are retained as validation evidence. Issue #27 requires
-an explicit full-resource-to-stable-projection derivation and cross-binding; issue #28 prevents the
-composite experiment report from representing the SARIF-only control without falsely claiming
-source preflight. These are validation trust-boundary limitations and do not weaken or extend the
-product's runtime containment guarantee.
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479` are retained as validation evidence. Issue #27 requires
+an explicit full-resource-to-stable-projection derivation and cross-binding before a composite
+experiment report is claimed. The SARIF-only control's former preflight derivation defect is fixed
+without adding a source read. This validation trust-boundary limitation does not weaken or extend
+the product's runtime containment guarantee.
 
 Optional `token-window/v1` evidence is enabled only by
 `matching.enableTokenWindows`. It normalises whitespace and ignores blank-line-only movement, but

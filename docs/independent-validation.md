@@ -6,7 +6,7 @@
 > [Real-producer generalisation](real-producer-generalisation.md); none of the
 > v2 labels, thresholds, difficult cases, or reports were replaced. The
 > [interpretation erratum](../validation/holdout/interpretation-erratum.json) records that matcher
-> v3/v3.1 reused an exposed holdout and therefore are regression evidence, not additional
+> v3/v3.1/v3.2 reused an exposed holdout and therefore are regression evidence, not additional
 > independent evaluations.
 
 ## Result

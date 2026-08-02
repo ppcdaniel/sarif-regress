@@ -45,6 +45,8 @@ Release status: **blocked**.
 - Conflicting context now vetoes collision-only/weak admission, and code-flow anchors can only rank
   already admissible edges when unique on both input sides; neither change adds a producer-specific
   rule or raises a graph/resource limit.
+- Sparse evidence preflight is now derived from whether a variant consumes source context; the
+  SARIF-only `0 TP / 0 FP / 19 FN` control remains source-free and unchanged.
 
 ### Security
 
@@ -68,7 +70,7 @@ Release status: **blocked**.
 - Several matcher-security, memory, release-gating, validation-terms, and notice-distribution
   blockers remain open. See `docs/release-readiness.md`.
 - The typed sparse limitation record is preserved, but composite experiment-report promotion is
-  blocked by issues #27 and #28; no composite report is claimed.
+  blocked by issue #27's full-resource derivation/cross-binding; no composite report is claimed.
 - Deterministic reports are verified; reproducible package bytes are not yet claimed.
 
 ## [0.1.0] — Unreleased
