@@ -252,8 +252,9 @@ the input supplies enough independently bounded evidence to admit an edge, such 
 
 Matcher v3.2 turns two review findings into explicit implementation boundaries: conflicting context
 vetoes collided or weak admission, and code-flow anchors cannot admit an edge and can rank only when
-unique on both input sides. Exact-head run `30761620623` confirmed both changes on hosted Ubuntu and
-Windows; the release remains blocked independently by PMD recall and the other readiness findings.
+unique on both input sides. Exact-head normal-mode run `30763347894` confirmed both changes on
+hosted Ubuntu and Windows; the release remains blocked independently by PMD recall and the other
+readiness findings.
 
 `--repo` and configuration `repoRoot` bind both inputs to one shared root. The experiment did
 **not** establish that independently supplied baseline and candidate roots satisfy the production
@@ -267,14 +268,14 @@ result and a documented limitation, not an ingestion error.
 ## 12. Determinism and security engineering
 
 **Tested fact.** Project-owned matcher-v3 and v3.1 reports were reproduced on hosted Ubuntu and
-Windows product heads, and matcher-v3.2 candidate reports were byte-compared on exact head
-`4cc6faf0167d7da385c1d204cba97d1f34ccb479`. Stable output excludes ambient absolute repository
+Windows product heads, and matcher-v3.2 reports were reproduced in normal mode on exact head
+`d880bd0a0495650a34ae2faa8521f170af80d7a9`. Stable output excludes ambient absolute repository
 paths. The 1k, 10k, and 100k SARIF-only benchmark cells retained the configured limits and oversized
 pathological buckets were refused. Ubuntu enforced its calibrated runtime and memory budgets;
 Windows recorded observations and byte-identical deterministic projections without applying the
 Ubuntu-calibrated runtime ceilings. Source-context projection was not benchmarked.
-These facts do not by themselves attest a later documentation head; only a fresh exact-head run
-confirmed through the GitHub connector can do that.
+CI run `30763347889`, holdout run `30763347894`, determinism run `30763347908`, and benchmark run
+`30763347910` all concluded success and were confirmed through the GitHub connector.
 
 Repository context uses bounded, regular-file-only, strict-decoding reads; rejects traversal,
 encoded traversal, network and UNC paths, Windows device paths, symbolic links, junctions, and

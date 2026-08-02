@@ -43,7 +43,7 @@ historical severity is not rewritten by disposition.
 | Severity | Original review | Research addendum | Promotion addendum | Total | Current effect |
 |---|---:|---:|---:|---:|---|
 | Blocker | 1 | 0 | 2 | 3 | Historical and pre-push promotion defects remain counted after remediation |
-| High | 9 | 7 | 3 | 19 | Mixed resolved and open findings; licensing, release, manifest-refresh, and composite-evidence blockers remain |
+| High | 9 | 7 | 3 | 19 | Mixed resolved and open findings; licensing, release, and composite-evidence blockers plus a manifest-refresh follow-up remain |
 | Medium | 14 | 8 | 2 | 24 | Metric semantics, context/output/package hardening, compatibility, test isolation, and research-evidence durability |
 | Low | 3 | 0 | 0 | 3 | Version authority, public constructor compatibility, and unused restore path |
 
@@ -131,7 +131,9 @@ Total recorded findings: 49.
 - **Disposition:** addressed in the hardening work by a strict
   [hash-bound interpretation erratum](../../validation/holdout/interpretation-erratum.json) and
   corrected current prose. The frozen matcher-v2 and matcher-v3 histories are unchanged; issue
-  closure still requires exact-head verification.
+  #16 was closed after normal-mode holdout run `30763347894` reproduced the bound reports and
+  interpretation on hosted Ubuntu and Windows at exact head
+  `d880bd0a0495650a34ae2faa8521f170af80d7a9`.
 
 ### H-03 — Required validation uses binaries with unresolved maintenance terms
 
@@ -187,6 +189,11 @@ Total recorded findings: 49.
 - **Blocks merging PR #13:** no.
 - **Blocks release:** yes.
 - **Tracking:** [#19](https://github.com/ppcdaniel/sarif-regress/issues/19).
+- **Disposition:** implementation and behavioral coverage are present. CI run `30763347889` and
+  normal holdout run `30763347894` passed on exact head
+  `d880bd0a0495650a34ae2faa8521f170af80d7a9`. Issue #19 remains open because its acceptance
+  criteria require a real tagged-commit run; this mission forbids creating a tag or release, so no
+  tag-triggered execution is claimed.
 
 ### H-06 — Collided context can be admitted even when other context conflicts
 
@@ -207,8 +214,8 @@ Total recorded findings: 49.
 - **Tracking:** [#20](https://github.com/ppcdaniel/sarif-regress/issues/20).
 - **Disposition:** matcher v3.2 carries an explicit conflict bit into admission and vetoes collided
   derived/context and weak-message edges when another available context representation conflicts.
-  Exact-head Ubuntu and Windows product suites passed in stage-one run `30761620623` and stage-two
-  run `30762486314`; issue closure remains contingent only on the final normal-mode run.
+  Exact-head Ubuntu and Windows product suites passed in both bootstrap stages and normal-mode run
+  `30763347894`; issue #20 is closed.
 
 ### H-07 — Code-flow anchors can act as unbounded primary identity
 
@@ -229,8 +236,8 @@ Total recorded findings: 49.
 - **Disposition:** matcher v3.2 removes code flow from edge admission and occurrence-counts anchor
   identities independently on both input sides; only a one-per-side anchor can rank an edge already
   admitted by independent evidence. Repeated anchors retain one bounded degradation trace.
-  Exact-head Ubuntu and Windows product suites passed in stage-one run `30761620623` and stage-two
-  run `30762486314`; issue closure remains contingent only on the final normal-mode run.
+  Exact-head Ubuntu and Windows product suites passed in both bootstrap stages and normal-mode run
+  `30763347894`; issue #21 is closed.
 
 ### H-08 — Candidate-edge bounds are applied after full edge materialisation
 
@@ -748,7 +755,8 @@ research evidence, not the frozen v2/v3/v3.1 records.
   regression test remains source-free. Exact-head holdout/sparse run `30761620623` admitted the
   refreshed manifests, reproduced the control and four source-backed variants on Ubuntu and
   Windows, authenticated their artifacts, and uploaded the candidate before the expected stale
-  committed-evidence comparison. The limitation now records #27 as its remaining composite blocker.
+  committed-evidence comparison. Normal-mode run `30763347894` then reproduced the promoted bytes;
+  issue #28 is closed. The limitation records #27 as its remaining composite blocker.
 
 ### H-16 — The stable resource projection embedded volatile benchmark measurements
 
@@ -846,7 +854,8 @@ merged pull request.
 - **Tracking:** existing release-gate issue #19.
 - **Disposition:** fixed and exercised in stage-two run `30762486314`. Its mode detector selected
   `stage2` for both operating systems, the coordinator accepted the complete exact file set, and the
-  workflow reached only the deliberate final-refusal job.
+  workflow reached only the deliberate final-refusal job. Normal run `30763347894` subsequently
+  selected `normal` and succeeded. Issue #19 remains open solely for tag-triggered evidence.
 
 ### B-03 — Candidate-unbound CI validated frozen bytes against future schemas
 
@@ -864,7 +873,8 @@ merged pull request.
 - **Tracking:** [#30](https://github.com/ppcdaniel/sarif-regress/issues/30).
 - **Disposition:** fixed without changing frozen v3.1 bytes. Hosted CI runs `30761620627` and
   `30762486272` passed the stage-aware validation tests on Ubuntu and Windows; both bootstrap
-  stages also reached their intended coordinators.
+  stages reached their intended coordinators, and normal CI/holdout runs `30763347889` and
+  `30763347894` succeeded. Issue #30 is closed.
 
 ### H-17 — Attestation-bearing artifacts were uploaded before a later fallible step
 
@@ -882,7 +892,9 @@ merged pull request.
 - **Tracking:** existing release-gate issue #19.
 - **Disposition:** fixed and covered by workflow-order/dependency assertions. Stage-one run
   `30761620623` and stage-two run `30762486314` both uploaded their attestation-bearing artifact
-  only from a successful coordinator after sparse comparison; normal-mode verification remains.
+  only from a successful coordinator after sparse comparison. Normal run `30763347894` succeeded
+  and emitted a workflow/coordinator-success attestation. Issue #19 remains open only because no
+  tag-triggered workflow was permitted.
 
 ### H-18 — Comparison field renames reused schema version 3
 
@@ -897,7 +909,7 @@ merged pull request.
 - **Tracking:** [#30](https://github.com/ppcdaniel/sarif-regress/issues/30).
 - **Disposition:** fixed. Schema 4, archived v3.1 schema 3, and wrong-envelope refusals passed hosted
   Ubuntu and Windows tests in CI runs `30761620627` and `30762486272` and in both bootstrap product
-  jobs. Final normal-mode verification remains for issue closure.
+  jobs. Normal CI/holdout runs `30763347889` and `30763347894` succeeded; issue #30 is closed.
 
 ### H-19 — Sparse implementation inventories had no supported deterministic refresh path
 

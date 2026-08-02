@@ -35,19 +35,19 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
 - [x] Legacy PMD remains `0 TP / 0 FP / 25 FN`; the clean sparse best result is
   `9 TP / 0 FP / 10 FN`.
 - [x] Zero labelled ambiguity is silently matched in the recorded reports.
-- [ ] Exact final-head development corpus passes.
-- [ ] Exact final-head holdout report and comparison summary reproduce byte-for-byte.
-- [ ] Exact final-head sparse observations, gate evidence, limitation record, and every supporting
+- [x] Exact normal verification head `d880bd0a0495650a34ae2faa8521f170af80d7a9` development corpus passes.
+- [x] Its holdout report and comparison summary reproduce byte-for-byte.
+- [x] Its sparse observations, gate evidence, limitation record, and every supporting
   projection authenticate and reproduce byte-for-byte.
 - [ ] Resolve issue #27's full-resource-to-stable-projection derivation/cross-binding before
   claiming a composite `experiment-report.json`; issue #28's SARIF-only preflight derivation is
   corrected without changing source evidence, resource measurements, or gates.
-- [ ] Any “independent” claim refers only to the original matcher-v2 holdout or a genuinely new
+- [x] Any “independent” claim refers only to the original matcher-v2 holdout or a genuinely new
   blinded corpus; v3/v3.1/v3.2 is labelled exposed/post-hoc regression evidence.
 
 ## Security and dependency disposition
 
-- [ ] Close or safely disposition matcher issues #20 and #21.
+- [x] Matcher issues #20 and #21 are closed with exact normal-mode Ubuntu/Windows evidence.
 - [ ] Prove bounded candidate-edge memory at the documented global cap or narrow the release
   guarantee (#22).
 - [ ] Resolve repository-root lifetime, corpus output/input aliasing, package cleanup, and atomic
@@ -81,11 +81,11 @@ python3 -B validation/research/sparse-sarif/tools/scan_contamination.py \
 git status --short
 ```
 
-- [ ] All JSON parses with duplicate-key rejection and validates against its governing schema.
+- [x] All JSON parses reject duplicate keys and validate against governing schemas.
 - [ ] All workflow YAML parses.
-- [ ] All shell scripts pass syntax checks.
-- [ ] Checksum manifests verify.
-- [ ] Static scans introduce no bytecode/build/generated output.
+- [x] All shell scripts pass syntax checks.
+- [x] Checksum manifests verify.
+- [x] Static scans introduce no bytecode/build/generated output.
 
 ## Linux verification
 
@@ -124,15 +124,18 @@ Windows execution. At minimum run:
 - [ ] Windows package checksum verification succeeds.
 - [ ] Windows standalone and locally installed tool both run a real fixture comparison and produce
   expected JSON/HTML.
-- [ ] Hosted Ubuntu and Windows full CI succeed on the exact final head.
-- [ ] Hosted Ubuntu and Windows holdout and sparse research jobs succeed on the exact final head.
+- [x] Hosted Ubuntu and Windows full CI succeeded on exact head
+  `d880bd0a0495650a34ae2faa8521f170af80d7a9` in run `30763347889`.
+- [x] Hosted Ubuntu and Windows holdout and sparse research jobs succeeded on that head in run
+  `30763347894`.
 - [ ] Hosted package smoke succeeds on both operating systems for the exact same release bundle.
 
 ## Determinism and resources
 
-- [ ] Linux and Windows normalized reports are byte-identical, including holdout, delta, sparse
+- [x] Linux and Windows normalized reports are byte-identical, including holdout, delta, sparse
   experiment, and deterministic benchmark projections.
-- [ ] 1k, 10k, and 100k unique and pathological benchmark gates pass without raising limits.
+- [x] 1k, 10k, and 100k unique and pathological benchmark gates passed in run `30763347910`
+  without raising limits.
 - [ ] Source-context projection has a bounded resource result before any future side-specific root
   design is reconsidered.
 - [ ] Repeated independent package builds either compare byte-identical or release wording clearly

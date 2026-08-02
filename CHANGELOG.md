@@ -47,6 +47,10 @@ Release status: **blocked**.
   rule or raises a graph/resource limit.
 - Sparse evidence preflight is now derived from whether a variant consumes source context; the
   SARIF-only `0 TP / 0 FP / 19 FN` control remains source-free and unchanged.
+- The final matcher-v3.2 reports, sparse projections, and 1k/10k/100k benchmark evidence reproduced
+  on exact head `d880bd0a0495650a34ae2faa8521f170af80d7a9` across hosted Ubuntu and Windows;
+  package smoke passed independently on both systems. Package-byte reproducibility is not claimed,
+  and this verification does not change the blocked release recommendation.
 
 ### Security
 

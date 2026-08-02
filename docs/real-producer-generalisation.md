@@ -29,9 +29,10 @@ The implementation is stacked on the still-open independent-validation PR:
 | Evaluated matcher-v3.1 implementation | `863210dfda02690b0d9ee579f5d7fd7a45545b1e` |
 | Matcher-v3.1 source-tree SHA-256 | `fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f` |
 | Matcher-v3.2 branch | `agent/nightly-release-hardening` |
-| Matcher-v3.2 evidence state | Stage-two comparison promoted; normal exact-head verification pending |
+| Matcher-v3.2 evidence state | Normal exact-head verification succeeded |
 | Authenticated sparse-evidence source head | `4cc6faf0167d7da385c1d204cba97d1f34ccb479` |
 | Stage-two promotion source head | `ac081e70ab2911c02bafffce5661eaec76a871fa` |
+| Normal verification source head | `d880bd0a0495650a34ae2faa8521f170af80d7a9` |
 | Matcher | `sarifregress/matcher/v3.2` |
 | Product output/configuration schemas | `1` / `1` |
 | Holdout manifest SHA-256 | `b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379` |
@@ -384,6 +385,13 @@ determinism run `30762486305`, and benchmark run `30762486292` succeeded. Holdou
 passed every product, capture, sparse, schema, and coordinator job and concluded `failure` only at
 its deliberate final-refusal job. The coordinator artifact was authenticated before the two
 promotable files were accepted.
+
+On normal verification head `d880bd0a0495650a34ae2faa8521f170af80d7a9`, CI run `30763347889`,
+holdout/sparse run `30763347894`, determinism run `30763347908`, and benchmark run `30763347910`
+all succeeded. Each hosted OS passed 545 tests in CI; the holdout coordinator selected `normal`,
+authenticated its inputs, reproduced committed reports and sparse projections byte-for-byte, and
+emitted a success attestation. All twelve 1k/10k/100k benchmark cells passed without changing a
+budget or product limit.
 
 Configured bases remain local, lexical, non-fetching, and fail closed.
 Occurrence indexing is bounded by the already ingested findings and stores

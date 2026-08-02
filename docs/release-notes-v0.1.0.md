@@ -120,8 +120,10 @@ The source can build:
 Package scripts generate SHA-256 manifests. Hosted smoke tests checked checksum verification,
 standalone startup, local-feed tool installation, installed package byte identity, and installed
 tool startup on Linux and Windows at exact matcher-v3.2 source head
-`4cc6faf0167d7da385c1d204cba97d1f34ccb479` in CI run `30761620627`. Real comparison through each
-distribution form, an independent package-byte reproducibility check, and verified licence/notice
+`d880bd0a0495650a34ae2faa8521f170af80d7a9` in CI run `30763347889`. Normal holdout run
+`30763347894`, determinism run `30763347908`, and extended benchmark run `30763347910` also
+succeeded on that exact head. Real comparison through each distribution form, an independent
+package-byte reproducibility check, and verified licence/notice
 inclusion remain outstanding. No asset is available for installation from a public feed or release
 page.
 

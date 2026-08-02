@@ -143,11 +143,11 @@ path interpretation, not identity proof. Side-specific baseline/candidate roots 
 and are not shipped. Findings with no reliable fingerprint, no embedded snippet, no trusted source
 snapshot, and only non-unique rule/path/message/location evidence are intentionally left unmatched.
 Matcher v3.2 enforces the two previously open safety boundaries: conflicting context vetoes
-collided or weak admission, and code-flow anchors cannot admit an edge. Exact-head holdout run
-`30761620623` on `4cc6faf0167d7da385c1d204cba97d1f34ccb479` passed the Linux and Windows product
-suites and byte-compared candidate reports in its successful coordinator job. The workflow
-conclusion was `failure`, as designed, after a stale sparse-projection comparison and the deliberate
-stage-one promotion refusal; it was not release evidence.
+collided or weak admission, and code-flow anchors cannot admit an edge. Normal-mode holdout run
+`30763347894` succeeded on exact head `d880bd0a0495650a34ae2faa8521f170af80d7a9`, reproducing
+the committed reports byte-for-byte on hosted Ubuntu and Windows. CI run `30763347889`, determinism
+run `30763347908`, and all twelve extended benchmark cells in run `30763347910` also succeeded on
+that head. The release remains blocked by the measured recall and separate readiness findings.
 
 The public corpus gates precision at `0.95`, recall at `0.90`, exact classifications and diagnostics,
 zero silently matched labelled ambiguity, and byte-identical approved Windows/Linux reports.

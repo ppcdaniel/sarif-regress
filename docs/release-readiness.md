@@ -89,7 +89,7 @@ independently bounded evidence to admit an edge, such as:
 Matcher v3.2 makes this profile an implementation invariant for the two reviewed gaps:
 conflicting context vetoes collided or weak admission, and code-flow anchors cannot admit edges and
 rank only when unique on both sides. Exact-head product suites on hosted Ubuntu and Windows covered
-both revisions during each bootstrap stage; final normal-mode verification is recorded separately.
+both revisions during each bootstrap stage and normal-mode run `30763347894`.
 
 `--repo` and configuration `repoRoot` bind both inputs to one shared root. Independently supplied
 baseline and candidate roots could become a supported evidence source only after a future design
@@ -144,16 +144,15 @@ Ubuntu/Windows CI and package smoke in run `30727269212`, holdout/sparse validat
 `30727269210`, determinism in `30727269224`, and every extended benchmark cell in `30727269219`.
 Package checks covered checksum verification, self-contained `--help` startup, local-feed tool
 installation, installed-package byte identity, and installed-tool `--help` on both operating
-systems. This agent did not perform local Windows execution. The final promotion head requires its
-own connector-confirmed normal-mode workflow disposition.
+systems. This agent did not perform local Windows execution.
 
 Issues #14 (exact-head workflow execution) and #29 (volatile resource projection) were closed on
 that earlier exact head and those runs. Current matcher-v3.2 head
 `4cc6faf0167d7da385c1d204cba97d1f34ccb479` then passed hosted Ubuntu/Windows CI and package smoke
 in run `30761620627`. Holdout/sparse run `30761620623`, determinism run `30761620626`, and resource
 run `30761620637` authenticated and uploaded exact-head candidates before their expected stale-byte
-comparison or deliberate promotion refusal. Issue #28 is implemented and covered by the exact-head
-sparse admission path; issue #27 remains open for composite evidence promotion.
+comparison or deliberate promotion refusal. Issue #28's implementation is covered by the exact-head
+sparse admission path and is now closed; issue #27 remains open for composite evidence promotion.
 
 On the stage-two promotion head `ac081e70ab2911c02bafffce5661eaec76a871fa`, CI run `30762486272`,
 determinism run `30762486305`, and benchmark run `30762486292` succeeded. Holdout run `30762486314`
@@ -164,6 +163,15 @@ passed every product, PMD capture, sparse, schema, and coordinator job; its over
 normalized files byte-identically across Ubuntu and Windows. Only `comparison-summary.json` and
 its checksum binding changed; the report, metrics, delta, metadata, and truthful stage-one
 attestation remained byte-identical.
+
+Normal verification head `d880bd0a0495650a34ae2faa8521f170af80d7a9` then completed the protocol:
+CI run `30763347889`, holdout/sparse run `30763347894`, determinism run `30763347908`, and extended
+benchmark run `30763347910` all succeeded. CI passed 545 tests on each hosted operating system,
+both package-smoke jobs and the 1k resource smoke passed, the holdout detector selected `normal`,
+and artifact `8838184822` attested workflow/coordinator success plus cross-platform byte identity.
+All twelve extended benchmark cells passed. Issues #16, #20, #21, #28, and #30 were closed with
+this evidence. Issue #19 remains open because its acceptance criteria require a real tagged-commit
+run, which this no-tag mission intentionally did not create.
 
 Matcher-v3.2 promotion used a deliberate two-stage protocol. The first failed workflow authenticated
 the unbound report bytes and recorded the failed workflow separately from its successful
@@ -277,16 +285,12 @@ not treated as closed evidence until its acceptance criteria and final exact-hea
 | #7 / PR #8 | Independent holdout infrastructure remains an open, unmerged draft stack dependency |
 | #11 / #12 / PR #13 | Sparse SARIF remains unsupported; aggregate and PMD recall miss fixed gates; the matcher work remains draft and unmerged |
 | PR #23 | Nightly hardening, release audit, and limitation evidence remain draft and unmerged |
-| #16 | Claim wording is corrected and hash-bound; final normal-mode closure evidence remains pending |
 | #17 | Owner-specific disposition for validation dependency maintenance terms is absent |
 | #18 | Release bundle and package do not contain verified project/runtime/dependency notices |
-| #19 | Authenticated release gating is implemented; final normal-mode acceptance evidence remains pending |
-| #20 | Matcher-v3.2 context-conflict veto passed both bootstrap stages; final normal-mode closure run remains pending |
-| #21 | Matcher-v3.2 ranking-only, occurrence-aware code flow passed both bootstrap stages; final normal-mode closure run remains pending |
+| #19 | Authenticated release gating is implemented and test-covered, but no tagged-commit run was performed because this mission forbids tags |
 | #22 | Global candidate-edge memory behavior is not bounded before object materialisation |
 | #25 | Sparse decision/evidence gate tracking remains open; no v4 may be authorised |
 | #27 | Composite evidence needs an explicit full-resource-to-stable-projection derivation and cross-binding |
-| #30 | Schema 4 and archived-v3.1 compatibility passed both bootstrap stages; final normal-mode closure run remains pending |
 
 The untracked Medium findings listed in the adversarial review also require release disposition:
 lifecycle metric naming, vacuous precision, repository-root lifetime, corpus output/input aliasing,
@@ -294,6 +298,10 @@ package cleanup, atomic-output threat-model wording, binary reproducibility word
 schema-v1 evolution, runner-provided release tooling, real comparison smoke through distribution
 artifacts, durable retention of raw runtime measurements, and a stricter stable-projection schema
 and behavioral test.
+
+Issue #31 remains open as a maintainability follow-up: the immediate manifest/evidence cascade is
+current and normal-mode verified, but the repository still lacks a reusable bounded deterministic
+refresh command.
 
 ## Preview and stable criteria
 
