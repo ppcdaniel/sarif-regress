@@ -44,10 +44,10 @@ historical severity is not rewritten by disposition.
 |---|---:|---:|---:|---:|---|
 | Blocker | 1 | 0 | 2 | 3 | Historical and pre-push promotion defects remain counted after remediation |
 | High | 9 | 7 | 3 | 19 | Mixed resolved and open findings; licensing, release, manifest-refresh, and composite-evidence blockers remain |
-| Medium | 14 | 8 | 1 | 23 | Metric semantics, context/output/package hardening, compatibility, and research-evidence durability |
+| Medium | 14 | 8 | 2 | 24 | Metric semantics, context/output/package hardening, compatibility, test isolation, and research-evidence durability |
 | Low | 3 | 0 | 0 | 3 | Version authority, public constructor compatibility, and unused restore path |
 
-Total recorded findings: 48.
+Total recorded findings: 49.
 
 ## Blocker findings
 
@@ -908,6 +908,26 @@ merged pull request.
 - **Tracking:** [#31](https://github.com/ppcdaniel/sarif-regress/issues/31).
 - **Disposition:** open. Failed run `30760917264` produced no sparse candidate artifact; no old
   metric or evidence hash has been rebound to the changed implementation.
+
+### M-24 — The assignment-solver regression test depended on code-flow edge admission
+
+- **Evidence and code area:** exact-head holdout run `30761477309`, Linux job `91532730149`;
+  `AssignmentSolverTests.Maximum_cardinality_solver_avoids_the_greedy_high_edge_trap` expected two
+  matched decisions but observed three refused/new/resolved decisions. Its second assignment edge
+  existed only because a shared code-flow anchor previously admitted correspondence. Matcher v3.2
+  intentionally removes code-flow anchors from edge admission, so the pure assignment regression
+  no longer constructed the graph it claimed to test.
+- **Why it matters:** an assignment-objective test was coupled to an unrelated, now-rejected
+  evidence heuristic. That obscured whether the failure was in bounded assignment or in the
+  intended admission hardening and stopped all hosted candidate generation.
+- **Smallest safe remediation:** construct the second edge with unique independent context evidence,
+  retain the high-edge trap and the exact two-pair assertions, and leave the separate code-flow
+  admission-refusal tests responsible for the new safety contract.
+- **Blocks PR #8/#13/release:** no product defect independently. **Blocks the hardening PR:** until
+  the test again isolates assignment behaviour and passes on both hosted operating systems.
+- **Disposition:** fixed locally by replacing only the trap's code-flow-only leg with a unique raw
+  context edge. The product matcher and expected two-pair assignment remain unchanged; hosted
+  Ubuntu and Windows execution is still required.
 
 ### M-23 — Pre-push checksum and research manifests became stale during integration
 
