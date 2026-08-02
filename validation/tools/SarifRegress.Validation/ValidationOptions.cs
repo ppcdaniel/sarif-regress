@@ -18,6 +18,9 @@ public enum ValidationCommand
 
     /// <summary>Score a fixed sparse-SARIF observation artifact against labels.</summary>
     SparseEvaluate,
+
+    /// <summary>Emit the exact product resource limits used by hosted evidence.</summary>
+    ResourceLimits,
 }
 
 /// <summary>
@@ -43,6 +46,7 @@ public static class ValidationOptionsParser
     private const string ValidateStructureCommandName = "validate-structure";
     private const string SparseRunCommandName = "sparse-run";
     private const string SparseEvaluateCommandName = "sparse-evaluate";
+    private const string ResourceLimitsCommandName = "resource-limits";
 
     private static readonly ImmutableHashSet<string> KnownOptions =
         ImmutableHashSet.Create(
@@ -68,7 +72,9 @@ public static class ValidationOptionsParser
         + "  SarifRegress.Validation sparse-run --repository-root PATH "
         + "--output-root PATH\n"
         + "  SarifRegress.Validation sparse-evaluate --repository-root PATH "
-        + "--output-root PATH --observations PATH\n\n"
+        + "--output-root PATH --observations PATH\n"
+        + "  SarifRegress.Validation resource-limits --repository-root PATH "
+        + "--output-root PATH\n\n"
         + "evaluate reads the committed frozen evaluation metadata and writes "
         + "sarif-regress-holdout.json, sarif-multitool-baseline.json, "
         + "v3-to-v3.1-delta.json, comparison-summary.json, and "
@@ -104,7 +110,8 @@ public static class ValidationOptionsParser
                 "The generated output root must not overlap the committed expected-output root.");
         }
 
-        if (command == ValidationCommand.ValidateStructure)
+        if (command is ValidationCommand.ValidateStructure
+            or ValidationCommand.ResourceLimits)
         {
             RejectOptions(
                 values,
@@ -194,6 +201,7 @@ public static class ValidationOptionsParser
         ValidateStructureCommandName => ValidationCommand.ValidateStructure,
         SparseRunCommandName => ValidationCommand.SparseRun,
         SparseEvaluateCommandName => ValidationCommand.SparseEvaluate,
+        ResourceLimitsCommandName => ValidationCommand.ResourceLimits,
         _ => throw new ValidationUsageException(
             $"Unknown validation command '{value}'."),
     };

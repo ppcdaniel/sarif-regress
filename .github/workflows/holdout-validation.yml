@@ -100,6 +100,9 @@ jobs:
             validation/research/sparse-sarif/tools/test_scan_contamination.py \
             -v
           python -B \
+            validation/research/sparse-sarif/tools/test_project_release_evidence.py \
+            -v
+          python -B \
             validation/research/sparse-sarif/tools/scan_contamination.py \
             --research-root validation/research/sparse-sarif
           python -B - <<'PY'
@@ -1049,14 +1052,27 @@ jobs:
           cd -- "${RUNNER_TEMP}"
           "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh"
 
+      - name: Record development corpus evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run \
+            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            -- \
+            corpus run \
+            --corpus corpus \
+            --json-out artifacts/holdout-validation/development-corpus-report.json
+
       - name: Upload Linux evaluation evidence
         id: upload-evidence
-        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: holdout-linux
           path: artifacts/holdout-validation
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
 
   windows:
@@ -1126,14 +1142,30 @@ jobs:
             Pop-Location
           }
 
+      - name: Record development corpus evidence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & dotnet run `
+            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            -- `
+            corpus run `
+            --corpus corpus `
+            --json-out artifacts/holdout-validation/development-corpus-report.json
+          if ($LASTEXITCODE -ne 0) {
+            throw "Development corpus failed with exit code $LASTEXITCODE."
+          }
+
       - name: Upload Windows evaluation evidence
         id: upload-evidence
-        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: holdout-windows
           path: artifacts/holdout-validation
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
 
   compare:
@@ -1143,7 +1175,9 @@ jobs:
       - windows
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
+    outputs:
+      artifact_id: ${{ steps.upload-cross-platform-evidence.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-cross-platform-evidence.outputs.artifact-digest }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1186,6 +1220,7 @@ jobs:
           mkdir -p "${verified_directory}"
 
           readonly reports=(
+            'development-corpus-report.json'
             'sarif-regress-holdout.json'
             'sarif-multitool-baseline.json'
             'v3-to-v3.1-delta.json'
@@ -1216,6 +1251,91 @@ jobs:
             fi
             cp -- "${linux_report}" "${verified_directory}/${report_name}"
           done
+
+      - name: Create stable sparse-experiment release projection
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python3 -B - <<'PY'
+          import copy
+          import hashlib
+          import json
+          import stat
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd()
+          verified = root / "artifacts" / "verified"
+          research = root / "validation" / "research" / "sparse-sarif"
+          sys.path.insert(0, str(research / "tools"))
+          from project_release_evidence import project_release_evidence
+          maximum_bytes = 64 * 1024 * 1024
+
+          def reject_duplicate(pairs):
+              value = {}
+              for key, item in pairs:
+                  if key in value:
+                      raise ValueError(f"duplicate JSON property {key!r}")
+                  value[key] = item
+              return value
+
+          def load_json(path):
+              status = path.lstat()
+              if not stat.S_ISREG(status.st_mode):
+                  raise SystemExit(f"Release evidence is not a regular file: {path.name}.")
+              size = status.st_size
+              if size <= 0 or size > maximum_bytes:
+                  raise SystemExit(f"Invalid release evidence size for {path.name}.")
+              with path.open("rb") as stream:
+                  payload = stream.read(maximum_bytes + 1)
+              if len(payload) != size:
+                  raise SystemExit(f"Release evidence changed while reading {path.name}.")
+              return json.loads(payload, object_pairs_hook=reject_duplicate)
+
+          holdout = load_json(verified / "sarif-regress-holdout.json")
+          development = load_json(verified / "development-corpus-report.json")
+          if development.get("passed") is not True or development.get("failures") != []:
+              raise SystemExit("Development corpus is not green.")
+          release = project_release_evidence(
+              holdout,
+              development,
+              producer_order=("semgrep", "gitleaks", "pmd"),
+              relationships_per_producer=25,
+          )
+          if release is None:
+              raise SystemExit("Release evidence cannot be projected safely.")
+          variant_ids = (
+              "sarif-only-control",
+              "exact-region-snippet",
+              "token-window",
+              "relative-context",
+              "agreement-only-combination",
+          )
+          projection = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-release-projection/v1",
+              "corpusManifestSha256": hashlib.sha256(
+                  (research / "manifest.json").read_bytes()
+              ).hexdigest(),
+              "implementationManifestSha256": hashlib.sha256(
+                  (research / "experiment-implementation-manifest.json").read_bytes()
+              ).hexdigest(),
+              "variants": [
+                  {"id": variant_id, "value": copy.deepcopy(release)}
+                  for variant_id in variant_ids
+              ],
+          }
+          output = verified / "sparse-experiment-release-projection.json"
+          output.write_bytes(
+              (json.dumps(projection, ensure_ascii=False, indent=2) + "\n").encode(
+                  "utf-8"
+              )
+          )
+          PY
 
       - name: Create cross-platform artifact attestation projection
         shell: bash
@@ -1448,8 +1568,10 @@ jobs:
               "checksums.sha256",
               "comparison-summary.json",
               "cross-platform-attestation.json",
+              "development-corpus-report.json",
               "sarif-multitool-baseline.json",
               "sarif-regress-holdout.json",
+              "sparse-experiment-release-projection.json",
               "v3-to-v3.1-delta.json",
           )
           coordinator_manifest = "".join(
@@ -1460,6 +1582,7 @@ jobs:
           PY
 
       - name: Upload cross-platform evidence
+        id: upload-cross-platform-evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: holdout-cross-platform

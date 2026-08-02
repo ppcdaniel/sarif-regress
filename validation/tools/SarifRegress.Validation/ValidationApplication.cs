@@ -75,6 +75,26 @@ public sealed class ValidationApplication
         }
 
         EnsureOutputRoot(outputRoot);
+        if (options.Command == ValidationCommand.ResourceLimits)
+        {
+            byte[] bytes = ResourceLimitEvidenceSerializer.Serialize();
+            AmbientDataGuard.Validate(bytes, repositoryRoot);
+            string outputPath = Path.Combine(
+                outputRoot,
+                ResourceLimitEvidenceSerializer.OutputFileName);
+            StableJson.WriteFile(outputPath, bytes);
+            schemaValidator.ValidateFile(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    SparseResearchManifestReader.SparseRootRelativePath
+                    + "/schemas/resource-limit-evidence.schema.json"),
+                outputPath,
+                limits.MaximumManifestBytes,
+                repositoryRoot,
+                outputRoot);
+            return ValidationExitCodes.Success;
+        }
+
         if (options.Command == ValidationCommand.SparseRun)
         {
             SparseExperimentObservations observations =

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/research/sparse-sarif/schemas/resource-limit-evidence.schema.json",
+  "title": "Exact product resource limits used by sparse-experiment evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "maximumCandidatePairsPerFinding",
+    "maximumCandidatePairs",
+    "maximumAssignmentSideSize"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": { "const": "sarifregress-resource-limits/v1" },
+    "maximumCandidatePairsPerFinding": { "const": 256 },
+    "maximumCandidatePairs": { "const": 1000000 },
+    "maximumAssignmentSideSize": { "const": 12 }
+  }
+}

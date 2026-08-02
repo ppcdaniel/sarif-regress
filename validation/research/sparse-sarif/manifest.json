@@ -348,7 +348,7 @@
       },
       {
         "path": "experiment-implementation-manifest.json",
-        "sha256": "8ac4c54a9e6718ca867b7113ccbffac722242614757f8398f590e79f906c49b1"
+        "sha256": "9cf28a92a4ba1c915029c096441c6066496b555fed715b7fcae092c82a086c90"
       },
       {
         "path": "schemas/experiment-gate-evidence.schema.json",
@@ -364,11 +364,11 @@
       },
       {
         "path": "schemas/experiment-report.schema.json",
-        "sha256": "e8fae76a7a43c3d6afb4986d4055eec54d2f8a42cd34e4dc7e9a65e28be3b5e1"
+        "sha256": "4288be5d87541654989a39ed120c0bd343c2b2727d67751b78520f5ecd1adf8d"
       },
       {
         "path": "schemas/experiment-supporting-evidence.schema.json",
-        "sha256": "28c5cde76f63a56ca38bf9069beda93abc4e38ac2dbd055ed6029c439dfad9c7"
+        "sha256": "6c38c573b0f14fe8350597082f4802bf3d6e0224a549202948e1f8a6081f7325"
       },
       {
         "path": "schemas/labels.schema.json",
@@ -383,6 +383,14 @@
         "sha256": "5a45d52d4e9592abf2dfb2c2c42553532c7f0a37e77d8dae8356c70bb94706a8"
       },
       {
+        "path": "schemas/resource-limit-evidence.schema.json",
+        "sha256": "10cc51e6e7304f83f0cdbf1d0f1bfe78c40be0698794494befb3743dbe6d3bb4"
+      },
+      {
+        "path": "schemas/resource-observations.schema.json",
+        "sha256": "68807e3dda0427be32ba313b8c18d60fd5b45fc48523b86d4ee52f421d1b61ea"
+      },
+      {
         "path": "tools/capture_pmd.sh",
         "sha256": "0301931849443923b1376675ccda6ad44c49b7dfe92415aff9729098eee7d07e"
       },
@@ -391,12 +399,20 @@
         "sha256": "110ada3813afc6b065ea2a72d5b681815ce453c5b604232698aa51144244b351"
       },
       {
+        "path": "tools/project_release_evidence.py",
+        "sha256": "aeb8bb7b5d1b61cedb3631d3f76389a2fd86277e2b4dbd8d06d6d1ecbe4ed886"
+      },
+      {
         "path": "tools/scan_contamination.py",
         "sha256": "2f7865fefff4d3405d2c7f69126e75d94edba1f7d4d8bd2b9ac623f1a89fe128"
       },
       {
         "path": "tools/test_pmd_capture_tools.py",
         "sha256": "2dfada0b9b30aa31ff22a1aacdc682c744d12168dd86868b01f2f722a17a1156"
+      },
+      {
+        "path": "tools/test_project_release_evidence.py",
+        "sha256": "ad7e10266e9380eef3ca3ba12f8264dec464fba1a9e0432efc667a4cbf117ec8"
       },
       {
         "path": "tools/test_scan_contamination.py",

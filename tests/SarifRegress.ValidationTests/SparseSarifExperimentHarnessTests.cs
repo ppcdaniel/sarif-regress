@@ -1,10 +1,56 @@
 using System.Text;
+using System.Text.Json;
+using SarifRegress.Core.Security;
 using SarifRegress.Validation;
 
 namespace SarifRegress.ValidationTests;
 
 public sealed class SparseSarifExperimentHarnessTests
 {
+    [Fact]
+    public async Task Resource_limit_evidence_is_stable_and_executable()
+    {
+        string outputRoot = ValidationTestRepository.CreateTemporaryDirectory();
+        try
+        {
+            ValidationOptions options = ValidationOptionsParser.Parse(
+            [
+                "resource-limits",
+                "--repository-root",
+                ValidationTestRepository.FindRoot(),
+                "--output-root",
+                outputRoot,
+            ]);
+            Assert.Equal(ValidationCommand.ResourceLimits, options.Command);
+
+            int exitCode = await new ValidationApplication().RunAsync(
+                options,
+                TestContext.Current.CancellationToken);
+            Assert.Equal(ValidationExitCodes.Success, exitCode);
+            string outputPath = Path.Combine(
+                outputRoot,
+                ResourceLimitEvidenceSerializer.OutputFileName);
+            byte[] first = File.ReadAllBytes(outputPath);
+            byte[] second = ResourceLimitEvidenceSerializer.Serialize();
+            Assert.Equal(first, second);
+            using var document = JsonDocument.Parse(first);
+            JsonElement root = document.RootElement;
+            Assert.Equal(
+                ResourceLimits.Default.MaximumCandidatePairEvaluationsPerFinding,
+                root.GetProperty("maximumCandidatePairsPerFinding").GetInt32());
+            Assert.Equal(
+                ResourceLimits.Default.MaximumCandidatePairEvaluations,
+                root.GetProperty("maximumCandidatePairs").GetInt64());
+            Assert.Equal(
+                ResourceLimits.Default.MaximumAssignmentSideSize,
+                root.GetProperty("maximumAssignmentSideSize").GetInt32());
+        }
+        finally
+        {
+            Directory.Delete(outputRoot, recursive: true);
+        }
+    }
+
     [Fact]
     public void Sparse_commands_keep_observation_and_label_evaluation_separate()
     {

@@ -443,6 +443,100 @@ public sealed class DeterminismAndSafetyTests
         Assert.DoesNotContain("pull_request:", captureWorkflow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Supporting_evidence_workflows_emit_exact_head_role_projections()
+    {
+        string workflowRoot = Path.Combine(
+            ValidationTestRepository.FindRoot(),
+            ".github",
+            "workflows");
+        string holdout = File.ReadAllText(Path.Combine(
+            workflowRoot,
+            "holdout-validation.yml"));
+        string determinism = File.ReadAllText(Path.Combine(
+            workflowRoot,
+            "determinism.yml"));
+        string benchmarks = File.ReadAllText(Path.Combine(
+            workflowRoot,
+            "benchmarks.yml"));
+
+        Assert.Contains(
+            "development-corpus-report.json",
+            holdout,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "sparse-experiment-release-projection.json",
+            holdout,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("if-no-files-found: warn", holdout, StringComparison.Ordinal);
+        Assert.Contains("for run_id in 1 2", determinism, StringComparison.Ordinal);
+        Assert.Contains("foreach ($runId in @(1, 2))", determinism, StringComparison.Ordinal);
+        Assert.Contains(
+            "sparse-experiment-determinism-projection.json",
+            determinism,
+            StringComparison.Ordinal);
+        Assert.Contains("          - 1000\n", benchmarks, StringComparison.Ordinal);
+        Assert.Contains("          - 10000\n", benchmarks, StringComparison.Ordinal);
+        Assert.Contains("          - 100000\n", benchmarks, StringComparison.Ordinal);
+        Assert.Contains(
+            "validation/research/sparse-sarif/**",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "validation/tools/SarifRegress.Validation/**",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "sparse-experiment-resource-projection.json",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "sparse-experiment-resource-values.json",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.Contains("math.ceil(", benchmarks, StringComparison.Ordinal);
+        Assert.Contains(
+            "observedMaximumComponentFindingCount",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "maximumAdmittedAssignmentComponentSize",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "maximumAssignmentSideSize",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.Contains("resource-limits", benchmarks, StringComparison.Ordinal);
+        Assert.Contains("resource-limits.json", benchmarks, StringComparison.Ordinal);
+        Assert.Contains(
+            "sourceContextProjectionBenchmarked\": False",
+            benchmarks,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("if-no-files-found: warn", benchmarks, StringComparison.Ordinal);
+
+        foreach (string workflow in new[] { holdout, determinism, benchmarks })
+        {
+            string[] actionReferences = workflow
+                .Split('\n')
+                .Select(line => line.Trim())
+                .Where(line => line.StartsWith("uses: ", StringComparison.Ordinal))
+                .Select(line => line["uses: ".Length..].Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries)[0])
+                .ToArray();
+            Assert.NotEmpty(actionReferences);
+            Assert.All(actionReferences, reference =>
+            {
+                int separator = reference.LastIndexOf('@');
+                Assert.True(separator > 0, $"Action is not pinned: {reference}");
+                string revision = reference[(separator + 1)..];
+                Assert.Equal(40, revision.Length);
+                Assert.All(revision, character => Assert.True(Uri.IsHexDigit(character)));
+            });
+        }
+    }
+
     [Theory]
     [InlineData("ci.yml")]
     [InlineData("holdout-validation.yml")]

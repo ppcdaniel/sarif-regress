@@ -464,6 +464,10 @@
       "sha256": "c1d775711b582e61ba09a833718131751b445bd6cdd84550381ca0e645d46ccc"
     },
     {
+      "path": "validation/tools/SarifRegress.Validation/ResourceLimitEvidenceSerializer.cs",
+      "sha256": "8d7073a1add354cca35974380a937f1f770a5a701d0b07cb0c71a14825c0857e"
+    },
+    {
       "path": "validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj",
       "sha256": "4c91185e72d54bc4b226b28fca5820cc9efd93709514554c5761984a5b54428e"
     },
@@ -497,7 +501,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationApplication.cs",
-      "sha256": "23457ab0ba6411bae88eaa5882db7434346fc9d1d4fd36942d0e66ed24792c30"
+      "sha256": "22a0afbbfaf0d0d2ac67538e6cf0bcaafc94d492eaaf9afad2c1e67a471e1a01"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationLimits.cs",
@@ -505,7 +509,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationOptions.cs",
-      "sha256": "65f8023ac396cf8d9a597ff4ba4651ccee1abba7037f29a39fcabe2833c1c6be"
+      "sha256": "04f94db36b8ecda252ee7ccc0eef2c63d4c0f2f85ccd09b0f7084da72bbea096"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/packages.lock.json",

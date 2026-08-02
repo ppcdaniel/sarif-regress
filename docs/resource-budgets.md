@@ -53,9 +53,14 @@ Token-window evidence is omitted rather than partially compared when a bound is 
 exceeding `maximumStringCharacters`. The source read remains independently capped by
 `maximumRepositoryFileBytes`.
 
-The benchmark harness records finding count, candidate-edge count, component-size distribution,
-classification counts, and process measurements. It never changes matching policy based on
-timing.
+The benchmark harness records finding count, configured per-finding/global candidate limits,
+candidate-edge count, component-size distribution, classification counts, and process
+measurements. Hosted resource evidence pairs that report with a stable limit record emitted by the
+validation executable from `ResourceLimits.Default`, including the configured assignment-side
+limit. It never changes matching policy based on timing. Resource evidence distinguishes the
+largest component observed before refusal from the largest component admitted to bounded
+assignment; an oversized component is reported at its real size and an admitted size of zero
+rather than being rewritten to the configured limit.
 
 Run the deterministic synthetic datasets with:
 
@@ -80,7 +85,7 @@ embedded comparison-output SHA-256 must agree.
 
 `.github/workflows/benchmarks.yml` runs for matcher-affecting pull requests, weekly, and on manual
 dispatch. Its matrix measures both
-dataset shapes at 10,000 and 100,000 findings on standard Ubuntu and Windows runners. Ubuntu
+dataset shapes at 1,000, 10,000, and 100,000 findings on standard Ubuntu and Windows runners. Ubuntu
 enforces the published latency, memory, and refusal budgets; Windows records the same deterministic
 operation projection without applying Ubuntu-calibrated runtime ceilings. Every matrix cell
 uploads the full observation report, deterministic projection, and checksums. A coordinator
