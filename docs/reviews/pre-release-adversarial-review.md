@@ -43,11 +43,11 @@ historical severity is not rewritten by disposition.
 | Severity | Original review | Research addendum | Promotion addendum | Total | Current effect |
 |---|---:|---:|---:|---:|---|
 | Blocker | 1 | 0 | 2 | 3 | Historical and pre-push promotion defects remain counted after remediation |
-| High | 9 | 7 | 2 | 18 | Mixed resolved and open findings; licensing, release, and composite-evidence blockers remain |
+| High | 9 | 7 | 3 | 19 | Mixed resolved and open findings; licensing, release, manifest-refresh, and composite-evidence blockers remain |
 | Medium | 14 | 8 | 1 | 23 | Metric semantics, context/output/package hardening, compatibility, and research-evidence durability |
 | Low | 3 | 0 | 0 | 3 | Version authority, public constructor compatibility, and unused restore path |
 
-Total recorded findings: 47.
+Total recorded findings: 48.
 
 ## Blocker findings
 
@@ -885,6 +885,29 @@ merged pull request.
 - **Tracking:** [#30](https://github.com/ppcdaniel/sarif-regress/issues/30).
 - **Disposition:** fixed locally; static release/stage tests pass and hosted .NET evidence remains
   required.
+
+### H-19 — Sparse implementation inventories had no supported deterministic refresh path
+
+- **Evidence and code area:** exact-head holdout run `30760917264` on
+  `be00cf6ad4acc8b9c408f8afdba22631f1fd8b81`; both `sparse-admission` cells failed
+  `EXPERIMENT022` because `CodeFlowAnchorOccurrenceIndex.cs` changed after
+  `experiment-implementation-manifest.json` was last refreshed. All candidate, recapture, compare,
+  and deliberate-refusal jobs were skipped. The repository has strict readers in
+  `SparseResearchManifestReader` and `scan_contamination.py`, but no production refresh command;
+  `_refresh` in the scanner test suite is synthetic-fixture-only.
+- **Why it matters:** a two-line production import fix invalidated the exact implementation
+  inventory and prevented any replacement sparse evidence from being generated. Ad hoc refreshes
+  are easy to make incomplete. The old expected evidence correctly remains bound to its original
+  implementation/corpus hashes and must not be rewritten by hand.
+- **Smallest safe remediation:** deterministically refresh the current implementation manifest and
+  corpus integrity entry from the closed file-set contract, verify them with the strict scanner,
+  then generate the complete exact-head evidence/provenance/limitation/checksum cascade from hosted
+  artifacts. Track a reusable bounded refresh command separately.
+- **Blocks merging PR #8/#13:** no. **Blocks the hardening PR:** until the manifest is refreshed and
+  hosted candidates are produced. **Blocks release:** yes for any current sparse-evidence claim.
+- **Tracking:** [#31](https://github.com/ppcdaniel/sarif-regress/issues/31).
+- **Disposition:** open. Failed run `30760917264` produced no sparse candidate artifact; no old
+  metric or evidence hash has been rebound to the changed implementation.
 
 ### M-23 — Pre-push checksum and research manifests became stale during integration
 

@@ -233,7 +233,7 @@
     },
     {
       "path": "src/SarifRegress.Match/CodeFlowAnchorOccurrenceIndex.cs",
-      "sha256": "dfe935bcf97095a8275dad949676a9ba6414534f64cf32e7774cbfb2fa2b9c08"
+      "sha256": "e78360fb42a2a23aa9f31d8f7ddc18059e4cedc05023eb2f178589cab0c08fdc"
     },
     {
       "path": "src/SarifRegress.Match/ContextFingerprintOccurrenceIndex.cs",
