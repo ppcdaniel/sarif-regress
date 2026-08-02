@@ -672,3 +672,27 @@ research evidence, not the already frozen v2/v3/v3.1 records.
 - **Disposition:** the one-time provenance job passed in run `30719295884` and was then removed.
   Routine CI retains reproducible PMD recapture plus post-upload authentication without depending
   on the 30-day historical artifact.
+
+### H-14 — The evidence scanner made source preflight depend on SARIF-only recall
+
+- **Evidence and code area:** on exact head `94c906d...`, all four hosted evidence workflows passed,
+  but promotion of their authenticated projections failed in
+  `validation/research/sparse-sarif/tools/scan_contamination.py`,
+  `_computed_gate_bindings`. The `sarif-only-control` correctly recorded no repository preflight;
+  the scanner derived that preflight was required solely because the control's PMD recall was
+  `0/19`. All four source-backed variants produced internally consistent bindings.
+- **Why it matters:** the typed limitation report could not represent the scientifically correct
+  negative control. Changing the control evidence to satisfy that derivation would falsely imply
+  that SARIF-only matching reads or authenticates a source tree.
+- **Smallest safe remediation:** exempt only the predeclared SARIF-only control from the
+  source-context preflight derivation, retain all metric gates, and add a real-shape regression test
+  with `0 TP / 0 FP / 19 FN`. Because the scanner is corpus-integrity-bound, update the scanner and
+  manifest hashes and regenerate every exact-head projection.
+- **Blocks PR #8/#13:** no. **Blocks the nightly hardening PR:** until corrected and regenerated.
+  **Blocks release or matcher v4:** yes for reliance on the sparse experiment report.
+- **Tracking:** [#28](https://github.com/ppcdaniel/sarif-regress/issues/28).
+- **Disposition:** open. A focused correction and real-shape regression test passed locally, but
+  publication was refused because the existing scanner itself contains producer-specific research
+  policy. No alternate publication path was used, no control evidence was changed, and no composite
+  experiment report was promoted. The already authenticated `94c906d...` projections remain bound
+  to the unchanged scanner and corpus manifest; #28 tracks the blocker.
