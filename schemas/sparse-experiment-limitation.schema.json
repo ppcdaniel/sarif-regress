@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/sparse-experiment-limitation.schema.json",
+  "title": "Authenticated sparse-SARIF experiment limitation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "decision",
+    "releaseRecommendation",
+    "matcherV4Implemented",
+    "sourceHeadSha",
+    "matcherAlgorithmVersion",
+    "corpusManifestSha256",
+    "implementationManifestSha256",
+    "workflowArtifacts",
+    "evidenceFiles",
+    "cleanPmd",
+    "legacyHoldout",
+    "safety",
+    "blockedCompositeValidationIssue",
+    "reasons"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": { "const": "sparse-experiment-limitation/v1" },
+    "decision": { "const": "document-limitation" },
+    "releaseRecommendation": { "const": "blocked" },
+    "matcherV4Implemented": { "const": false },
+    "sourceHeadSha": { "$ref": "#/$defs/gitSha" },
+    "matcherAlgorithmVersion": { "const": "sarifregress/matcher/v3.2" },
+    "corpusManifestSha256": { "$ref": "#/$defs/sha256" },
+    "implementationManifestSha256": { "$ref": "#/$defs/sha256" },
+    "workflowArtifacts": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/workflowArtifact" },
+            { "properties": { "role": { "const": "sparse-candidate" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/workflowArtifact" },
+            { "properties": { "role": { "const": "pmd-recapture" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/workflowArtifact" },
+            { "properties": { "role": { "const": "release" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/workflowArtifact" },
+            { "properties": { "role": { "const": "determinism" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/workflowArtifact" },
+            { "properties": { "role": { "const": "resources" } } }
+          ]
+        }
+      ],
+      "items": false
+    },
+    "evidenceFiles": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/evidenceFile" }
+    },
+    "cleanPmd": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationshipCount",
+        "variants",
+        "bestVariantIds"
+      ],
+      "properties": {
+        "relationshipCount": { "const": 19 },
+        "variants": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "allOf": [
+                { "$ref": "#/$defs/variantMetrics" },
+                { "properties": { "id": { "const": "sarif-only-control" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/variantMetrics" },
+                { "properties": { "id": { "const": "exact-region-snippet" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/variantMetrics" },
+                { "properties": { "id": { "const": "token-window" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/variantMetrics" },
+                { "properties": { "id": { "const": "relative-context" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/variantMetrics" },
+                {
+                  "properties": {
+                    "id": { "const": "agreement-only-combination" }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "bestVariantIds": {
+          "const": ["relative-context", "agreement-only-combination"]
+        }
+      }
+    },
+    "legacyHoldout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relationshipCount", "metrics", "byProducer"],
+      "properties": {
+        "relationshipCount": { "const": 75 },
+        "metrics": { "$ref": "#/$defs/metrics" },
+        "byProducer": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            {
+              "allOf": [
+                { "$ref": "#/$defs/producerMetrics" },
+                { "properties": { "producerFamily": { "const": "semgrep" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/producerMetrics" },
+                { "properties": { "producerFamily": { "const": "gitleaks" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/producerMetrics" },
+                { "properties": { "producerFamily": { "const": "pmd" } } }
+              ]
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "labelledAmbiguityUnits",
+        "correctAmbiguityRefusals",
+        "silentlyMatchedAmbiguity",
+        "ingestionFailures",
+        "structuralFailures",
+        "repeatedRunByteIdentical",
+        "linuxWindowsByteIdentical",
+        "resourceBudgetsWithinLimits",
+        "sourceContextProjectionBenchmarked",
+        "sourceBackedVariantsRequireCorpusSpecificPreflight"
+      ],
+      "properties": {
+        "labelledAmbiguityUnits": { "const": 3 },
+        "correctAmbiguityRefusals": { "const": 3 },
+        "silentlyMatchedAmbiguity": { "const": 0 },
+        "ingestionFailures": { "const": 0 },
+        "structuralFailures": { "const": 0 },
+        "repeatedRunByteIdentical": { "const": true },
+        "linuxWindowsByteIdentical": { "const": true },
+        "resourceBudgetsWithinLimits": { "const": true },
+        "sourceContextProjectionBenchmarked": { "const": false },
+        "sourceBackedVariantsRequireCorpusSpecificPreflight": { "const": true }
+      }
+    },
+    "blockedCompositeValidationIssue": { "const": 27 },
+    "reasons": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "portablePath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acceptedPairs",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "acceptedPairs": { "type": "integer", "minimum": 0 },
+        "truePositives": { "type": "integer", "minimum": 0 },
+        "falsePositives": { "type": "integer", "minimum": 0 },
+        "falseNegatives": { "type": "integer", "minimum": 0 },
+        "precision": { "type": "number", "minimum": 0, "maximum": 1 },
+        "recall": { "type": "number", "minimum": 0, "maximum": 1 },
+        "f1": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "variantMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "metrics"],
+      "properties": {
+        "id": { "type": "string" },
+        "metrics": { "$ref": "#/$defs/metrics" }
+      }
+    },
+    "producerMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producerFamily", "metrics"],
+      "properties": {
+        "producerFamily": { "enum": ["semgrep", "gitleaks", "pmd"] },
+        "metrics": { "$ref": "#/$defs/metrics" }
+      }
+    },
+    "workflowArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "runId",
+        "sourceHeadSha",
+        "name",
+        "artifactId",
+        "digest"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "sparse-candidate",
+            "pmd-recapture",
+            "release",
+            "determinism",
+            "resources"
+          ]
+        },
+        "runId": { "type": "integer", "minimum": 1 },
+        "sourceHeadSha": { "$ref": "#/$defs/gitSha" },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9.]+)*$"
+        },
+        "artifactId": { "type": "integer", "minimum": 1 },
+        "digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "evidenceFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "sha256"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "path": { "$ref": "#/$defs/portablePath" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

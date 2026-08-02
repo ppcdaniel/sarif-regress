@@ -1,0 +1,231 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-limitation/v1",
+  "decision": "document-limitation",
+  "releaseRecommendation": "blocked",
+  "matcherV4Implemented": false,
+  "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+  "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
+  "corpusManifestSha256": "f9696478b0247d6b1d5ddc2f6ea24fddcbbf888d5fc15f83de475a73dbc163fd",
+  "implementationManifestSha256": "c2765f2b3cd5a3961ae46deb1866bbff5b5e3a63dbe53783167d79f68e0ac348",
+  "workflowArtifacts": [
+    {
+      "role": "sparse-candidate",
+      "runId": 30761620623,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-experiment-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837655726,
+      "digest": "0a05d9cf69a1e4dcb11d99fb14e0afef55fd052045509bb0a7ead3ddf2119de1"
+    },
+    {
+      "role": "pmd-recapture",
+      "runId": 30761620623,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-sarif-pmd-capture-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837641900,
+      "digest": "e7218ed07983fd4940f3a9b43cf1789512f81e04f2053e303a3db4e834a1c1b9"
+    },
+    {
+      "role": "release",
+      "runId": 30761620623,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "holdout-v3.2-cross-platform-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837663843,
+      "digest": "1524d42042a91e829551327dd0f0d77eb2ad42b4a70ad09c7c02c434ecf1ebfd"
+    },
+    {
+      "role": "determinism",
+      "runId": 30761620626,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-determinism-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837655464,
+      "digest": "2727b7fda2483886fa9106e2b9b53e5723aac723ea43575dfdfaa758407738e7"
+    },
+    {
+      "role": "resources",
+      "runId": 30761620637,
+      "sourceHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "name": "sparse-resource-candidate-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837650617,
+      "digest": "306953185113f04be26766cb65491d69808e6b594fc2f8190f6833f7d4d81e24"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "kind": "sparse-experiment-observations/v1",
+      "path": "expected/sparse-experiment-observations.json",
+      "sha256": "ff490ba21d5c3f8243a477d140f7bc65dd6cfefd68e407da611303fc01df0db2"
+    },
+    {
+      "kind": "sparse-experiment-gates/v1",
+      "path": "expected/sparse-experiment-gate-evidence.json",
+      "sha256": "4c88856e256b7b38cbfefccbf9a63a112a4736877cd606395d95ee8e2d17abdc"
+    },
+    {
+      "kind": "sparse-experiment-workflow-provenance/v1",
+      "path": "expected/sparse-experiment-workflow-provenance.json",
+      "sha256": "3f91856620633447f75a436c3556154369e73af7d15b05a4c0a800714c8bba76"
+    },
+    {
+      "kind": "sparse-experiment-resource-observations/v1",
+      "path": "expected/sparse-experiment-resource-observations.json",
+      "sha256": "3aaea4252e3124d4a09a658945c35c5f11274a5b61d4b85eaec8d925b48e4fa4"
+    },
+    {
+      "kind": "sparse-experiment-release-projection/v1",
+      "path": "expected/projections/sparse-experiment-release-projection.json",
+      "sha256": "92d7405ba1df1f1fecce3739cffad6cb4d9eb5826694521f8b18e6266aa6cbee"
+    },
+    {
+      "kind": "sparse-experiment-determinism-projection/v1",
+      "path": "expected/projections/sparse-experiment-determinism-projection.json",
+      "sha256": "6c8a2ea416726364122ef051f0898c33616a2365123036a61feaeb62ce011515"
+    },
+    {
+      "kind": "sparse-experiment-resource-projection/v1",
+      "path": "expected/projections/sparse-experiment-resource-projection.json",
+      "sha256": "504b72d66912e81d9ea294a14a7227489976e7d02867bba27626d2a577221fac"
+    }
+  ],
+  "cleanPmd": {
+    "relationshipCount": 19,
+    "variants": [
+      {
+        "id": "sarif-only-control",
+        "metrics": {
+          "acceptedPairs": 0,
+          "truePositives": 0,
+          "falsePositives": 0,
+          "falseNegatives": 19,
+          "precision": 1,
+          "recall": 0,
+          "f1": 0
+        }
+      },
+      {
+        "id": "exact-region-snippet",
+        "metrics": {
+          "acceptedPairs": 2,
+          "truePositives": 2,
+          "falsePositives": 0,
+          "falseNegatives": 17,
+          "precision": 1,
+          "recall": 0.105263,
+          "f1": 0.190476
+        }
+      },
+      {
+        "id": "token-window",
+        "metrics": {
+          "acceptedPairs": 4,
+          "truePositives": 4,
+          "falsePositives": 0,
+          "falseNegatives": 15,
+          "precision": 1,
+          "recall": 0.210526,
+          "f1": 0.347826
+        }
+      },
+      {
+        "id": "relative-context",
+        "metrics": {
+          "acceptedPairs": 9,
+          "truePositives": 9,
+          "falsePositives": 0,
+          "falseNegatives": 10,
+          "precision": 1,
+          "recall": 0.473684,
+          "f1": 0.642857
+        }
+      },
+      {
+        "id": "agreement-only-combination",
+        "metrics": {
+          "acceptedPairs": 9,
+          "truePositives": 9,
+          "falsePositives": 0,
+          "falseNegatives": 10,
+          "precision": 1,
+          "recall": 0.473684,
+          "f1": 0.642857
+        }
+      }
+    ],
+    "bestVariantIds": [
+      "relative-context",
+      "agreement-only-combination"
+    ]
+  },
+  "legacyHoldout": {
+    "relationshipCount": 75,
+    "metrics": {
+      "acceptedPairs": 50,
+      "truePositives": 50,
+      "falsePositives": 0,
+      "falseNegatives": 25,
+      "precision": 1.0,
+      "recall": 0.666667,
+      "f1": 0.8
+    },
+    "byProducer": [
+      {
+        "producerFamily": "semgrep",
+        "metrics": {
+          "acceptedPairs": 25,
+          "truePositives": 25,
+          "falsePositives": 0,
+          "falseNegatives": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      {
+        "producerFamily": "gitleaks",
+        "metrics": {
+          "acceptedPairs": 25,
+          "truePositives": 25,
+          "falsePositives": 0,
+          "falseNegatives": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      {
+        "producerFamily": "pmd",
+        "metrics": {
+          "acceptedPairs": 0,
+          "truePositives": 0,
+          "falsePositives": 0,
+          "falseNegatives": 25,
+          "precision": 1.0,
+          "recall": 0.0,
+          "f1": 0.0
+        }
+      }
+    ]
+  },
+  "safety": {
+    "labelledAmbiguityUnits": 3,
+    "correctAmbiguityRefusals": 3,
+    "silentlyMatchedAmbiguity": 0,
+    "ingestionFailures": 0,
+    "structuralFailures": 0,
+    "repeatedRunByteIdentical": true,
+    "linuxWindowsByteIdentical": true,
+    "resourceBudgetsWithinLimits": true,
+    "sourceContextProjectionBenchmarked": false,
+    "sourceBackedVariantsRequireCorpusSpecificPreflight": true
+  },
+  "blockedCompositeValidationIssue": 27,
+  "reasons": [
+    "Best clean-PMD recall is 0.473684, below the fixed 0.80 PMD gate.",
+    "The 75-relationship exposed holdout remains at 0.666667 recall, below the fixed 0.90 aggregate gate.",
+    "All source-backed variants fail the three no-trusted-hash wrong-root scenarios.",
+    "Relative-context and agreement-only-combination also fail the family-B no-trusted-hash mismatched-snapshot scenario.",
+    "The 1k, 10k, and 100k resource matrix did not execute source-context projection.",
+    "Preflight validation and later source reads do not share one immutable snapshot handle.",
+    "Issue 27 prevents composite promotion until every supporting projection is derived from and cross-bound to authenticated full evidence."
+  ]
+}

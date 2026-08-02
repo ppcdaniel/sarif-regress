@@ -22,7 +22,9 @@ and normalizing the external baseline is supported on Linux and Windows.
 - `history/matcher-v3/` preserves the attested successor result, schemas, and
   checksum anchors.
 - `history/v2-to-v3-delta.json` records every fixed, regressed, and remaining
-  relationship without rewriting either historical snapshot.
+  relationship between the first two frozen snapshots.
+- `expected/v3-to-v3.1-delta.json` records the five classification corrections
+  made after matcher v3 without rewriting its frozen history.
 
 ## Evaluation
 
@@ -40,8 +42,8 @@ Both wrappers verify structure, provenance, schemas, tool identity, checksums,
 and expected bytes. They write regenerated evidence beneath
 `artifacts/holdout-validation/` and do not modify committed fixtures.
 
-The active result uses `sarifregress/matcher/v3`. Its frozen record is
-`history/matcher-v3/metadata.json`; the original matcher-v2 evidence remains
+The active product uses `sarifregress/matcher/v3.2`. Matcher v3.1 and matcher v3 are frozen under
+`history/matcher-v3.1/` and `history/matcher-v3/`; the original matcher-v2 evidence remains
 independently checksummed and reproducible from its exact validation commit.
 
 Producer capture is deliberately separate. See `tools/capture/README.md` for

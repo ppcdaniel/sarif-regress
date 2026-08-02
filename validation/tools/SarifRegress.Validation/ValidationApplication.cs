@@ -9,22 +9,23 @@ public sealed class ValidationApplication
     public const string SarifRegressReportFileName = "sarif-regress-holdout.json";
     public const string MultitoolReportFileName = "sarif-multitool-baseline.json";
     public const string ComparisonSummaryFileName = "comparison-summary.json";
-    public const string V2ToV3DeltaReportFileName = "v2-to-v3-delta.json";
+    public const string V31ToV32DeltaReportFileName = "v3.1-to-v3.2-delta.json";
     public const string ChecksumManifestFileName = "checksums.sha256";
 
     private const string ManifestRelativePath = "validation/holdout/manifest.json";
     private const string MetadataRelativePath =
         "validation/holdout/evaluation-metadata.json";
     private const string ExpectedRelativeRoot = "validation/expected";
-    private const string MatcherV2HistoryChecksumRelativePath =
-        "validation/history/matcher-v2/checksums.sha256";
-    private const string MatcherV2HistoryReportRelativePath =
-        "validation/history/matcher-v2/sarif-regress-holdout.json";
+    private const string MatcherV31HistoryChecksumRelativePath =
+        "validation/history/matcher-v3.1/checksums.sha256";
+    private const string MatcherV31HistoryReportRelativePath =
+        "validation/history/matcher-v3.1/sarif-regress-holdout.json";
 
     private readonly HoldoutManifestReader manifestReader;
     private readonly EvaluationMetadataReader metadataReader;
     private readonly CrossPlatformAttestationReader attestationReader;
-    private readonly MatcherV2HistoryReader matcherV2HistoryReader;
+    private readonly MatcherV31HistoryReader matcherV31HistoryReader;
+    private readonly HoldoutInterpretationErratumReader interpretationErratumReader;
     private readonly FrozenSourceVerifier sourceVerifier;
     private readonly SarifRegressHoldoutEvaluator sarifRegressEvaluator;
     private readonly SarifMultitoolEvaluator multitoolEvaluator;
@@ -36,11 +37,12 @@ public sealed class ValidationApplication
         HoldoutManifestReader? manifestReader = null,
         EvaluationMetadataReader? metadataReader = null,
         CrossPlatformAttestationReader? attestationReader = null,
-        MatcherV2HistoryReader? matcherV2HistoryReader = null,
+        MatcherV31HistoryReader? matcherV31HistoryReader = null,
         FrozenSourceVerifier? sourceVerifier = null,
         SarifRegressHoldoutEvaluator? sarifRegressEvaluator = null,
         SarifMultitoolEvaluator? multitoolEvaluator = null,
-        ValidationLimits? limits = null)
+        ValidationLimits? limits = null,
+        HoldoutInterpretationErratumReader? interpretationErratumReader = null)
     {
         this.limits = limits ?? ValidationLimits.Default;
         this.limits.Validate();
@@ -48,8 +50,10 @@ public sealed class ValidationApplication
         this.metadataReader = metadataReader ?? new EvaluationMetadataReader(this.limits);
         this.attestationReader = attestationReader
             ?? new CrossPlatformAttestationReader(this.limits);
-        this.matcherV2HistoryReader = matcherV2HistoryReader
-            ?? new MatcherV2HistoryReader(this.limits);
+        this.matcherV31HistoryReader = matcherV31HistoryReader
+            ?? new MatcherV31HistoryReader(this.limits);
+        this.interpretationErratumReader = interpretationErratumReader
+            ?? new HoldoutInterpretationErratumReader(this.limits);
         this.sourceVerifier = sourceVerifier ?? new FrozenSourceVerifier(limits: this.limits);
         this.sarifRegressEvaluator = sarifRegressEvaluator
             ?? new SarifRegressHoldoutEvaluator();
@@ -75,6 +79,74 @@ public sealed class ValidationApplication
         }
 
         EnsureOutputRoot(outputRoot);
+        if (options.Command == ValidationCommand.ResourceLimits)
+        {
+            byte[] bytes = ResourceLimitEvidenceSerializer.Serialize();
+            AmbientDataGuard.Validate(bytes, repositoryRoot);
+            string outputPath = Path.Combine(
+                outputRoot,
+                ResourceLimitEvidenceSerializer.OutputFileName);
+            StableJson.WriteFile(outputPath, bytes);
+            schemaValidator.ValidateFile(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    SparseResearchManifestReader.SparseRootRelativePath
+                    + "/schemas/resource-limit-evidence.schema.json"),
+                outputPath,
+                limits.MaximumManifestBytes,
+                repositoryRoot,
+                outputRoot);
+            return ValidationExitCodes.Success;
+        }
+
+        if (options.Command == ValidationCommand.SparseRun)
+        {
+            SparseExperimentObservations observations =
+                await new SparseSarifExperimentRunner(limits)
+                    .RunAsync(repositoryRoot, outputRoot, cancellationToken)
+                    .ConfigureAwait(false);
+            byte[] bytes = SparseSarifExperimentSerializer.Serialize(observations);
+            AmbientDataGuard.Validate(bytes, repositoryRoot);
+            string outputPath = Path.Combine(
+                outputRoot,
+                SparseSarifExperimentRunner.OutputFileName);
+            StableJson.WriteFile(outputPath, bytes);
+            schemaValidator.ValidateFile(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    SparseResearchManifestReader.SparseRootRelativePath
+                    + "/schemas/experiment-observations.schema.json"),
+                outputPath,
+                limits.MaximumSarifBytes,
+                repositoryRoot,
+                outputRoot);
+            return ValidationExitCodes.Success;
+        }
+
+        if (options.Command == ValidationCommand.SparseEvaluate)
+        {
+            SparseExperimentGateEvidence evidence =
+                new SparseSarifExperimentEvaluator(limits).Evaluate(
+                    repositoryRoot,
+                    options.ObservationsPath!);
+            byte[] bytes = SparseSarifExperimentSerializer.Serialize(evidence);
+            AmbientDataGuard.Validate(bytes, repositoryRoot);
+            string outputPath = Path.Combine(
+                outputRoot,
+                SparseSarifExperimentEvaluator.OutputFileName);
+            StableJson.WriteFile(outputPath, bytes);
+            schemaValidator.ValidateFile(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    SparseResearchManifestReader.SparseRootRelativePath
+                    + "/schemas/experiment-gate-evidence.schema.json"),
+                outputPath,
+                limits.MaximumSarifBytes,
+                repositoryRoot,
+                outputRoot);
+            return ValidationExitCodes.Success;
+        }
+
         ValidatedHoldout holdout = manifestReader.Read(repositoryRoot);
         EvaluationMetadata metadata = metadataReader.Read(
             repositoryRoot,
@@ -85,8 +157,10 @@ public sealed class ValidationApplication
                 metadata.Identity.SourceTreeSha256,
                 cancellationToken)
             .ConfigureAwait(false);
-        MatcherV2HistorySnapshot matcherV2 = matcherV2HistoryReader.Read(
+        MatcherV31HistorySnapshot matcherV31 = matcherV31HistoryReader.Read(
             repositoryRoot);
+        HoldoutInterpretationErratumSnapshot interpretationErratum =
+            interpretationErratumReader.Read(repositoryRoot);
         if (options.Command == ValidationCommand.ValidateStructure)
         {
             return ValidationExitCodes.Success;
@@ -110,15 +184,18 @@ public sealed class ValidationApplication
                     cancellationToken)
                 .ConfigureAwait(false);
         byte[] sarifRegressBytes = StableReportSerializer.Serialize(sarifRegress);
+        bool currentReportHashBound = interpretationErratum.ValidateCurrentReport(
+            metadata.Identity.MatcherAlgorithmVersion,
+            sarifRegressBytes);
         byte[] multitoolBytes = StableReportSerializer.Serialize(multitool);
         string sarifRegressSha256 = Sha256(sarifRegressBytes);
-        var deltaInputHashes = new MatcherDeltaInputHashes(
-            matcherV2.HistoryChecksumManifestSha256,
-            matcherV2.ReportSha256,
+        var deltaInputHashes = new MatcherV31ToV32InputHashes(
+            matcherV31.HistoryChecksumManifestSha256,
+            matcherV31.ReportSha256,
             sarifRegressSha256,
             holdout.ManifestSha256);
-        MatcherV2ToV3DeltaReport delta = MatcherV2ToV3DeltaBuilder.Create(
-            matcherV2,
+        MatcherV31ToV32DeltaReport delta = MatcherV31ToV32DeltaBuilder.Create(
+            matcherV31,
             sarifRegress,
             deltaInputHashes,
             limits);
@@ -136,10 +213,10 @@ public sealed class ValidationApplication
             metadataSha256,
             sarifRegressSha256,
             Sha256(multitoolBytes),
-            matcherV2.ReportSha256,
+            matcherV31.ReportSha256,
             Sha256(deltaBytes));
         ValidatedCrossPlatformAttestation? attestation =
-            options.CrossPlatformAttestationPath is null
+            options.CrossPlatformAttestationPath is null || !currentReportHashBound
                 ? null
                 : attestationReader.Read(
                     repositoryRoot,
@@ -150,7 +227,7 @@ public sealed class ValidationApplication
                         metadataSha256,
                         hashes.SarifRegressReportSha256,
                         hashes.SarifMultitoolBaselineReportSha256,
-                        hashes.V2ToV3DeltaReportSha256));
+                        hashes.V31ToV32DeltaReportSha256));
         ComparisonSummaryReport comparison = ComparisonSummaryBuilder.Create(
             sarifRegress,
             multitool,
@@ -166,7 +243,7 @@ public sealed class ValidationApplication
             StringComparer.Ordinal);
         normalizedBuilder.Add(SarifRegressReportFileName, sarifRegressBytes);
         normalizedBuilder.Add(MultitoolReportFileName, multitoolBytes);
-        normalizedBuilder.Add(V2ToV3DeltaReportFileName, deltaBytes);
+        normalizedBuilder.Add(V31ToV32DeltaReportFileName, deltaBytes);
         normalizedBuilder.Add(ComparisonSummaryFileName, comparisonBytes);
         ImmutableSortedDictionary<string, byte[]> normalized =
             normalizedBuilder.ToImmutable();
@@ -202,7 +279,8 @@ public sealed class ValidationApplication
             sarifRegress,
             externalReproducibilityFailed,
             attestation is not null,
-            delta.EveryChangedDecisionHasTrace);
+            delta.EveryChangedDecisionHasTrace,
+            currentReportHashBound);
     }
 
     /// <summary>
@@ -212,13 +290,15 @@ public sealed class ValidationApplication
         SarifRegressHoldoutReport sarifRegress,
         bool externalReproducibilityFailed,
         bool crossPlatformByteIdentity,
-        bool everyChangedDecisionHasTrace = true)
+        bool everyChangedDecisionHasTrace = true,
+        bool currentReportHashBound = true)
     {
         ArgumentNullException.ThrowIfNull(sarifRegress);
         return sarifRegress.Aggregate.StructuralFailures > 0
             || externalReproducibilityFailed
             || !crossPlatformByteIdentity
             || !everyChangedDecisionHasTrace
+            || !currentReportHashBound
                 ? ValidationExitCodes.ValidationFailure
                 : ValidationExitCodes.Success;
     }
@@ -236,8 +316,8 @@ public sealed class ValidationApplication
                 "validation/schemas/sarif-multitool-baseline-report.schema.json",
             [ComparisonSummaryFileName] =
                 "validation/schemas/comparison-summary.schema.json",
-            [V2ToV3DeltaReportFileName] =
-                "validation/schemas/v2-to-v3-delta.schema.json",
+            [V31ToV32DeltaReportFileName] =
+                "validation/schemas/v3.1-to-v3.2-delta.schema.json",
         };
         foreach ((string name, byte[] bytes) in reports.OrderBy(
                      item => item.Key,
@@ -269,17 +349,18 @@ public sealed class ValidationApplication
                 StablePath.Resolve(repositoryRoot, MetadataRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
+            [MatcherV31HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
                 StablePath.Resolve(
                     repositoryRoot,
-                    MatcherV2HistoryChecksumRelativePath),
+                    MatcherV31HistoryChecksumRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
-                StablePath.Resolve(repositoryRoot, MatcherV2HistoryReportRelativePath),
+            [MatcherV31HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
+                StablePath.Resolve(repositoryRoot, MatcherV31HistoryReportRelativePath),
                 limits.MaximumSarifBytes,
                 repositoryRoot),
         };
+        AddInterpretationErratumInputs(repositoryRoot, files);
         foreach ((string name, byte[] bytes) in reports)
         {
             files.Add($"{ExpectedRelativeRoot}/{name}", bytes);
@@ -312,17 +393,18 @@ public sealed class ValidationApplication
                 StablePath.Resolve(repositoryRoot, MetadataRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
+            [MatcherV31HistoryChecksumRelativePath] = BoundedJsonFile.ReadBytes(
                 StablePath.Resolve(
                     repositoryRoot,
-                    MatcherV2HistoryChecksumRelativePath),
+                    MatcherV31HistoryChecksumRelativePath),
                 limits.MaximumManifestBytes,
                 repositoryRoot),
-            [MatcherV2HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
-                StablePath.Resolve(repositoryRoot, MatcherV2HistoryReportRelativePath),
+            [MatcherV31HistoryReportRelativePath] = BoundedJsonFile.ReadBytes(
+                StablePath.Resolve(repositoryRoot, MatcherV31HistoryReportRelativePath),
                 limits.MaximumSarifBytes,
                 repositoryRoot),
         };
+        AddInterpretationErratumInputs(repositoryRoot, expected);
         foreach ((string name, byte[] bytes) in reports)
         {
             expected.Add($"{ExpectedRelativeRoot}/{name}", bytes);
@@ -350,6 +432,36 @@ public sealed class ValidationApplication
                     $"The generated checksum for '{name}' is incorrect.");
             }
         }
+    }
+
+    private void AddInterpretationErratumInputs(
+        string repositoryRoot,
+        IDictionary<string, byte[]> inputs)
+    {
+        inputs.Add(
+            HoldoutInterpretationErratumReader.RelativePath,
+            BoundedJsonFile.ReadBytes(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    HoldoutInterpretationErratumReader.RelativePath),
+                limits.MaximumManifestBytes,
+                repositoryRoot));
+        inputs.Add(
+            HoldoutInterpretationErratumReader.ChecksumManifestRelativePath,
+            BoundedJsonFile.ReadBytes(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    HoldoutInterpretationErratumReader.ChecksumManifestRelativePath),
+                limits.MaximumManifestBytes,
+                repositoryRoot));
+        inputs.Add(
+            HoldoutInterpretationErratumReader.SchemaRelativePath,
+            BoundedJsonFile.ReadBytes(
+                StablePath.Resolve(
+                    repositoryRoot,
+                    HoldoutInterpretationErratumReader.SchemaRelativePath),
+                limits.MaximumSchemaBytes,
+                repositoryRoot));
     }
 
     internal static void EnsureOutputRoot(string outputRoot)

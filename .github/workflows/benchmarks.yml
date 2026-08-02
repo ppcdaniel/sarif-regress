@@ -12,6 +12,8 @@ on:
       - 'scripts/build.ps1'
       - 'scripts/build.sh'
       - 'src/**'
+      - 'validation/research/sparse-sarif/**'
+      - 'validation/tools/SarifRegress.Validation/**'
   schedule:
     - cron: '23 4 * * 1'
   workflow_dispatch:
@@ -33,6 +35,7 @@ jobs:
           - label: windows
             runner: windows-latest
         size:
+          - 1000
           - 10000
           - 100000
         dataset:
@@ -43,7 +46,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -69,6 +82,15 @@ jobs:
           set -euo pipefail
           evidence_directory="artifacts/benchmarks/current"
           mkdir -p "${evidence_directory}"
+          dotnet run \
+            --project validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            -- \
+            resource-limits \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --output-root "${evidence_directory}"
           benchmark_exit=0
           dotnet run \
             --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
@@ -90,6 +112,7 @@ jobs:
               LC_ALL=C sha256sum \
                 deterministic.json \
                 report.json \
+                resource-limits.json \
                 > checksums.sha256
             )
           fi
@@ -107,6 +130,18 @@ jobs:
             -Force |
             Out-Null
           & dotnet run `
+            --project validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            -- `
+            resource-limits `
+            --repository-root $env:GITHUB_WORKSPACE `
+            --output-root $evidenceDirectory
+          if ($LASTEXITCODE -ne 0) {
+            throw "Resource-limit evidence failed with exit code $LASTEXITCODE."
+          }
+          & dotnet run `
             --project src/SarifRegress.Cli/SarifRegress.Cli.csproj `
             --configuration Release `
             --no-build `
@@ -122,7 +157,7 @@ jobs:
           }
 
           $manifestLines = foreach (
-            $name in @('deterministic.json', 'report.json')
+            $name in @('deterministic.json', 'report.json', 'resource-limits.json')
           ) {
             $hash = Get-FileHash `
               -LiteralPath (Join-Path $evidenceDirectory $name) `
@@ -137,22 +172,45 @@ jobs:
             $utf8WithoutBom)
 
       - name: Upload benchmark evidence
-        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmark-${{ matrix.size }}-${{ matrix.dataset }}-${{ matrix.platform.label }}
           path: artifacts/benchmarks/current
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
 
   compare:
     name: Compare extended cross-platform hashes
-    if: always()
     needs: measure
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      artifact_id: ${{ steps.upload-verified-benchmarks.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-verified-benchmarks.outputs.artifact-digest }}
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact projection runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
       - name: Download all extended evidence
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -164,7 +222,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/verified
-          for size in 10000 100000; do
+          for size in 1000 10000 100000; do
             for dataset in unique pathological; do
               linux_report="artifacts/download/benchmark-${size}-${dataset}-linux/deterministic.json"
               windows_report="artifacts/download/benchmark-${size}-${dataset}-windows/deterministic.json"
@@ -190,7 +248,310 @@ jobs:
             LC_ALL=C sha256sum ./*.json > checksums.sha256
           )
 
+      - name: Create full resource evidence and stable gate projection
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python3 -B - <<'PY'
+          import copy
+          import hashlib
+          import json
+          import math
+          import stat
+          from pathlib import Path
+
+          root = Path.cwd()
+          research = root / "validation" / "research" / "sparse-sarif"
+
+          download = root / "artifacts" / "download"
+          verified = root / "artifacts" / "verified"
+          budgets = {
+              1000: (10_000, 512 * 1024 * 1024),
+              10000: (20_000, 768 * 1024 * 1024),
+              100000: (60_000, 1024 * 1024 * 1024),
+          }
+          cells = []
+          observed_cells = []
+          first_limits_payload = None
+          for operating_system, platform in (("ubuntu", "linux"), ("windows", "windows")):
+              for size in (1000, 10000, 100000):
+                  for dataset in ("unique", "pathological"):
+                      artifact = f"benchmark-{size}-{dataset}-{platform}"
+                      path = download / artifact / "report.json"
+                      limits_path = download / artifact / "resource-limits.json"
+                      status = path.lstat()
+                      if (
+                          not stat.S_ISREG(status.st_mode)
+                          or status.st_size <= 0
+                          or status.st_size > 64 * 1024 * 1024
+                      ):
+                          raise SystemExit(f"Invalid benchmark evidence {path}.")
+                      payload = path.read_bytes()
+                      if len(payload) != status.st_size:
+                          raise SystemExit(f"Benchmark evidence changed while reading {path}.")
+                      limits_status = limits_path.lstat()
+                      if (
+                          not stat.S_ISREG(limits_status.st_mode)
+                          or limits_status.st_size <= 0
+                          or limits_status.st_size > 64 * 1024
+                      ):
+                          raise SystemExit(f"Invalid resource-limit evidence {limits_path}.")
+                      limits_payload = limits_path.read_bytes()
+                      if len(limits_payload) != limits_status.st_size:
+                          raise SystemExit(
+                              f"Resource-limit evidence changed while reading {limits_path}."
+                          )
+                      if first_limits_payload is None:
+                          first_limits_payload = limits_payload
+                      elif limits_payload != first_limits_payload:
+                          raise SystemExit("Executable resource limits differ across cells.")
+                      report = json.loads(payload)
+                      product_limits = json.loads(limits_payload)
+                      if set(product_limits) != {
+                          "schemaVersion",
+                          "kind",
+                          "maximumCandidatePairsPerFinding",
+                          "maximumCandidatePairs",
+                          "maximumAssignmentSideSize",
+                      } or (
+                          product_limits["schemaVersion"] != "1"
+                          or product_limits["kind"]
+                          != "sarifregress-resource-limits/v1"
+                      ):
+                          raise SystemExit("Resource-limit evidence contract is invalid.")
+                      expected_kind = (
+                          "unique-fingerprints"
+                          if dataset == "unique"
+                          else "pathological-bucket"
+                      )
+                      if (
+                          report["dataset"]["findingCountPerSide"] != size
+                          or report["dataset"]["kind"] != expected_kind
+                      ):
+                          raise SystemExit(f"Benchmark identity disagrees with {artifact}.")
+                      operations = report["operations"]
+                      observations = report["observations"]
+                      refusal = (
+                          dataset == "pathological"
+                          and operations["candidateEdgeCount"] == 0
+                          and operations["ambiguousComponentCount"] > 0
+                          and bool(
+                              {"MATCH0007", "MATCH0008", "MATCH0009"}
+                              & set(operations["diagnosticCodes"])
+                          )
+                      )
+                      observed_component = operations[
+                          "maximumComponentFindingCount"
+                      ]
+                      admitted_component = 0 if refusal else observed_component
+                      elapsed = math.ceil(
+                          observations["parseLatencyMilliseconds"]
+                          + observations["canonicaliseLatencyMilliseconds"]
+                          + observations["compareLatencyMilliseconds"]
+                          + observations["serializeLatencyMilliseconds"]
+                      )
+                      runtime_enforced = operating_system == "ubuntu"
+                      elapsed_budget, memory_budget = budgets[size]
+                      within = (
+                          product_limits["maximumCandidatePairsPerFinding"] == 256
+                          and product_limits["maximumCandidatePairs"] == 1_000_000
+                          and product_limits["maximumAssignmentSideSize"] == 12
+                          and report["limits"]["maximumCandidatePairsPerFinding"]
+                          == product_limits["maximumCandidatePairsPerFinding"]
+                          and report["limits"]["maximumCandidatePairs"]
+                          == product_limits["maximumCandidatePairs"]
+                          and operations["candidateEdgeCount"] <= 1_000_000
+                          and (
+                              (
+                                  refusal
+                                  and observed_component == 2 * size
+                                  and admitted_component == 0
+                              )
+                              or (
+                                  not refusal
+                                  and operations["candidateEdgeCount"] == size
+                                  and observed_component == 2
+                                  and admitted_component == 2
+                              )
+                          )
+                          and refusal is (dataset == "pathological")
+                          and (
+                              not runtime_enforced
+                              or (
+                                  report["budget"]["passed"] is True
+                                  and elapsed <= elapsed_budget
+                                  and observations["peakWorkingSetBytes"] <= memory_budget
+                              )
+                          )
+                      )
+                      cells.append(
+                          {
+                              "operatingSystem": operating_system,
+                              "findingCount": size,
+                              "dataset": dataset,
+                              "candidateEdges": operations["candidateEdgeCount"],
+                              "maximumComponentSize": admitted_component,
+                              "elapsedMilliseconds": elapsed,
+                              "peakWorkingSetBytes": observations[
+                                  "peakWorkingSetBytes"
+                              ],
+                              "configuredCandidatePairLimit": product_limits[
+                                  "maximumCandidatePairs"
+                              ],
+                              "configuredAssignmentComponentLimit": product_limits[
+                                  "maximumAssignmentSideSize"
+                              ],
+                              "boundedRefusalObserved": refusal,
+                              "runtimeBudgetEnforced": runtime_enforced,
+                              "withinDocumentedLimits": within,
+                          }
+                      )
+                      observed_cells.append(
+                          {
+                              "operatingSystem": operating_system,
+                              "findingCount": size,
+                              "dataset": dataset,
+                              "candidateEdges": operations["candidateEdgeCount"],
+                              "observedMaximumComponentFindingCount": observed_component,
+                              "maximumAdmittedAssignmentComponentSize": admitted_component,
+                              "configuredCandidatePairsPerFindingLimit": product_limits[
+                                  "maximumCandidatePairsPerFinding"
+                              ],
+                              "configuredCandidatePairLimit": product_limits[
+                                  "maximumCandidatePairs"
+                              ],
+                              "configuredAssignmentComponentLimit": product_limits[
+                                  "maximumAssignmentSideSize"
+                              ],
+                              "boundedRefusalObserved": refusal,
+                              "runtimeBudgetEnforced": runtime_enforced,
+                              "withinDocumentedLimits": within,
+                          }
+                      )
+
+          stable_observations = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-resource-observations/v1",
+              "corpusManifestSha256": hashlib.sha256(
+                  (research / "manifest.json").read_bytes()
+              ).hexdigest(),
+              "implementationManifestSha256": hashlib.sha256(
+                  (research / "experiment-implementation-manifest.json").read_bytes()
+              ).hexdigest(),
+              "cells": observed_cells,
+          }
+          stable_observation_bytes = (
+              json.dumps(stable_observations, ensure_ascii=False, indent=2) + "\n"
+          ).encode("utf-8")
+          evidence = {
+              "withinDocumentedLimits": all(
+                  cell["withinDocumentedLimits"] for cell in cells
+              ),
+              "sourceContextProjectionBenchmarked": False,
+              "cells": cells,
+              "evidencePath": (
+                  "expected/sparse-experiment-resource-observations.json"
+              ),
+              "evidenceSha256": hashlib.sha256(
+                  stable_observation_bytes
+              ).hexdigest(),
+          }
+          variant_ids = (
+              "sarif-only-control",
+              "exact-region-snippet",
+              "token-window",
+              "relative-context",
+              "agreement-only-combination",
+          )
+          full_variants = [
+              {"id": variant_id, "value": copy.deepcopy(evidence)}
+              for variant_id in variant_ids
+          ]
+          # Stable coordinator bytes intentionally exclude volatile timing and
+          # memory. Composite admission derives this subset from, and cross-binds
+          # it to, the full evidence contract.
+          projection_evidence = {
+              "withinDocumentedLimits": evidence["withinDocumentedLimits"],
+              "sourceContextProjectionBenchmarked": evidence[
+                  "sourceContextProjectionBenchmarked"
+              ],
+              "evidencePath": evidence["evidencePath"],
+              "evidenceSha256": evidence["evidenceSha256"],
+          }
+          projection_variants = [
+              {"id": variant_id, "value": copy.deepcopy(projection_evidence)}
+              for variant_id in variant_ids
+          ]
+          corpus_hash = hashlib.sha256(
+              (research / "manifest.json").read_bytes()
+          ).hexdigest()
+          implementation_hash = hashlib.sha256(
+              (research / "experiment-implementation-manifest.json").read_bytes()
+          ).hexdigest()
+          full = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-resource-values/v1",
+              "corpusManifestSha256": corpus_hash,
+              "implementationManifestSha256": implementation_hash,
+              "variants": full_variants,
+          }
+          projection = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-resource-projection/v1",
+              "corpusManifestSha256": corpus_hash,
+              "implementationManifestSha256": implementation_hash,
+              "variants": projection_variants,
+          }
+          for name, value in (
+              ("sparse-experiment-resource-values.json", full),
+              ("sparse-experiment-resource-projection.json", projection),
+          ):
+              (verified / name).write_bytes(
+                  (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode(
+                      "utf-8"
+                  )
+              )
+          (verified / "sparse-experiment-resource-observations.json").write_bytes(
+              stable_observation_bytes
+          )
+          files = sorted(
+              path for path in verified.iterdir()
+              if path.is_file() and path.name != "checksums.sha256"
+          )
+          (verified / "checksums.sha256").write_bytes(
+              "".join(
+                  f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
+                  for path in files
+              ).encode("ascii")
+          )
+          PY
+
+      - name: Upload sparse resource evidence candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-resource-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Verify committed sparse resource evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-resource-projection.json \
+            validation/research/sparse-sarif/expected/projections/sparse-experiment-resource-projection.json
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-resource-observations.json \
+            validation/research/sparse-sarif/expected/sparse-experiment-resource-observations.json
+
       - name: Upload verified cross-platform evidence
+        id: upload-verified-benchmarks
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmark-cross-platform

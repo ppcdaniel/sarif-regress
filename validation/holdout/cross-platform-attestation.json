@@ -1,48 +1,49 @@
 {
-  "schemaVersion": "2",
+  "schemaVersion": "4",
   "repository": "ppcdaniel/sarif-regress",
-  "repositoryCommitSha": "29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b",
+  "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
   "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
-  "evaluationMetadataSha256": "d9e88ba62142a23459ad86f5372b2e153e4727c3560662b8625a7a115d9006b7",
+  "evaluationMetadataSha256": "e170ba6f7203e2414f4b27b725996f177c1a04045522b42fe57038782bbf5915",
   "baseReports": {
-    "sarifRegressHoldoutSha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99",
-    "sarifMultitoolBaselineSha256": "edc58e16c85635ee3ffa7dddd454425230fe3f71f4020b80cb1baf7f20300aa2",
-    "v2ToV3DeltaSha256": "e75c5fd7855e4da55029a8f262d78ba2007f574092c2464085f870204a18afdb"
+    "sarifRegressHoldoutSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
+    "sarifMultitoolBaselineSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
+    "v31ToV32DeltaSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
   },
   "githubActions": {
     "workflowPath": ".github/workflows/holdout-validation.yml",
-    "runId": 30698849989,
+    "runId": 30761620623,
     "runAttempt": 1,
-    "runUrl": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30698849989",
-    "workflowHeadSha": "cc1016e71d5c31acf73c4dbed3cb7b59c5dc1e74",
-    "conclusion": "success",
+    "runUrl": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30761620623",
+    "workflowHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+    "workflowConclusion": "failure",
+    "coordinatorJobConclusion": "success",
     "coordinatorJobName": "Compare Linux and Windows normalized bytes"
   },
   "artifacts": {
     "linux": {
-      "name": "holdout-linux",
-      "artifactId": 8818160563,
-      "archiveSha256": "ffd746c2dc6c24b65186fc18f6919a61aab22d974d25daab4ff682d918bca40b",
+      "name": "holdout-v3.2-candidate-linux-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837651649,
+      "archiveSha256": "2160092e5a3e5263eee3545c7fb749ca58e7e940a360cba271e489cde3d99082",
       "reportDigests": {
-        "sarifRegressHoldoutSha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99",
-        "sarifMultitoolBaselineSha256": "edc58e16c85635ee3ffa7dddd454425230fe3f71f4020b80cb1baf7f20300aa2",
-        "v2ToV3DeltaSha256": "e75c5fd7855e4da55029a8f262d78ba2007f574092c2464085f870204a18afdb"
+        "sarifRegressHoldoutSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
+        "sarifMultitoolBaselineSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
+        "v31ToV32DeltaSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
       }
     },
     "windows": {
-      "name": "holdout-windows",
-      "artifactId": 8818173708,
-      "archiveSha256": "dc3644ecefb1be8c66e6092326dc0505d034b9ba3466960351c63336fb8dc2b3",
+      "name": "holdout-v3.2-candidate-windows-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837657200,
+      "archiveSha256": "2cf58f6e411a2101ec0c6835db8504c8085b72536da12d627e184eb572cc4217",
       "reportDigests": {
-        "sarifRegressHoldoutSha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99",
-        "sarifMultitoolBaselineSha256": "edc58e16c85635ee3ffa7dddd454425230fe3f71f4020b80cb1baf7f20300aa2",
-        "v2ToV3DeltaSha256": "e75c5fd7855e4da55029a8f262d78ba2007f574092c2464085f870204a18afdb"
+        "sarifRegressHoldoutSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
+        "sarifMultitoolBaselineSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
+        "v31ToV32DeltaSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
       }
     }
   },
   "byteIdentity": {
     "sarifRegressHoldout": true,
     "sarifMultitoolBaseline": true,
-    "v2ToV3Delta": true
+    "v31ToV32Delta": true
   }
 }

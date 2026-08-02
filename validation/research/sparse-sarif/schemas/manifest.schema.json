@@ -1,0 +1,450 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/research/sparse-sarif/schemas/manifest.schema.json",
+  "title": "Sparse-SARIF research corpus manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "corpusId",
+    "producer",
+    "families",
+    "contamination",
+    "integrity"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "corpusId": {
+      "const": "pmd-sparse-research"
+    },
+    "producer": {
+      "$ref": "#/$defs/producer"
+    },
+    "families": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/family"
+      }
+    },
+    "contamination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scannerPath",
+        "scannerSha256",
+        "policyVersion"
+      ],
+      "properties": {
+        "scannerPath": {
+          "const": "tools/scan_contamination.py"
+        },
+        "scannerSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "policyVersion": {
+          "const": "sparse-sarif-contamination/v1"
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "files"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/integrityPath"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+    },
+    "httpsUrl": {
+      "type": "string",
+      "minLength": 9,
+      "maxLength": 2048,
+      "pattern": "^https://[^\\s]+$"
+    },
+    "integrityPath": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/relativePath"
+        },
+        {
+          "not": {
+            "pattern": "^(?:manifest\\.json|expected/)"
+          }
+        }
+      ]
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "name",
+        "version",
+        "sourceCommit",
+        "projectUrl",
+        "releaseUrl",
+        "license",
+        "archive",
+        "helpSha256",
+        "capture"
+      ],
+      "properties": {
+        "family": {
+          "const": "pmd"
+        },
+        "name": {
+          "const": "PMD"
+        },
+        "version": {
+          "const": "7.26.0"
+        },
+        "sourceCommit": {
+          "const": "8fd38edf285a33e1164f66205ebe243441db9557"
+        },
+        "projectUrl": {
+          "const": "https://github.com/pmd/pmd"
+        },
+        "releaseUrl": {
+          "const": "https://github.com/pmd/pmd/releases/tag/pmd_releases%2F7.26.0"
+        },
+        "license": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identifier",
+            "name",
+            "url"
+          ],
+          "properties": {
+            "identifier": {
+              "const": "LicenseRef-PMD-BSD-Style"
+            },
+            "name": {
+              "const": "PMD BSD-style license"
+            },
+            "url": {
+              "const": "https://github.com/pmd/pmd/blob/8fd38edf285a33e1164f66205ebe243441db9557/LICENSE"
+            }
+          }
+        },
+        "archive": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "sizeBytes",
+            "sha256"
+          ],
+          "properties": {
+            "url": {
+              "const": "https://github.com/pmd/pmd/releases/download/pmd_releases/7.26.0/pmd-dist-7.26.0-bin.zip"
+            },
+            "sizeBytes": {
+              "const": 73646044
+            },
+            "sha256": {
+              "const": "9f55cb7ff0e9f9a66dd2f005eaa370e84c8a4cd971b134aa14a930c4a283ebc9"
+            }
+          }
+        },
+        "helpSha256": {
+          "const": "babf2b1e17bddd7611cc4882b9686c207e2b73fee3e3053276b3455e6c890b91"
+        },
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceHeadSha",
+            "workflow",
+            "runner",
+            "runtime",
+            "contract",
+            "captureCommand",
+            "downloadCommand"
+          ],
+          "properties": {
+            "sourceHeadSha": {
+              "$ref": "#/$defs/gitCommit"
+            },
+            "workflow": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "runId",
+                "artifactId",
+                "artifactName",
+                "artifactDigest"
+              ],
+              "properties": {
+                "runId": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "artifactId": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "artifactName": {
+                  "type": "string",
+                  "pattern": "^sparse-sarif-pmd-(?:bootstrap|capture)-[0-9a-f]{40}$",
+                  "maxLength": 128
+                },
+                "artifactDigest": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            },
+            "runner": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label",
+                "imageOS",
+                "imageVersion",
+                "operatingSystem",
+                "architecture"
+              ],
+              "properties": {
+                "label": {
+                  "const": "ubuntu-24.04"
+                },
+                "imageOS": {
+                  "const": "ubuntu24"
+                },
+                "imageVersion": {
+                  "type": "string",
+                  "pattern": "^[0-9]{8}\\.[0-9]+\\.[0-9]+$"
+                },
+                "operatingSystem": {
+                  "const": "Linux"
+                },
+                "architecture": {
+                  "const": "x86_64"
+                }
+              }
+            },
+            "runtime": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pythonVersion",
+                "javaDistribution",
+                "javaVendor",
+                "javaVersion"
+              ],
+              "properties": {
+                "pythonVersion": {
+                  "const": "3.12.13"
+                },
+                "javaDistribution": {
+                  "const": "Eclipse Temurin"
+                },
+                "javaVendor": {
+                  "const": "Eclipse Adoptium"
+                },
+                "javaVersion": {
+                  "const": "17.0.19+10"
+                }
+              }
+            },
+            "contract": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "sha256"
+              ],
+              "properties": {
+                "version": {
+                  "const": "pmd-authentic-sparse-capture/v1"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            },
+            "captureCommand": {
+              "const": [
+                "pmd",
+                "check",
+                "--dir",
+                ".",
+                "--format",
+                "sarif",
+                "--no-cache",
+                "--no-fail-on-violation",
+                "--no-progress",
+                "--relativize-paths-with",
+                "<side-source-root>",
+                "--report-file",
+                "<raw-capture>",
+                "--rulesets",
+                "<family-ruleset>",
+                "--threads",
+                "0",
+                "--use-version",
+                "java-17"
+              ]
+            },
+            "downloadCommand": {
+              "const": [
+                "curl",
+                "--disable",
+                "--fail",
+                "--location",
+                "--max-filesize",
+                "<archive-bytes>",
+                "--proto",
+                "=https",
+                "--retry",
+                "3",
+                "--retry-all-errors",
+                "--show-error",
+                "--silent",
+                "--tlsv1.2",
+                "--output",
+                "<archive-destination>",
+                "<archive-url>"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelsPath",
+        "rulesetPath",
+        "baseline",
+        "candidate"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "labelsPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "rulesetPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "baseline": {
+          "$ref": "#/$defs/side"
+        },
+        "candidate": {
+          "$ref": "#/$defs/side"
+        }
+      }
+    },
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceRoot",
+        "sarifPath",
+        "projectionAuditPath",
+        "sourceTreeSha256",
+        "rawCaptureSha256",
+        "rawCaptureBytes",
+        "projectedSarifSha256",
+        "projectedSarifBytes",
+        "projectionAuditSha256",
+        "resultCount"
+      ],
+      "properties": {
+        "sourceRoot": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sarifPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "projectionAuditPath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "sourceTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "rawCaptureSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "rawCaptureBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "projectedSarifSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "projectedSarifBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "projectionAuditSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "resultCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        }
+      }
+    }
+  }
+}

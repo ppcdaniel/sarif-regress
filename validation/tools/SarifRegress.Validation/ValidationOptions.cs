@@ -12,6 +12,15 @@ public enum ValidationCommand
 
     /// <summary>Validate manifest, provenance, labels, and schemas without executing tools.</summary>
     ValidateStructure,
+
+    /// <summary>Run the label-neutral sparse-SARIF source-context experiment.</summary>
+    SparseRun,
+
+    /// <summary>Score a fixed sparse-SARIF observation artifact against labels.</summary>
+    SparseEvaluate,
+
+    /// <summary>Emit the exact product resource limits used by hosted evidence.</summary>
+    ResourceLimits,
 }
 
 /// <summary>
@@ -25,7 +34,8 @@ public sealed record ValidationOptions(
     string? MultitoolPath,
     string? MultitoolVersion,
     bool CompareExpected,
-    string? CrossPlatformAttestationPath);
+    string? CrossPlatformAttestationPath,
+    string? ObservationsPath = null);
 
 /// <summary>
 /// Parses a deliberately small, strict command line without ambient defaults.
@@ -34,6 +44,9 @@ public static class ValidationOptionsParser
 {
     private const string EvaluateCommandName = "evaluate";
     private const string ValidateStructureCommandName = "validate-structure";
+    private const string SparseRunCommandName = "sparse-run";
+    private const string SparseEvaluateCommandName = "sparse-evaluate";
+    private const string ResourceLimitsCommandName = "resource-limits";
 
     private static readonly ImmutableHashSet<string> KnownOptions =
         ImmutableHashSet.Create(
@@ -44,7 +57,8 @@ public static class ValidationOptionsParser
             "--multitool-path",
             "--multitool-version",
             "--compare-expected",
-            "--cross-platform-attestation");
+            "--cross-platform-attestation",
+            "--observations");
 
     /// <summary>Gets stable command help used by both the CLI and tests.</summary>
     public static string HelpText =>
@@ -54,10 +68,16 @@ public static class ValidationOptionsParser
         + "--compare-expected true|false [--expected-root PATH] "
         + "[--cross-platform-attestation PATH]\n"
         + "  SarifRegress.Validation validate-structure --repository-root PATH "
+        + "--output-root PATH\n"
+        + "  SarifRegress.Validation sparse-run --repository-root PATH "
+        + "--output-root PATH\n"
+        + "  SarifRegress.Validation sparse-evaluate --repository-root PATH "
+        + "--output-root PATH --observations PATH\n"
+        + "  SarifRegress.Validation resource-limits --repository-root PATH "
         + "--output-root PATH\n\n"
         + "evaluate reads the committed frozen evaluation metadata and writes "
         + "sarif-regress-holdout.json, sarif-multitool-baseline.json, "
-        + "v2-to-v3-delta.json, comparison-summary.json, and "
+        + "v3.1-to-v3.2-delta.json, comparison-summary.json, and "
         + "checksums.sha256. Raw Multitool SARIF is written only below output-root/raw.\n"
         + "When --compare-expected is true, --expected-root is required and all five "
         + "project-owned deterministic outputs are compared byte-for-byte. The optional "
@@ -80,6 +100,7 @@ public static class ValidationOptionsParser
         string repositoryRoot = RequiredPath(values, "--repository-root");
         string outputRoot = RequiredPath(values, "--output-root");
         string? expectedRoot = OptionalPath(values, "--expected-root");
+        string? observationsPath = OptionalPath(values, "--observations");
 
         ValidateOutputRoot(repositoryRoot, outputRoot);
 
@@ -89,7 +110,8 @@ public static class ValidationOptionsParser
                 "The generated output root must not overlap the committed expected-output root.");
         }
 
-        if (command == ValidationCommand.ValidateStructure)
+        if (command is ValidationCommand.ValidateStructure
+            or ValidationCommand.ResourceLimits)
         {
             RejectOptions(
                 values,
@@ -97,7 +119,8 @@ public static class ValidationOptionsParser
                 "--multitool-path",
                 "--multitool-version",
                 "--compare-expected",
-                "--cross-platform-attestation");
+                "--cross-platform-attestation",
+                "--observations");
             return new ValidationOptions(
                 command,
                 repositoryRoot,
@@ -106,7 +129,41 @@ public static class ValidationOptionsParser
                 null,
                 null,
                 CompareExpected: false,
-                CrossPlatformAttestationPath: null);
+                CrossPlatformAttestationPath: null,
+                ObservationsPath: null);
+        }
+
+        if (command is ValidationCommand.SparseRun or ValidationCommand.SparseEvaluate)
+        {
+            RejectOptions(
+                values,
+                "--expected-root",
+                "--multitool-path",
+                "--multitool-version",
+                "--compare-expected",
+                "--cross-platform-attestation");
+            if (command == ValidationCommand.SparseRun && observationsPath is not null)
+            {
+                throw new ValidationUsageException(
+                    "--observations is not valid for sparse-run.");
+            }
+
+            if (command == ValidationCommand.SparseEvaluate && observationsPath is null)
+            {
+                throw new ValidationUsageException(
+                    "--observations is required for sparse-evaluate.");
+            }
+
+            return new ValidationOptions(
+                command,
+                repositoryRoot,
+                outputRoot,
+                null,
+                null,
+                null,
+                CompareExpected: false,
+                CrossPlatformAttestationPath: null,
+                observationsPath);
         }
 
         string multitoolPath = RequiredValue(values, "--multitool-path");
@@ -134,13 +191,17 @@ public static class ValidationOptionsParser
             multitoolPath,
             multitoolVersion,
             compareExpected,
-            crossPlatformAttestation);
+            crossPlatformAttestation,
+            ObservationsPath: null);
     }
 
     private static ValidationCommand ParseCommand(string value) => value switch
     {
         EvaluateCommandName => ValidationCommand.Evaluate,
         ValidateStructureCommandName => ValidationCommand.ValidateStructure,
+        SparseRunCommandName => ValidationCommand.SparseRun,
+        SparseEvaluateCommandName => ValidationCommand.SparseEvaluate,
+        ResourceLimitsCommandName => ValidationCommand.ResourceLimits,
         _ => throw new ValidationUsageException(
             $"Unknown validation command '{value}'."),
     };
@@ -261,7 +322,7 @@ public static class ValidationOptionsParser
         if (present is not null)
         {
             throw new ValidationUsageException(
-                $"Validation option '{present}' is not valid for validate-structure.");
+                $"Validation option '{present}' is not valid for this command.");
         }
     }
 

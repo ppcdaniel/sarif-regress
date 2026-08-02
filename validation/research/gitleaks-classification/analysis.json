@@ -1,0 +1,213 @@
+{
+  "schemaVersion": "1",
+  "reportKind": "gitleaks-classification-mismatch-analysis",
+  "producer": "Gitleaks",
+  "correctedMatcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+  "labelsChanged": false,
+  "correspondenceChanged": false,
+  "inputs": {
+    "labels": {
+      "path": "validation/holdout/cases/gitleaks/labels.json",
+      "sha256": "1f17cc8e0eab4e94c70519817c42430a3344c42bd55c2ecd044d1d5f4b84b026"
+    },
+    "baselineSarif": {
+      "path": "validation/holdout/cases/gitleaks/baseline.sarif",
+      "sha256": "1a09b8b78e50c157ce16cdd3e21edffdeaec2deb88337c185d44f0fa5ff81a5c"
+    },
+    "candidateSarif": {
+      "path": "validation/holdout/cases/gitleaks/candidate.sarif",
+      "sha256": "57e66495752f67407be384eab0a6b2197abfde72df88921edbf8cc292e6f82f5"
+    },
+    "sourceTransformationPlan": {
+      "path": "validation/holdout/cases/gitleaks/producer-input/case-plan.json",
+      "sha256": "43ab0a9d65faf2861e248ba7d6ab37d6927c57725bf46bc5909f320db2818c1d"
+    },
+    "frozenMatcherV3Report": {
+      "path": "validation/history/matcher-v3/sarif-regress-holdout.json",
+      "sha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99"
+    }
+  },
+  "sharedHistoricalDecision": {
+    "precedenceTier": "weak-contextual",
+    "producerFingerprintStrength": 0,
+    "pathMatchKind": "aliased",
+    "contextAgreement": "compatible",
+    "supportingAgreement": "none",
+    "messageAgreement": "none",
+    "regionDriftBand": 0,
+    "collisionOnly": true,
+    "contextEvidence": {
+      "embeddedSnippet": "REDACTED",
+      "snippetHash": "01a0faf4b20407a5d6ec8dc95ad61e85e3a5d6481581357807c56229f8e0858e",
+      "reliability": "duplicated-on-both-sides",
+      "comparisonAlgorithm": "sarifregress/context-evidence/v2",
+      "occurrenceAlgorithm": "sarifregress/evidence-occurrence/v1"
+    },
+    "pathEvidence": {
+      "kind": "path-alias",
+      "baselinePrefix": "src/renamed-old/",
+      "candidatePrefix": "src/renamed-new/",
+      "algorithmVersion": "sarifregress/path-alias/v1"
+    },
+    "historicalClassificationRule": "messageAgreement=none implied modified before path or region movement was evaluated",
+    "correctedClassificationRule": "after correspondence, a unique delimited substitution of each side's own full repository-relative path explains only the message delta; other changed context still implies modified, otherwise path or region movement implies moved",
+    "correctedTraceTransformation": {
+      "kind": "classification-message-location-template",
+      "lossy": true,
+      "algorithmVersion": "sarifregress/message-location-template/v1",
+      "valueContract": "versioned SHA-256 values bind the original canonical-message pair and its shared path-neutral template; no raw message or path is emitted"
+    }
+  },
+  "cases": [
+    {
+      "caseId": "gitleaks-match-014",
+      "semanticId": "gitleaks-renamed-01",
+      "expectedClassification": "moved",
+      "historicalActualClassification": "modified",
+      "correctedClassification": "moved",
+      "baseline": {
+        "findingKey": "baseline:0:22",
+        "path": "src/renamed-old/gitleaks-renamed-01.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-01.env.",
+        "derivedFingerprint": "09ee8ef30dd5d3377d0dd326cb5c345ee4b11c032311eefbdfbfeb460b78d474",
+        "sourceSha256": "630c4199f205ad185f55d4752ce26c163f432d5a18cbe8634774026236b0cfbe"
+      },
+      "candidate": {
+        "findingKey": "candidate:0:25",
+        "path": "src/renamed-new/gitleaks-renamed-01.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-new/gitleaks-renamed-01.env.",
+        "derivedFingerprint": "e4b8b97a9152a53d082ebe89f276bb5ab4e1217bcb0cddda71625ebd00bce37f",
+        "sourceSha256": "630c4199f205ad185f55d4752ce26c163f432d5a18cbe8634774026236b0cfbe"
+      },
+      "sourceTransformation": {
+        "scenario": "renamed",
+        "contentChanged": false,
+        "pathChanged": true,
+        "regionChanged": false,
+        "proof": "baseline and candidate source bytes have identical SHA-256; the capture plan labels an unchanged one-finding file move"
+      }
+    },
+    {
+      "caseId": "gitleaks-match-015",
+      "semanticId": "gitleaks-renamed-02",
+      "expectedClassification": "moved",
+      "historicalActualClassification": "modified",
+      "correctedClassification": "moved",
+      "baseline": {
+        "findingKey": "baseline:0:23",
+        "path": "src/renamed-old/gitleaks-renamed-02.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-02.env.",
+        "derivedFingerprint": "b80bcd9fc4a9107ddc553448beb5e8ed708ed3249e98736e060bd65d3e909e4b",
+        "sourceSha256": "d1e5ac0fd78af6487c569b3f264145e2aa1d12613f15063ad3cfb4ed85c476f7"
+      },
+      "candidate": {
+        "findingKey": "candidate:0:26",
+        "path": "src/renamed-new/gitleaks-renamed-02.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-new/gitleaks-renamed-02.env.",
+        "derivedFingerprint": "a5f145da301ff52652c778ee154a2b43b19a7a1aefa210dbdde3e040a4b0917a",
+        "sourceSha256": "d1e5ac0fd78af6487c569b3f264145e2aa1d12613f15063ad3cfb4ed85c476f7"
+      },
+      "sourceTransformation": {
+        "scenario": "renamed",
+        "contentChanged": false,
+        "pathChanged": true,
+        "regionChanged": false,
+        "proof": "baseline and candidate source bytes have identical SHA-256; the capture plan labels an unchanged one-finding file move"
+      }
+    },
+    {
+      "caseId": "gitleaks-match-016",
+      "semanticId": "gitleaks-renamed-03",
+      "expectedClassification": "moved",
+      "historicalActualClassification": "modified",
+      "correctedClassification": "moved",
+      "baseline": {
+        "findingKey": "baseline:0:24",
+        "path": "src/renamed-old/gitleaks-renamed-03.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-03.env.",
+        "derivedFingerprint": "f4cf09ee5adef12933fe9a9d687827bdae8672cbfb399c5378e57ac4e7230d7c",
+        "sourceSha256": "6d7fada33ecd88eb60915841594cb3b08589af546034cc4be56f98ad33ceca54"
+      },
+      "candidate": {
+        "findingKey": "candidate:0:27",
+        "path": "src/renamed-new/gitleaks-renamed-03.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-new/gitleaks-renamed-03.env.",
+        "derivedFingerprint": "7344719d091fe4b6a767c8dd2515b1354dc9589b108f795cf36318cb28c04252",
+        "sourceSha256": "6d7fada33ecd88eb60915841594cb3b08589af546034cc4be56f98ad33ceca54"
+      },
+      "sourceTransformation": {
+        "scenario": "renamed",
+        "contentChanged": false,
+        "pathChanged": true,
+        "regionChanged": false,
+        "proof": "baseline and candidate source bytes have identical SHA-256; the capture plan labels an unchanged one-finding file move"
+      }
+    },
+    {
+      "caseId": "gitleaks-match-017",
+      "semanticId": "gitleaks-renamed-04",
+      "expectedClassification": "moved",
+      "historicalActualClassification": "modified",
+      "correctedClassification": "moved",
+      "baseline": {
+        "findingKey": "baseline:0:25",
+        "path": "src/renamed-old/gitleaks-renamed-04.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-04.env.",
+        "derivedFingerprint": "551123cb27a706c5c8f20ce8bce8c7f97eb9c6b23e77a9e65e76388b53540683",
+        "sourceSha256": "a9cda78a11b5f68732e15007ac8c705c185705071cc27d9b384aa03cd36cd6f0"
+      },
+      "candidate": {
+        "findingKey": "candidate:0:28",
+        "path": "src/renamed-new/gitleaks-renamed-04.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-new/gitleaks-renamed-04.env.",
+        "derivedFingerprint": "98720214c9139d650292a185995effccd921ad13c6888420db9099e705a02427",
+        "sourceSha256": "a9cda78a11b5f68732e15007ac8c705c185705071cc27d9b384aa03cd36cd6f0"
+      },
+      "sourceTransformation": {
+        "scenario": "renamed",
+        "contentChanged": false,
+        "pathChanged": true,
+        "regionChanged": false,
+        "proof": "baseline and candidate source bytes have identical SHA-256; the capture plan labels an unchanged one-finding file move"
+      }
+    },
+    {
+      "caseId": "gitleaks-match-018",
+      "semanticId": "gitleaks-renamed-05",
+      "expectedClassification": "moved",
+      "historicalActualClassification": "modified",
+      "correctedClassification": "moved",
+      "baseline": {
+        "findingKey": "baseline:0:26",
+        "path": "src/renamed-old/gitleaks-renamed-05.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-old/gitleaks-renamed-05.env.",
+        "derivedFingerprint": "5ea9708c7ec1870f23ff5dbabd309e5b80415327e5db41a2cc02a2fc216b8ef9",
+        "sourceSha256": "df581e3bc0a1a0cc8347c240637672c79c34aee2958224a3e35d9ead782e38f6"
+      },
+      "candidate": {
+        "findingKey": "candidate:0:29",
+        "path": "src/renamed-new/gitleaks-renamed-05.env",
+        "region": "3:13-3:49",
+        "canonicalMessage": "holdout-synthetic-token has detected secret for file src/renamed-new/gitleaks-renamed-05.env.",
+        "derivedFingerprint": "a85ebe9bc96f5c1a70757fcd2977458de37ba6983cc21d8565cad877ef458be5",
+        "sourceSha256": "df581e3bc0a1a0cc8347c240637672c79c34aee2958224a3e35d9ead782e38f6"
+      },
+      "sourceTransformation": {
+        "scenario": "renamed",
+        "contentChanged": false,
+        "pathChanged": true,
+        "regionChanged": false,
+        "proof": "baseline and candidate source bytes have identical SHA-256; the capture plan labels an unchanged one-finding file move"
+      }
+    }
+  ]
+}

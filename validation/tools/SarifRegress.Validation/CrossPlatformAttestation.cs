@@ -13,7 +13,7 @@ public sealed record CrossPlatformAttestationExpectation(
     string EvaluationMetadataSha256,
     string SarifRegressReportSha256,
     string SarifMultitoolBaselineReportSha256,
-    string V2ToV3DeltaReportSha256);
+    string V31ToV32DeltaReportSha256);
 
 /// <summary>Retains exact validated attestation bytes for checksum construction.</summary>
 public sealed record ValidatedCrossPlatformAttestation(
@@ -121,7 +121,7 @@ public sealed class CrossPlatformAttestationReader
         AttestationDocument document,
         CrossPlatformAttestationExpectation expected)
     {
-        RequireEqual("schema version", "2", document.SchemaVersion);
+        RequireEqual("schema version", "4", document.SchemaVersion);
         RequireEqual("repository", RepositoryName, document.Repository);
         RequireEqual(
             "frozen repository commit",
@@ -142,9 +142,9 @@ public sealed class CrossPlatformAttestationReader
             WorkflowPath,
             document.GithubActions.WorkflowPath);
         RequireEqual(
-            "workflow conclusion",
+            "coordinator job conclusion",
             "success",
-            document.GithubActions.Conclusion);
+            document.GithubActions.CoordinatorJobConclusion);
         RequireEqual(
             "coordinator job name",
             CoordinatorJobName,
@@ -160,14 +160,28 @@ public sealed class CrossPlatformAttestationReader
             "workflow head commit",
             document.GithubActions.WorkflowHeadSha);
 
+        bool bootstrapArtifacts = document.Artifacts.Linux.Name.StartsWith(
+            "holdout-v3.2-candidate-linux-",
+            StringComparison.Ordinal);
+        string expectedWorkflowConclusion = bootstrapArtifacts ? "failure" : "success";
+        RequireEqual(
+            "workflow conclusion",
+            expectedWorkflowConclusion,
+            document.GithubActions.WorkflowConclusion);
+        string expectedLinuxName = bootstrapArtifacts
+            ? $"holdout-v3.2-candidate-linux-{document.GithubActions.WorkflowHeadSha}"
+            : "holdout-linux";
+        string expectedWindowsName = bootstrapArtifacts
+            ? $"holdout-v3.2-candidate-windows-{document.GithubActions.WorkflowHeadSha}"
+            : "holdout-windows";
         ValidateArtifact(
             document.Artifacts.Linux,
-            "holdout-linux",
+            expectedLinuxName,
             expected,
             "Linux");
         ValidateArtifact(
             document.Artifacts.Windows,
-            "holdout-windows",
+            expectedWindowsName,
             expected,
             "Windows");
         if (document.Artifacts.Linux.ArtifactId
@@ -179,7 +193,7 @@ public sealed class CrossPlatformAttestationReader
 
         if (!document.ByteIdentity.SarifRegressHoldout
             || !document.ByteIdentity.SarifMultitoolBaseline
-            || !document.ByteIdentity.V2ToV3Delta)
+            || !document.ByteIdentity.V31ToV32Delta)
         {
             throw new InvalidDataException(
                 "Cross-platform attestation does not assert every independently generated report byte identity.");
@@ -211,9 +225,9 @@ public sealed class CrossPlatformAttestationReader
             expected.SarifMultitoolBaselineReportSha256,
             digests.SarifMultitoolBaselineSha256);
         RequireEqual(
-            $"{context} matcher v2-to-v3 delta SHA-256",
-            expected.V2ToV3DeltaReportSha256,
-            digests.V2ToV3DeltaSha256);
+            $"{context} matcher v3.1-to-v3.2 delta SHA-256",
+            expected.V31ToV32DeltaReportSha256,
+            digests.V31ToV32DeltaSha256);
     }
 
     private static void RejectZeroDigest(string name, string value)
@@ -254,7 +268,7 @@ public sealed class CrossPlatformAttestationReader
     {
         public required string SarifRegressHoldoutSha256 { get; init; }
         public required string SarifMultitoolBaselineSha256 { get; init; }
-        public required string V2ToV3DeltaSha256 { get; init; }
+        public required string V31ToV32DeltaSha256 { get; init; }
     }
 
     private sealed class GithubActionsDocument
@@ -264,7 +278,8 @@ public sealed class CrossPlatformAttestationReader
         public required int RunAttempt { get; init; }
         public required string RunUrl { get; init; }
         public required string WorkflowHeadSha { get; init; }
-        public required string Conclusion { get; init; }
+        public required string WorkflowConclusion { get; init; }
+        public required string CoordinatorJobConclusion { get; init; }
         public required string CoordinatorJobName { get; init; }
     }
 
@@ -286,6 +301,6 @@ public sealed class CrossPlatformAttestationReader
     {
         public required bool SarifRegressHoldout { get; init; }
         public required bool SarifMultitoolBaseline { get; init; }
-        public required bool V2ToV3Delta { get; init; }
+        public required bool V31ToV32Delta { get; init; }
     }
 }

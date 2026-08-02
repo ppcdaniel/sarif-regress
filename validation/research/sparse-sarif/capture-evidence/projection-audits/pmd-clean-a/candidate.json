@@ -1,0 +1,85 @@
+{
+  "algorithmVersion": "pmd-file-uri-prefix-projection/v1",
+  "captureContractSha256": "3f01bf4ecf7c39138b4d67e4547b43140002e964ce0b05a2084adebec9e21526",
+  "changes": [
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "2a834a0ada6c698f0f27a3562d6ca2aba29e9e4055799b6c4d91c8199ceae779",
+      "pointer": "/runs/0/results/0/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/access/LeaseMonitor.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "2382c434365fe6da5697b43d7c46ce4963784196c0731ceadd89a9c5a6aaa827",
+      "pointer": "/runs/0/results/1/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/archive/ArchiveWorker.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "a36521c447510a971155745669396df0ac093a6c5f27d03399527bc0b2739a93",
+      "pointer": "/runs/0/results/2/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/dispatch/RequestDispatcher.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "2d8522bccc64ecd5fe84f5f2d0025120521fe893ac3e824a924bbbc055a6cd3b",
+      "pointer": "/runs/0/results/3/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/health/ConnectionHealth.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "7a6254a0dd26cec784c458f50495219bd15bee779dd1ef00d222fa064ec2290d",
+      "pointer": "/runs/0/results/4/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/imports/InvoiceImporter.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "1b46a69ef37b312420de9fd08b740af8ae280d66b299827dad3727f95c4a5894",
+      "pointer": "/runs/0/results/5/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/ledger/LedgerService.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "d0c6b3f445f14fe0efeb0d6d7d0748048d3c34324c72ad059c6c348ebe7e54e9",
+      "pointer": "/runs/0/results/6/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/recovery/RecoveryCoordinator.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "d0c6b3f445f14fe0efeb0d6d7d0748048d3c34324c72ad059c6c348ebe7e54e9",
+      "pointer": "/runs/0/results/7/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/recovery/RecoveryCoordinator.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "d0c6b3f445f14fe0efeb0d6d7d0748048d3c34324c72ad059c6c348ebe7e54e9",
+      "pointer": "/runs/0/results/8/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/recovery/RecoveryCoordinator.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "ad5f83e8c0bfb6637e0e96b6237df950c267ff3d2ee73d08a4373ce8263d3af3",
+      "pointer": "/runs/0/results/9/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/routing/NotificationRouter.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "ad5f83e8c0bfb6637e0e96b6237df950c267ff3d2ee73d08a4373ce8263d3af3",
+      "pointer": "/runs/0/results/10/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/routing/NotificationRouter.java"
+    }
+  ],
+  "familyId": "pmd-clean-a",
+  "logicalSourceRoot": "cases/pmd-clean-a/candidate/source",
+  "projectedSarif": {
+    "bytes": 8654,
+    "resultCount": 11,
+    "sha256": "63ec0f5811039d343a4367ac62e44e0ab0794610ae614f9a6e40c581658b92cb"
+  },
+  "rawSarif": {
+    "bytes": 9985,
+    "sha256": "3c8764742f9c027e7871ab504b8f4ff3fc735cf9b7cfbf681d51aa186c7ec416"
+  },
+  "schemaVersion": "1",
+  "side": "candidate"
+}

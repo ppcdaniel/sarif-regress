@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text.Json;
 using SarifRegress.Cli.Corpus;
+using SarifRegress.Core;
 using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Findings;
@@ -170,7 +171,7 @@ public sealed class SparseSarifSafeStopValidationTests
                 {
                     JsonElement decision = finding.GetProperty("decision");
                     Assert.Equal(
-                        "sarifregress/matcher/v3",
+                        ProductInformation.MatcherAlgorithmVersion,
                         decision.GetProperty("matcherAlgorithmVersion").GetString());
                     Assert.False(ContainsSparseContinuity(
                         decision.GetProperty("precedenceTier").GetString()));

@@ -1,0 +1,79 @@
+{
+  "algorithmVersion": "pmd-file-uri-prefix-projection/v1",
+  "captureContractSha256": "3f01bf4ecf7c39138b4d67e4547b43140002e964ce0b05a2084adebec9e21526",
+  "changes": [
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "3a9d2b470ea0db121bcfead6eaf9d8d2c25bdb5fee2ffafd6943f9584265841c",
+      "pointer": "/runs/0/results/0/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/cache/CacheRefresher.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "12e03de92d7afc495bdafc1c2288bfe9cff3f435346bb522fd091ecbfac24086",
+      "pointer": "/runs/0/results/1/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/dispatch/RequestDispatcher.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "edb910e6d339abd8a560f0e0e33094e2d5c57899c31cb561ff1cae0c3fd42843",
+      "pointer": "/runs/0/results/2/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/health/ConnectionHealth.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "ca7b855f4bb23f78ddf00915356c568518d7e248d35375006de2e2d614475491",
+      "pointer": "/runs/0/results/3/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/imports/InvoiceImporter.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "6d299b8945f69cbd90bd4d29d49c1c8fac6b355c1f03a0962060640d02aca858",
+      "pointer": "/runs/0/results/4/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/jobs/ArchiveWorker.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "179ff5606bfbf5aed6b02c577efba357a0c966a7c7a5f28748d122811735787f",
+      "pointer": "/runs/0/results/5/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/ledger/LedgerService.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c9cad676556b8760528a5b9d658058cda46bd1136d671df56dd56f50098032c6",
+      "pointer": "/runs/0/results/6/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/recovery/RecoveryCoordinator.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c9cad676556b8760528a5b9d658058cda46bd1136d671df56dd56f50098032c6",
+      "pointer": "/runs/0/results/7/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/recovery/RecoveryCoordinator.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c9cad676556b8760528a5b9d658058cda46bd1136d671df56dd56f50098032c6",
+      "pointer": "/runs/0/results/8/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/recovery/RecoveryCoordinator.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c3cf93c857f3f11416fc9db40074e92439fdcb71030558bb6d47c72920a31391",
+      "pointer": "/runs/0/results/9/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "com/riverton/routing/NotificationRouter.java"
+    }
+  ],
+  "familyId": "pmd-clean-a",
+  "logicalSourceRoot": "cases/pmd-clean-a/baseline/source",
+  "projectedSarif": {
+    "bytes": 7993,
+    "resultCount": 10,
+    "sha256": "4d5ae757d19291f758da10cef49e5ff53c689809ff18398192a26b3a0b1efdb6"
+  },
+  "rawSarif": {
+    "bytes": 9193,
+    "sha256": "8addcfcb07081bb619d1984ae04efb8746881c70537516bd8767f911ea14611a"
+  },
+  "schemaVersion": "1",
+  "side": "baseline"
+}

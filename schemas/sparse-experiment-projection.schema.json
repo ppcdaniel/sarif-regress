@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/sparse-experiment-projection.schema.json",
+  "title": "Authenticated sparse-experiment coordinator projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "corpusManifestSha256",
+    "implementationManifestSha256",
+    "variants"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": {
+      "enum": [
+        "sparse-experiment-release-projection/v1",
+        "sparse-experiment-determinism-projection/v1",
+        "sparse-experiment-resource-projection/v1"
+      ]
+    },
+    "corpusManifestSha256": { "$ref": "#/$defs/sha256" },
+    "implementationManifestSha256": { "$ref": "#/$defs/sha256" },
+    "variants": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "sarif-only-control" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "exact-region-snippet" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "token-window" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            { "properties": { "id": { "const": "relative-context" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/variant" },
+            {
+              "properties": {
+                "id": { "const": "agreement-only-combination" }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "sparse-experiment-resource-projection/v1"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "variants": {
+            "contains": {
+              "required": ["value"],
+              "properties": {
+                "value": {
+                  "$ref": "#/$defs/resourceProjectionValueV1"
+                }
+              }
+            },
+            "minContains": 5
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "value"],
+      "properties": {
+        "id": {
+          "enum": [
+            "sarif-only-control",
+            "exact-region-snippet",
+            "token-window",
+            "relative-context",
+            "agreement-only-combination"
+          ]
+        },
+        "value": {
+          "type": "object",
+          "minProperties": 1
+        }
+      }
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+    },
+    "resourceProjectionValueV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "withinDocumentedLimits",
+        "sourceContextProjectionBenchmarked",
+        "evidencePath",
+        "evidenceSha256"
+      ],
+      "properties": {
+        "withinDocumentedLimits": {
+          "type": "boolean"
+        },
+        "sourceContextProjectionBenchmarked": {
+          "type": "boolean"
+        },
+        "evidencePath": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "evidenceSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

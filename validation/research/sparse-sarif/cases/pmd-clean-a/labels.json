@@ -1,0 +1,382 @@
+{
+  "schemaVersion": "1",
+  "familyId": "pmd-clean-a",
+  "producerFamily": "pmd",
+  "ruleId": "AvoidPrintStackTrace",
+  "baselineSarif": "baseline.sarif",
+  "candidateSarif": "candidate.sarif",
+  "relationships": [
+    {
+      "id": "pmd-clean-a-relationship-001",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/ledger/LedgerService.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/ledger/LedgerService.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "intra-file-method-move",
+        "description": "The reconcile method and its unchanged reporting statement move below summarize in the same class.",
+        "baselineSourcePath": "baseline/source/com/riverton/ledger/LedgerService.java",
+        "baselineFileSha256": "304b87c73477a0621a92fbcaa4c88d68c90a8a85b06d190ffbf6f694d92741c2",
+        "candidateSourcePath": "candidate/source/com/riverton/ledger/LedgerService.java",
+        "candidateFileSha256": "e244a0914e480ae93c4642bfbd50a287847edf595285f8e1a52ca6600033e591"
+      }
+    },
+    {
+      "id": "pmd-clean-a-relationship-002",
+      "expectedClassification": "unchanged",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/health/ConnectionHealth.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/health/ConnectionHealth.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "unchanged-source",
+        "description": "The class, method, and reporting statement are byte-identical on both sides.",
+        "baselineSourcePath": "baseline/source/com/riverton/health/ConnectionHealth.java",
+        "baselineFileSha256": "97686ea913db3dc601a0eb7d407abbe08bd88349591ca3132410a1aab02df12f",
+        "candidateSourcePath": "candidate/source/com/riverton/health/ConnectionHealth.java",
+        "candidateFileSha256": "97686ea913db3dc601a0eb7d407abbe08bd88349591ca3132410a1aab02df12f"
+      }
+    },
+    {
+      "id": "pmd-clean-a-relationship-003",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/recovery/RecoveryCoordinator.java",
+        "region": {
+          "startLine": 10,
+          "startColumn": 9,
+          "endLine": 10,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/recovery/RecoveryCoordinator.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "intra-file-method-move",
+        "description": "The unchanged inspect method moves before recover, moving its reporting statement within the file.",
+        "baselineSourcePath": "baseline/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "baselineFileSha256": "bf643f6da1648aae6e6e1faaca984e106b6b91567f5fc215de716d76c219be75",
+        "candidateSourcePath": "candidate/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "candidateFileSha256": "5615030852b8a02539094eadeb2a885dd3d9817dc64fe82c81e4fd71e8d93f31"
+      }
+    },
+    {
+      "id": "pmd-clean-a-relationship-004",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/jobs/ArchiveWorker.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/archive/ArchiveWorker.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "file-move",
+        "description": "The byte-identical ArchiveWorker source file moves from the jobs directory to the archive directory.",
+        "baselineSourcePath": "baseline/source/com/riverton/jobs/ArchiveWorker.java",
+        "baselineFileSha256": "3980f666e7ce55f51c5526a55468899b68ed97ce81bde45c53c9baf94cc696f8",
+        "candidateSourcePath": "candidate/source/com/riverton/archive/ArchiveWorker.java",
+        "candidateFileSha256": "3980f666e7ce55f51c5526a55468899b68ed97ce81bde45c53c9baf94cc696f8"
+      }
+    },
+    {
+      "id": "pmd-clean-a-relationship-005",
+      "expectedClassification": "unchanged",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/dispatch/RequestDispatcher.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/dispatch/RequestDispatcher.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "unchanged-source",
+        "description": "The class, method, and reporting statement are byte-identical on both sides.",
+        "baselineSourcePath": "baseline/source/com/riverton/dispatch/RequestDispatcher.java",
+        "baselineFileSha256": "334450dad4172f00d58fba3957f2783803d2ce9f40dd84801deb93520e7f9178",
+        "candidateSourcePath": "candidate/source/com/riverton/dispatch/RequestDispatcher.java",
+        "candidateFileSha256": "334450dad4172f00d58fba3957f2783803d2ce9f40dd84801deb93520e7f9178"
+      }
+    },
+    {
+      "id": "pmd-clean-a-relationship-006",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/recovery/RecoveryCoordinator.java",
+        "region": {
+          "startLine": 6,
+          "startColumn": 9,
+          "endLine": 6,
+          "endColumn": 43
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/recovery/RecoveryCoordinator.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 43
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "intra-file-statement-move",
+        "description": "The secondary-failure statement remains in recover while the method and statement order both change.",
+        "baselineSourcePath": "baseline/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "baselineFileSha256": "bf643f6da1648aae6e6e1faaca984e106b6b91567f5fc215de716d76c219be75",
+        "candidateSourcePath": "candidate/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "candidateFileSha256": "5615030852b8a02539094eadeb2a885dd3d9817dc64fe82c81e4fd71e8d93f31"
+      }
+    },
+    {
+      "id": "pmd-clean-a-relationship-007",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/imports/InvoiceImporter.java",
+        "region": {
+          "startLine": 8,
+          "startColumn": 13,
+          "endLine": 8,
+          "endColumn": 38
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/imports/InvoiceImporter.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 13,
+          "endLine": 9,
+          "endColumn": 38
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "line-shift",
+        "description": "A non-finding input-normalization statement is inserted before the unchanged catch block.",
+        "baselineSourcePath": "baseline/source/com/riverton/imports/InvoiceImporter.java",
+        "baselineFileSha256": "e26216aca51c01766e0049356a624adfbe41a2b4abf9341bac71171d74702ff6",
+        "candidateSourcePath": "candidate/source/com/riverton/imports/InvoiceImporter.java",
+        "candidateFileSha256": "ef8c1f99e3f8776a9d2b0ff81980275e5448850882339ab67fea2f35feed3f91"
+      }
+    },
+    {
+      "id": "pmd-clean-a-relationship-008",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/recovery/RecoveryCoordinator.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 41
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/recovery/RecoveryCoordinator.java",
+        "region": {
+          "startLine": 10,
+          "startColumn": 9,
+          "endLine": 10,
+          "endColumn": 41
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "intra-file-statement-move",
+        "description": "The primary-failure statement remains in recover while the method and statement order both change.",
+        "baselineSourcePath": "baseline/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "baselineFileSha256": "bf643f6da1648aae6e6e1faaca984e106b6b91567f5fc215de716d76c219be75",
+        "candidateSourcePath": "candidate/source/com/riverton/recovery/RecoveryCoordinator.java",
+        "candidateFileSha256": "5615030852b8a02539094eadeb2a885dd3d9817dc64fe82c81e4fd71e8d93f31"
+      }
+    }
+  ],
+  "new": [
+    {
+      "id": "pmd-clean-a-new-001",
+      "expectedClassification": "new",
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/access/LeaseMonitor.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "finding-added",
+        "description": "LeaseMonitor is introduced only in the candidate source tree with one reporting statement.",
+        "candidateSourcePath": "candidate/source/com/riverton/access/LeaseMonitor.java",
+        "candidateFileSha256": "38ada614264c29daa84d5f957275393f4d23c00287f9bb8c4c2c94b3fdbe3f5e"
+      }
+    }
+  ],
+  "resolved": [
+    {
+      "id": "pmd-clean-a-resolved-001",
+      "expectedClassification": "resolved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "com/riverton/cache/CacheRefresher.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 34
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "finding-removed",
+        "description": "The candidate replaces the baseline reporting statement with a java.util.logging call.",
+        "baselineSourcePath": "baseline/source/com/riverton/cache/CacheRefresher.java",
+        "baselineFileSha256": "89a223b9404bbce4fbce37b6c07916dacc77819046fc4dd37d925a62443aa85a",
+        "candidateSourcePath": "candidate/source/com/riverton/cache/CacheRefresher.java",
+        "candidateFileSha256": "7a6db5e358032175df31a72c5f4e6b80331055c7321b77d2069a54fc5d883c7f"
+      }
+    }
+  ],
+  "ambiguities": [
+    {
+      "id": "pmd-clean-a-ambiguity-001",
+      "shape": "one-to-many",
+      "baseline": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "com/riverton/routing/NotificationRouter.java",
+          "region": {
+            "startLine": 5,
+            "startColumn": 9,
+            "endLine": 5,
+            "endColumn": 34
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        }
+      ],
+      "candidate": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "com/riverton/routing/NotificationRouter.java",
+          "region": {
+            "startLine": 5,
+            "startColumn": 9,
+            "endLine": 5,
+            "endColumn": 34
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "com/riverton/routing/NotificationRouter.java",
+          "region": {
+            "startLine": 9,
+            "startColumn": 9,
+            "endLine": 9,
+            "endColumn": 34
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        }
+      ],
+      "expected": "refuse",
+      "sourceTransformation": {
+        "kind": "handler-split",
+        "description": "One generic route handler is replaced by two equally plausible channel handlers, so source transformation alone does not select a unique candidate continuation.",
+        "baselineSourcePath": "baseline/source/com/riverton/routing/NotificationRouter.java",
+        "baselineFileSha256": "032a8bb491f78482c871f872cc299ecc462ea9956cf14d7157c30a9a4def2354",
+        "candidateSourcePath": "candidate/source/com/riverton/routing/NotificationRouter.java",
+        "candidateFileSha256": "ce235e40e8819a0a71a5626cac38f8e7286f93809e42780adb70f68c53d4ac99"
+      }
+    }
+  ]
+}

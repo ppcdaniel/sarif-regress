@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/research/sparse-sarif/schemas/resource-observations.schema.json",
+  "title": "Stable sparse-experiment resource observations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "corpusManifestSha256",
+    "implementationManifestSha256",
+    "cells"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": { "const": "sparse-experiment-resource-observations/v1" },
+    "corpusManifestSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "implementationManifestSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "cells": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operatingSystem",
+          "findingCount",
+          "dataset",
+          "candidateEdges",
+          "observedMaximumComponentFindingCount",
+          "maximumAdmittedAssignmentComponentSize",
+          "configuredCandidatePairsPerFindingLimit",
+          "configuredCandidatePairLimit",
+          "configuredAssignmentComponentLimit",
+          "boundedRefusalObserved",
+          "runtimeBudgetEnforced",
+          "withinDocumentedLimits"
+        ],
+        "properties": {
+          "operatingSystem": { "enum": ["ubuntu", "windows"] },
+          "findingCount": { "enum": [1000, 10000, 100000] },
+          "dataset": { "enum": ["unique", "pathological"] },
+          "candidateEdges": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "observedMaximumComponentFindingCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200000
+          },
+          "maximumAdmittedAssignmentComponentSize": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 12
+          },
+          "configuredCandidatePairsPerFindingLimit": { "const": 256 },
+          "configuredCandidatePairLimit": { "const": 1000000 },
+          "configuredAssignmentComponentLimit": { "const": 12 },
+          "boundedRefusalObserved": { "type": "boolean" },
+          "runtimeBudgetEnforced": { "type": "boolean" },
+          "withinDocumentedLimits": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

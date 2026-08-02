@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1",
-  "repositoryCommitSha": "29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b",
-  "sourceTreeSha256": "4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486",
+  "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+  "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
   "sarifRegressToolVersion": "0.1.0",
-  "matcherAlgorithmVersion": "sarifregress/matcher/v3",
+  "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
   "fingerprintAlgorithmVersions": [
     {
       "name": "derived-fingerprint",

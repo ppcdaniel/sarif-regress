@@ -29,7 +29,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
 
       - name: Install .NET SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -115,11 +125,106 @@ jobs:
             }
           }
 
+      - name: Produce repeated sparse experiment evidence on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly project='validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          for run_id in 1 2; do
+            observations="artifacts/sparse-determinism/run-${run_id}/observations"
+            evaluation="artifacts/sparse-determinism/run-${run_id}/evaluation"
+            mkdir -p -- "${observations}" "${evaluation}"
+            dotnet run \
+              --project "${project}" \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              sparse-run \
+              --repository-root "${GITHUB_WORKSPACE}" \
+              --output-root "${observations}"
+            dotnet run \
+              --project "${project}" \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              sparse-evaluate \
+              --repository-root "${GITHUB_WORKSPACE}" \
+              --output-root "${evaluation}" \
+              --observations "${observations}/sparse-experiment-observations.json"
+          done
+          cmp --silent -- \
+            artifacts/sparse-determinism/run-1/observations/sparse-experiment-observations.json \
+            artifacts/sparse-determinism/run-2/observations/sparse-experiment-observations.json
+          cmp --silent -- \
+            artifacts/sparse-determinism/run-1/evaluation/sparse-experiment-gate-evidence.json \
+            artifacts/sparse-determinism/run-2/evaluation/sparse-experiment-gate-evidence.json
+
+      - name: Produce repeated sparse experiment evidence on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $project = 'validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          foreach ($runId in @(1, 2)) {
+            $observations = "artifacts/sparse-determinism/run-$runId/observations"
+            $evaluation = "artifacts/sparse-determinism/run-$runId/evaluation"
+            New-Item -ItemType Directory -Force -Path $observations, $evaluation |
+              Out-Null
+            & dotnet run `
+              --project $project `
+              --configuration Release `
+              --no-build `
+              --no-restore `
+              -- `
+              sparse-run `
+              --repository-root $env:GITHUB_WORKSPACE `
+              --output-root $observations
+            if ($LASTEXITCODE -ne 0) {
+              throw "Sparse observation run $runId failed."
+            }
+            & dotnet run `
+              --project $project `
+              --configuration Release `
+              --no-build `
+              --no-restore `
+              -- `
+              sparse-evaluate `
+              --repository-root $env:GITHUB_WORKSPACE `
+              --output-root $evaluation `
+              --observations "$observations/sparse-experiment-observations.json"
+            if ($LASTEXITCODE -ne 0) {
+              throw "Sparse evaluation run $runId failed."
+            }
+          }
+          foreach ($relative in @(
+            'observations/sparse-experiment-observations.json',
+            'evaluation/sparse-experiment-gate-evidence.json'
+          )) {
+            $first = [System.IO.File]::ReadAllBytes(
+              "artifacts/sparse-determinism/run-1/$relative")
+            $second = [System.IO.File]::ReadAllBytes(
+              "artifacts/sparse-determinism/run-2/$relative")
+            if ($first.Length -ne $second.Length) {
+              throw "Repeated sparse output differs: $relative"
+            }
+            for ($index = 0; $index -lt $first.Length; $index++) {
+              if ($first[$index] -ne $second[$index]) {
+                throw "Repeated sparse output differs: $relative"
+              }
+            }
+          }
+
       - name: Upload deterministic reports
+        id: upload-deterministic-reports
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: determinism-${{ matrix.label }}
-          path: artifacts/determinism
+          path: |
+            artifacts/determinism
+            artifacts/sparse-determinism
           if-no-files-found: error
           retention-days: 30
 
@@ -128,8 +233,33 @@ jobs:
     needs: produce
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      artifact_id: ${{ steps.upload-verified-determinism.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-verified-determinism.outputs.artifact-digest }}
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact projection runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
       - name: Download Linux report
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -152,8 +282,8 @@ jobs:
             benchmark-unique-deterministic.json \
             benchmark-pathological-deterministic.json
           do
-            linux_report="artifacts/download/linux/${report_name}"
-            windows_report="artifacts/download/windows/${report_name}"
+            linux_report="artifacts/download/linux/determinism/${report_name}"
+            windows_report="artifacts/download/windows/determinism/${report_name}"
             linux_hash="$(sha256sum "${linux_report}" | cut -d ' ' -f 1)"
             windows_hash="$(sha256sum "${windows_report}" | cut -d ' ' -f 1)"
             if [[ "${linux_hash}" != "${windows_hash}" ]]; then
@@ -177,7 +307,140 @@ jobs:
               > checksums.sha256
           )
 
+      - name: Verify sparse experiment bytes and create stable projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import copy
+          import hashlib
+          import json
+          import stat
+          from pathlib import Path
+
+          root = Path.cwd()
+          download = root / "artifacts" / "download"
+          verified = root / "artifacts" / "verified"
+          relative_outputs = (
+              "observations/sparse-experiment-observations.json",
+              "evaluation/sparse-experiment-gate-evidence.json",
+          )
+          hashes = {}
+          for platform in ("linux", "windows"):
+              hashes[platform] = []
+              for run_id in (1, 2):
+                  run_root = (
+                      download
+                      / platform
+                      / "sparse-determinism"
+                      / f"run-{run_id}"
+                  )
+                  for relative in relative_outputs:
+                      path = run_root / relative
+                      status = path.lstat()
+                      if (
+                          not stat.S_ISREG(status.st_mode)
+                          or status.st_size <= 0
+                          or status.st_size > 64 * 1024 * 1024
+                      ):
+                          raise SystemExit(f"Invalid sparse output {path}.")
+                      payload = path.read_bytes()
+                      if len(payload) != status.st_size:
+                          raise SystemExit(f"Sparse output changed while reading {path}.")
+                      if run_id == 1:
+                          comparison = verified / f"sparse-{platform}-{Path(relative).name}"
+                          comparison.write_bytes(payload)
+                  gate = run_root / relative_outputs[1]
+                  hashes[platform].append(
+                      hashlib.sha256(gate.read_bytes()).hexdigest()
+                  )
+
+          for relative in relative_outputs:
+              paths = [
+                  download
+                  / platform
+                  / "sparse-determinism"
+                  / f"run-{run_id}"
+                  / relative
+                  for platform in ("linux", "windows")
+                  for run_id in (1, 2)
+              ]
+              first = paths[0].read_bytes()
+              if any(path.read_bytes() != first for path in paths[1:]):
+                  raise SystemExit(f"Sparse experiment bytes differ for {relative}.")
+
+          evidence = {
+              "repeatedRunByteIdentical": True,
+              "linuxWindowsByteIdentical": True,
+              "linux": {
+                  "firstOutputSha256": hashes["linux"][0],
+                  "secondOutputSha256": hashes["linux"][1],
+              },
+              "windows": {
+                  "firstOutputSha256": hashes["windows"][0],
+                  "secondOutputSha256": hashes["windows"][1],
+              },
+              "comparison": {"byteIdentical": True},
+          }
+          variant_ids = (
+              "sarif-only-control",
+              "exact-region-snippet",
+              "token-window",
+              "relative-context",
+              "agreement-only-combination",
+          )
+          research = root / "validation" / "research" / "sparse-sarif"
+          projection = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-determinism-projection/v1",
+              "corpusManifestSha256": hashlib.sha256(
+                  (research / "manifest.json").read_bytes()
+              ).hexdigest(),
+              "implementationManifestSha256": hashlib.sha256(
+                  (research / "experiment-implementation-manifest.json").read_bytes()
+              ).hexdigest(),
+              "variants": [
+                  {"id": variant_id, "value": copy.deepcopy(evidence)}
+                  for variant_id in variant_ids
+              ],
+          }
+          projection_path = verified / "sparse-experiment-determinism-projection.json"
+          projection_path.write_bytes(
+              (json.dumps(projection, ensure_ascii=False, indent=2) + "\n").encode(
+                  "utf-8"
+              )
+          )
+          files = sorted(
+              path for path in verified.iterdir()
+              if path.is_file() and path.name != "checksums.sha256"
+          )
+          (verified / "checksums.sha256").write_bytes(
+              "".join(
+                  f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
+                  for path in files
+              ).encode("ascii")
+          )
+          PY
+
+      - name: Upload sparse determinism projection candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-determinism-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Verify committed sparse determinism projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-determinism-projection.json \
+            validation/research/sparse-sarif/expected/projections/sparse-experiment-determinism-projection.json
+
       - name: Upload verified cross-platform report
+        id: upload-verified-determinism
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cross-platform-determinism

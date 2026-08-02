@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-workflow-provenance/v1",
+  "repository": "ppcdaniel/sarif-regress",
+  "workflowPath": ".github/workflows/holdout-validation.yml",
+  "workflowRunId": 30761620623,
+  "workflowRunAttempt": 1,
+  "workflowHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+  "artifacts": {
+    "linux": {
+      "name": "sparse-experiment-linux-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837645917,
+      "archiveSha256": "052af2aa10ec28f477839ee9c18e77152195f15d0413d8b06a8e6dec6b5125c6"
+    },
+    "windows": {
+      "name": "sparse-experiment-windows-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+      "artifactId": 8837652540,
+      "archiveSha256": "fa413f7220aaf6b25a9cea383531e847b166f9c04c5e1395cebfee0270f7323f"
+    }
+  },
+  "outputs": {
+    "sparse-experiment-gate-evidence.json": "4c88856e256b7b38cbfefccbf9a63a112a4736877cd606395d95ee8e2d17abdc",
+    "sparse-experiment-observations.json": "ff490ba21d5c3f8243a477d140f7bc65dd6cfefd68e407da611303fc01df0db2"
+  },
+  "repeatedRunByteIdentical": true,
+  "linuxWindowsByteIdentical": true
+}

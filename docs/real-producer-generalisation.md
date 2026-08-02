@@ -2,10 +2,12 @@
 
 ## Outcome
 
-Matcher v3 safely fixes the independent Semgrep ingestion defect and the
-repeated-context Gitleaks graph defect. It does not add a sparse-SARIF
-continuity rule for PMD because the proposed general rule failed the fixed
-precision and ambiguity gates.
+Matcher v3.2 retains matcher v3's general Semgrep ingestion and repeated-context Gitleaks fixes,
+retains v3.1's correction for the five exposed-holdout Gitleaks classification mismatches, and
+closes two unsafe weak-evidence admission paths. It does not add a
+sparse-SARIF continuity rule for PMD. A clean side-specific source-context experiment reached only
+`9 TP / 0 FP / 10 FN` and failed the fixed recall and production-safety gates, so matcher v4 was
+not created.
 
 The release recommendation remains:
 
@@ -22,17 +24,27 @@ The implementation is stacked on the still-open independent-validation PR:
 | Validation base | `0231d6fe779203a92469099b90d446fafe67b064` |
 | Base branch | `agent/independent-holdout-validation` |
 | Implementation branch | `agent/holdout-generalization-fixes` |
-| Evaluated matcher-v3 implementation | `29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b` |
-| Product source-tree SHA-256 | `4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486` |
-| Matcher | `sarifregress/matcher/v3` |
+| Historical matcher-v3 implementation | `29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b` |
+| Historical matcher-v3 source-tree SHA-256 | `4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486` |
+| Evaluated matcher-v3.1 implementation | `863210dfda02690b0d9ee579f5d7fd7a45545b1e` |
+| Matcher-v3.1 source-tree SHA-256 | `fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f` |
+| Matcher-v3.2 branch | `agent/nightly-release-hardening` |
+| Matcher-v3.2 evidence state | Normal exact-head verification succeeded |
+| Authenticated sparse-evidence source head | `4cc6faf0167d7da385c1d204cba97d1f34ccb479` |
+| Stage-two promotion source head | `ac081e70ab2911c02bafffce5661eaec76a871fa` |
+| Normal verification source head | `d880bd0a0495650a34ae2faa8521f170af80d7a9` |
+| Matcher | `sarifregress/matcher/v3.2` |
 | Product output/configuration schemas | `1` / `1` |
 | Holdout manifest SHA-256 | `b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379` |
 
-The holdout labels, source transformations, difficult cases, Microsoft SARIF
-Multitool pin, and quality thresholds are byte-unchanged. The original v2
-reports remain under `validation/history/matcher-v2/`; matcher-v3 reports
-are under `validation/history/matcher-v3/`. The deterministic relationship
-delta is `validation/history/v2-to-v3-delta.json`.
+The holdout labels, source transformations, difficult cases, Microsoft SARIF Multitool pin, and
+quality thresholds are byte-unchanged. Matcher v2's first run is the independent baseline. Once
+those labels informed implementation, v3, v3.1, and v3.2 became exposed-holdout regression evidence, not
+new independent validation. The original v2 reports remain under
+`validation/history/matcher-v2/`; matcher-v3 and v3.1 records are preserved separately with
+deterministic deltas. The
+[machine-readable interpretation erratum](../validation/holdout/interpretation-erratum.json)
+hash-binds those legacy labels to this corrected interpretation without rewriting either report.
 
 ## Original matcher-v2 failures
 
@@ -144,10 +156,11 @@ degraded collision evidence rather than being treated as a unique identity.
 The exact 13×13 reproduction and a 30×30 repeated-context test remain bounded
 and input-order invariant.
 
-Five accepted Gitleaks pairs still have a classification mismatch
+In the matcher-v3 result, five accepted Gitleaks pairs still have a classification mismatch
 (`gitleaks-match-014` through `-018`). Their identity is correct, so they
 are true-positive correspondence edges, but the complete label graph gate
-remains failed and the mismatches stay visible in the report.
+remains failed and the mismatches stay visible in that frozen report. Matcher v3.1's later general
+classification correction resolves all five without changing correspondence or labels.
 
 ## Phase 3: sparse SARIF safe stop
 
@@ -191,6 +204,33 @@ No sparse-continuity tier was added. PMD remains unmatched and issue #11
 remains open. This is the required stop condition: a safe partial improvement
 is preferable to a rule below 0.95 precision or one that silently resolves
 ambiguity.
+
+### Clean side-specific repository-context experiment
+
+ADR 0003 subsequently evaluated Option B without using the marker-bearing legacy PMD sources. Two
+separately designed clean PMD families were frozen before their first scored run. They contain 19
+relationships, three new findings, three resolved findings, and three ambiguity groups covering
+nine endpoints. This is controlled research designed after the legacy failure was known, not a
+second independent holdout.
+
+| Variant | TP | FP | FN | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| SARIF-only control | 0 | 0 | 19 | `1.0` by empty-acceptance convention | `0` | `0` |
+| Exact-region snippet | 2 | 0 | 17 | `1.0` | `0.105263` | `0.190476` |
+| Token window | 4 | 0 | 15 | `1.0` | `0.210526` | `0.347826` |
+| Relative context | 9 | 0 | 10 | `1.0` | `0.473684` | `0.642857` |
+| Agreement-only combination | 9 | 0 | 10 | `1.0` | `0.473684` | `0.642857` |
+
+All labelled ambiguity remained refused, and ingestion and structural failures were zero. However,
+all source-backed variants failed all three no-trusted-hash wrong-root scenarios. The tied best
+variants also failed family B's no-trusted-hash mismatched-snapshot scenario. Source preflight and
+later reads did not share one immutable snapshot handle, physical-root identity was not proved, and
+source projection was not benchmarked.
+
+The clean 19-relationship universe cannot replace the frozen 75-relationship holdout. Historical
+aggregate recall therefore remains `0.666667`, and best clean-PMD recall is `0.473684`; both miss
+their fixed gates. Separate repository roots remain validation-only research, issue #11 stays open,
+and no matcher-v4 implementation or product option was added.
 
 ## Matcher-v3 evidence hierarchy and versions
 
@@ -249,6 +289,56 @@ The delta records 59 fixed ground-truth relationships, 0 regressed
 relationships, 32 still failing relationships, and 0 newly introduced false
 matches. All 64 changed decisions have bounded explanation traces.
 
+## Matcher-v3.1 classification correction
+
+The frozen matcher-v3 record above remains unchanged. A subsequent
+post-correspondence audit proved that `gitleaks-match-014` through `-018` are
+unchanged one-finding files moved through the configured
+`src/renamed-old/` to `src/renamed-new/` alias: each baseline/candidate source
+pair is byte-identical, while Gitleaks embeds the changed repository-relative
+path in its otherwise identical canonical message.
+
+Matcher v3.1 corrects only that general classification boundary. It requires an
+already accepted, explicitly aliased edge; one unique, delimited occurrence of
+each side's own full repository-relative path; and byte-identical canonical
+message prefix and suffix. Extra message text, repeated tokens, embedded path
+prefixes, path continuations, context changes, and code-flow changes remain
+`modified`. The classifier cannot affect candidate admission, scoring,
+assignment, or ambiguity.
+
+Each use adds a bounded hashed
+`classification-message-location-template` transformation under
+`sarifregress/message-location-template/v1`. Matcher v3.1 therefore preserves
+the correspondence metrics (`50 TP / 0 FP / 25 FN`) while reducing the five
+known Gitleaks classification mismatches to zero. The exact case-level evidence
+is in
+[`validation/research/gitleaks-classification/analysis.json`](../validation/research/gitleaks-classification/analysis.json).
+The later clean sparse-SARIF experiment failed its fixed gates, so matcher v4 was not created.
+
+## Matcher-v3.2 admission safety correction
+
+The adversarial review found two independent precision risks after v3.1 evidence was frozen.
+Collided snippet or token context could still admit an edge even when another available context
+representation contradicted it, and a shared code-flow anchor could act as primary identity. Matcher
+v3.2 applies general, producer-neutral corrections without changing holdout labels, thresholds, or
+resource limits:
+
+- any context conflict vetoes collision-only and weak-message admission;
+- code-flow evidence cannot admit an edge;
+- a shared code-flow anchor can rank an already admissible edge only when the same path/context
+  anchor occurs in exactly one finding on each input side within its automatic-producer/rule bucket;
+- repeated anchors produce one bounded finding-local degradation record under
+  `sarifregress/code-flow-occurrence/v1`; and
+- equal-optimum ambiguity remains refused by the unchanged assignment layer.
+
+The active comparison summary advances to schema version `4` because v3.2 replaces the v3 report
+hash fields with v3.1 and v3.1-to-v3.2 delta hashes. Frozen v3.1 schema-3 bytes remain under
+`validation/history/matcher-v3.1/`. The interpretation erratum now hash-binds the exact v3.2 report
+generated on source head `4cc6faf0167d7da385c1d204cba97d1f34ccb479`. Stage-two run `30762486314`
+on `ac081e70ab2911c02bafffce5661eaec76a871fa` reproduced seven normalized files byte-identically
+across Ubuntu and Windows, promoted only the resulting comparison and checksum binding, and then
+stopped at the deliberate final-promotion refusal. Neither bootstrap artifact is release evidence.
+
 ## External baseline
 
 Microsoft SARIF Multitool remains pinned at 5.5.0 and is not ground truth.
@@ -280,6 +370,29 @@ The 1,000-finding resource smoke remains part of normal CI. No assignment,
 candidate-pair, retained-edge, repository-containment, or source-read ceiling
 was increased.
 
+The current sparse experiment role artifacts are bound to source head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479`: CI run `30761620627` succeeded; holdout/sparse run
+`30761620623`, determinism run `30761620626`, and resource run `30761620637` generated authenticated
+promotion candidates. Their coordinators authenticated exact artifact
+IDs, names, archive digests, run IDs, and heads, then reproduced the release, determinism, and
+stable resource projection bytes. The candidate workflows failed only at the expected stale
+committed-projection comparison or the deliberate promotion refusal. This is not the composite
+cross-binding tracked by #27. The 1k/10k/100k resource matrix passed for the SARIF-only matcher, but
+it did not execute source-context projection; that production gate remains unproved.
+
+On stage-two promotion head `ac081e70ab2911c02bafffce5661eaec76a871fa`, CI run `30762486272`,
+determinism run `30762486305`, and benchmark run `30762486292` succeeded. Holdout run `30762486314`
+passed every product, capture, sparse, schema, and coordinator job and concluded `failure` only at
+its deliberate final-refusal job. The coordinator artifact was authenticated before the two
+promotable files were accepted.
+
+On normal verification head `d880bd0a0495650a34ae2faa8521f170af80d7a9`, CI run `30763347889`,
+holdout/sparse run `30763347894`, determinism run `30763347908`, and benchmark run `30763347910`
+all succeeded. Each hosted OS passed 545 tests in CI; the holdout coordinator selected `normal`,
+authenticated its inputs, reproduced committed reports and sparse projections byte-for-byte, and
+emitted a success attestation. All twelve 1k/10k/100k benchmark cells passed without changing a
+budget or product limit.
+
 Configured bases remain local, lexical, non-fetching, and fail closed.
 Occurrence indexing is bounded by the already ingested findings and stores
 only per-bucket evidence identities and counts. It does not execute producer
@@ -289,17 +402,33 @@ code, inspect secret values semantically, or use machine learning.
 
 The fixed aggregate thresholds are precision at least 0.95 and recall at
 least 0.90; each producer requires precision at least 0.95 and recall at
-least 0.80. Matcher v3 passes every precision, ambiguity, ingestion,
-structural, trace, and determinism condition, but fails aggregate recall, PMD
-recall, and the complete label graph. The recommendation therefore remains
-`blocked`.
+least 0.80. The bound matcher v3.2 report passes every precision, classification, ambiguity,
+ingestion, structural, trace, and determinism condition, but fails aggregate
+recall, PMD recall, and the complete label graph. The recommendation therefore
+remains `blocked`.
 
 Remaining failures are exactly:
 
-- five Gitleaks classification mismatches;
 - 25 PMD missed identity relationships; and
 - two PMD ambiguity units that remain unmatched rather than being silently
   paired.
+
+The clean corpus does not change that universe. Its best variants reached only `9 TP / 0 FP /
+10 FN`, recall `0.473684`. All source-backed variants failed the three no-trusted-hash wrong-root
+scenarios; the tied best variants also failed family B's mismatched-snapshot scenario. Snapshot
+preflight and later reads are not one immutable operation, and source projection lacks bounded
+resource evidence. Issue #27 additionally requires an explicit full-resource-to-stable-projection
+derivation and cross-binding. Issue #28's incorrect source-preflight derivation for the SARIF-only
+`0/0/19` control is fixed without changing that control. The typed
+`sparse-experiment-limitation/v1` record and individually authenticated role projections are
+preserved without changing either source or resource evidence.
+
+Supported automatic evidence requires a reliable non-colliding fingerprint; reliable embedded
+context or bounded token context from the current shared root; or safe URI-base resolution combined
+with another qualifying identity signal. Explicit aliases still require qualifying path/context.
+The unsupported profile has no reliable fingerprint, no embedded snippet, no trusted source
+snapshot, and only non-unique rule/path/message/location evidence. Side-specific roots are not
+shipped.
 
 The holdout is one controlled case per producer, not an ecosystem-wide
 sample. Producer capture remains Linux-only, while evaluation of committed
@@ -327,13 +456,32 @@ validate provenance and schemas, regenerate reports in a temporary directory,
 and byte-compare them with `validation/expected/`. They do not modify
 committed fixtures.
 
-The matcher-v2 and matcher-v3 history anchors can be checked without running
+Run the remaining commands from the repository root.
+
+The matcher-v2, matcher-v3, and matcher-v3.1 history anchors can be checked without running
 the analyzers:
 
 ```sh
 sha256sum -c validation/history/matcher-v2/checksums.sha256
 sha256sum -c validation/history/matcher-v3/checksums.sha256
+sha256sum -c validation/history/matcher-v3.1/checksums.sha256
 ```
+
+Clean sparse admission and the preserved limitation evidence can be checked with:
+
+```sh
+python3 -B validation/research/sparse-sarif/tools/test_scan_contamination.py
+python3 -B validation/research/sparse-sarif/tools/scan_contamination.py \
+  --research-root validation/research/sparse-sarif
+(
+  cd validation/research/sparse-sarif/expected
+  sha256sum -c checksums.sha256
+)
+```
+
+See `validation/research/sparse-sarif/README.md` for label-neutral execution and post-run scoring.
+No composite `expected/experiment-report.json` is currently claimed while issue #27 remains open;
+the checked-in `sparse-experiment-limitation.json` is the authoritative safe-stop record.
 
 Extended deterministic datasets use:
 

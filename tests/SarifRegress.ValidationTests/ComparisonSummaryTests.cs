@@ -164,8 +164,8 @@ public sealed class ComparisonSummaryTests
 
         AssertLifecycleMetrics(aggregate);
         AssertLifecycleMetrics(Assert.Single(report.Producers).SarifRegress);
-        Assert.Equal(Hash('5'), report.ReportHashes.MatcherV2ReportSha256);
-        Assert.Equal(Hash('6'), report.ReportHashes.V2ToV3DeltaReportSha256);
+        Assert.Equal(Hash('5'), report.ReportHashes.MatcherV31ReportSha256);
+        Assert.Equal(Hash('6'), report.ReportHashes.V31ToV32DeltaReportSha256);
     }
 
     [Fact]

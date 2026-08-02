@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1",
+  "repositoryCommitSha": "863210dfda02690b0d9ee579f5d7fd7a45545b1e",
+  "sourceTreeSha256": "fa14cb54282345aa2cc16e4a931d79ba651282f4b3355dc09df51fa05212694f",
+  "sarifRegressToolVersion": "0.1.0",
+  "matcherAlgorithmVersion": "sarifregress/matcher/v3.1",
+  "fingerprintAlgorithmVersions": [
+    {
+      "name": "derived-fingerprint",
+      "version": "rule-path-context/v2"
+    },
+    {
+      "name": "derived-fingerprint-compare",
+      "version": "sarifregress/derived-fingerprint-compare/v2"
+    },
+    {
+      "name": "embedded-snippet",
+      "version": "embedded-snippet/v1"
+    },
+    {
+      "name": "producer-fingerprint-common",
+      "version": "sarifregress/producer-fingerprint-common-version/v1"
+    }
+  ],
+  "outputSchemaVersion": "1",
+  "configurationSchemaVersion": "1",
+  "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
+  "environment": {
+    "operatingSystem": "linux",
+    "architecture": "x64",
+    "dotnetSdkVersion": "10.0.302"
+  }
+}

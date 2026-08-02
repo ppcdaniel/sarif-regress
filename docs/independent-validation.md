@@ -4,7 +4,10 @@
 > This document and `validation/history/matcher-v2/` preserve the original,
 > untuned MVP evaluation from PR #8. Matcher v3 is evaluated separately in
 > [Real-producer generalisation](real-producer-generalisation.md); none of the
-> v2 labels, thresholds, difficult cases, or reports were replaced.
+> v2 labels, thresholds, difficult cases, or reports were replaced. The
+> [interpretation erratum](../validation/holdout/interpretation-erratum.json) records that matcher
+> v3/v3.1/v3.2 reused an exposed holdout and therefore are regression evidence, not additional
+> independent evaluations.
 
 ## Result
 
@@ -259,7 +262,7 @@ the result.
 ## Reproduction and cross-platform evidence
 
 To reproduce matcher v2, materialise the exact validation head instead of
-running the active matcher-v3 branch:
+running the active matcher-v3.2 branch:
 
 ```sh
 git worktree add ../sarif-regress-matcher-v2 0231d6fe779203a92469099b90d446fafe67b064

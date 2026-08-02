@@ -17,7 +17,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "2"
+      "const": "4"
     },
     "repository": {
       "const": "ppcdaniel/sarif-regress"
@@ -53,7 +53,7 @@
             {
               "properties": {
                 "name": {
-                  "const": "holdout-linux"
+                  "pattern": "^(holdout-linux|holdout-v3\\.2-candidate-linux-[0-9a-f]{40})$"
                 }
               }
             }
@@ -67,7 +67,7 @@
             {
               "properties": {
                 "name": {
-                  "const": "holdout-windows"
+                  "pattern": "^(holdout-windows|holdout-v3\\.2-candidate-windows-[0-9a-f]{40})$"
                 }
               }
             }
@@ -81,7 +81,7 @@
       "required": [
         "sarifRegressHoldout",
         "sarifMultitoolBaseline",
-        "v2ToV3Delta"
+        "v31ToV32Delta"
       ],
       "properties": {
         "sarifRegressHoldout": {
@@ -90,7 +90,7 @@
         "sarifMultitoolBaseline": {
           "const": true
         },
-        "v2ToV3Delta": {
+        "v31ToV32Delta": {
           "const": true
         }
       }
@@ -111,7 +111,7 @@
       "required": [
         "sarifRegressHoldoutSha256",
         "sarifMultitoolBaselineSha256",
-        "v2ToV3DeltaSha256"
+        "v31ToV32DeltaSha256"
       ],
       "properties": {
         "sarifRegressHoldoutSha256": {
@@ -120,7 +120,7 @@
         "sarifMultitoolBaselineSha256": {
           "$ref": "#/$defs/sha256"
         },
-        "v2ToV3DeltaSha256": {
+        "v31ToV32DeltaSha256": {
           "$ref": "#/$defs/sha256"
         }
       }
@@ -134,7 +134,8 @@
         "runAttempt",
         "runUrl",
         "workflowHeadSha",
-        "conclusion",
+        "workflowConclusion",
+        "coordinatorJobConclusion",
         "coordinatorJobName"
       ],
       "properties": {
@@ -160,7 +161,13 @@
         "workflowHeadSha": {
           "$ref": "#/$defs/gitCommitSha"
         },
-        "conclusion": {
+        "workflowConclusion": {
+          "enum": [
+            "failure",
+            "success"
+          ]
+        },
+        "coordinatorJobConclusion": {
           "const": "success"
         },
         "coordinatorJobName": {

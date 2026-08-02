@@ -88,6 +88,21 @@ public static class BoundedJsonFile
         byte[] bytes = approvedRoot is null
             ? ReadBytes(path, maximumBytes)
             : ReadBytes(path, maximumBytes, approvedRoot);
+        return ParseNode(
+            bytes,
+            maximumDepth,
+            maximumStringCharacters,
+            Path.GetFileName(path));
+    }
+
+    /// <summary>Parses already-read bounded bytes without reopening their source.</summary>
+    public static JsonNode ParseNode(
+        ReadOnlySpan<byte> bytes,
+        int maximumDepth,
+        int maximumStringCharacters,
+        string logicalName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(logicalName);
         EnsureTokenBoundsAndUniqueProperties(
             bytes,
             maximumDepth,
@@ -101,7 +116,7 @@ public static class BoundedJsonFile
                 MaxDepth = maximumDepth,
             });
         JsonNode value = node ?? throw new InvalidDataException(
-            $"JSON file '{Path.GetFileName(path)}' contains only null.");
+            $"JSON file '{logicalName}' contains only null.");
         EnsureStringBounds(value, maximumStringCharacters);
         return value;
     }

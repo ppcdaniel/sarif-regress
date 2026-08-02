@@ -20,17 +20,20 @@ internal sealed class CandidateEdgeFactory
     private readonly SarifRegressConfiguration configuration;
     private readonly ProducerFingerprintOccurrenceIndex fingerprintOccurrences;
     private readonly ContextFingerprintOccurrenceIndex contextFingerprintOccurrences;
+    private readonly CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences;
     private readonly PathAliasIndex pathAliases;
     private readonly RuleAliasIndex ruleAliases;
 
     public CandidateEdgeFactory(
         SarifRegressConfiguration configuration,
         ProducerFingerprintOccurrenceIndex fingerprintOccurrences,
-        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences)
+        ContextFingerprintOccurrenceIndex contextFingerprintOccurrences,
+        CodeFlowAnchorOccurrenceIndex codeFlowAnchorOccurrences)
     {
         this.configuration = configuration;
         this.fingerprintOccurrences = fingerprintOccurrences;
         this.contextFingerprintOccurrences = contextFingerprintOccurrences;
+        this.codeFlowAnchorOccurrences = codeFlowAnchorOccurrences;
         pathAliases = PathAliasIndex.Create(
             configuration.PathAliases,
             configuration.Matching.PathCaseSensitivity);
@@ -68,7 +71,6 @@ internal sealed class CandidateEdgeFactory
             derivedFingerprint,
             pathMatchKind,
             context,
-            supportingAgreement,
             messageAgreement);
         if (precedence.Tier == PrecedenceTier.Refuse)
         {
@@ -497,7 +499,8 @@ internal sealed class CandidateEdgeFactory
         return new ContextComparison(
             agreement,
             ReliableExact: agreement == AgreementBand.Exact,
-            Collided: collidedHashCount > 0);
+            Collided: collidedHashCount > 0,
+            Conflicting: conflictingHashCount > 0);
     }
 
     private void CompareContextHash(
@@ -610,7 +613,7 @@ internal sealed class CandidateEdgeFactory
         Finding candidate,
         ICollection<EvidenceDraft> evidence)
     {
-        var codeFlowAgreement = CompareCodeFlow(baseline.CodeFlow, candidate.CodeFlow, evidence);
+        var codeFlowAgreement = CompareCodeFlow(baseline, candidate, evidence);
         _ = CompareRelatedLocations(
             baseline.RelatedLocations,
             candidate.RelatedLocations,
@@ -619,10 +622,12 @@ internal sealed class CandidateEdgeFactory
     }
 
     private AgreementBand CompareCodeFlow(
-        CodeFlowEvidence? baseline,
-        CodeFlowEvidence? candidate,
+        Finding baselineFinding,
+        Finding candidateFinding,
         ICollection<EvidenceDraft> evidence)
     {
+        var baseline = baselineFinding.CodeFlow;
+        var candidate = candidateFinding.CodeFlow;
         if (baseline is null || candidate is null
             || baseline.Anchors.IsDefaultOrEmpty
             || candidate.Anchors.IsDefaultOrEmpty)
@@ -633,21 +638,59 @@ internal sealed class CandidateEdgeFactory
         var baselineAnchors = CreateAnchorSet(baseline);
         var candidateAnchors = CreateAnchorSet(candidate);
         var intersection = baselineAnchors
-            .Intersect(candidateAnchors, StringComparer.Ordinal)
-            .Order(StringComparer.Ordinal)
+            .Intersect(candidateAnchors)
+            .OrderBy(
+                CodeFlowAnchorOccurrenceIndex.GetStableValue,
+                StringComparer.Ordinal)
             .ToArray();
         if (intersection.Length == 0)
         {
             return AgreementBand.None;
         }
 
-        var isExact = baselineAnchors.SetEquals(candidateAnchors);
+        var reliableIntersection = intersection
+            .Where(anchor =>
+                codeFlowAnchorOccurrences.GetCount(
+                    InputKind.Baseline,
+                    baselineFinding,
+                    anchor) == 1
+                && codeFlowAnchorOccurrences.GetCount(
+                    InputKind.Candidate,
+                    candidateFinding,
+                    anchor) == 1)
+            .ToHashSet();
+        var collidedIntersection = intersection
+            .Where(anchor => !reliableIntersection.Contains(anchor))
+            .ToArray();
+        if (collidedIntersection.Length > 0)
+        {
+            AddCodeFlowCollisionEvidence(
+                baselineFinding,
+                candidateFinding,
+                collidedIntersection,
+                evidence);
+        }
+
+        var baselineReliableAnchors = baselineAnchors
+            .Where(anchor => codeFlowAnchorOccurrences.GetCount(
+                InputKind.Baseline,
+                baselineFinding,
+                anchor) == 1)
+            .ToHashSet();
+        var candidateReliableAnchors = candidateAnchors
+            .Where(anchor => codeFlowAnchorOccurrences.GetCount(
+                InputKind.Candidate,
+                candidateFinding,
+                anchor) == 1)
+            .ToHashSet();
+        var isExact = reliableIntersection.Count > 0
+            && baselineReliableAnchors.SetEquals(candidateReliableAnchors);
         var baselineHash = HashOrderedSet(
             MatchingAlgorithms.CodeFlowSetVersion,
-            baselineAnchors);
+            baselineAnchors.Select(CodeFlowAnchorOccurrenceIndex.GetStableValue));
         var candidateHash = HashOrderedSet(
             MatchingAlgorithms.CodeFlowSetVersion,
-            candidateAnchors);
+            candidateAnchors.Select(CodeFlowAnchorOccurrenceIndex.GetStableValue));
         evidence.Add(new EvidenceDraft(
             "code-flow",
             baselineHash,
@@ -655,16 +698,41 @@ internal sealed class CandidateEdgeFactory
             EvidenceOrigin.System,
             Lossy: false,
             MatchingAlgorithms.CodeFlowSetVersion));
+        if (reliableIntersection.Count == 0)
+        {
+            return AgreementBand.None;
+        }
+
         return isExact ? AgreementBand.Exact : AgreementBand.Compatible;
     }
 
-    private HashSet<string> CreateAnchorSet(CodeFlowEvidence codeFlow) =>
+    private HashSet<CodeFlowAnchorIdentity> CreateAnchorSet(CodeFlowEvidence codeFlow) =>
         codeFlow.Anchors
-            .Select(anchor => VersionedHash.Compute(
-                MatchingAlgorithms.CodeFlowAnchorVersion,
-                NormalizePathForComparison(anchor.CanonicalPath),
-                anchor.ContextHash))
-            .ToHashSet(StringComparer.Ordinal);
+            .Select(anchor => CodeFlowAnchorOccurrenceIndex.CreateIdentity(
+                anchor,
+                configuration.Matching.PathCaseSensitivity))
+            .ToHashSet();
+
+    private void AddCodeFlowCollisionEvidence(
+        Finding baseline,
+        Finding candidate,
+        IReadOnlyList<CodeFlowAnchorIdentity> collidedAnchors,
+        ICollection<EvidenceDraft> evidence)
+    {
+        evidence.Add(new EvidenceDraft(
+            "code-flow-anchor-collision",
+            codeFlowAnchorOccurrences.FormatCollisionSummary(
+                InputKind.Baseline,
+                baseline,
+                collidedAnchors),
+            codeFlowAnchorOccurrences.FormatCollisionSummary(
+                InputKind.Candidate,
+                candidate,
+                collidedAnchors),
+            EvidenceOrigin.System,
+            Lossy: true,
+            MatchingAlgorithms.CodeFlowOccurrenceVersion));
+    }
 
     private AgreementBand CompareRelatedLocations(
         ImmutableArray<RelatedLocation> baseline,
@@ -759,7 +827,6 @@ internal sealed class CandidateEdgeFactory
         DerivedFingerprintComparison derivedFingerprint,
         PathMatchKind pathMatchKind,
         ContextComparison context,
-        AgreementBand supportingAgreement,
         AgreementBand messageAgreement)
     {
         var stableContext =
@@ -795,18 +862,15 @@ internal sealed class CandidateEdgeFactory
                 CollisionOnly: false);
         }
 
-        if (supportingAgreement >= AgreementBand.Compatible)
-        {
-            return new PrecedenceSelection(
-                PrecedenceTier.PathProblem,
-                CollisionOnly: false);
-        }
-
+        var collisionEvidenceConflicts = context.Conflicting
+            && (derivedFingerprint.Collided || context.Collided);
         var duplicatedDerivedFingerprintAdmissible =
             derivedFingerprint.Collided
-            && pathMatchKind != PathMatchKind.None;
+            && pathMatchKind != PathMatchKind.None
+            && !collisionEvidenceConflicts;
         var duplicatedRawContextAdmissible =
             context.Collided
+            && !collisionEvidenceConflicts
             && (pathMatchKind == PathMatchKind.Aliased
                 || pathMatchKind == PathMatchKind.Exact
                     && messageAgreement >= AgreementBand.Compatible);
@@ -819,6 +883,7 @@ internal sealed class CandidateEdgeFactory
         }
 
         var weakMessageAdmissible = configuration.Matching.AllowWeakMessageSimilarity
+            && !collisionEvidenceConflicts
             && messageAgreement >= AgreementBand.Compatible
             && (pathMatchKind == PathMatchKind.Exact
                 || context.Agreement >= AgreementBand.Compatible);
@@ -1060,10 +1125,15 @@ internal sealed class CandidateEdgeFactory
     private readonly record struct ContextComparison(
         AgreementBand Agreement,
         bool ReliableExact,
-        bool Collided)
+        bool Collided,
+        bool Conflicting)
     {
         public static ContextComparison None { get; } =
-            new(AgreementBand.None, ReliableExact: false, Collided: false);
+            new(
+                AgreementBand.None,
+                ReliableExact: false,
+                Collided: false,
+                Conflicting: false);
     }
 
     private readonly record struct PrecedenceSelection(

@@ -34,6 +34,8 @@ is lexical and never dereferences or fetches the configured URI. A resolved file
 receives the independent repository-containment checks below before any optional source read.
 Stable explanation output records the configured logical identifier and versioned mechanism, but
 not the raw configured target, so explicit local roots do not leak into reports or vary by host.
+URI-base mapping is safe path resolution, not standalone identity evidence. A mapped path can
+participate only when another qualifying fingerprint or context signal admits the relationship.
 
 Configuration may lower a built-in ceiling but cannot raise the trusted bootstrap ceiling. Parser
 collection limits are enforced while JSON tokens are read, before an oversized subtree is
@@ -59,6 +61,20 @@ are normalised before hashing.
 
 The native Linux containment path currently supports x64 and Arm64 kernels that expose `openat2`
 and `statx`. Other Linux architectures and older kernels fail closed with `SECURITY0004`.
+
+The shipped product has one shared approved root for both inputs. Separate baseline/candidate roots
+exist only in validation research. They are not approved because all source-backed variants failed
+the no-trusted-hash wrong-root scenarios; physical/snapshot identity remains incomplete; preflight
+and later context reads do not share one immutable snapshot handle; and source projection has no
+bounded benchmark result. These are production security/resource gaps, not permissions to fall back
+to weak matching.
+
+The sparse research role projections authenticated on source head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479` are retained as validation evidence. Issue #27 requires
+an explicit full-resource-to-stable-projection derivation and cross-binding before a composite
+experiment report is claimed. The SARIF-only control's former preflight derivation defect is fixed
+without adding a source read. This validation trust-boundary limitation does not weaken or extend
+the product's runtime containment guarantee.
 
 Optional `token-window/v1` evidence is enabled only by
 `matching.enableTokenWindows`. It normalises whitespace and ignores blank-line-only movement, but

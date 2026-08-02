@@ -12,9 +12,14 @@ edge even when automatic producer identity, rule, canonical path, exact region, 
 message happen to be equal.
 
 This is the highest-risk generalisation defect because location and message can coincide after
-unrelated edits. The independent holdout must measure a proposed rule; it must not supply hidden
-identity labels to that rule. Precision must remain at least 0.95, and labelled ambiguity must never
-be silently auto-matched.
+unrelated edits. The already-exposed holdout can falsify an unsafe proposed rule, but it cannot
+provide new independent positive validation or supply hidden identity labels to that rule. A future
+independent claim requires a new untouched or blinded corpus. Precision must remain at least 0.95,
+and labelled ambiguity must never be silently auto-matched.
+
+The [interpretation erratum](../../validation/holdout/interpretation-erratum.json) is the
+machine-readable authority for the distinction between matcher-v2's independent first evaluation
+and the exposed-holdout matcher-v3/v3.1 results used in this decision.
 
 ## Audited evidence
 
@@ -32,9 +37,9 @@ The three false exact intersections are:
 
 | Baseline | Candidate | Shared line | Why it is false |
 |---|---|---:|---|
-| `baseline:0:17` | `candidate:0:15` | 34 | Independent controlled identities aligned after inserted lines |
-| `baseline:0:18` | `candidate:0:16` | 36 | Independent controlled identities aligned after inserted lines |
-| `baseline:0:19` | `candidate:0:17` | 38 | Independent controlled identities aligned after inserted lines |
+| `baseline:0:17` | `candidate:0:15` | 34 | Distinct controlled identities aligned after inserted lines |
+| `baseline:0:18` | `candidate:0:16` | 36 | Distinct controlled identities aligned after inserted lines |
+| `baseline:0:19` | `candidate:0:17` | 38 | Distinct controlled identities aligned after inserted lines |
 
 Requiring the entire producer/rule bucket to contain exactly one sparse finding on each side
 recovers zero PMD relationships. It is safe but does not materially improve recall.
@@ -90,8 +95,9 @@ measured without semantic-ID leakage from the current snapshots.
 
 ## Decision
 
-Stop Phase 3 without changing product matching behavior. Matcher v3 contains the independently
-validated URI-base and collision-aware context work, but it emits no sparse-continuity tier.
+Stop Phase 3 without changing product matching behavior. Matcher v3 contains URI-base and
+collision-aware context work that improved the exposed-holdout regression result, but it emits no
+sparse-continuity tier.
 Fingerprint-free, snippet-free findings without another admissible evidence mechanism remain
 unmatched. Duplicate signatures are never resolved by input order, and the deliberate PMD
 ambiguity is not silently auto-matched.
@@ -110,7 +116,8 @@ decision.
 
 ## Consequences and reopening criteria
 
-- PMD recall remains zero in the current independent holdout; safety takes priority over recall.
+- PMD recall remains zero in matcher-v3's exposed-holdout regression result; safety takes priority
+  over recall.
 - Reports continue to distinguish unmatched endpoints from an explicitly solved ambiguity
   component. With no admissible sparse edge, current PMD ambiguity endpoints are one-sided
   unmatched decisions, but they are not silently paired.

@@ -8,8 +8,8 @@ public sealed record ComparisonReportHashes(
     string EvaluationMetadataSha256,
     string SarifRegressReportSha256,
     string SarifMultitoolBaselineReportSha256,
-    string MatcherV2ReportSha256,
-    string V2ToV3DeltaReportSha256);
+    string MatcherV31ReportSha256,
+    string V31ToV32DeltaReportSha256);
 
 /// <summary>Freezes release gates before evaluating the holdout.</summary>
 public sealed record ReleaseThresholds(
@@ -350,8 +350,8 @@ public static class ComparisonSummaryBuilder
                      ("evaluation metadata", hashes.EvaluationMetadataSha256),
                      ("SarifRegress report", hashes.SarifRegressReportSha256),
                      ("Multitool report", hashes.SarifMultitoolBaselineReportSha256),
-                     ("matcher-v2 report", hashes.MatcherV2ReportSha256),
-                     ("v2-to-v3 delta report", hashes.V2ToV3DeltaReportSha256),
+                     ("matcher-v3.1 report", hashes.MatcherV31ReportSha256),
+                     ("v3.1-to-v3.2 delta report", hashes.V31ToV32DeltaReportSha256),
                  })
         {
             if (value is null

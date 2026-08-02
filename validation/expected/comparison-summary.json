@@ -1,11 +1,11 @@
 {
-  "schemaVersion": "2",
+  "schemaVersion": "4",
   "reportKind": "holdout-external-baseline-comparison",
   "evaluation": {
-    "repositoryCommitSha": "29ea23e0e9b0b85269d3eaaa52ccf3c7a91da30b",
-    "sourceTreeSha256": "4a6b69ed50a96334fbcf949eda7a044d14f4d9c7405e7641567ff84d604f6486",
+    "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+    "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
     "sarifRegressToolVersion": "0.1.0",
-    "matcherAlgorithmVersion": "sarifregress/matcher/v3",
+    "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
     "fingerprintAlgorithmVersions": [
       {
         "name": "derived-fingerprint",
@@ -30,11 +30,11 @@
   },
   "reportHashes": {
     "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
-    "evaluationMetadataSha256": "d9e88ba62142a23459ad86f5372b2e153e4727c3560662b8625a7a115d9006b7",
-    "sarifRegressReportSha256": "c9411e318678412ae757739749a58a999aa0fc6640b6a76460b4b59ad083dd99",
-    "sarifMultitoolBaselineReportSha256": "edc58e16c85635ee3ffa7dddd454425230fe3f71f4020b80cb1baf7f20300aa2",
-    "matcherV2ReportSha256": "d53225fbafeda78048726d201b230c6c24f0f8f68348e827b096f754406110cf",
-    "v2ToV3DeltaReportSha256": "e75c5fd7855e4da55029a8f262d78ba2007f574092c2464085f870204a18afdb"
+    "evaluationMetadataSha256": "e170ba6f7203e2414f4b27b725996f177c1a04045522b42fe57038782bbf5915",
+    "sarifRegressReportSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
+    "sarifMultitoolBaselineReportSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
+    "matcherV31ReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
+    "v31ToV32DeltaReportSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
   },
   "thresholds": {
     "minimumPrecision": 0.95,
@@ -70,7 +70,7 @@
       "truePositives": 50,
       "falsePositives": 0,
       "falseNegatives": 25,
-      "classificationMismatches": 5,
+      "classificationMismatches": 0,
       "expectedNewClassifications": 9,
       "correctNewClassifications": 9,
       "incorrectNewClassifications": 0,
@@ -126,7 +126,7 @@
         "truePositives": 25,
         "falsePositives": 0,
         "falseNegatives": 0,
-        "classificationMismatches": 5,
+        "classificationMismatches": 0,
         "expectedNewClassifications": 3,
         "correctNewClassifications": 3,
         "incorrectNewClassifications": 0,

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/sparse-experiment-workflow-provenance.schema.json",
+  "title": "Sparse-experiment candidate workflow provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "repository",
+    "workflowPath",
+    "workflowRunId",
+    "workflowRunAttempt",
+    "workflowHeadSha",
+    "artifacts",
+    "outputs",
+    "repeatedRunByteIdentical",
+    "linuxWindowsByteIdentical"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": { "const": "sparse-experiment-workflow-provenance/v1" },
+    "repository": { "const": "ppcdaniel/sarif-regress" },
+    "workflowPath": { "const": ".github/workflows/holdout-validation.yml" },
+    "workflowRunId": { "type": "integer", "minimum": 1 },
+    "workflowRunAttempt": { "type": "integer", "minimum": 1 },
+    "workflowHeadSha": { "$ref": "#/$defs/gitSha" },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["linux", "windows"],
+      "properties": {
+        "linux": { "$ref": "#/$defs/artifact" },
+        "windows": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sparse-experiment-gate-evidence.json",
+        "sparse-experiment-observations.json"
+      ],
+      "properties": {
+        "sparse-experiment-gate-evidence.json": { "$ref": "#/$defs/sha256" },
+        "sparse-experiment-observations.json": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "repeatedRunByteIdentical": { "const": true },
+    "linuxWindowsByteIdentical": { "const": true }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "artifactId", "archiveSha256"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "artifactId": { "type": "integer", "minimum": 1 },
+        "archiveSha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}
