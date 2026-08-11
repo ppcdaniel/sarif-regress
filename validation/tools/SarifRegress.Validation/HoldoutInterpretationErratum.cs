@@ -7,15 +7,36 @@ using System.Text.Json.Serialization;
 namespace SarifRegress.Validation;
 
 /// <summary>
-/// Retains the exact matcher-v3.1 report binding established by the interpretation erratum.
+/// Retains the matcher-v3.2 report-binding state established by the interpretation erratum.
 /// </summary>
 public sealed record HoldoutInterpretationErratumSnapshot(
     string CurrentMatcherAlgorithmVersion,
     string CurrentReportBindingStatus,
     string? CurrentReportSha256)
 {
+    /// <summary>The original bootstrap state whose tracked outputs still use v3.1 contracts.</summary>
+    public const string LegacyCandidateUnboundStatus = "candidate-unbound";
+
+    /// <summary>The reusable bootstrap state for re-attesting matcher-v3.2 output.</summary>
+    public const string RefreshUnboundStatus = "refresh-unbound";
+
+    /// <summary>The state whose report bytes are bound by the erratum.</summary>
+    public const string BoundStatus = "bound";
+
+    /// <summary>Gets whether the current report intentionally has no artifact binding.</summary>
+    public bool IsCurrentReportUnbound =>
+        IsUnboundStatus(CurrentReportBindingStatus);
+
     /// <summary>
-    /// Validates a bound report, or returns false for the exact fail-closed bootstrap version.
+    /// Gets whether tracked output predates matcher-v3.2 and therefore needs archived schemas.
+    /// </summary>
+    public bool UsesArchivedMatcherV31Outputs => string.Equals(
+        CurrentReportBindingStatus,
+        LegacyCandidateUnboundStatus,
+        StringComparison.Ordinal);
+
+    /// <summary>
+    /// Validates a bound report, or returns false for a fail-closed bootstrap state.
     /// </summary>
     public bool ValidateCurrentReport(
         string matcherAlgorithmVersion,
@@ -31,15 +52,12 @@ public sealed record HoldoutInterpretationErratumSnapshot(
                 "The holdout interpretation erratum does not cover the current matcher version.");
         }
 
-        if (string.Equals(
-                CurrentReportBindingStatus,
-                "candidate-unbound",
-                StringComparison.Ordinal))
+        if (IsCurrentReportUnbound)
         {
             if (CurrentReportSha256 is not null)
             {
                 throw new InvalidDataException(
-                    "An unbound holdout candidate cannot carry a report digest.");
+                    "An unbound holdout report cannot carry a report digest.");
             }
 
             return false;
@@ -47,7 +65,7 @@ public sealed record HoldoutInterpretationErratumSnapshot(
 
         if (!string.Equals(
                 CurrentReportBindingStatus,
-                "bound",
+                BoundStatus,
                 StringComparison.Ordinal)
             || CurrentReportSha256 is null)
         {
@@ -68,6 +86,10 @@ public sealed record HoldoutInterpretationErratumSnapshot(
 
         return true;
     }
+
+    private static bool IsUnboundStatus(string status) =>
+        string.Equals(status, LegacyCandidateUnboundStatus, StringComparison.Ordinal)
+        || string.Equals(status, RefreshUnboundStatus, StringComparison.Ordinal);
 }
 
 /// <summary>
@@ -182,7 +204,7 @@ public sealed class HoldoutInterpretationErratumReader
         IEnumerable<string> paths = ChecksummedFiles;
         if (string.Equals(
                 currentReportBinding.Status,
-                "bound",
+                HoldoutInterpretationErratumSnapshot.BoundStatus,
                 StringComparison.Ordinal))
         {
             paths = paths.Append(MatcherV32ReportRelativePath);
@@ -269,20 +291,21 @@ public sealed class HoldoutInterpretationErratumReader
             "current matcher version",
             MatcherV32AlgorithmVersion,
             document.CurrentReportBinding.MatcherAlgorithmVersion);
-        if (string.Equals(
-                document.CurrentReportBinding.Status,
-                "candidate-unbound",
-                StringComparison.Ordinal))
+        var currentReportSnapshot = new HoldoutInterpretationErratumSnapshot(
+            document.CurrentReportBinding.MatcherAlgorithmVersion,
+            document.CurrentReportBinding.Status,
+            document.CurrentReportBinding.Artifact?.Sha256);
+        if (currentReportSnapshot.IsCurrentReportUnbound)
         {
             if (document.CurrentReportBinding.Artifact is not null)
             {
                 throw new InvalidDataException(
-                    "The unbound matcher-v3.2 candidate must not identify report bytes.");
+                    "An unbound matcher-v3.2 report must not identify report bytes.");
             }
         }
         else if (string.Equals(
                      document.CurrentReportBinding.Status,
-                     "bound",
+                     HoldoutInterpretationErratumSnapshot.BoundStatus,
                      StringComparison.Ordinal)
                  && document.CurrentReportBinding.Artifact is not null)
         {

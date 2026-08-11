@@ -453,7 +453,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/HoldoutInterpretationErratum.cs",
-      "sha256": "5ceb080a050db28a458db4b2dafe18a528225da54d32c54fca016fb51f9959f3"
+      "sha256": "989b3aac282e329a6c9b48e83be9adb765236da3608f657a7b38869817efabef"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/HoldoutManifest.cs",
@@ -525,7 +525,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationLimits.cs",
-      "sha256": "a9e74e2049c6810b2503630c02ec4e890ec33932f71b347ab941a16bf477337a"
+      "sha256": "79be16c969ccb2308ec544eae9a80e25b2d9c32b5593965c98c18d8c156bbdda"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationOptions.cs",

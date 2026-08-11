@@ -79,7 +79,7 @@ def detect_stage(root: Path) -> str:
     ) != MATCHER_VERSION:
         raise SystemExit("Erratum does not identify matcher-v3.2.")
     status = binding.get("status")
-    if status == "candidate-unbound":
+    if status in {"candidate-unbound", "refresh-unbound"}:
         return "stage1"
     if status != "bound":
         raise SystemExit("Erratum has an unknown matcher-v3.2 binding state.")

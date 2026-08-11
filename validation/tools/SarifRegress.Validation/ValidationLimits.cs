@@ -21,6 +21,8 @@ public sealed record ValidationLimits(
     TimeSpan SchemaRegexTimeout,
     TimeSpan ProcessTimeout)
 {
+    private static readonly TimeSpan DefaultSchemaRegexTimeout = TimeSpan.FromSeconds(2);
+
     /// <summary>Gets conservative defaults suitable for the small committed holdout.</summary>
     public static ValidationLimits Default { get; } = new(
         MaximumManifestBytes: 2L * 1024 * 1024,
@@ -37,7 +39,8 @@ public sealed record ValidationLimits(
         MaximumSchemaEvaluationSteps: 10_000_000,
         MaximumSchemaNumberCharacters: 1024,
         MaximumProcessOutputCharacters: 1024 * 1024,
-        SchemaRegexTimeout: TimeSpan.FromMilliseconds(100),
+        // Regex timeouts measure wall-clock time, so allow scheduler headroom on loaded CI hosts.
+        SchemaRegexTimeout: DefaultSchemaRegexTimeout,
         ProcessTimeout: TimeSpan.FromMinutes(2));
 
     /// <summary>Fails fast when a caller supplies an internally inconsistent limit set.</summary>

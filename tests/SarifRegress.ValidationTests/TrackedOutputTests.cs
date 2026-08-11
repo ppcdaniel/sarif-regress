@@ -22,11 +22,9 @@ public sealed class TrackedOutputTests
         string root = ValidationTestRepository.FindRoot();
         HoldoutInterpretationErratumSnapshot interpretation =
             new HoldoutInterpretationErratumReader().Read(root);
-        bool candidateUnbound = string.Equals(
-            interpretation.CurrentReportBindingStatus,
-            "candidate-unbound",
-            StringComparison.Ordinal);
-        string schemaRoot = candidateUnbound
+        bool usesArchivedMatcherV31Outputs =
+            interpretation.UsesArchivedMatcherV31Outputs;
+        string schemaRoot = usesArchivedMatcherV31Outputs
             ? Path.Combine(
                 root,
                 "validation",
@@ -34,7 +32,8 @@ public sealed class TrackedOutputTests
                 "matcher-v3.1",
                 "schemas")
             : Path.Combine(root, "validation", "schemas");
-        (string ReportName, string SchemaName)[] schemaChecks = candidateUnbound
+        (string ReportName, string SchemaName)[] schemaChecks =
+            usesArchivedMatcherV31Outputs
             ? [
                 (
                     "sarif-regress-holdout.json",
@@ -185,10 +184,7 @@ public sealed class TrackedOutputTests
             "expected");
         HoldoutInterpretationErratumSnapshot interpretation =
             new HoldoutInterpretationErratumReader().Read(root);
-        string[] checksummedPaths = string.Equals(
-            interpretation.CurrentReportBindingStatus,
-            "candidate-unbound",
-            StringComparison.Ordinal)
+        string[] checksummedPaths = interpretation.UsesArchivedMatcherV31Outputs
             ? [
                 "validation/expected/comparison-summary.json",
                 "validation/expected/sarif-multitool-baseline.json",

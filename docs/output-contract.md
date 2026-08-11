@@ -136,9 +136,12 @@ The active cross-platform attestation schema is version `4`. Its GitHub Actions 
 after the coordinator authenticates and uploads the candidate. The generic legacy `conclusion`
 property is rejected.
 
-Matcher-v3.2 evidence uses two fail-closed promotion stages. `candidate-unbound` generates and
-cross-compares the exact reports and truthful candidate attestation, then refuses final status. Once
-the report digest and that candidate attestation are committed, a bound comparison whose
+Matcher-v3.2 evidence uses two fail-closed promotion stages. The legacy `candidate-unbound` state
+generates matcher-v3.2 bytes from the archived matcher-v3.1 output baseline. The reusable
+`refresh-unbound` state re-attests changed matcher-v3.2 product source without reverting tracked
+outputs or validation contracts to matcher-v3.1. Both states generate and cross-compare exact
+reports and a truthful candidate attestation, then refuse final status. Once the report digest and
+that candidate attestation are committed, a bound comparison whose
 `crossPlatformByteIdentity` remains `false` selects stage 2. Both operating systems rerun the real
 evaluator, tolerate only the expected tracked-output mismatch, and cross-compare the resulting
 attested comparison and checksum bytes before another deliberate refusal. Only promotion of those

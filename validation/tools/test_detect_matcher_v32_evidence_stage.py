@@ -94,6 +94,10 @@ class EvidenceStageTests(unittest.TestCase):
         self.write_erratum("candidate-unbound")
         self.assertEqual("stage1", detect_stage(self.root))
 
+    def test_refresh_unbound_report_selects_stage_1_without_reading_outputs(self) -> None:
+        self.write_erratum("refresh-unbound")
+        self.assertEqual("stage1", detect_stage(self.root))
+
     def test_bound_unattested_comparison_selects_stage_2(self) -> None:
         self.write_erratum("bound")
         self.write_bound_inputs(byte_identity=False)

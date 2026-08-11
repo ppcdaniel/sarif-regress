@@ -266,6 +266,48 @@ public sealed class JsonSchemaValidatorTests
     }
 
     [Fact]
+    public void Validator_fails_closed_when_the_schema_regex_timeout_is_exhausted()
+    {
+        const string schemaJson = """
+            {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "pattern": "^(?=(a+)+$)"
+            }
+            """;
+        string temporaryRoot = ValidationTestRepository.CreateTemporaryDirectory();
+        try
+        {
+            string schemaPath = WriteSchema(temporaryRoot, schemaJson);
+            ValidationLimits constrainedLimits = ValidationLimits.Default with
+            {
+                SchemaRegexTimeout = TimeSpan.FromTicks(1),
+            };
+            JsonNode instance = JsonValue.Create(
+                new string('a', constrainedLimits.MaximumStringCharacters - 1) + "!")!;
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(() =>
+                new JsonSchemaValidator(constrainedLimits).ValidateNode(
+                    schemaPath,
+                    instance,
+                    "regex-timeout.json",
+                    temporaryRoot));
+
+            Assert.Contains(
+                "configured schema evaluation limits",
+                exception.Message,
+                StringComparison.Ordinal);
+            JsonSchemaEvaluationException evaluationException =
+                Assert.IsType<JsonSchemaEvaluationException>(exception.InnerException);
+            Assert.IsType<RegexMatchTimeoutException>(evaluationException.InnerException);
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Sha256_pattern_rejects_a_trailing_line_feed()
     {
         const string schemaJson = """

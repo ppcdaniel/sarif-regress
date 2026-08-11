@@ -196,7 +196,10 @@
           "const": "sarifregress/matcher/v3.2"
         },
         "status": {
-          "const": "candidate-unbound"
+          "enum": [
+            "candidate-unbound",
+            "refresh-unbound"
+          ]
         }
       }
     },

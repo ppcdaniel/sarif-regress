@@ -38,7 +38,7 @@ public sealed class HoldoutInterpretationErratumTests
             "sarif-regress-holdout.json"));
 
         Assert.Equal("sarifregress/matcher/v3.2", snapshot.CurrentMatcherAlgorithmVersion);
-        if (snapshot.CurrentReportBindingStatus == "candidate-unbound")
+        if (snapshot.IsCurrentReportUnbound)
         {
             Assert.Null(snapshot.CurrentReportSha256);
             Assert.False(snapshot.ValidateCurrentReport(
@@ -89,13 +89,17 @@ public sealed class HoldoutInterpretationErratumTests
             });
     }
 
-    [Fact]
-    public void Pending_current_report_is_never_treated_as_hash_bound()
+    [Theory]
+    [InlineData("candidate-unbound", true)]
+    [InlineData("refresh-unbound", false)]
+    public void Unbound_current_report_is_never_treated_as_hash_bound(
+        string bindingStatus,
+        bool usesArchivedMatcherV31Outputs)
     {
         string root = ValidationTestRepository.FindRoot();
         var snapshot = new HoldoutInterpretationErratumSnapshot(
             "sarifregress/matcher/v3.2",
-            "candidate-unbound",
+            bindingStatus,
             CurrentReportSha256: null);
         byte[] reportBytes = File.ReadAllBytes(Path.Combine(
             root,
@@ -106,6 +110,10 @@ public sealed class HoldoutInterpretationErratumTests
         reportBytes.CopyTo(changedBytes, 0);
         changedBytes[^1] = (byte)'\n';
 
+        Assert.True(snapshot.IsCurrentReportUnbound);
+        Assert.Equal(
+            usesArchivedMatcherV31Outputs,
+            snapshot.UsesArchivedMatcherV31Outputs);
         _ = Assert.Throws<InvalidDataException>(() =>
             snapshot.ValidateCurrentReport("sarifregress/matcher/v4", reportBytes));
         Assert.False(snapshot.ValidateCurrentReport(
@@ -129,6 +137,46 @@ public sealed class HoldoutInterpretationErratumTests
             bound.ValidateCurrentReport(
                 "sarifregress/matcher/v3.2",
                 changedBytes));
+    }
+
+    [Fact]
+    public void Erratum_schema_accepts_only_artifact_free_refresh_state()
+    {
+        string root = ValidationTestRepository.FindRoot();
+        string schemaPath = Path.Combine(
+            root,
+            "validation",
+            "schemas",
+            "interpretation-erratum.schema.json");
+        JsonObject node = JsonNode.Parse(File.ReadAllBytes(Path.Combine(
+                root,
+                "validation",
+                "holdout",
+                "interpretation-erratum.json")))
+            ?.AsObject()
+            ?? throw new InvalidDataException("The tracked interpretation erratum is null.");
+        JsonObject binding = node["currentReportBinding"]?.AsObject()
+            ?? throw new InvalidDataException("The tracked report binding is null.");
+        binding["status"] = "refresh-unbound";
+        _ = binding.Remove("artifact");
+
+        _ = new JsonSchemaValidator().ValidateNode(
+            schemaPath,
+            node,
+            "interpretation-erratum.json",
+            root);
+
+        binding["artifact"] = new JsonObject
+        {
+            ["path"] = "validation/expected/sarif-regress-holdout.json",
+            ["sha256"] = new string('a', 64),
+        };
+        _ = Assert.Throws<InvalidDataException>(() =>
+            new JsonSchemaValidator().ValidateNode(
+                schemaPath,
+                node,
+                "interpretation-erratum.json",
+                root));
     }
 
     [Fact]
