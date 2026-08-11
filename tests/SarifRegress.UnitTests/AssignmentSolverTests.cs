@@ -26,8 +26,8 @@ public sealed class AssignmentSolverTests
             InputKind.Baseline,
             "baseline:two",
             path: "src/other.cs",
-            message: "Flow pair.",
-            codeFlowPaths: ["src/flow-anchor.cs"]);
+            message: "Context pair.",
+            contextHash: "solver-context-pair");
         var candidateOne = MatchingTestData.Finding(
             InputKind.Candidate,
             "candidate:one",
@@ -37,7 +37,7 @@ public sealed class AssignmentSolverTests
             [
                 MatchingTestData.DerivedFingerprint("exact-derived"),
             ],
-            codeFlowPaths: ["src/flow-anchor.cs"]);
+            contextHash: "solver-context-pair");
         var candidateTwo = MatchingTestData.Finding(
             InputKind.Candidate,
             "candidate:two",
@@ -265,7 +265,7 @@ public sealed class AssignmentSolverTests
     }
 
     [Fact]
-    public void Matcher_v2_rejects_an_assignment_side_limit_above_twelve()
+    public void Matcher_v3_rejects_an_assignment_side_limit_above_twelve()
     {
         var limits = ResourceLimits.Default with
         {

@@ -1,0 +1,911 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolExecutionNotifications": []
+        }
+      ],
+      "results": [
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ambiguous.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 45,
+                  "endLine": 3,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_AMBIGUOUS_SHARED\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 3
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "partialFingerprints": {
+            "holdout/controlledFingerprint/v1": "semgrep-ambiguous-shared"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ambiguous.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 45,
+                  "endLine": 5,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_AMBIGUOUS_SHARED\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "partialFingerprints": {
+            "holdout/controlledFingerprint/v1": "semgrep-ambiguous-shared"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-old/renamed.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 3,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RENAMED_01\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 3
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-old/renamed.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 5,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RENAMED_02\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-old/renamed.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 7,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RENAMED_03\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-old/renamed.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 9,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RENAMED_04\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-old/renamed.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 11,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RENAMED_05\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/resolved.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 40,
+                  "endLine": 3,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RESOLVED_01\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 3
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/resolved.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 40,
+                  "endLine": 5,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RESOLVED_02\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/resolved.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 40,
+                  "endLine": 7,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_RESOLVED_03\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 3,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_EXACT_01\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 3
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 5,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_EXACT_02\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 7,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_EXACT_03\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 9,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_EXACT_04\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 11,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_EXACT_05\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 16,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MESSAGE_01\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 16
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 18,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MESSAGE_02\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 18
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 20,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MESSAGE_03\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 20
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 22,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MESSAGE_04\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 22
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 24,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MESSAGE_05\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 29,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MOVED_01\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 31,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MOVED_02\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 31
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 33,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MOVED_03\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 33
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 35,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MOVED_04\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 35
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 37,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_MOVED_05\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 37
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 46,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_SHIFT_01\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 46
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 48,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_SHIFT_02\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 48
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 50,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_SHIFT_03\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 50
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/stable.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 52,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_SHIFT_04\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 52
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        },
+        {
+          "fingerprints": {
+            "matchBasedId/v1": "requires login"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///opt/sarif-regress-holdout/semgrep/baseline/src/stable.py"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 54,
+                  "snippet": {
+                    "text": "    holdout_sink(\"SEMGREP_SHIFT_05\")"
+                  },
+                  "startColumn": 5,
+                  "startLine": 54
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Controlled holdout sink invocation"
+          },
+          "properties": {},
+          "ruleId": "holdout-sink"
+        }
+      ],
+      "tool": {
+        "driver": {
+          "name": "Semgrep OSS",
+          "rules": [
+            {
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "fullDescription": {
+                "text": "Controlled holdout sink invocation"
+              },
+              "help": {
+                "markdown": "Controlled holdout sink invocation",
+                "text": "Controlled holdout sink invocation"
+              },
+              "id": "holdout-sink",
+              "name": "holdout-sink",
+              "properties": {
+                "precision": "very-high",
+                "tags": []
+              },
+              "shortDescription": {
+                "text": "Semgrep Finding: holdout-sink"
+              }
+            }
+          ],
+          "semanticVersion": "1.172.0"
+        }
+      }
+    }
+  ],
+  "version": "2.1.0"
+}

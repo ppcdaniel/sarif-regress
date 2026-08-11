@@ -26,6 +26,17 @@ Limit violations are deterministic. A violation that prevents safe identity reso
 the affected finding or command. A component too large for exact assignment is refused as
 ambiguous; SarifRegress does not substitute a heuristic assignment.
 
+Explicit `uriBaseMappings` can supply a missing logical URI base, but cannot replace a valid base
+defined by SARIF. Definitions are bounded to directory-form repository or local filesystem roots,
+or safe relative children of another configured base. Network/UNC roots, authority-bearing
+repository URIs, queries, fragments, traversal, cycles, and excessive depth fail closed. Resolution
+is lexical and never dereferences or fetches the configured URI. A resolved filesystem path still
+receives the independent repository-containment checks below before any optional source read.
+Stable explanation output records the configured logical identifier and versioned mechanism, but
+not the raw configured target, so explicit local roots do not leak into reports or vary by host.
+URI-base mapping is safe path resolution, not standalone identity evidence. A mapped path can
+participate only when another qualifying fingerprint or context signal admits the relationship.
+
 Configuration may lower a built-in ceiling but cannot raise the trusted bootstrap ceiling. Parser
 collection limits are enforced while JSON tokens are read, before an oversized subtree is
 materialised. Known, unsupported, and future SARIF/configuration subtrees all use the same bounded
@@ -37,19 +48,38 @@ before evidence scoring; SarifRegress never scores a truncated prefix.
 
 Repository context is optional. Paths are first canonicalised lexically, then mapped to a
 repository-relative path. The adapter rejects rooted, parent-traversing, symlink, or junction paths
-that escape the approved root. The source file is opened relative to an anchored repository
-directory handle: Linux uses `openat2` with beneath/no-link resolution and Windows uses a relative
-segment-by-segment `NtCreateFile` walk. Every Windows segment is opened relative to the retained
-parent handle with `FILE_OPEN_REPARSE_POINT`, then rejected by handle if it is a reparse point or
-has the wrong directory/file type. The returned file handle, not a later pathname lookup, is the
-only object read. If the operating system cannot provide that containment primitive, repository
-context fails closed with `SECURITY0004`; it does not fall back to pathname rechecks.
+that escape the approved root. It opens the approved root one physical component at a time, rejects
+linked ancestors and remote/device roots, and retains that directory handle for the context's
+lifetime. Every source file is opened relative to the retained capability: Linux uses `openat2`
+with beneath/no-link resolution and Windows uses a relative segment-by-segment `NtCreateFile` walk.
+Every Windows segment is opened relative to the retained parent handle with
+`FILE_OPEN_REPARSE_POINT`, then rejected by handle if it is a reparse point or has the wrong
+directory/file type. The returned file handle, not a later pathname lookup, is the only object
+read. Replacing the original root pathname therefore cannot redirect later reads. If the operating
+system cannot provide that containment primitive, repository context fails closed with
+`SECURITY0004`; it does not fall back to pathname rechecks.
 Only regular files are accepted; directories, devices, sockets, and named pipes fail with
 `SECURITY0005` before any content read. Reads are bounded by file size and snippet radius. Newlines
 are normalised before hashing.
 
-The native Linux containment path currently supports x64 and Arm64 kernels that expose `openat2`
-and `statx`. Other Linux architectures and older kernels fail closed with `SECURITY0004`.
+The native Linux containment path currently supports x64 and Arm64 kernels that expose `openat2`,
+`statx`, and `fstatfs`. Other Linux architectures and older kernels fail closed with
+`SECURITY0004`. Known remote and pseudo filesystem types are rejected; a future filesystem type
+needs explicit classification before its remote-mount behavior is covered by this claim.
+
+The shipped product has one shared approved root for both inputs. Separate baseline/candidate roots
+exist only in validation research. They are not approved because all source-backed variants failed
+the no-trusted-hash wrong-root scenarios; physical/snapshot identity remains incomplete; preflight
+and later context reads do not share one immutable snapshot handle; and source projection has no
+bounded benchmark result. These are production security/resource gaps, not permissions to fall back
+to weak matching.
+
+The sparse research role projections authenticated on source head
+`4cc6faf0167d7da385c1d204cba97d1f34ccb479` are retained as validation evidence. Issue #27 requires
+an explicit full-resource-to-stable-projection derivation and cross-binding before a composite
+experiment report is claimed. The SARIF-only control's former preflight derivation defect is fixed
+without adding a source read. This validation trust-boundary limitation does not weaken or extend
+the product's runtime containment guarantee.
 
 Optional `token-window/v1` evidence is enabled only by
 `matching.enableTokenWindows`. It normalises whitespace and ignores blank-line-only movement, but
@@ -67,11 +97,20 @@ not load scripts, styles, fonts, images, or other resources from the network.
 Canonical SARIF is a separate escaped projection. Multi-file CLI outputs are staged and committed
 transactionally, cannot select an input path, and cannot select the same output path twice.
 Existing parent-directory symbolic links and junctions are resolved when comparing destination
-identities. A final output link is replaced rather than followed. If rollback cannot restore an
-original destination, its recoverable sibling backup is retained instead of being deleted.
+identities. Staging names are atomically reserved with exclusive `CreateNew` handles, and a final
+output link is replaced rather than followed. If rollback cannot restore an original destination,
+its recoverable sibling backup is retained instead of being deleted.
+
+`corpus run --json-out` additionally refuses every lexical or physical destination below the
+corpus input tree, including a destination reached through an aliased parent directory.
+
+The transactional guarantee assumes the caller exclusively controls each selected output
+directory for the duration of the command. A hostile local process with concurrent write/rename
+permission on an output directory can still replace an ancestor or staged entry between filesystem
+operations; use a private output directory when crossing that local trust boundary.
 
 ## Reporting a vulnerability
 
 Do not include exploit payloads, repository secrets, or private SARIF files in a public issue.
-Contact the repository owner privately through the security-reporting mechanism shown by GitHub
-for the repository.
+Follow the top-level [security policy](../SECURITY.md), which links directly to GitHub's private
+vulnerability-reporting form and documents the supported-version and response expectations.

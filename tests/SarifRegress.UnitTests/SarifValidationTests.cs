@@ -621,6 +621,10 @@ public sealed class SarifValidationTests
 
         public bool RequestedTokenWindow { get; private set; }
 
+        public void Dispose()
+        {
+        }
+
         public ValueTask<RepositoryContextResult> ReadAsync(
             string repositoryRelativePath,
             SarifRegress.Core.Findings.Region? region,

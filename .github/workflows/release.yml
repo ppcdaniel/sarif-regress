@@ -7,9 +7,113 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
+  holdout:
+    name: Produce exact-head holdout evidence
+    uses: ./.github/workflows/holdout-validation.yml
+
+  release-readiness:
+    name: Enforce release-channel readiness
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: holdout
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out exact tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install release-gate runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Authenticate exact holdout artifact metadata
+        shell: bash
+        env:
+          EXPECTED_ARTIFACT_DIGEST: ${{ needs.holdout.outputs.artifact_digest }}
+          EXPECTED_ARTIFACT_ID: ${{ needs.holdout.outputs.artifact_id }}
+          EXPECTED_SOURCE_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${EXPECTED_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          test "${EXPECTED_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          readonly metadata_path="${RUNNER_TEMP}/release-holdout-artifact.json"
+          curl \
+            --disable \
+            --fail-with-body \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --location \
+            --proto '=https' \
+            --show-error \
+            --silent \
+            --tlsv1.2 \
+            --output "${metadata_path}" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${EXPECTED_ARTIFACT_ID}"
+          jq -e \
+            --arg artifact_digest "sha256:${EXPECTED_ARTIFACT_DIGEST}" \
+            --arg artifact_id "${EXPECTED_ARTIFACT_ID}" \
+            --arg run_id "${GITHUB_RUN_ID}" \
+            --arg source_sha "${EXPECTED_SOURCE_SHA}" \
+            '(.id | tostring) == $artifact_id and
+             .name == "holdout-cross-platform" and
+             .digest == $artifact_digest and
+             .expired == false and
+             (.workflow_run.id | tostring) == $run_id and
+             .workflow_run.head_sha == $source_sha' \
+            "${metadata_path}" >/dev/null
+
+      - name: Download exact holdout evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.holdout.outputs.artifact_id }}
+          path: artifacts/release-holdout
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Authenticate evidence and enforce channel policy
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python -B validation/tools/release/test_verify_release_gate.py -v
+          python -B validation/tools/release/verify_release_gate.py \
+            --repository-root . \
+            --evidence-root artifacts/release-holdout \
+            --source-sha "${EXPECTED_SOURCE_SHA}" \
+            --tag "${RELEASE_TAG}" \
+            --workflow-run-id "${GITHUB_RUN_ID}" \
+            --workflow-run-attempt "${GITHUB_RUN_ATTEMPT}"
+
   cross-platform-determinism:
     name: Verify release determinism
     uses: ./.github/workflows/determinism.yml
@@ -111,14 +215,16 @@ jobs:
         working-directory: artifacts/release
         run: |
           set -euo pipefail
-          LC_ALL=C sha256sum \
-            ./*.nupkg \
-            ./benchmark-*.json \
-            ./corpus-report.json \
-            ./sarif-regress-linux-x64 \
-            ./sarif-regress-win-x64.exe \
-            ./source-commit.txt |
-            sed 's#  \./#  #' > checksums.sha256
+          mapfile -d '' release_files < <(
+            find . \
+              -maxdepth 1 \
+              -type f \
+              ! -name 'checksums.sha256' \
+              -printf '%f\0' |
+              LC_ALL=C sort -z
+          )
+          test "${#release_files[@]}" -gt 0
+          LC_ALL=C sha256sum "${release_files[@]}" > checksums.sha256
 
       - name: Verify release checksums
         shell: bash
@@ -187,11 +293,38 @@ jobs:
             cd release
             sha256sum --check checksums.sha256
           )
+          declare -A notice_sources=(
+            [DOTNET_RUNTIME_LICENSE.txt]=notices/DOTNET_RUNTIME_LICENSE.txt
+            [DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt]=notices/DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt
+            [LICENSE]=LICENSE
+            [SYSTEM_COMMANDLINE_LICENSE.md]=notices/SYSTEM_COMMANDLINE_LICENSE.md
+            [THIRD_PARTY_NOTICES.md]=THIRD_PARTY_NOTICES.md
+          )
+          for notice_name in "${!notice_sources[@]}"; do
+            cmp --silent -- \
+              "${notice_sources[${notice_name}]}" \
+              "release/${notice_name}"
+            expected_line="$(
+              sha256sum "release/${notice_name}" |
+                sed 's#  release/#  #'
+            )"
+            grep --fixed-strings --line-regexp -- \
+              "${expected_line}" \
+              release/checksums.sha256 >/dev/null
+          done
           chmod 755 release/sarif-regress-linux-x64
           release/sarif-regress-linux-x64 --help >/dev/null
           shopt -s nullglob
           package_files=(release/SarifRegress.Tool.*.nupkg)
           test "${#package_files[@]}" -eq 1
+          unzip -p "${package_files[0]}" LICENSE |
+            cmp --silent -- LICENSE -
+          unzip -p "${package_files[0]}" THIRD_PARTY_NOTICES.md |
+            cmp --silent -- THIRD_PARTY_NOTICES.md -
+          unzip -p \
+            "${package_files[0]}" \
+            notices/SYSTEM_COMMANDLINE_LICENSE.md |
+            cmp --silent -- notices/SYSTEM_COMMANDLINE_LICENSE.md -
           package_name="$(basename -- "${package_files[0]}")"
           package_version="${package_name#SarifRegress.Tool.}"
           package_version="${package_version%.nupkg}"
@@ -212,6 +345,10 @@ jobs:
             "${package_files[0]}" \
             "${installed_package_files[0]}"
           release-tool/sarif-regress --help >/dev/null
+          bash scripts/smoke-comparison.sh \
+            release/sarif-regress-linux-x64 \
+            release-tool/sarif-regress \
+            "${RUNNER_TEMP}/release-comparison-smoke"
 
       - name: Verify and execute exact Windows assets
         if: runner.os == 'Windows'
@@ -236,6 +373,38 @@ jobs:
             }
           }
 
+          $noticeSources = [ordered]@{
+            'DOTNET_RUNTIME_LICENSE.txt' = 'notices/DOTNET_RUNTIME_LICENSE.txt'
+            'DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt' = `
+              'notices/DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt'
+            'LICENSE' = 'LICENSE'
+            'SYSTEM_COMMANDLINE_LICENSE.md' = `
+              'notices/SYSTEM_COMMANDLINE_LICENSE.md'
+            'THIRD_PARTY_NOTICES.md' = 'THIRD_PARTY_NOTICES.md'
+          }
+          $checksumLines = @(Get-Content release/checksums.sha256)
+          foreach ($noticeName in $noticeSources.Keys) {
+            $sourceHash = (
+              Get-FileHash `
+                -LiteralPath $noticeSources[$noticeName] `
+                -Algorithm SHA256
+            ).Hash.ToLowerInvariant()
+            $releasePath = Join-Path release $noticeName
+            $releaseHash = (
+              Get-FileHash -LiteralPath $releasePath -Algorithm SHA256
+            ).Hash.ToLowerInvariant()
+            $sourceLength = (Get-Item -LiteralPath $noticeSources[$noticeName]).Length
+            $releaseLength = (Get-Item -LiteralPath $releasePath).Length
+            if ($releaseLength -ne $sourceLength -or $releaseHash -cne $sourceHash) {
+              throw "Release notice differs from its audited source: $noticeName"
+            }
+
+            $expectedLine = "$releaseHash  $noticeName"
+            if ($checksumLines -cnotcontains $expectedLine) {
+              throw "Release checksum manifest omits $noticeName."
+            }
+          }
+
           & .\release\sarif-regress-win-x64.exe --help | Out-Null
           if ($LASTEXITCODE -ne 0) {
             throw "The exact Windows release executable failed."
@@ -254,6 +423,54 @@ jobs:
           }
           if ($packageFiles.Count -ne 1 -or -not $packageMatch.Success) {
             throw 'Expected exactly one versioned .NET tool package.'
+          }
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $packageNoticeSources = [ordered]@{
+            'LICENSE' = 'LICENSE'
+            'THIRD_PARTY_NOTICES.md' = 'THIRD_PARTY_NOTICES.md'
+            'notices/SYSTEM_COMMANDLINE_LICENSE.md' = `
+              'notices/SYSTEM_COMMANDLINE_LICENSE.md'
+          }
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($packageFiles[0].FullName)
+          try {
+            foreach ($entryName in $packageNoticeSources.Keys) {
+              $entries = @(
+                $archive.Entries |
+                  Where-Object { $_.FullName -ceq $entryName }
+              )
+              if ($entries.Count -ne 1) {
+                throw "Expected one package entry named $entryName."
+              }
+
+              $entryStream = $entries[0].Open()
+              try {
+                $hasher = [System.Security.Cryptography.SHA256]::Create()
+                try {
+                  $entryHash = [System.BitConverter]::ToString(
+                    $hasher.ComputeHash($entryStream)
+                  ).Replace('-', '').ToLowerInvariant()
+                }
+                finally {
+                  $hasher.Dispose()
+                }
+              }
+              finally {
+                $entryStream.Dispose()
+              }
+
+              $sourcePath = $packageNoticeSources[$entryName]
+              $sourceHash = (
+                Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256
+              ).Hash.ToLowerInvariant()
+              $sourceLength = (Get-Item -LiteralPath $sourcePath).Length
+              if ($entries[0].Length -ne $sourceLength -or $entryHash -cne $sourceHash) {
+                throw "Package entry differs from its audited source: $entryName"
+              }
+            }
+          }
+          finally {
+            $archive.Dispose()
           }
 
           $packageVersion = $packageMatch.Groups[1].Value
@@ -300,6 +517,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "The exact installed .NET tool failed."
           }
+          .\scripts\smoke-comparison.ps1 `
+            -StandaloneExecutable .\release\sarif-regress-win-x64.exe `
+            -InstalledToolExecutable .\release-tool\sarif-regress.exe `
+            -OutputRoot (Join-Path `
+              $env:RUNNER_TEMP `
+              'release-comparison-smoke')
 
   create-release-draft:
     name: Create tagged GitHub release draft
@@ -307,6 +530,7 @@ jobs:
     needs:
       - cross-platform-determinism
       - package
+      - release-readiness
       - smoke-release-bundle
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -314,6 +538,13 @@ jobs:
       contents: write
 
     steps:
+      - name: Check out exact tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Download release bundle
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -343,6 +574,12 @@ jobs:
             echo "The release bundle has an invalid source commit." >&2
             exit 1
           fi
+          if [[ "$(git rev-parse HEAD)" != "${expected_commit}" ]]; then
+            echo "Release notes and bundle come from different commits." >&2
+            exit 1
+          fi
+          test -f docs/release-notes-v0.1.0.md
+          test ! -L docs/release-notes-v0.1.0.md
           read -r tag_object tag_type < <(
             gh api \
               "repos/${GH_REPO}/git/ref/tags/${GITHUB_REF_NAME}" \
@@ -369,16 +606,29 @@ jobs:
               >&2
             exit 1
           fi
+          release_flags=(
+            --draft
+            --verify-tag
+            --generate-notes
+            --notes-file docs/release-notes-v0.1.0.md
+            --title "SarifRegress ${GITHUB_REF_NAME}"
+          )
+          tag_without_build="${GITHUB_REF_NAME%%+*}"
+          if [[ "${tag_without_build}" == *-* ]]; then
+            release_flags+=(--prerelease)
+          fi
           gh release create \
             "${GITHUB_REF_NAME}" \
             release/*.nupkg \
             release/benchmark-*.json \
             release/corpus-report.json \
+            release/DOTNET_RUNTIME_LICENSE.txt \
+            release/DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt \
+            release/LICENSE \
+            release/SYSTEM_COMMANDLINE_LICENSE.md \
+            release/THIRD_PARTY_NOTICES.md \
             release/sarif-regress-linux-x64 \
             release/sarif-regress-win-x64.exe \
             release/source-commit.txt \
             release/checksums.sha256 \
-            --draft \
-            --verify-tag \
-            --generate-notes \
-            --title "SarifRegress ${GITHUB_REF_NAME}"
+            "${release_flags[@]}"

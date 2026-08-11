@@ -12,8 +12,52 @@ internal static class RepositoryFileHandleOpener
     private const int StreamBufferBytes = 16 * 1024;
 
     /// <summary>
-    /// Opens a regular repository file through the platform's handle-relative API.
+    /// Opens and retains a physical repository root through the platform's
+    /// component-relative API.
     /// </summary>
+    /// <param name="repositoryRoot">The lexically canonical approved root.</param>
+    /// <returns>A retained root capability or its classified failure.</returns>
+    public static RepositoryRootHandle OpenRoot(string repositoryRoot)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
+
+        try
+        {
+            if (OperatingSystem.IsLinux())
+            {
+                return CreateRootHandle(
+                    LinuxRepositoryFileOpener.OpenRoot(repositoryRoot),
+                    RepositoryRootPlatform.Linux);
+            }
+
+            if (OperatingSystem.IsWindows())
+            {
+                return CreateRootHandle(
+                    WindowsRepositoryFileOpener.OpenRoot(repositoryRoot),
+                    RepositoryRootPlatform.Windows);
+            }
+        }
+        catch (Exception exception)
+            when (exception is DllNotFoundException
+                or EntryPointNotFoundException
+                or MarshalDirectiveException
+                or PlatformNotSupportedException)
+        {
+            return RepositoryRootHandle.Failed(
+                RepositoryFileOpenFailure.SafetyUnavailable);
+        }
+
+        return RepositoryRootHandle.Failed(
+            RepositoryFileOpenFailure.SafetyUnavailable);
+    }
+
+    /// <summary>
+    /// Opens a regular repository file through a short-lived retained root.
+    /// </summary>
+    /// <remarks>
+    /// Production repository contexts retain the result of <see cref="OpenRoot"/>.
+    /// This convenience overload remains for focused native-open tests.
+    /// </remarks>
     /// <param name="repositoryRoot">The lexically canonical approved root.</param>
     /// <param name="repositoryRelativePath">
     /// A validated path relative to <paramref name="repositoryRoot"/>.
@@ -26,34 +70,8 @@ internal static class RepositoryFileHandleOpener
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRelativePath);
 
-        try
-        {
-            if (OperatingSystem.IsLinux())
-            {
-                return LinuxRepositoryFileOpener.Open(
-                    repositoryRoot,
-                    repositoryRelativePath);
-            }
-
-            if (OperatingSystem.IsWindows())
-            {
-                return WindowsRepositoryFileOpener.Open(
-                    repositoryRoot,
-                    repositoryRelativePath);
-            }
-        }
-        catch (Exception exception)
-            when (exception is DllNotFoundException
-                or EntryPointNotFoundException
-                or MarshalDirectiveException
-                or PlatformNotSupportedException)
-        {
-            return RepositoryFileOpenResult.Failed(
-                RepositoryFileOpenFailure.SafetyUnavailable);
-        }
-
-        return RepositoryFileOpenResult.Failed(
-            RepositoryFileOpenFailure.SafetyUnavailable);
+        using var retainedRoot = OpenRoot(repositoryRoot);
+        return retainedRoot.Open(repositoryRelativePath);
     }
 
     /// <summary>
@@ -95,6 +113,18 @@ internal static class RepositoryFileHandleOpener
             return RepositoryFileOpenResult.Failed(
                 RepositoryFileOpenFailure.IoError);
         }
+    }
+
+    private static RepositoryRootHandle CreateRootHandle(
+        RepositoryDirectoryOpenResult openResult,
+        RepositoryRootPlatform platform)
+    {
+        if (openResult.Handle is SafeFileHandle directoryHandle)
+        {
+            return RepositoryRootHandle.Succeeded(directoryHandle, platform);
+        }
+
+        return RepositoryRootHandle.Failed(openResult.Failure);
     }
 }
 
@@ -144,6 +174,166 @@ internal readonly record struct RepositoryFileOpenResult(
 }
 
 /// <summary>
+/// Owns the immutable physical directory capability used by one repository context.
+/// </summary>
+internal sealed class RepositoryRootHandle : IDisposable
+{
+    private readonly object lifetimeGate = new();
+    private readonly RepositoryRootPlatform platform;
+    private readonly RepositoryFileOpenFailure openFailure;
+    private SafeFileHandle? directoryHandle;
+    private bool disposed;
+
+    private RepositoryRootHandle(
+        SafeFileHandle? directoryHandle,
+        RepositoryRootPlatform platform,
+        RepositoryFileOpenFailure openFailure)
+    {
+        this.directoryHandle = directoryHandle;
+        this.platform = platform;
+        this.openFailure = openFailure;
+    }
+
+    /// <summary>
+    /// Creates a root capability that owns a validated directory handle.
+    /// </summary>
+    public static RepositoryRootHandle Succeeded(
+        SafeFileHandle directoryHandle,
+        RepositoryRootPlatform platform)
+    {
+        ArgumentNullException.ThrowIfNull(directoryHandle);
+        if (directoryHandle.IsInvalid)
+        {
+            throw new ArgumentException(
+                "A successful repository root requires a valid directory handle.",
+                nameof(directoryHandle));
+        }
+
+        if (platform is RepositoryRootPlatform.None)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(platform),
+                platform,
+                "A successful repository root requires a native platform.");
+        }
+
+        return new RepositoryRootHandle(
+            directoryHandle,
+            platform,
+            RepositoryFileOpenFailure.None);
+    }
+
+    /// <summary>
+    /// Creates a failed root capability whose reads preserve the native failure class.
+    /// </summary>
+    public static RepositoryRootHandle Failed(
+        RepositoryFileOpenFailure failure)
+    {
+        if (failure is RepositoryFileOpenFailure.None)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(failure),
+                failure,
+                "A failed repository root requires a failure classification.");
+        }
+
+        return new RepositoryRootHandle(
+            directoryHandle: null,
+            RepositoryRootPlatform.None,
+            failure);
+    }
+
+    /// <summary>
+    /// Opens one regular file relative to the retained physical directory.
+    /// </summary>
+    public RepositoryFileOpenResult Open(string repositoryRelativePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRelativePath);
+
+        lock (lifetimeGate)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            if (directoryHandle is not SafeFileHandle retainedDirectoryHandle)
+            {
+                return RepositoryFileOpenResult.Failed(openFailure);
+            }
+
+            return platform switch
+            {
+                RepositoryRootPlatform.Linux =>
+                    LinuxRepositoryFileOpener.OpenRelative(
+                        retainedDirectoryHandle,
+                        repositoryRelativePath),
+                RepositoryRootPlatform.Windows =>
+                    WindowsRepositoryFileOpener.OpenRelative(
+                        retainedDirectoryHandle,
+                        repositoryRelativePath),
+                _ => RepositoryFileOpenResult.Failed(
+                    RepositoryFileOpenFailure.SafetyUnavailable),
+            };
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        lock (lifetimeGate)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            directoryHandle?.Dispose();
+            directoryHandle = null;
+        }
+    }
+}
+
+/// <summary>
+/// Identifies the native relative-open implementation for a retained root.
+/// </summary>
+internal enum RepositoryRootPlatform
+{
+    None,
+    Linux,
+    Windows,
+}
+
+/// <summary>
+/// Carries either an owned physical directory handle or its stable failure class.
+/// </summary>
+internal readonly record struct RepositoryDirectoryOpenResult(
+    SafeFileHandle? Handle,
+    RepositoryFileOpenFailure Failure)
+{
+    /// <summary>
+    /// Creates a successful directory-open result.
+    /// </summary>
+    public static RepositoryDirectoryOpenResult Succeeded(
+        SafeFileHandle handle) =>
+        new(handle, RepositoryFileOpenFailure.None);
+
+    /// <summary>
+    /// Creates a failed directory-open result.
+    /// </summary>
+    public static RepositoryDirectoryOpenResult Failed(
+        RepositoryFileOpenFailure failure)
+    {
+        if (failure is RepositoryFileOpenFailure.None)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(failure),
+                failure,
+                "A failed directory open requires a failure classification.");
+        }
+
+        return new RepositoryDirectoryOpenResult(null, failure);
+    }
+}
+
+/// <summary>
 /// Linux implementation using an anchored directory descriptor and
 /// <c>openat2</c> resolution constraints.
 /// </summary>
@@ -179,14 +369,107 @@ internal static class LinuxRepositoryFileOpener
     private const int StatxBufferBytes = 256;
     private const int FileTypeMask = 0xF000;
     private const int RegularFileType = 0x8000;
+    private const int FileSystemStatusBufferBytes = 256;
+    internal const long AndrewFileSystemMagic = 0x5346_414F;
+    internal const long AndrewFileSystemKernelMagic = 0x6B41_4653;
+    internal const long CephFileSystemMagic = 0x00C3_6400;
+    internal const long CifsFileSystemMagic = 0xFF53_4D42;
+    internal const long CodaFileSystemMagic = 0x7375_7245;
+    internal const long FuseFileSystemMagic = 0x6573_5546;
+    internal const long NetworkControlProtocolMagic = 0x0000_564C;
+    internal const long NetworkFileSystemMagic = 0x0000_6969;
+    internal const long NinePFileSystemMagic = 0x0102_1997;
+    internal const long ProcFileSystemMagic = 0x0000_9FA0;
+    internal const long SmbFileSystemMagic = 0x0000_517B;
+    internal const long Smb2FileSystemMagic = 0xFE53_4D42;
+    internal const long SysFileSystemMagic = 0x6265_6572;
+
+    /// <summary>
+    /// Opens an absolute repository root one physical component at a time.
+    /// </summary>
+    /// <remarks>
+    /// Complexity: time O(D), space O(D), where D is the root path length.
+    /// </remarks>
+    public static RepositoryDirectoryOpenResult OpenRoot(string repositoryRoot)
+    {
+        if (RuntimeInformation.ProcessArchitecture is not
+            (Architecture.X64 or Architecture.Arm64))
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                RepositoryFileOpenFailure.SafetyUnavailable);
+        }
+
+        if (!Path.IsPathFullyQualified(repositoryRoot)
+            || repositoryRoot.StartsWith("//", StringComparison.Ordinal)
+            || IsDeviceNamespace(repositoryRoot))
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                RepositoryFileOpenFailure.UnsafePath);
+        }
+
+        var rootDescriptor = NativeOpen(
+            Path.DirectorySeparatorChar.ToString(),
+            OpenReadOnly |
+            OpenCloseOnExec |
+            OpenDirectory |
+            OpenNoFollow);
+        if (rootDescriptor < 0)
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                ClassifyError(Marshal.GetLastPInvokeError()));
+        }
+
+        SafeFileHandle? retainedDirectoryHandle = new SafeFileHandle(
+            (nint)rootDescriptor,
+            ownsHandle: true);
+        try
+        {
+            var segments = repositoryRoot.Split(
+                Path.DirectorySeparatorChar,
+                StringSplitOptions.RemoveEmptyEntries);
+            foreach (var segment in segments)
+            {
+                var directoryOpenResult = OpenRelativeDirectory(
+                    retainedDirectoryHandle,
+                    segment);
+                if (directoryOpenResult.Handle is not
+                    SafeFileHandle nextDirectoryHandle)
+                {
+                    return RepositoryDirectoryOpenResult.Failed(
+                        directoryOpenResult.Failure);
+                }
+
+                retainedDirectoryHandle.Dispose();
+                retainedDirectoryHandle = nextDirectoryHandle;
+            }
+
+            var fileSystemFailure = ValidateRepositoryFileSystem(
+                retainedDirectoryHandle);
+            if (fileSystemFailure is not RepositoryFileOpenFailure.None)
+            {
+                return RepositoryDirectoryOpenResult.Failed(
+                    fileSystemFailure);
+            }
+
+            var completedRootHandle = retainedDirectoryHandle;
+            retainedDirectoryHandle = null;
+            return RepositoryDirectoryOpenResult.Succeeded(
+                completedRootHandle);
+        }
+        finally
+        {
+            retainedDirectoryHandle?.Dispose();
+        }
+    }
 
     /// <summary>
     /// Opens a repository file without a pathname-check/open race.
     /// </summary>
-    public static RepositoryFileOpenResult Open(
-        string repositoryRoot,
+    public static RepositoryFileOpenResult OpenRelative(
+        SafeFileHandle rootHandle,
         string repositoryRelativePath)
     {
+        ArgumentNullException.ThrowIfNull(rootHandle);
         if (RuntimeInformation.ProcessArchitecture is not
             (Architecture.X64 or Architecture.Arm64))
         {
@@ -194,21 +477,6 @@ internal static class LinuxRepositoryFileOpener
                 RepositoryFileOpenFailure.SafetyUnavailable);
         }
 
-        var rootDescriptor = NativeOpen(
-            repositoryRoot,
-            OpenReadOnly |
-            OpenCloseOnExec |
-            OpenDirectory |
-            OpenNoFollow);
-        if (rootDescriptor < 0)
-        {
-            return RepositoryFileOpenResult.Failed(
-                ClassifyError(Marshal.GetLastPInvokeError()));
-        }
-
-        using var rootHandle = new SafeFileHandle(
-            (nint)rootDescriptor,
-            ownsHandle: true);
         var openHow = new OpenHow
         {
             Flags =
@@ -224,10 +492,11 @@ internal static class LinuxRepositoryFileOpener
         };
         var fileDescriptor = NativeOpenAt2(
             OpenAt2SystemCall,
-            rootDescriptor,
+            rootHandle.DangerousGetHandle().ToInt32(),
             repositoryRelativePath,
             ref openHow,
             (nuint)Marshal.SizeOf<OpenHow>());
+        GC.KeepAlive(rootHandle);
         if (fileDescriptor < 0)
         {
             return RepositoryFileOpenResult.Failed(
@@ -256,6 +525,93 @@ internal static class LinuxRepositoryFileOpener
             throw;
         }
     }
+
+    private static RepositoryDirectoryOpenResult OpenRelativeDirectory(
+        SafeFileHandle parentHandle,
+        string segment)
+    {
+        var openHow = new OpenHow
+        {
+            Flags =
+                OpenReadOnly |
+                OpenCloseOnExec |
+                OpenDirectory |
+                OpenNoFollow,
+            Resolve =
+                ResolveNoMagicLinks |
+                ResolveNoSymbolicLinks |
+                ResolveBeneath,
+        };
+        var directoryDescriptor = NativeOpenAt2(
+            OpenAt2SystemCall,
+            parentHandle.DangerousGetHandle().ToInt32(),
+            segment,
+            ref openHow,
+            (nuint)Marshal.SizeOf<OpenHow>());
+        GC.KeepAlive(parentHandle);
+        if (directoryDescriptor < 0)
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                ClassifyError(Marshal.GetLastPInvokeError()));
+        }
+
+        return RepositoryDirectoryOpenResult.Succeeded(
+            new SafeFileHandle(
+                (nint)directoryDescriptor,
+                ownsHandle: true));
+    }
+
+    private static RepositoryFileOpenFailure ValidateRepositoryFileSystem(
+        SafeFileHandle directoryHandle)
+    {
+        var fileSystemStatus = Marshal.AllocHGlobal(
+            FileSystemStatusBufferBytes);
+        try
+        {
+            var status = NativeFileSystemStatus(
+                directoryHandle.DangerousGetHandle().ToInt32(),
+                fileSystemStatus);
+            GC.KeepAlive(directoryHandle);
+            if (status < 0)
+            {
+                return RepositoryFileOpenFailure.SafetyUnavailable;
+            }
+
+            var fileSystemType = Marshal.ReadInt64(fileSystemStatus);
+            return IsUnsafeFileSystem(fileSystemType)
+                ? RepositoryFileOpenFailure.UnsafePath
+                : RepositoryFileOpenFailure.None;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(fileSystemStatus);
+        }
+    }
+
+    private static bool IsDeviceNamespace(string repositoryRoot) =>
+        string.Equals(
+            repositoryRoot,
+            "/dev",
+            StringComparison.Ordinal)
+        || repositoryRoot.StartsWith(
+            "/dev/",
+            StringComparison.Ordinal);
+
+    internal static bool IsUnsafeFileSystem(long fileSystemType) =>
+        fileSystemType is
+            AndrewFileSystemMagic or
+            AndrewFileSystemKernelMagic or
+            CephFileSystemMagic or
+            CifsFileSystemMagic or
+            CodaFileSystemMagic or
+            FuseFileSystemMagic or
+            NetworkControlProtocolMagic or
+            NetworkFileSystemMagic or
+            NinePFileSystemMagic or
+            ProcFileSystemMagic or
+            SmbFileSystemMagic or
+            Smb2FileSystemMagic or
+            SysFileSystemMagic;
 
     /// <summary>
     /// Maps Linux errors without weakening an unavailable containment primitive.
@@ -340,6 +696,14 @@ internal static class LinuxRepositoryFileOpener
 
     [DllImport(
         "libc",
+        EntryPoint = "fstatfs",
+        SetLastError = true)]
+    private static extern int NativeFileSystemStatus(
+        int fileDescriptor,
+        nint fileSystemStatus);
+
+    [DllImport(
+        "libc",
         EntryPoint = "syscall",
         SetLastError = true,
         CharSet = CharSet.Ansi)]
@@ -420,36 +784,116 @@ internal static class WindowsRepositoryFileOpener
     private const uint ObjectCaseInsensitive = 0x0000_0040;
     private const uint Synchronize = 0x0010_0000;
     private const int FileAttributeTagInfoClass = 9;
+    private const uint DriveUnknown = 0;
+    private const uint DriveNoRootDirectory = 1;
+    private const uint DriveRemote = 4;
 
     /// <summary>
-    /// Opens a repository file without following any relative-path reparse point.
+    /// Opens a local drive repository root one physical component at a time.
     /// </summary>
-    public static RepositoryFileOpenResult Open(
-        string repositoryRoot,
-        string repositoryRelativePath)
+    /// <remarks>
+    /// Complexity: time O(D), space O(D), where D is the root path length.
+    /// </remarks>
+    public static RepositoryDirectoryOpenResult OpenRoot(string repositoryRoot)
     {
-        using var rootHandle = CreateFile(
-            repositoryRoot,
+        if (!TryGetLocalDriveRoot(repositoryRoot, out var driveRoot))
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                RepositoryFileOpenFailure.UnsafePath);
+        }
+
+        var driveType = GetDriveType(driveRoot);
+        if (driveType is DriveRemote)
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                RepositoryFileOpenFailure.UnsafePath);
+        }
+
+        if (driveType is DriveNoRootDirectory)
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                RepositoryFileOpenFailure.NotFound);
+        }
+
+        if (driveType is DriveUnknown)
+        {
+            return RepositoryDirectoryOpenResult.Failed(
+                RepositoryFileOpenFailure.SafetyUnavailable);
+        }
+
+        SafeFileHandle? retainedDirectoryHandle = CreateFile(
+            driveRoot,
             FileTraverse | FileReadAttributes | Synchronize,
             FileShareRead | FileShareWrite | FileShareDelete,
             nint.Zero,
             FileOpenExisting,
             FileFlagBackupSemantics | FileFlagOpenReparsePoint,
             nint.Zero);
-        if (rootHandle.IsInvalid)
+        if (retainedDirectoryHandle.IsInvalid)
         {
-            return RepositoryFileOpenResult.Failed(
-                ClassifyError(Marshal.GetLastPInvokeError()));
+            var nativeError = Marshal.GetLastPInvokeError();
+            retainedDirectoryHandle.Dispose();
+            return RepositoryDirectoryOpenResult.Failed(
+                ClassifyError(nativeError));
         }
 
-        var rootFailure = ValidateDirectory(rootHandle);
-        if (rootFailure is not RepositoryFileOpenFailure.None)
+        try
         {
-            return RepositoryFileOpenResult.Failed(
-                rootFailure);
-        }
+            var driveRootFailure = ValidateDirectory(
+                retainedDirectoryHandle);
+            if (driveRootFailure is not RepositoryFileOpenFailure.None)
+            {
+                return RepositoryDirectoryOpenResult.Failed(
+                    driveRootFailure);
+            }
 
-        return OpenRelative(rootHandle, repositoryRelativePath);
+            var relativeRoot = repositoryRoot[driveRoot.Length..];
+            var segments = relativeRoot.Split(
+                new[] { '\\', '/' },
+                StringSplitOptions.RemoveEmptyEntries);
+            foreach (var segment in segments)
+            {
+                var directoryOpenFailure = OpenRelativeHandle(
+                    retainedDirectoryHandle,
+                    segment,
+                    FileTraverse | FileReadAttributes | Synchronize,
+                    FileShareRead | FileShareWrite | FileShareDelete,
+                    FileOpenReparsePoint |
+                        FileSynchronousIoNonAlert,
+                    out var directoryHandle);
+                if (directoryOpenFailure is not
+                    RepositoryFileOpenFailure.None)
+                {
+                    return RepositoryDirectoryOpenResult.Failed(
+                        directoryOpenFailure);
+                }
+
+                var nextDirectoryHandle = directoryHandle
+                    ?? throw new InvalidOperationException(
+                        "A successful relative directory open must return a handle.");
+                var directoryValidationFailure = ValidateDirectory(
+                    nextDirectoryHandle);
+                if (directoryValidationFailure is not
+                    RepositoryFileOpenFailure.None)
+                {
+                    nextDirectoryHandle.Dispose();
+                    return RepositoryDirectoryOpenResult.Failed(
+                        directoryValidationFailure);
+                }
+
+                retainedDirectoryHandle.Dispose();
+                retainedDirectoryHandle = nextDirectoryHandle;
+            }
+
+            var completedRootHandle = retainedDirectoryHandle;
+            retainedDirectoryHandle = null;
+            return RepositoryDirectoryOpenResult.Succeeded(
+                completedRootHandle);
+        }
+        finally
+        {
+            retainedDirectoryHandle?.Dispose();
+        }
     }
 
     /// <summary>
@@ -496,10 +940,14 @@ internal static class WindowsRepositoryFileOpener
         return ClassifyError(convertedError);
     }
 
-    private static RepositoryFileOpenResult OpenRelative(
+    /// <summary>
+    /// Opens a repository file without following any relative-path reparse point.
+    /// </summary>
+    public static RepositoryFileOpenResult OpenRelative(
         SafeFileHandle rootHandle,
         string repositoryRelativePath)
     {
+        ArgumentNullException.ThrowIfNull(rootHandle);
         var segments = repositoryRelativePath.Split(
             new[] { '\\', '/' },
             StringSplitOptions.None);
@@ -610,6 +1058,31 @@ internal static class WindowsRepositoryFileOpener
         }
     }
 
+    private static bool TryGetLocalDriveRoot(
+        string repositoryRoot,
+        out string driveRoot)
+    {
+        driveRoot = string.Empty;
+        if (!Path.IsPathFullyQualified(repositoryRoot)
+            || repositoryRoot.StartsWith("\\\\", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var pathRoot = Path.GetPathRoot(repositoryRoot);
+        if (pathRoot is null
+            || pathRoot.Length != 3
+            || !char.IsAsciiLetter(pathRoot[0])
+            || pathRoot[1] != Path.VolumeSeparatorChar
+            || pathRoot[2] is not ('\\' or '/'))
+        {
+            return false;
+        }
+
+        driveRoot = pathRoot;
+        return true;
+    }
+
     private static RepositoryFileOpenFailure OpenRelativeHandle(
         SafeFileHandle parentHandle,
         string segment,
@@ -701,6 +1174,12 @@ internal static class WindowsRepositoryFileOpener
         uint creationDisposition,
         uint flagsAndAttributes,
         nint templateFile);
+
+    [DllImport(
+        "kernel32.dll",
+        EntryPoint = "GetDriveTypeW",
+        CharSet = CharSet.Unicode)]
+    private static extern uint GetDriveType(string rootPathName);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

@@ -16,7 +16,8 @@ public sealed record RepositoryContextResult(
 /// <summary>
 /// Supplies bounded, read-only source evidence without exposing filesystem access to the core.
 /// </summary>
-public interface IRepositoryContext
+/// <remarks>The creator owns and disposes each repository context.</remarks>
+public interface IRepositoryContext : IDisposable
 {
     /// <summary>
     /// Reads a bounded source window around a one-based region.

@@ -76,10 +76,11 @@ internal sealed class ValidateCommandHandler
                 return ExitCodes.CommandOrInputError;
             }
 
+            using var repositoryContextLifetime = repositoryContext.Context;
             var ingestion = await ValidateCommandSupport.IngestAsync(
                     resolved.InputPath,
                     configuration,
-                    repositoryContext.Context,
+                    repositoryContextLifetime,
                     cancellationToken)
                 .ConfigureAwait(false);
             var compatibilityDiagnostics = new GithubCompatibilityChecker()

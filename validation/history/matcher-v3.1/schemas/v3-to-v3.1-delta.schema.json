@@ -1,0 +1,507 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/v3-to-v3.1-delta.schema.json",
+  "title": "SarifRegress matcher-v3 to matcher-v3.1 holdout delta",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportKind",
+    "inputHashes",
+    "matcherV3",
+    "matcherV31",
+    "algorithmVersionChanges",
+    "correspondenceIdentity",
+    "classificationMismatchChanges",
+    "cases",
+    "relationships",
+    "newlyIntroducedFalseMatches",
+    "ambiguityChanges",
+    "ingestionSuccessChanges",
+    "remainingFailures",
+    "changedDecisionCount",
+    "changedDecisionTraceCount",
+    "changedDecisionWithoutTraceCount",
+    "changedDecisionsWithoutTrace",
+    "everyChangedDecisionHasTrace"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "reportKind": {
+      "const": "matcher-v3-to-v3.1-delta"
+    },
+    "inputHashes": {
+      "$ref": "#/$defs/inputHashes"
+    },
+    "matcherV3": {
+      "$ref": "#/$defs/matcherSnapshot"
+    },
+    "matcherV31": {
+      "$ref": "#/$defs/matcherSnapshot"
+    },
+    "algorithmVersionChanges": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/algorithmVersionChange"
+      }
+    },
+    "correspondenceIdentity": {
+      "$ref": "#/$defs/correspondenceIdentityDelta"
+    },
+    "classificationMismatchChanges": {
+      "$ref": "#/$defs/classificationMismatchDelta"
+    },
+    "cases": {
+      "$ref": "#/$defs/caseDelta"
+    },
+    "relationships": {
+      "$ref": "#/$defs/relationshipDelta"
+    },
+    "newlyIntroducedFalseMatches": {
+      "$ref": "#/$defs/relationshipReferences"
+    },
+    "ambiguityChanges": {
+      "$ref": "#/$defs/ambiguityDelta"
+    },
+    "ingestionSuccessChanges": {
+      "$ref": "#/$defs/ingestionDelta"
+    },
+    "remainingFailures": {
+      "$ref": "#/$defs/relationshipReferences"
+    },
+    "changedDecisionCount": {
+      "$ref": "#/$defs/count"
+    },
+    "changedDecisionTraceCount": {
+      "$ref": "#/$defs/count"
+    },
+    "changedDecisionWithoutTraceCount": {
+      "$ref": "#/$defs/count"
+    },
+    "changedDecisionsWithoutTrace": {
+      "$ref": "#/$defs/relationshipReferences"
+    },
+    "everyChangedDecisionHasTrace": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitCommitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?![vV]?[lL][aA][tT][eE][sS][tT]$)(?!.*[ *xX^~><=|])[0-9A-Za-z][0-9A-Za-z._+-]*$"
+    },
+    "algorithmVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+/-]*$"
+    },
+    "schemaVersionValue": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[0-9]+(?:\\.[0-9]+)*$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "nullableAlgorithmVersion": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/algorithmVersion"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inputHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherV3HistoryChecksumManifestSha256",
+        "matcherV3ReportSha256",
+        "matcherV31ReportSha256",
+        "holdoutManifestSha256"
+      ],
+      "properties": {
+        "matcherV3HistoryChecksumManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "matcherV3ReportSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "matcherV31ReportSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "holdoutManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "namedAlgorithm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "version": {
+          "$ref": "#/$defs/algorithmVersion"
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryCommitSha",
+        "sourceTreeSha256",
+        "sarifRegressToolVersion",
+        "matcherAlgorithmVersion",
+        "fingerprintAlgorithmVersions",
+        "outputSchemaVersion",
+        "configurationSchemaVersion",
+        "holdoutManifestSha256"
+      ],
+      "properties": {
+        "repositoryCommitSha": {
+          "$ref": "#/$defs/gitCommitSha"
+        },
+        "sourceTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "sarifRegressToolVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "matcherAlgorithmVersion": {
+          "$ref": "#/$defs/algorithmVersion"
+        },
+        "fingerprintAlgorithmVersions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/namedAlgorithm"
+          }
+        },
+        "outputSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "configurationSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "holdoutManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groundTruthUnits",
+        "labelledRelationships",
+        "labelledMatches",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "classificationMismatches",
+        "expectedNewClassifications",
+        "newClassifications",
+        "correctNewClassifications",
+        "incorrectNewClassifications",
+        "newClassificationAccuracy",
+        "expectedResolvedClassifications",
+        "resolvedClassifications",
+        "correctResolvedClassifications",
+        "incorrectResolvedClassifications",
+        "resolvedClassificationAccuracy",
+        "ambiguousClassifications",
+        "correctAmbiguityRefusals",
+        "unexpectedAmbiguityRefusals",
+        "incorrectlyAutoMatchedAmbiguousCases",
+        "ingestionFailures",
+        "structuralFailures",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "groundTruthUnits": { "$ref": "#/$defs/count" },
+        "labelledRelationships": { "$ref": "#/$defs/count" },
+        "labelledMatches": { "$ref": "#/$defs/count" },
+        "truePositives": { "$ref": "#/$defs/count" },
+        "falsePositives": { "$ref": "#/$defs/count" },
+        "falseNegatives": { "$ref": "#/$defs/count" },
+        "classificationMismatches": { "$ref": "#/$defs/count" },
+        "expectedNewClassifications": { "$ref": "#/$defs/count" },
+        "newClassifications": { "$ref": "#/$defs/count" },
+        "correctNewClassifications": { "$ref": "#/$defs/count" },
+        "incorrectNewClassifications": { "$ref": "#/$defs/count" },
+        "newClassificationAccuracy": { "$ref": "#/$defs/ratio" },
+        "expectedResolvedClassifications": { "$ref": "#/$defs/count" },
+        "resolvedClassifications": { "$ref": "#/$defs/count" },
+        "correctResolvedClassifications": { "$ref": "#/$defs/count" },
+        "incorrectResolvedClassifications": { "$ref": "#/$defs/count" },
+        "resolvedClassificationAccuracy": { "$ref": "#/$defs/ratio" },
+        "ambiguousClassifications": { "$ref": "#/$defs/count" },
+        "correctAmbiguityRefusals": { "$ref": "#/$defs/count" },
+        "unexpectedAmbiguityRefusals": { "$ref": "#/$defs/count" },
+        "incorrectlyAutoMatchedAmbiguousCases": { "$ref": "#/$defs/count" },
+        "ingestionFailures": { "$ref": "#/$defs/count" },
+        "structuralFailures": { "$ref": "#/$defs/count" },
+        "precision": { "$ref": "#/$defs/ratio" },
+        "recall": { "$ref": "#/$defs/ratio" },
+        "f1": { "$ref": "#/$defs/ratio" }
+      }
+    },
+    "producerMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerId",
+        "metrics"
+      ],
+      "properties": {
+        "producerId": { "$ref": "#/$defs/identifier" },
+        "metrics": { "$ref": "#/$defs/metrics" }
+      }
+    },
+    "matcherSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluation",
+        "aggregate",
+        "producers"
+      ],
+      "properties": {
+        "evaluation": { "$ref": "#/$defs/evaluation" },
+        "aggregate": { "$ref": "#/$defs/metrics" },
+        "producers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/producerMetrics" }
+        }
+      }
+    },
+    "algorithmVersionChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "matcherV3Version",
+        "matcherV31Version",
+        "changed"
+      ],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "matcherV3Version": { "$ref": "#/$defs/nullableAlgorithmVersion" },
+        "matcherV31Version": { "$ref": "#/$defs/nullableAlgorithmVersion" },
+        "changed": { "type": "boolean" }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "truePositives",
+        "falsePositives",
+        "falseNegatives"
+      ],
+      "properties": {
+        "truePositives": { "$ref": "#/$defs/count" },
+        "falsePositives": { "$ref": "#/$defs/count" },
+        "falseNegatives": { "$ref": "#/$defs/count" }
+      }
+    },
+    "correspondenceIdentityDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherV3",
+        "matcherV31",
+        "unchanged"
+      ],
+      "properties": {
+        "matcherV3": { "$ref": "#/$defs/identity" },
+        "matcherV31": { "$ref": "#/$defs/identity" },
+        "unchanged": { "type": "boolean" }
+      }
+    },
+    "caseReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "producerId"
+      ],
+      "properties": {
+        "caseId": { "$ref": "#/$defs/identifier" },
+        "producerId": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "caseReferences": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/caseReference" }
+    },
+    "relationshipReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "producerId",
+        "relationshipId",
+        "matcherV3Outcome",
+        "matcherV31Outcome",
+        "matcherV3State",
+        "matcherV31State"
+      ],
+      "properties": {
+        "caseId": { "$ref": "#/$defs/identifier" },
+        "producerId": { "$ref": "#/$defs/identifier" },
+        "relationshipId": { "$ref": "#/$defs/identifier" },
+        "matcherV3Outcome": { "$ref": "#/$defs/identifier" },
+        "matcherV31Outcome": { "$ref": "#/$defs/identifier" },
+        "matcherV3State": { "$ref": "#/$defs/identifier" },
+        "matcherV31State": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "relationshipReferences": {
+      "type": "array",
+      "maxItems": 100000,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/relationshipReference" }
+    },
+    "caseDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixed",
+        "regressed",
+        "stillFailing"
+      ],
+      "properties": {
+        "fixed": { "$ref": "#/$defs/caseReferences" },
+        "regressed": { "$ref": "#/$defs/caseReferences" },
+        "stillFailing": { "$ref": "#/$defs/caseReferences" }
+      }
+    },
+    "relationshipDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixed",
+        "regressed",
+        "stillFailing"
+      ],
+      "properties": {
+        "fixed": { "$ref": "#/$defs/relationshipReferences" },
+        "regressed": { "$ref": "#/$defs/relationshipReferences" },
+        "stillFailing": { "$ref": "#/$defs/relationshipReferences" }
+      }
+    },
+    "classificationMismatchDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherV3Count",
+        "matcherV31Count",
+        "fixed",
+        "introduced"
+      ],
+      "properties": {
+        "matcherV3Count": { "$ref": "#/$defs/count" },
+        "matcherV31Count": { "$ref": "#/$defs/count" },
+        "fixed": { "$ref": "#/$defs/relationshipReferences" },
+        "introduced": { "$ref": "#/$defs/relationshipReferences" }
+      }
+    },
+    "ambiguityDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherV3CorrectRefusals",
+        "matcherV31CorrectRefusals",
+        "matcherV3UnexpectedRefusals",
+        "matcherV31UnexpectedRefusals",
+        "matcherV3IncorrectAutoMatches",
+        "matcherV31IncorrectAutoMatches",
+        "fixed",
+        "regressed",
+        "stillFailing",
+        "unexpectedRefusalsResolved",
+        "unexpectedRefusalsIntroduced"
+      ],
+      "properties": {
+        "matcherV3CorrectRefusals": { "$ref": "#/$defs/count" },
+        "matcherV31CorrectRefusals": { "$ref": "#/$defs/count" },
+        "matcherV3UnexpectedRefusals": { "$ref": "#/$defs/count" },
+        "matcherV31UnexpectedRefusals": { "$ref": "#/$defs/count" },
+        "matcherV3IncorrectAutoMatches": { "$ref": "#/$defs/count" },
+        "matcherV31IncorrectAutoMatches": { "$ref": "#/$defs/count" },
+        "fixed": { "$ref": "#/$defs/relationshipReferences" },
+        "regressed": { "$ref": "#/$defs/relationshipReferences" },
+        "stillFailing": { "$ref": "#/$defs/relationshipReferences" },
+        "unexpectedRefusalsResolved": { "$ref": "#/$defs/relationshipReferences" },
+        "unexpectedRefusalsIntroduced": { "$ref": "#/$defs/relationshipReferences" }
+      }
+    },
+    "ingestionDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherV3Failures",
+        "matcherV31Failures",
+        "newlySuccessful",
+        "newlyFailed",
+        "stillFailing"
+      ],
+      "properties": {
+        "matcherV3Failures": { "$ref": "#/$defs/count" },
+        "matcherV31Failures": { "$ref": "#/$defs/count" },
+        "newlySuccessful": { "$ref": "#/$defs/caseReferences" },
+        "newlyFailed": { "$ref": "#/$defs/caseReferences" },
+        "stillFailing": { "$ref": "#/$defs/caseReferences" }
+      }
+    }
+  }
+}

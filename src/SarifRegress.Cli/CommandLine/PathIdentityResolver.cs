@@ -41,6 +41,49 @@ internal static class PathIdentityResolver
     public static string ResolveInputIdentity(string path) =>
         ResolveExistingComponents(Path.GetFullPath(path));
 
+    /// <summary>
+    /// Determines whether an output path would create or replace an entry
+    /// below an input directory, including through an aliased parent.
+    /// </summary>
+    public static bool IsOutputWithinInputDirectory(
+        string outputPath,
+        string inputDirectoryPath)
+    {
+        var fullOutputPath = Path.GetFullPath(outputPath);
+        var fullInputDirectoryPath = Path.GetFullPath(inputDirectoryPath);
+        if (IsWithinDirectory(fullOutputPath, fullInputDirectoryPath))
+        {
+            return true;
+        }
+
+        return IsWithinDirectory(
+            ResolveOutputIdentity(fullOutputPath),
+            ResolveInputIdentity(fullInputDirectoryPath));
+    }
+
+    // Time: O(D), where D is the number of path segments. Space: O(D).
+    private static bool IsWithinDirectory(
+        string candidatePath,
+        string directoryPath)
+    {
+        string relativePath = Path.GetRelativePath(
+            directoryPath,
+            candidatePath);
+        if (string.Equals(relativePath, ".", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return !Path.IsPathRooted(relativePath)
+            && !string.Equals(relativePath, "..", StringComparison.Ordinal)
+            && !relativePath.StartsWith(
+                ".." + Path.DirectorySeparatorChar,
+                StringComparison.Ordinal)
+            && !relativePath.StartsWith(
+                ".." + Path.AltDirectorySeparatorChar,
+                StringComparison.Ordinal);
+    }
+
     private static string ResolveExistingComponents(string path)
     {
         var fullPath = Path.GetFullPath(path);

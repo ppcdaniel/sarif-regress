@@ -1,0 +1,745 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolConfigurationNotifications": [],
+          "toolExecutionNotifications": []
+        }
+      ],
+      "results": [
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/AmbiguousCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 4,
+                  "startColumn": 9,
+                  "startLine": 4
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "partialFingerprints": {
+            "holdout/controlledFingerprint/v1": "pmd-ambiguous-shared"
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/AmbiguousCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 6,
+                  "startColumn": 9,
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "partialFingerprints": {
+            "holdout/controlledFingerprint/v1": "pmd-ambiguous-shared"
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/NewCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 4,
+                  "startColumn": 9,
+                  "startLine": 4
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/NewCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 6,
+                  "startColumn": 9,
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/NewCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 8,
+                  "startColumn": 9,
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 4,
+                  "startColumn": 9,
+                  "startLine": 4
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 6,
+                  "startColumn": 9,
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 8,
+                  "startColumn": 9,
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 10,
+                  "startColumn": 9,
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 12,
+                  "startColumn": 9,
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 17,
+                  "startColumn": 9,
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead. [controlled candidate wording change]"
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 19,
+                  "startColumn": 9,
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead. [controlled candidate wording change]"
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 21,
+                  "startColumn": 9,
+                  "startLine": 21
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead. [controlled candidate wording change]"
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 23,
+                  "startColumn": 9,
+                  "startLine": 23
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead. [controlled candidate wording change]"
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 25,
+                  "startColumn": 9,
+                  "startLine": 25
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead. [controlled candidate wording change]"
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 34,
+                  "startColumn": 9,
+                  "startLine": 34
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 36,
+                  "startColumn": 9,
+                  "startLine": 36
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 38,
+                  "startColumn": 9,
+                  "startLine": 38
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 40,
+                  "startColumn": 9,
+                  "startLine": 40
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 42,
+                  "startColumn": 9,
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 48,
+                  "startColumn": 9,
+                  "startLine": 48
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 52,
+                  "startColumn": 9,
+                  "startLine": 52
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 57,
+                  "startColumn": 9,
+                  "startLine": 57
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 63,
+                  "startColumn": 9,
+                  "startLine": 63
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///C:/sarif-regress-holdout/pmd/candidate/src/StableCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 70,
+                  "startColumn": 9,
+                  "startLine": 70
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-new/RenamedCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 4,
+                  "startColumn": 9,
+                  "startLine": 4
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-new/RenamedCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 6,
+                  "startColumn": 9,
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-new/RenamedCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 8,
+                  "startColumn": 9,
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-new/RenamedCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 10,
+                  "startColumn": 9,
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/renamed-new/RenamedCases.java"
+                },
+                "region": {
+                  "endColumn": 36,
+                  "endLine": 12,
+                  "startColumn": 9,
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0
+        }
+      ],
+      "tool": {
+        "driver": {
+          "informationUri": "https://docs.pmd-code.org/latest/",
+          "name": "PMD",
+          "rules": [
+            {
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "fullDescription": {
+                "text": "\nAvoid printStackTrace(); use a logger call instead.\n        "
+              },
+              "help": {
+                "text": "\nAvoid printStackTrace(); use a logger call instead.\n        "
+              },
+              "helpUri": "https://docs.pmd-code.org/snapshot/pmd_rules_java_bestpractices.html#avoidprintstacktrace",
+              "id": "AvoidPrintStackTrace",
+              "properties": {
+                "priority": 3,
+                "ruleset": "Best Practices",
+                "tags": [
+                  "Best Practices"
+                ]
+              },
+              "shortDescription": {
+                "text": "Avoid printStackTrace(); use a logger call instead."
+              }
+            }
+          ],
+          "version": "7.26.0+holdout-candidate-projection"
+        }
+      }
+    }
+  ],
+  "version": "2.1.0"
+}

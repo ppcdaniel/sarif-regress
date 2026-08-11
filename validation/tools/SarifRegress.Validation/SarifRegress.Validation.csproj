@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>SarifRegress.Validation</AssemblyName>
+    <RootNamespace>SarifRegress.Validation</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SarifRegress.Validation.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/SarifRegress.Cli/SarifRegress.Cli.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reuse the frozen product's audited openat2/NtCreateFile containment primitive. -->
+    <Compile Include="../../../src/SarifRegress.Sarif/Repository/RepositoryFileHandleOpener.cs"
+             Link="Security/RepositoryFileHandleOpener.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset
+  xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+  name="Sparse SARIF research rules">
+  <description>
+    Local PMD 7.26.0 rule selection for source-only sparse SARIF research.
+  </description>
+  <rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace"/>
+</ruleset>

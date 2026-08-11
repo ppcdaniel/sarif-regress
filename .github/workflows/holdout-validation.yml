@@ -1,0 +1,2313 @@
+name: Independent holdout validation
+
+on:
+  workflow_call:
+    outputs:
+      artifact_id:
+        description: Exact holdout-cross-platform artifact ID from this run
+        value: ${{ jobs.compare.outputs.artifact_id }}
+      artifact_digest:
+        description: SHA-256 digest of the holdout-cross-platform artifact archive
+        value: ${{ jobs.compare.outputs.artifact_digest }}
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - '.config/dotnet-tools.json'
+      - '.github/workflows/**'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'SarifRegress.slnx'
+      - 'corpus/schema/**'
+      - 'scripts/verify.ps1'
+      - 'scripts/verify.sh'
+      - 'scripts/validate-holdout.ps1'
+      - 'scripts/validate-holdout.sh'
+      - 'schemas/**'
+      - 'src/**'
+      - 'tests/SarifRegress.ValidationTests/**'
+      - 'validation/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Raw PMD bytes and runner-environment evidence remain workflow artifacts.
+  # Stable projections/audits are committed and compared byte-for-byte; raw
+  # hashes are cross-bound through the manifest and audits. The dynamic capture
+  # environment and aggregate artifact checksum are verified, not compared to
+  # committed bytes, because source SHA and runner image version vary per run.
+  sparse-admission:
+    name: Admit research corpus (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ubuntu
+            os: ubuntu-24.04
+            python: '3.12.13'
+          - label: windows
+            os: windows-2025
+            # Python 3.12.13 has no Windows x64 binary in setup-python's
+            # manifest. Keep the capture runtime at 3.12.13 on Ubuntu and pin
+            # this cross-platform admission check to the final Windows-binary
+            # 3.12 patch instead.
+            python: '3.12.10'
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact Python runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Test and apply complete contamination admission
+        shell: bash
+        env:
+          EXPECTED_PYTHON_VERSION: ${{ matrix.python }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python -B - <<'PY'
+          import os
+          import platform
+
+          expected = os.environ["EXPECTED_PYTHON_VERSION"]
+          if platform.python_version() != expected:
+              raise SystemExit(
+                  f"Expected Python {expected}, got {platform.python_version()}."
+              )
+          PY
+          python -B \
+            validation/research/sparse-sarif/tools/test_scan_contamination.py \
+            -v
+          python -B \
+            validation/research/sparse-sarif/tools/test_refresh_sparse_manifests.py \
+            -v
+          python -B \
+            validation/research/sparse-sarif/tools/refresh_sparse_manifests.py \
+            --check
+          python -B \
+            validation/research/sparse-sarif/tools/test_project_release_evidence.py \
+            -v
+          python -B \
+            validation/tools/release/test_verify_release_gate.py \
+            -v
+          python -B \
+            validation/tools/test_detect_matcher_v32_evidence_stage.py \
+            -v
+          python -B \
+            validation/research/sparse-sarif/tools/scan_contamination.py \
+            --research-root validation/research/sparse-sarif
+          python -B - <<'PY'
+          from pathlib import Path
+
+          root = Path("validation/research/sparse-sarif/tools")
+          prohibited = sorted(root.rglob("__pycache__"))
+          prohibited.extend(sorted(root.rglob("*.pyc")))
+          prohibited.extend(sorted(root.rglob("*.pyo")))
+          if prohibited:
+              raise SystemExit(f"Python bytecode output is prohibited: {prohibited[0]}")
+          PY
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+  sparse-capture:
+    name: Recapture and verify authentic PMD research SARIF
+    needs: sparse-admission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      artifact_id: ${{ steps.upload-sparse-evidence.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-sparse-evidence.outputs.artifact-digest }}
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact Python runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Revalidate promoted corpus before producer setup
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python3 -B \
+            validation/research/sparse-sarif/tools/scan_contamination.py \
+            --research-root validation/research/sparse-sarif
+
+      - name: Install exact Java runtime
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '17.0.19+10'
+
+      - name: Verify capture tools statically
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          bash -n validation/research/sparse-sarif/tools/capture_pmd.sh
+          python3 -B - <<'PY'
+          from pathlib import Path
+
+          root = Path("validation/research/sparse-sarif/tools")
+          names = (
+              "project_pmd_sarif.py",
+              "verify_pmd_capture.py",
+              "test_pmd_capture_tools.py",
+          )
+          for name in names:
+              path = root / name
+              compile(path.read_bytes(), str(path), "exec")
+          PY
+          (
+            cd validation/research/sparse-sarif/tools
+            python3 -B test_pmd_capture_tools.py -v
+          )
+          if find validation/research/sparse-sarif/tools \
+            \( -type d -name __pycache__ -o -type f -name '*.py[co]' \) \
+            -print -quit | grep -q .; then
+            echo 'Python bytecode output is prohibited.' >&2
+            exit 1
+          fi
+
+      - name: Capture and verify authentic PMD SARIF
+        shell: bash
+        env:
+          CAPTURE_OUTPUT_ROOT: ${{ runner.temp }}/sparse-sarif-pmd-capture
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          test "${ImageOS:-}" = 'ubuntu24'
+          [[ "${ImageVersion:-}" =~ ^[0-9]{8}\.[0-9]+\.[0-9]+$ ]]
+          ./validation/research/sparse-sarif/tools/capture_pmd.sh \
+            --output-root "${CAPTURE_OUTPUT_ROOT}" \
+            --source-sha "${EXPECTED_SOURCE_SHA}"
+          if find validation/research/sparse-sarif/tools \
+            \( -type d -name __pycache__ -o -type f -name '*.py[co]' \) \
+            -print -quit | grep -q .; then
+            echo 'Python bytecode output is prohibited.' >&2
+            exit 1
+          fi
+
+      - name: Verify post-capture source integrity
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Upload raw and projected capture evidence
+        id: upload-sparse-evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-sarif-pmd-capture-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/sparse-sarif-pmd-capture
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Compare staged evidence with promoted corpus
+        shell: bash
+        env:
+          CAPTURE_OUTPUT_ROOT: ${{ runner.temp }}/sparse-sarif-pmd-capture
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python3 -B \
+            validation/research/sparse-sarif/tools/verify_pmd_capture.py \
+            verify-promotion \
+            --research-root validation/research/sparse-sarif \
+            --capture-root "${CAPTURE_OUTPUT_ROOT}"
+
+  recapture-attestation:
+    name: Authenticate uploaded exact-head PMD recapture
+    needs: sparse-capture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact Python runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Download exact uploaded artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.sparse-capture.outputs.artifact_id }}
+          path: ${{ runner.temp }}/exact-head-pmd-capture
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Authenticate uploaded artifact metadata and content
+        shell: bash
+        env:
+          ARTIFACT_DIGEST: ${{ needs.sparse-capture.outputs.artifact_digest }}
+          ARTIFACT_ID: ${{ needs.sparse-capture.outputs.artifact_id }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RECAPTURE_ROOT: ${{ runner.temp }}/exact-head-pmd-capture
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          [[ "${ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          readonly artifact_name="sparse-sarif-pmd-capture-${EXPECTED_SOURCE_SHA}"
+          readonly metadata_path="${RUNNER_TEMP}/exact-head-pmd-artifact.json"
+          curl \
+            --disable \
+            --fail-with-body \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --location \
+            --proto '=https' \
+            --show-error \
+            --silent \
+            --tlsv1.2 \
+            --output "${metadata_path}" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}"
+          jq -e \
+            --arg artifact_id "${ARTIFACT_ID}" \
+            --arg artifact_name "${artifact_name}" \
+            --arg artifact_digest "sha256:${ARTIFACT_DIGEST}" \
+            --arg run_id "${GITHUB_RUN_ID}" \
+            --arg source_sha "${EXPECTED_SOURCE_SHA}" \
+            '(.id | tostring) == $artifact_id and
+             .name == $artifact_name and
+             .digest == $artifact_digest and
+             .expired == false and
+             (.workflow_run.id | tostring) == $run_id and
+             .workflow_run.head_sha == $source_sha' \
+            "${metadata_path}" >/dev/null
+          python3 -B \
+            validation/research/sparse-sarif/tools/verify_pmd_capture.py \
+            verify-promotion \
+            --research-root validation/research/sparse-sarif \
+            --capture-root "${RECAPTURE_ROOT}"
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+  sparse-experiment-linux:
+    name: Generate sparse-SARIF experiment candidate (Linux)
+    needs: sparse-admission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      artifact_id: ${{ steps.upload-sparse-experiment-linux.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-sparse-experiment-linux.outputs.artifact-digest }}
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore and build validation harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly validation_project='validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          dotnet restore "${validation_project}" --locked-mode
+          dotnet build \
+            "${validation_project}" \
+            --configuration Release \
+            --no-restore
+
+      - name: Generate two byte-identical sparse experiment candidates
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SPARSE_CANDIDATE_ROOT: ${{ runner.temp }}/sparse-experiment-linux-candidate
+          SPARSE_WORK_ROOT: ${{ runner.temp }}/sparse-experiment-linux-work
+        run: |
+          set -euo pipefail
+          readonly validation_project='validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          readonly observations_name='sparse-experiment-observations.json'
+          readonly gate_evidence_name='sparse-experiment-gate-evidence.json'
+
+          create_empty_root() {
+            local root="$1"
+            test ! -e "${root}"
+            mkdir -p -- "${root}"
+            test -d "${root}"
+            test ! -L "${root}"
+            test -z "$(find "${root}" -mindepth 1 -maxdepth 1 -print -quit)"
+          }
+
+          assert_only_file() {
+            local root="$1"
+            local expected_name="$2"
+            mapfile -t entries < <(
+              find "${root}" -mindepth 1 -maxdepth 1 -printf '%f\n' |
+                LC_ALL=C sort
+            )
+            if [[ "${#entries[@]}" -ne 1 || "${entries[0]}" != "${expected_name}" ]]; then
+              echo "Unexpected output below ${root}." >&2
+              exit 1
+            fi
+            test -f "${root}/${expected_name}"
+            test ! -L "${root}/${expected_name}"
+            test -s "${root}/${expected_name}"
+          }
+
+          test ! -e "${SPARSE_WORK_ROOT}"
+          mkdir -p -- "${SPARSE_WORK_ROOT}"
+          for run_id in 1 2; do
+            observations_root="${SPARSE_WORK_ROOT}/run-${run_id}-observations"
+            evaluation_root="${SPARSE_WORK_ROOT}/run-${run_id}-evaluation"
+            create_empty_root "${observations_root}"
+            create_empty_root "${evaluation_root}"
+
+            dotnet run \
+              --project "${validation_project}" \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              sparse-run \
+              --repository-root "${GITHUB_WORKSPACE}" \
+              --output-root "${observations_root}"
+            assert_only_file "${observations_root}" "${observations_name}"
+
+            dotnet run \
+              --project "${validation_project}" \
+              --configuration Release \
+              --no-build \
+              --no-restore \
+              -- \
+              sparse-evaluate \
+              --repository-root "${GITHUB_WORKSPACE}" \
+              --output-root "${evaluation_root}" \
+              --observations "${observations_root}/${observations_name}"
+            assert_only_file "${evaluation_root}" "${gate_evidence_name}"
+          done
+
+          cmp --silent -- \
+            "${SPARSE_WORK_ROOT}/run-1-observations/${observations_name}" \
+            "${SPARSE_WORK_ROOT}/run-2-observations/${observations_name}"
+          cmp --silent -- \
+            "${SPARSE_WORK_ROOT}/run-1-evaluation/${gate_evidence_name}" \
+            "${SPARSE_WORK_ROOT}/run-2-evaluation/${gate_evidence_name}"
+
+          create_empty_root "${SPARSE_CANDIDATE_ROOT}"
+          cp -- \
+            "${SPARSE_WORK_ROOT}/run-1-observations/${observations_name}" \
+            "${SPARSE_CANDIDATE_ROOT}/${observations_name}"
+          cp -- \
+            "${SPARSE_WORK_ROOT}/run-1-evaluation/${gate_evidence_name}" \
+            "${SPARSE_CANDIDATE_ROOT}/${gate_evidence_name}"
+          mapfile -t candidate_files < <(
+            find "${SPARSE_CANDIDATE_ROOT}" \
+              -mindepth 1 \
+              -maxdepth 1 \
+              -printf '%f\n' |
+              LC_ALL=C sort
+          )
+          expected_files=("${gate_evidence_name}" "${observations_name}")
+          test "${#candidate_files[@]}" -eq 2
+          test "${candidate_files[*]}" = "${expected_files[*]}"
+          for name in "${expected_files[@]}"; do
+            test -f "${SPARSE_CANDIDATE_ROOT}/${name}"
+            test ! -L "${SPARSE_CANDIDATE_ROOT}/${name}"
+            test -s "${SPARSE_CANDIDATE_ROOT}/${name}"
+          done
+
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Upload Linux sparse experiment candidate
+        id: upload-sparse-experiment-linux
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-experiment-linux-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/sparse-experiment-linux-candidate
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+  sparse-experiment-windows:
+    name: Generate sparse-SARIF experiment candidate (Windows)
+    needs: sparse-admission
+    runs-on: windows-2025
+    timeout-minutes: 30
+    outputs:
+      artifact_id: ${{ steps.upload-sparse-experiment-windows.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-sparse-experiment-windows.outputs.artifact-digest }}
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore and build validation harness
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $validationProject = 'validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          & dotnet restore $validationProject --locked-mode
+          if ($LASTEXITCODE -ne 0) {
+            throw "Locked validation restore failed with exit code $LASTEXITCODE."
+          }
+          & dotnet build `
+            $validationProject `
+            --configuration Release `
+            --no-restore
+          if ($LASTEXITCODE -ne 0) {
+            throw "Validation build failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Generate two byte-identical sparse experiment candidates
+        shell: pwsh
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SPARSE_CANDIDATE_ROOT: ${{ runner.temp }}/sparse-experiment-windows-candidate
+          SPARSE_WORK_ROOT: ${{ runner.temp }}/sparse-experiment-windows-work
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $validationProject = 'validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj'
+          $observationsName = 'sparse-experiment-observations.json'
+          $gateEvidenceName = 'sparse-experiment-gate-evidence.json'
+
+          function New-EmptyExperimentDirectory {
+            param([Parameter(Mandatory = $true)][string] $Path)
+
+            if (Test-Path -LiteralPath $Path) {
+              throw "Experiment output path already exists: $Path"
+            }
+            $directory = [System.IO.Directory]::CreateDirectory($Path)
+            if (($directory.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+              throw "Experiment output path is a reparse point: $Path"
+            }
+            if ([System.IO.Directory]::EnumerateFileSystemEntries($Path).GetEnumerator().MoveNext()) {
+              throw "Experiment output path is not empty: $Path"
+            }
+          }
+
+          function Assert-OnlyExperimentFile {
+            param(
+              [Parameter(Mandatory = $true)][string] $Root,
+              [Parameter(Mandatory = $true)][string] $ExpectedName
+            )
+
+            $entries = @([System.IO.Directory]::EnumerateFileSystemEntries($Root))
+            if ($entries.Count -ne 1) {
+              throw "Unexpected output count below $Root."
+            }
+            $entry = Get-Item -LiteralPath $entries[0] -Force
+            if (
+              $entry.Name -cne $ExpectedName -or
+              $entry.PSIsContainer -or
+              ($entry.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 -or
+              $entry.Length -le 0
+            ) {
+              throw "Unexpected output below $Root."
+            }
+          }
+
+          function Invoke-ValidationHarness {
+            param([Parameter(Mandatory = $true)][string[]] $CommandArguments)
+
+            & dotnet @CommandArguments
+            if ($LASTEXITCODE -ne 0) {
+              throw "Validation harness failed with exit code $LASTEXITCODE."
+            }
+          }
+
+          function Assert-ByteIdentical {
+            param(
+              [Parameter(Mandatory = $true)][string] $Left,
+              [Parameter(Mandatory = $true)][string] $Right
+            )
+
+            $leftBytes = [System.IO.File]::ReadAllBytes($Left)
+            $rightBytes = [System.IO.File]::ReadAllBytes($Right)
+            if ($leftBytes.Length -ne $rightBytes.Length) {
+              throw "Experiment outputs differ in length."
+            }
+            for ($index = 0; $index -lt $leftBytes.Length; $index++) {
+              if ($leftBytes[$index] -ne $rightBytes[$index]) {
+                throw "Experiment outputs differ at byte $index."
+              }
+            }
+          }
+
+          if (Test-Path -LiteralPath $env:SPARSE_WORK_ROOT) {
+            throw "Experiment work root already exists."
+          }
+          [System.IO.Directory]::CreateDirectory($env:SPARSE_WORK_ROOT) | Out-Null
+          foreach ($runId in @(1, 2)) {
+            $observationsRoot = Join-Path `
+              $env:SPARSE_WORK_ROOT `
+              "run-$runId-observations"
+            $evaluationRoot = Join-Path `
+              $env:SPARSE_WORK_ROOT `
+              "run-$runId-evaluation"
+            New-EmptyExperimentDirectory -Path $observationsRoot
+            New-EmptyExperimentDirectory -Path $evaluationRoot
+
+            Invoke-ValidationHarness -CommandArguments @(
+              'run',
+              '--project', $validationProject,
+              '--configuration', 'Release',
+              '--no-build',
+              '--no-restore',
+              '--',
+              'sparse-run',
+              '--repository-root', $env:GITHUB_WORKSPACE,
+              '--output-root', $observationsRoot
+            )
+            Assert-OnlyExperimentFile `
+              -Root $observationsRoot `
+              -ExpectedName $observationsName
+
+            Invoke-ValidationHarness -CommandArguments @(
+              'run',
+              '--project', $validationProject,
+              '--configuration', 'Release',
+              '--no-build',
+              '--no-restore',
+              '--',
+              'sparse-evaluate',
+              '--repository-root', $env:GITHUB_WORKSPACE,
+              '--output-root', $evaluationRoot,
+              '--observations', (Join-Path $observationsRoot $observationsName)
+            )
+            Assert-OnlyExperimentFile `
+              -Root $evaluationRoot `
+              -ExpectedName $gateEvidenceName
+          }
+
+          Assert-ByteIdentical `
+            -Left (Join-Path $env:SPARSE_WORK_ROOT "run-1-observations/$observationsName") `
+            -Right (Join-Path $env:SPARSE_WORK_ROOT "run-2-observations/$observationsName")
+          Assert-ByteIdentical `
+            -Left (Join-Path $env:SPARSE_WORK_ROOT "run-1-evaluation/$gateEvidenceName") `
+            -Right (Join-Path $env:SPARSE_WORK_ROOT "run-2-evaluation/$gateEvidenceName")
+
+          New-EmptyExperimentDirectory -Path $env:SPARSE_CANDIDATE_ROOT
+          Copy-Item `
+            -LiteralPath (Join-Path $env:SPARSE_WORK_ROOT "run-1-observations/$observationsName") `
+            -Destination (Join-Path $env:SPARSE_CANDIDATE_ROOT $observationsName)
+          Copy-Item `
+            -LiteralPath (Join-Path $env:SPARSE_WORK_ROOT "run-1-evaluation/$gateEvidenceName") `
+            -Destination (Join-Path $env:SPARSE_CANDIDATE_ROOT $gateEvidenceName)
+          $candidateEntries = @(
+            Get-ChildItem -LiteralPath $env:SPARSE_CANDIDATE_ROOT -Force |
+              Sort-Object -Property Name -CaseSensitive
+          )
+          $expectedNames = @($gateEvidenceName, $observationsName)
+          if ($candidateEntries.Count -ne $expectedNames.Count) {
+            throw 'Sparse experiment candidate does not contain exactly two files.'
+          }
+          for ($index = 0; $index -lt $expectedNames.Count; $index++) {
+            $entry = $candidateEntries[$index]
+            if (
+              $entry.Name -cne $expectedNames[$index] -or
+              $entry.PSIsContainer -or
+              ($entry.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 -or
+              $entry.Length -le 0
+            ) {
+              throw 'Sparse experiment candidate contains an unexpected entry.'
+            }
+          }
+
+          $actualSourceSha = (& git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $actualSourceSha -cne $env:EXPECTED_SOURCE_SHA) {
+            throw 'Exact source commit changed during sparse experiment generation.'
+          }
+          $status = & git status --porcelain=v1 --untracked-files=all
+          if ($LASTEXITCODE -ne 0 -or $status) {
+            throw 'Sparse experiment generation modified the worktree.'
+          }
+
+      - name: Upload Windows sparse experiment candidate
+        id: upload-sparse-experiment-windows
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-experiment-windows-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/sparse-experiment-windows-candidate
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+  sparse-experiment-compare:
+    name: Authenticate and compare sparse experiment candidates
+    needs:
+      - sparse-experiment-linux
+      - sparse-experiment-windows
+      - recapture-attestation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+
+    steps:
+      - name: Check out exact pull-request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Install exact provenance serializer runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Download exact Linux candidate by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.sparse-experiment-linux.outputs.artifact_id }}
+          path: ${{ runner.temp }}/sparse-experiment-download/linux
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Download exact Windows candidate by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.sparse-experiment-windows.outputs.artifact_id }}
+          path: ${{ runner.temp }}/sparse-experiment-download/windows
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Authenticate artifacts and compare exact bytes
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          LINUX_ARTIFACT_DIGEST: ${{ needs.sparse-experiment-linux.outputs.artifact_digest }}
+          LINUX_ARTIFACT_ID: ${{ needs.sparse-experiment-linux.outputs.artifact_id }}
+          SPARSE_DOWNLOAD_ROOT: ${{ runner.temp }}/sparse-experiment-download
+          SPARSE_VERIFIED_ROOT: ${{ runner.temp }}/sparse-experiment-verified
+          WINDOWS_ARTIFACT_DIGEST: ${{ needs.sparse-experiment-windows.outputs.artifact_digest }}
+          WINDOWS_ARTIFACT_ID: ${{ needs.sparse-experiment-windows.outputs.artifact_id }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${LINUX_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${WINDOWS_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${LINUX_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          [[ "${WINDOWS_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          test "${LINUX_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${WINDOWS_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${LINUX_ARTIFACT_ID}" != "${WINDOWS_ARTIFACT_ID}"
+
+          authenticate_artifact() {
+            local label="$1"
+            local artifact_id="$2"
+            local artifact_digest="$3"
+            local artifact_name="sparse-experiment-${label}-${EXPECTED_SOURCE_SHA}"
+            local metadata_path="${RUNNER_TEMP}/sparse-experiment-${label}-artifact.json"
+            curl \
+              --disable \
+              --fail-with-body \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              --location \
+              --proto '=https' \
+              --show-error \
+              --silent \
+              --tlsv1.2 \
+              --output "${metadata_path}" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
+            jq -e \
+              --arg artifact_id "${artifact_id}" \
+              --arg artifact_name "${artifact_name}" \
+              --arg artifact_digest "sha256:${artifact_digest}" \
+              --arg run_id "${GITHUB_RUN_ID}" \
+              --arg source_sha "${EXPECTED_SOURCE_SHA}" \
+              '(.id | tostring) == $artifact_id and
+               .name == $artifact_name and
+               .digest == $artifact_digest and
+               .expired == false and
+               (.workflow_run.id | tostring) == $run_id and
+               .workflow_run.head_sha == $source_sha' \
+              "${metadata_path}" >/dev/null
+          }
+
+          assert_candidate_root() {
+            local root="$1"
+            mapfile -t entries < <(
+              find "${root}" -mindepth 1 -maxdepth 1 -printf '%f\n' |
+                LC_ALL=C sort
+            )
+            expected=(
+              'sparse-experiment-gate-evidence.json'
+              'sparse-experiment-observations.json'
+            )
+            test "${#entries[@]}" -eq 2
+            test "${entries[*]}" = "${expected[*]}"
+            for name in "${expected[@]}"; do
+              test -f "${root}/${name}"
+              test ! -L "${root}/${name}"
+              test -s "${root}/${name}"
+            done
+          }
+
+          authenticate_artifact \
+            linux \
+            "${LINUX_ARTIFACT_ID}" \
+            "${LINUX_ARTIFACT_DIGEST}"
+          authenticate_artifact \
+            windows \
+            "${WINDOWS_ARTIFACT_ID}" \
+            "${WINDOWS_ARTIFACT_DIGEST}"
+
+          readonly linux_root="${SPARSE_DOWNLOAD_ROOT}/linux"
+          readonly windows_root="${SPARSE_DOWNLOAD_ROOT}/windows"
+          assert_candidate_root "${linux_root}"
+          assert_candidate_root "${windows_root}"
+          readonly candidate_root="${SPARSE_VERIFIED_ROOT}/candidate"
+          test ! -e "${SPARSE_VERIFIED_ROOT}"
+          mkdir -p -- "${candidate_root}"
+          for name in \
+            sparse-experiment-gate-evidence.json \
+            sparse-experiment-observations.json
+          do
+            cmp --silent -- "${linux_root}/${name}" "${windows_root}/${name}"
+            cp -- "${linux_root}/${name}" "${candidate_root}/${name}"
+          done
+          assert_candidate_root "${candidate_root}"
+
+          export EXPECTED_SOURCE_SHA
+          export LINUX_ARTIFACT_DIGEST
+          export LINUX_ARTIFACT_ID
+          export SPARSE_VERIFIED_ROOT
+          export WINDOWS_ARTIFACT_DIGEST
+          export WINDOWS_ARTIFACT_ID
+          export PYTHONDONTWRITEBYTECODE='1'
+          export PYTHONNOUSERSITE='1'
+          unset PYTHONPATH || true
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+
+          positive_decimal = re.compile(r"[1-9][0-9]*")
+          sha256 = re.compile(r"[0-9a-f]{64}")
+          commit = re.compile(r"[0-9a-f]{40}")
+
+          def required_decimal(name, maximum=9_007_199_254_740_991):
+              value = os.environ[name]
+              if positive_decimal.fullmatch(value) is None:
+                  raise SystemExit(f"{name} is not a positive decimal integer.")
+              parsed = int(value)
+              if parsed > maximum:
+                  raise SystemExit(f"{name} exceeds its permitted range.")
+              return parsed
+
+          def required_sha256(name):
+              value = os.environ[name]
+              if sha256.fullmatch(value) is None or set(value) == {"0"}:
+                  raise SystemExit(f"{name} is not a nonzero lowercase SHA-256.")
+              return value
+
+          head = os.environ["EXPECTED_SOURCE_SHA"]
+          if commit.fullmatch(head) is None:
+              raise SystemExit("EXPECTED_SOURCE_SHA is not a lowercase commit SHA.")
+          run_id = required_decimal("GITHUB_RUN_ID")
+          run_attempt = required_decimal("GITHUB_RUN_ATTEMPT", maximum=1000)
+          linux_id = required_decimal("LINUX_ARTIFACT_ID")
+          windows_id = required_decimal("WINDOWS_ARTIFACT_ID")
+          if linux_id == windows_id:
+              raise SystemExit("Linux and Windows evidence reused one artifact ID.")
+
+          root = pathlib.Path(os.environ["SPARSE_VERIFIED_ROOT"])
+          candidate = root / "candidate"
+          outputs = {}
+          for name in (
+              "sparse-experiment-gate-evidence.json",
+              "sparse-experiment-observations.json",
+          ):
+              payload = (candidate / name).read_bytes()
+              if not payload or len(payload) > 64 * 1024 * 1024:
+                  raise SystemExit(f"Candidate output {name!r} has an invalid size.")
+              outputs[name] = hashlib.sha256(payload).hexdigest()
+
+          provenance = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-workflow-provenance/v1",
+              "repository": "ppcdaniel/sarif-regress",
+              "workflowPath": ".github/workflows/holdout-validation.yml",
+              "workflowRunId": run_id,
+              "workflowRunAttempt": run_attempt,
+              "workflowHeadSha": head,
+              "artifacts": {
+                  "linux": {
+                      "name": f"sparse-experiment-linux-{head}",
+                      "artifactId": linux_id,
+                      "archiveSha256": required_sha256("LINUX_ARTIFACT_DIGEST"),
+                  },
+                  "windows": {
+                      "name": f"sparse-experiment-windows-{head}",
+                      "artifactId": windows_id,
+                      "archiveSha256": required_sha256("WINDOWS_ARTIFACT_DIGEST"),
+                  },
+              },
+              "outputs": outputs,
+              "repeatedRunByteIdentical": True,
+              "linuxWindowsByteIdentical": True,
+          }
+          (root / "sparse-experiment-workflow-provenance.json").write_bytes(
+              (json.dumps(provenance, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+          )
+          PY
+
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Upload authenticated sparse experiment candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-experiment-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/sparse-experiment-verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Verify committed sparse experiment evidence
+        shell: bash
+        env:
+          SPARSE_VERIFIED_ROOT: ${{ runner.temp }}/sparse-experiment-verified
+        run: |
+          set -euo pipefail
+          readonly candidate_root="${SPARSE_VERIFIED_ROOT}/candidate"
+          readonly expected_root="${GITHUB_WORKSPACE}/validation/research/sparse-sarif/expected"
+          for name in \
+            sparse-experiment-gate-evidence.json \
+            sparse-experiment-observations.json
+          do
+            cmp --silent -- "${candidate_root}/${name}" "${expected_root}/${name}"
+          done
+
+  linux:
+    name: Evaluate committed holdout (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
+      candidate_artifact_id: ${{ steps.upload-bootstrap-evidence.outputs.artifact-id || steps.upload-finalization-evidence.outputs.artifact-id }}
+      candidate_artifact_digest: ${{ steps.upload-bootstrap-evidence.outputs.artifact-digest || steps.upload-finalization-evidence.outputs.artifact-digest }}
+      mode: ${{ steps.matcher-mode.outputs.mode }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Install Multitool runtime
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.423
+
+      - name: Install projection verifier runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Detect committed matcher bootstrap state
+        id: matcher-mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode="$(python3 -B validation/tools/detect_matcher_v32_evidence_stage.py \
+            --repository-root "${GITHUB_WORKSPACE}")"
+          case "${mode}" in
+            stage1|stage2|normal) ;;
+            *) echo "Unknown matcher-v3.2 evidence mode '${mode}'." >&2; exit 1 ;;
+          esac
+          echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare exact-head matcher-v3.2 bootstrap metadata
+        if: ${{ steps.matcher-mode.outputs.mode == 'stage1' }}
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          python validation/tools/bootstrap_matcher_v32_metadata.py \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --source-sha "${EXPECTED_SOURCE_SHA}"
+
+      - name: Restore locked dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet restore SarifRegress.slnx --locked-mode
+
+      - name: Verify repository
+        if: ${{ steps.matcher-mode.outputs.mode == 'normal' }}
+        shell: bash
+        run: ./scripts/verify.sh
+
+      - name: Verify bootstrap product code
+        if: ${{ steps.matcher-mode.outputs.mode != 'normal' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet format SarifRegress.slnx --no-restore --verify-no-changes
+          dotnet build SarifRegress.slnx \
+            --configuration Release \
+            --no-restore \
+            --warnaserror
+          dotnet test tests/SarifRegress.UnitTests/SarifRegress.UnitTests.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore
+          dotnet test \
+            tests/SarifRegress.ValidationTests/SarifRegress.ValidationTests.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            --filter 'FullyQualifiedName!~TrackedOutputTests'
+
+      - name: Evaluate holdout
+        id: holdout-evaluation
+        continue-on-error: ${{ steps.matcher-mode.outputs.mode != 'normal' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd -- "${RUNNER_TEMP}"
+          "${GITHUB_WORKSPACE}/scripts/validate-holdout.sh"
+
+      - name: Record development corpus evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run \
+            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            -- \
+            corpus run \
+            --corpus corpus \
+            --json-out artifacts/holdout-validation/development-corpus-report.json
+
+      - name: Stage exact-head bootstrap metadata
+        if: ${{ steps.matcher-mode.outputs.mode != 'normal' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -- \
+            validation/holdout/evaluation-metadata.json \
+            artifacts/holdout-validation/evaluation-metadata.json
+
+      - name: Upload Linux evaluation evidence
+        id: upload-evidence
+        if: ${{ steps.matcher-mode.outputs.mode == 'normal' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-linux
+          path: artifacts/holdout-validation
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Verify fail-closed Linux candidate completeness
+        id: verify-bootstrap-candidate
+        if: ${{ steps.matcher-mode.outputs.mode != 'normal' && steps.holdout-evaluation.outcome == 'failure' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t entries < <(
+            find artifacts/holdout-validation -mindepth 1 -maxdepth 1 -printf '%f\n' |
+              LC_ALL=C sort
+          )
+          expected=(
+            'checksums.sha256'
+            'comparison-summary.json'
+            'development-corpus-report.json'
+            'evaluation-metadata.json'
+            'raw'
+            'sarif-multitool-baseline.json'
+            'sarif-regress-holdout.json'
+            'v3.1-to-v3.2-delta.json'
+          )
+          test "${entries[*]}" = "${expected[*]}"
+          for name in "${expected[@]}"; do test -s "artifacts/holdout-validation/${name}" || test -d "artifacts/holdout-validation/${name}"; done
+
+      - name: Upload fail-closed Linux matcher-v3.2 candidate
+        id: upload-bootstrap-evidence
+        if: ${{ steps.matcher-mode.outputs.mode == 'stage1' && steps.verify-bootstrap-candidate.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-v3.2-candidate-linux-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/holdout-validation
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Upload fail-closed Linux finalization candidate
+        id: upload-finalization-evidence
+        if: ${{ steps.matcher-mode.outputs.mode == 'stage2' && steps.verify-bootstrap-candidate.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-v3.2-final-candidate-linux-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/holdout-validation
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+  windows:
+    name: Evaluate committed holdout (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    outputs:
+      artifact_id: ${{ steps.upload-evidence.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-evidence.outputs.artifact-digest }}
+      candidate_artifact_id: ${{ steps.upload-bootstrap-evidence.outputs.artifact-id || steps.upload-finalization-evidence.outputs.artifact-id }}
+      candidate_artifact_digest: ${{ steps.upload-bootstrap-evidence.outputs.artifact-digest || steps.upload-finalization-evidence.outputs.artifact-digest }}
+      mode: ${{ steps.matcher-mode.outputs.mode }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Install Multitool runtime
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.423
+
+      - name: Install projection verifier runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Detect committed matcher bootstrap state
+        id: matcher-mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode="$(python -B validation/tools/detect_matcher_v32_evidence_stage.py \
+            --repository-root "${GITHUB_WORKSPACE}")"
+          case "${mode}" in
+            stage1|stage2|normal) ;;
+            *) echo "Unknown matcher-v3.2 evidence mode '${mode}'." >&2; exit 1 ;;
+          esac
+          echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare exact-head matcher-v3.2 bootstrap metadata
+        if: ${{ steps.matcher-mode.outputs.mode == 'stage1' }}
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          python validation/tools/bootstrap_matcher_v32_metadata.py \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --source-sha "${EXPECTED_SOURCE_SHA}"
+
+      - name: Restore locked dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet restore SarifRegress.slnx --locked-mode
+          if ($LASTEXITCODE -ne 0) {
+            throw "Locked solution restore failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Verify repository
+        if: ${{ steps.matcher-mode.outputs.mode == 'normal' }}
+        shell: pwsh
+        run: .\scripts\verify.ps1
+
+      - name: Verify bootstrap product code
+        if: ${{ steps.matcher-mode.outputs.mode != 'normal' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & dotnet format SarifRegress.slnx --no-restore --verify-no-changes
+          if ($LASTEXITCODE -ne 0) { throw 'Bootstrap format verification failed.' }
+          & dotnet build SarifRegress.slnx `
+            --configuration Release `
+            --no-restore `
+            --warnaserror
+          if ($LASTEXITCODE -ne 0) { throw 'Bootstrap build failed.' }
+          & dotnet test tests/SarifRegress.UnitTests/SarifRegress.UnitTests.csproj `
+            --configuration Release `
+            --no-build `
+            --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Bootstrap unit tests failed.' }
+          & dotnet test `
+            tests/SarifRegress.ValidationTests/SarifRegress.ValidationTests.csproj `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            --filter 'FullyQualifiedName!~TrackedOutputTests'
+          if ($LASTEXITCODE -ne 0) { throw 'Bootstrap validation tests failed.' }
+
+      - name: Evaluate holdout
+        id: holdout-evaluation
+        continue-on-error: ${{ steps.matcher-mode.outputs.mode != 'normal' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Push-Location -LiteralPath $env:RUNNER_TEMP
+          try {
+            & (Join-Path $env:GITHUB_WORKSPACE 'scripts/validate-holdout.ps1')
+          }
+          finally {
+            Pop-Location
+          }
+
+      - name: Record development corpus evidence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & dotnet run `
+            --project src/SarifRegress.Cli/SarifRegress.Cli.csproj `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            -- `
+            corpus run `
+            --corpus corpus `
+            --json-out artifacts/holdout-validation/development-corpus-report.json
+          if ($LASTEXITCODE -ne 0) {
+            throw "Development corpus failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Stage exact-head bootstrap metadata
+        if: ${{ steps.matcher-mode.outputs.mode != 'normal' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Copy-Item -LiteralPath validation/holdout/evaluation-metadata.json `
+            -Destination artifacts/holdout-validation/evaluation-metadata.json
+
+      - name: Upload Windows evaluation evidence
+        id: upload-evidence
+        if: ${{ steps.matcher-mode.outputs.mode == 'normal' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-windows
+          path: artifacts/holdout-validation
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Verify fail-closed Windows candidate completeness
+        id: verify-bootstrap-candidate
+        if: ${{ steps.matcher-mode.outputs.mode != 'normal' && steps.holdout-evaluation.outcome == 'failure' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = @(
+            'checksums.sha256',
+            'comparison-summary.json',
+            'development-corpus-report.json',
+            'evaluation-metadata.json',
+            'raw',
+            'sarif-multitool-baseline.json',
+            'sarif-regress-holdout.json',
+            'v3.1-to-v3.2-delta.json'
+          )
+          $entries = @(
+            Get-ChildItem -LiteralPath artifacts/holdout-validation |
+              Sort-Object -Property Name |
+              ForEach-Object Name
+          )
+          if (Compare-Object -ReferenceObject $expected -DifferenceObject $entries -SyncWindow 0) {
+            throw 'The Windows bootstrap candidate is incomplete or has extra files.'
+          }
+
+      - name: Upload fail-closed Windows matcher-v3.2 candidate
+        id: upload-bootstrap-evidence
+        if: ${{ steps.matcher-mode.outputs.mode == 'stage1' && steps.verify-bootstrap-candidate.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-v3.2-candidate-windows-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/holdout-validation
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Upload fail-closed Windows finalization candidate
+        id: upload-finalization-evidence
+        if: ${{ steps.matcher-mode.outputs.mode == 'stage2' && steps.verify-bootstrap-candidate.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-v3.2-final-candidate-windows-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/holdout-validation
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+  evidence-mode:
+    name: Verify matcher-v3.2 evidence mode
+    needs:
+      - linux
+      - windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require identical fail-closed mode on both operating systems
+        shell: bash
+        env:
+          LINUX_MODE: ${{ needs.linux.outputs.mode }}
+          WINDOWS_MODE: ${{ needs.windows.outputs.mode }}
+        run: |
+          set -euo pipefail
+          case "${LINUX_MODE}" in stage1|stage2|normal) ;; *) exit 1 ;; esac
+          test "${LINUX_MODE}" = "${WINDOWS_MODE}"
+
+  bootstrap-compare:
+    name: Compare Linux and Windows normalized bytes
+    if: ${{ needs.linux.outputs.mode != 'normal' }}
+    needs:
+      - evidence-mode
+      - linux
+      - windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out exact source commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_SOURCE_SHA}"
+
+      - name: Install attestation serializer runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Download exact Linux bootstrap candidate by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.linux.outputs.candidate_artifact_id }}
+          path: artifacts/bootstrap/linux
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Download exact Windows bootstrap candidate by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.windows.outputs.candidate_artifact_id }}
+          path: artifacts/bootstrap/windows
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Authenticate exact bootstrap artifacts
+        shell: bash
+        env:
+          EXPECTED_MODE: ${{ needs.linux.outputs.mode }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.candidate_artifact_digest }}
+          LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.candidate_artifact_id }}
+          WINDOWS_ARTIFACT_DIGEST: ${{ needs.windows.outputs.candidate_artifact_digest }}
+          WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.candidate_artifact_id }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${LINUX_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${WINDOWS_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${LINUX_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          [[ "${WINDOWS_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          test "${LINUX_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${WINDOWS_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${LINUX_ARTIFACT_ID}" != "${WINDOWS_ARTIFACT_ID}"
+          case "${EXPECTED_MODE}" in
+            stage1) readonly name_infix='candidate' ;;
+            stage2) readonly name_infix='final-candidate' ;;
+            *) echo "Invalid bootstrap mode '${EXPECTED_MODE}'." >&2; exit 1 ;;
+          esac
+
+          authenticate_artifact() {
+            local label="$1"
+            local artifact_id="$2"
+            local artifact_digest="$3"
+            local artifact_name="holdout-v3.2-${name_infix}-${label}-${EXPECTED_SOURCE_SHA}"
+            local metadata_path="${RUNNER_TEMP}/holdout-${label}-artifact.json"
+            curl \
+              --disable \
+              --fail-with-body \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              --location \
+              --proto '=https' \
+              --show-error \
+              --silent \
+              --tlsv1.2 \
+              --output "${metadata_path}" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
+            jq -e \
+              --arg artifact_id "${artifact_id}" \
+              --arg artifact_name "${artifact_name}" \
+              --arg artifact_digest "sha256:${artifact_digest}" \
+              --arg run_id "${GITHUB_RUN_ID}" \
+              --arg source_sha "${EXPECTED_SOURCE_SHA}" \
+              '(.id | tostring) == $artifact_id and
+               .name == $artifact_name and
+               .digest == $artifact_digest and
+               .expired == false and
+               (.workflow_run.id | tostring) == $run_id and
+               .workflow_run.head_sha == $source_sha' \
+              "${metadata_path}" >/dev/null
+          }
+          authenticate_artifact linux "${LINUX_ARTIFACT_ID}" "${LINUX_ARTIFACT_DIGEST}"
+          authenticate_artifact windows "${WINDOWS_ARTIFACT_ID}" "${WINDOWS_ARTIFACT_DIGEST}"
+
+      - name: Compare complete normalized candidate bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly output='artifacts/bootstrap/verified'
+          mkdir -p -- "${output}"
+          reports=(
+            'checksums.sha256'
+            'comparison-summary.json'
+            'development-corpus-report.json'
+            'evaluation-metadata.json'
+            'sarif-multitool-baseline.json'
+            'sarif-regress-holdout.json'
+            'v3.1-to-v3.2-delta.json'
+          )
+          for name in "${reports[@]}"; do
+            linux="artifacts/bootstrap/linux/${name}"
+            windows="artifacts/bootstrap/windows/${name}"
+            test -f "${linux}" && test ! -L "${linux}" && test -s "${linux}"
+            test -f "${windows}" && test ! -L "${windows}" && test -s "${windows}"
+            cmp --silent -- "${linux}" "${windows}"
+            cp -- "${linux}" "${output}/${name}"
+          done
+
+      - name: Create stable bootstrap sparse-experiment release projection
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python3 -B - <<'PY'
+          import copy
+          import hashlib
+          import json
+          import stat
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd()
+          verified = root / "artifacts" / "bootstrap" / "verified"
+          research = root / "validation" / "research" / "sparse-sarif"
+          sys.path.insert(0, str(research / "tools"))
+          from project_release_evidence import project_release_evidence
+          maximum_bytes = 64 * 1024 * 1024
+
+          def reject_duplicate(pairs):
+              value = {}
+              for key, item in pairs:
+                  if key in value:
+                      raise ValueError(f"duplicate JSON property {key!r}")
+                  value[key] = item
+              return value
+
+          def load_json(path):
+              status = path.lstat()
+              if not stat.S_ISREG(status.st_mode):
+                  raise SystemExit(
+                      f"Release evidence is not a regular file: {path.name}.")
+              size = status.st_size
+              if size <= 0 or size > maximum_bytes:
+                  raise SystemExit(f"Invalid release evidence size for {path.name}.")
+              with path.open("rb") as stream:
+                  payload = stream.read(maximum_bytes + 1)
+              if len(payload) != size:
+                  raise SystemExit(
+                      f"Release evidence changed while reading {path.name}.")
+              return json.loads(payload, object_pairs_hook=reject_duplicate)
+
+          holdout = load_json(verified / "sarif-regress-holdout.json")
+          development = load_json(verified / "development-corpus-report.json")
+          if development.get("passed") is not True or development.get("failures") != []:
+              raise SystemExit("Development corpus is not green.")
+          release = project_release_evidence(
+              holdout,
+              development,
+              producer_order=("semgrep", "gitleaks", "pmd"),
+              relationships_per_producer=25,
+          )
+          if release is None:
+              raise SystemExit("Release evidence cannot be projected safely.")
+          variant_ids = (
+              "sarif-only-control",
+              "exact-region-snippet",
+              "token-window",
+              "relative-context",
+              "agreement-only-combination",
+          )
+          projection = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-release-projection/v1",
+              "corpusManifestSha256": hashlib.sha256(
+                  (research / "manifest.json").read_bytes()
+              ).hexdigest(),
+              "implementationManifestSha256": hashlib.sha256(
+                  (research / "experiment-implementation-manifest.json").read_bytes()
+              ).hexdigest(),
+              "variants": [
+                  {"id": variant_id, "value": copy.deepcopy(release)}
+                  for variant_id in variant_ids
+              ],
+          }
+          output = verified / "sparse-experiment-release-projection.json"
+          output.write_bytes(
+              (json.dumps(projection, ensure_ascii=False, indent=2) + "\n").encode(
+                  "utf-8"
+              )
+          )
+          PY
+
+      - name: Create promotable matcher-v3.2 bootstrap attestation
+        if: ${{ needs.linux.outputs.mode == 'stage1' }}
+        shell: bash
+        env:
+          CHECKED_OUT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.candidate_artifact_id }}
+          LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.candidate_artifact_digest }}
+          WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.candidate_artifact_id }}
+          WINDOWS_ARTIFACT_DIGEST: ${{ needs.windows.outputs.candidate_artifact_digest }}
+        run: |
+          set -euo pipefail
+          python3 -B validation/tools/create_matcher_v32_bootstrap_attestation.py \
+            --repository-root "${GITHUB_WORKSPACE}" \
+            --linux-root artifacts/bootstrap/linux \
+            --windows-root artifacts/bootstrap/windows \
+            --verified-root artifacts/bootstrap/verified
+
+      - name: Finalize authenticated matcher-v3.2 bound bytes
+        if: ${{ needs.linux.outputs.mode == 'stage2' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import re
+          import shutil
+
+          root = Path.cwd()
+          verified = root / "artifacts" / "bootstrap" / "verified"
+          attestation_source = (
+              root / "validation" / "holdout" / "cross-platform-attestation.json")
+          comparison = json.loads(
+              (verified / "comparison-summary.json").read_bytes())
+          conditions = comparison.get("releaseConditions", {})
+          required_true_conditions = (
+              "zeroIncorrectAmbiguityMatches",
+              "noUnexplainedIngestionFailures",
+              "noStructuralFailures",
+              "crossPlatformByteIdentity",
+              "evaluationCompleted",
+              "everyChangedDecisionExplained",
+          )
+          if any(conditions.get(name) is not True for name in required_true_conditions):
+              raise SystemExit(
+                  "Stage-2 failed a safety condition unrelated to expected bytes.")
+          attestation_bytes = attestation_source.read_bytes()
+          attestation = json.loads(attestation_bytes)
+          actions = attestation.get("githubActions", {})
+          if (actions.get("workflowConclusion") != "failure"
+                  or actions.get("coordinatorJobConclusion") != "success"):
+              raise SystemExit("The committed stage-1 attestation is not truthful.")
+          checksum_text = (verified / "checksums.sha256").read_text(
+              encoding="utf-8")
+          attestation_hash = hashlib.sha256(attestation_bytes).hexdigest()
+          expected_line = (
+              f"{attestation_hash}  "
+              "validation/holdout/cross-platform-attestation.json")
+          if expected_line not in checksum_text.splitlines():
+              raise SystemExit(
+                  "The final checksum manifest does not bind the committed attestation.")
+          shutil.copyfile(
+              attestation_source,
+              verified / "cross-platform-attestation.json")
+          names = (
+              "checksums.sha256",
+              "comparison-summary.json",
+              "cross-platform-attestation.json",
+              "development-corpus-report.json",
+              "evaluation-metadata.json",
+              "sarif-multitool-baseline.json",
+              "sarif-regress-holdout.json",
+              "sparse-experiment-release-projection.json",
+              "v3.1-to-v3.2-delta.json",
+          )
+          manifest = "".join(
+              f"{hashlib.sha256((verified / name).read_bytes()).hexdigest()}  {name}\n"
+              for name in names)
+          (verified / "cross-platform-checksums.sha256").write_text(
+              manifest, encoding="ascii", newline="\n")
+          expected_names = set(names) | {"cross-platform-checksums.sha256"}
+          if {entry.name for entry in verified.iterdir()} != expected_names:
+              raise SystemExit("The stage-2 bundle contains an unexpected entry.")
+          PY
+
+      - name: Upload bootstrap sparse release projection candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-release-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/bootstrap/verified/sparse-experiment-release-projection.json
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Upload byte-identical matcher-v3.2 candidate
+        id: upload-bootstrap-cross-platform
+        if: ${{ needs.linux.outputs.mode == 'stage1' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-v3.2-cross-platform-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/bootstrap/verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Upload byte-identical matcher-v3.2 finalization candidate
+        id: upload-finalization-cross-platform
+        if: ${{ needs.linux.outputs.mode == 'stage2' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-v3.2-final-cross-platform-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/bootstrap/verified
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+  bootstrap-refuse:
+    name: Refuse matcher-v3.2 promotion candidate as final
+    if: ${{ needs.linux.outputs.mode != 'normal' }}
+    needs:
+      - linux
+      - windows
+      - bootstrap-compare
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Refuse cross-platform promotion candidate as final evidence
+        shell: bash
+        run: |
+          echo 'The coordinator succeeded; promote this stage only in a separate evidence commit.' >&2
+          exit 1
+
+  compare:
+    name: Compare Linux and Windows normalized bytes
+    if: ${{ needs.linux.outputs.mode == 'normal' }}
+    needs:
+      - evidence-mode
+      - linux
+      - sparse-experiment-compare
+      - windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      artifact_id: ${{ steps.upload-cross-platform-evidence.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload-cross-platform-evidence.outputs.artifact-digest }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact source commit
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          actual_source_sha="$(git rev-parse HEAD)"
+          test "${actual_source_sha}" = "${EXPECTED_SOURCE_SHA}"
+
+      - name: Install attestation serializer runtime
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Download exact Linux evaluation by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.linux.outputs.artifact_id }}
+          path: artifacts/download/linux
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Download exact Windows evaluation by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.windows.outputs.artifact_id }}
+          path: artifacts/download/windows
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+          digest-mismatch: error
+
+      - name: Authenticate exact normal artifacts
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.artifact_digest }}
+          LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.artifact_id }}
+          WINDOWS_ARTIFACT_DIGEST: ${{ needs.windows.outputs.artifact_digest }}
+          WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.artifact_id }}
+        run: |
+          set -euo pipefail
+          [[ "${EXPECTED_SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${LINUX_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${WINDOWS_ARTIFACT_ID}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${LINUX_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          [[ "${WINDOWS_ARTIFACT_DIGEST}" =~ ^[0-9a-f]{64}$ ]]
+          test "${LINUX_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${WINDOWS_ARTIFACT_DIGEST}" != "$(printf '0%.0s' {1..64})"
+          test "${LINUX_ARTIFACT_ID}" != "${WINDOWS_ARTIFACT_ID}"
+
+          authenticate_artifact() {
+            local label="$1"
+            local artifact_id="$2"
+            local artifact_digest="$3"
+            local artifact_name="holdout-${label}"
+            local metadata_path="${RUNNER_TEMP}/normal-holdout-${label}-artifact.json"
+            curl \
+              --disable \
+              --fail-with-body \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              --location \
+              --proto '=https' \
+              --show-error \
+              --silent \
+              --tlsv1.2 \
+              --output "${metadata_path}" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
+            jq -e \
+              --arg artifact_id "${artifact_id}" \
+              --arg artifact_name "${artifact_name}" \
+              --arg artifact_digest "sha256:${artifact_digest}" \
+              --arg run_id "${GITHUB_RUN_ID}" \
+              --arg source_sha "${EXPECTED_SOURCE_SHA}" \
+              '(.id | tostring) == $artifact_id and
+               .name == $artifact_name and
+               .digest == $artifact_digest and
+               .expired == false and
+               (.workflow_run.id | tostring) == $run_id and
+               .workflow_run.head_sha == $source_sha' \
+              "${metadata_path}" >/dev/null
+          }
+          authenticate_artifact linux "${LINUX_ARTIFACT_ID}" "${LINUX_ARTIFACT_DIGEST}"
+          authenticate_artifact windows "${WINDOWS_ARTIFACT_ID}" "${WINDOWS_ARTIFACT_DIGEST}"
+
+      - name: Verify normalized byte identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          readonly verified_directory='artifacts/verified'
+          mkdir -p "${verified_directory}"
+
+          readonly reports=(
+            'development-corpus-report.json'
+            'sarif-regress-holdout.json'
+            'sarif-multitool-baseline.json'
+            'v3.1-to-v3.2-delta.json'
+            'comparison-summary.json'
+            'checksums.sha256'
+          )
+
+          for report_name in "${reports[@]}"; do
+            linux_report="artifacts/download/linux/${report_name}"
+            windows_report="artifacts/download/windows/${report_name}"
+            if [[ ! -f "${linux_report}" || ! -f "${windows_report}" ]]; then
+              echo "Missing normalized report '${report_name}' from a producer job." >&2
+              exit 1
+            fi
+
+            linux_hash="$(sha256sum "${linux_report}" | cut -d ' ' -f 1)"
+            windows_hash="$(sha256sum "${windows_report}" | cut -d ' ' -f 1)"
+            if [[ "${linux_hash}" != "${windows_hash}" ]]; then
+              echo \
+                "${report_name} hash differs: Linux ${linux_hash}, Windows ${windows_hash}." \
+                >&2
+              exit 1
+            fi
+
+            if ! cmp --silent -- "${linux_report}" "${windows_report}"; then
+              echo "${report_name} bytes differ despite equal hashes." >&2
+              exit 1
+            fi
+            cp -- "${linux_report}" "${verified_directory}/${report_name}"
+          done
+
+      - name: Create stable sparse-experiment release projection
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONNOUSERSITE: '1'
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH || true
+          python3 -B - <<'PY'
+          import copy
+          import hashlib
+          import json
+          import stat
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd()
+          verified = root / "artifacts" / "verified"
+          research = root / "validation" / "research" / "sparse-sarif"
+          sys.path.insert(0, str(research / "tools"))
+          from project_release_evidence import project_release_evidence
+          maximum_bytes = 64 * 1024 * 1024
+
+          def reject_duplicate(pairs):
+              value = {}
+              for key, item in pairs:
+                  if key in value:
+                      raise ValueError(f"duplicate JSON property {key!r}")
+                  value[key] = item
+              return value
+
+          def load_json(path):
+              status = path.lstat()
+              if not stat.S_ISREG(status.st_mode):
+                  raise SystemExit(f"Release evidence is not a regular file: {path.name}.")
+              size = status.st_size
+              if size <= 0 or size > maximum_bytes:
+                  raise SystemExit(f"Invalid release evidence size for {path.name}.")
+              with path.open("rb") as stream:
+                  payload = stream.read(maximum_bytes + 1)
+              if len(payload) != size:
+                  raise SystemExit(f"Release evidence changed while reading {path.name}.")
+              return json.loads(payload, object_pairs_hook=reject_duplicate)
+
+          holdout = load_json(verified / "sarif-regress-holdout.json")
+          development = load_json(verified / "development-corpus-report.json")
+          if development.get("passed") is not True or development.get("failures") != []:
+              raise SystemExit("Development corpus is not green.")
+          release = project_release_evidence(
+              holdout,
+              development,
+              producer_order=("semgrep", "gitleaks", "pmd"),
+              relationships_per_producer=25,
+          )
+          if release is None:
+              raise SystemExit("Release evidence cannot be projected safely.")
+          variant_ids = (
+              "sarif-only-control",
+              "exact-region-snippet",
+              "token-window",
+              "relative-context",
+              "agreement-only-combination",
+          )
+          projection = {
+              "schemaVersion": "1",
+              "kind": "sparse-experiment-release-projection/v1",
+              "corpusManifestSha256": hashlib.sha256(
+                  (research / "manifest.json").read_bytes()
+              ).hexdigest(),
+              "implementationManifestSha256": hashlib.sha256(
+                  (research / "experiment-implementation-manifest.json").read_bytes()
+              ).hexdigest(),
+              "variants": [
+                  {"id": variant_id, "value": copy.deepcopy(release)}
+                  for variant_id in variant_ids
+              ],
+          }
+          output = verified / "sparse-experiment-release-projection.json"
+          output.write_bytes(
+              (json.dumps(projection, ensure_ascii=False, indent=2) + "\n").encode(
+                  "utf-8"
+              )
+          )
+          PY
+
+      - name: Upload sparse release projection candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sparse-release-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/verified/sparse-experiment-release-projection.json
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
+      - name: Verify committed sparse release projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp --silent -- \
+            artifacts/verified/sparse-experiment-release-projection.json \
+            validation/research/sparse-sarif/expected/projections/sparse-experiment-release-projection.json
+
+      - name: Create cross-platform artifact attestation projection
+        shell: bash
+        env:
+          CHECKED_OUT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          LINUX_ARTIFACT_ID: ${{ needs.linux.outputs.artifact_id }}
+          LINUX_ARTIFACT_DIGEST: ${{ needs.linux.outputs.artifact_digest }}
+          WINDOWS_ARTIFACT_ID: ${{ needs.windows.outputs.artifact_id }}
+          WINDOWS_ARTIFACT_DIGEST: ${{ needs.windows.outputs.artifact_digest }}
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+
+          root = pathlib.Path.cwd()
+          verified = root / "artifacts" / "verified"
+          linux = root / "artifacts" / "download" / "linux"
+          windows = root / "artifacts" / "download" / "windows"
+          maximum_bytes = 64 * 1024 * 1024
+          sha256_pattern = re.compile(r"[0-9a-f]{64}")
+          commit_pattern = re.compile(r"[0-9a-f]{40}")
+
+          def read_bounded(path):
+              size = path.stat().st_size
+              if size <= 0 or size > maximum_bytes:
+                  raise SystemExit(
+                      f"Attestation input {path.name!r} has invalid size {size}.")
+              return path.read_bytes()
+
+          def sha256(path):
+              return hashlib.sha256(read_bounded(path)).hexdigest()
+
+          def reject_duplicate(pairs):
+              result = {}
+              for key, value in pairs:
+                  if key in result:
+                      raise ValueError(f"duplicate JSON property {key!r}")
+                  result[key] = value
+              return result
+
+          def load_json(path):
+              return json.loads(
+                  read_bounded(path),
+                  object_pairs_hook=reject_duplicate)
+
+          def required_decimal(name, maximum=9_007_199_254_740_991):
+              value = os.environ[name]
+              if not re.fullmatch(r"[1-9][0-9]*", value):
+                  raise SystemExit(f"{name} is not a positive decimal integer.")
+              parsed = int(value)
+              if parsed > maximum:
+                  raise SystemExit(f"{name} exceeds its permitted range.")
+              return parsed
+
+          def required_sha256(name):
+              value = os.environ[name]
+              if sha256_pattern.fullmatch(value) is None or set(value) == {"0"}:
+                  raise SystemExit(f"{name} is not a nonzero lowercase SHA-256.")
+              return value
+
+          def parse_checksum_manifest(path):
+              text = read_bounded(path).decode("utf-8", errors="strict")
+              if not text.endswith("\n") or "\r" in text:
+                  raise SystemExit(f"{path.name} is not canonical LF text.")
+              result = {}
+              for line in text.splitlines():
+                  match = re.fullmatch(
+                      r"([0-9a-f]{64})  ([A-Za-z0-9][A-Za-z0-9._/-]*)",
+                      line)
+                  if match is None or match.group(2) in result:
+                      raise SystemExit(f"{path.name} contains an invalid entry.")
+                  result[match.group(2)] = match.group(1)
+              return result
+
+          linux_artifact_id = required_decimal("LINUX_ARTIFACT_ID")
+          windows_artifact_id = required_decimal("WINDOWS_ARTIFACT_ID")
+          if linux_artifact_id == windows_artifact_id:
+              raise SystemExit("Linux and Windows evidence reused one artifact ID.")
+          linux_artifact_digest = required_sha256("LINUX_ARTIFACT_DIGEST")
+          windows_artifact_digest = required_sha256("WINDOWS_ARTIFACT_DIGEST")
+
+          report_names = (
+              "sarif-regress-holdout.json",
+              "sarif-multitool-baseline.json",
+              "v3.1-to-v3.2-delta.json",
+          )
+          report_hashes = {}
+          for name in report_names:
+              linux_hash = sha256(linux / name)
+              windows_hash = sha256(windows / name)
+              verified_hash = sha256(verified / name)
+              if linux_hash != windows_hash or linux_hash != verified_hash:
+                  raise SystemExit(f"{name} changed after byte-identity verification.")
+              report_hashes[name] = verified_hash
+
+          metadata_path = root / "validation" / "holdout" / "evaluation-metadata.json"
+          manifest_path = root / "validation" / "holdout" / "manifest.json"
+          metadata_sha256 = sha256(metadata_path)
+          manifest_sha256 = sha256(manifest_path)
+          metadata = load_json(metadata_path)
+          frozen_commit = metadata.get("repositoryCommitSha")
+          if not isinstance(frozen_commit, str) or commit_pattern.fullmatch(
+                  frozen_commit) is None:
+              raise SystemExit("Evaluation metadata has no exact frozen commit SHA.")
+          if metadata.get("holdoutManifestSha256") != manifest_sha256:
+              raise SystemExit("Evaluation metadata does not hash the current manifest.")
+
+          sarif_report = load_json(verified / report_names[0])
+          multitool_report = load_json(verified / report_names[1])
+          delta_report = load_json(verified / report_names[2])
+          if (sarif_report.get("schemaVersion") != "3"
+                  or sarif_report.get("reportKind")
+                  != "sarif-regress-exposed-holdout-regression"):
+              raise SystemExit(
+                  "The matcher-v3.2 report repeats an obsolete holdout claim.")
+          for name, report in (
+                  (report_names[0], sarif_report),
+                  (report_names[1], multitool_report)):
+              evaluation = report.get("evaluation", {})
+              if evaluation.get("repositoryCommitSha") != frozen_commit:
+                  raise SystemExit(f"{name} does not identify the frozen commit.")
+              if evaluation.get("holdoutManifestSha256") != manifest_sha256:
+                  raise SystemExit(f"{name} does not identify the holdout manifest.")
+
+          matcher_v31_history_root = (
+              root / "validation" / "history" / "matcher-v3.1")
+          matcher_v31_history_manifest_hash = sha256(
+              matcher_v31_history_root / "checksums.sha256")
+          matcher_v31_report_hash = sha256(
+              matcher_v31_history_root / "sarif-regress-holdout.json")
+          expected_delta_hashes = {
+              "matcherV31HistoryChecksumManifestSha256":
+                  matcher_v31_history_manifest_hash,
+              "matcherV31ReportSha256": matcher_v31_report_hash,
+              "matcherV32ReportSha256": report_hashes[report_names[0]],
+              "holdoutManifestSha256": manifest_sha256,
+          }
+          if delta_report.get("inputHashes") != expected_delta_hashes:
+              raise SystemExit(
+                  "v3.1-to-v3.2-delta.json does not bind its exact inputs.")
+          checksums = parse_checksum_manifest(verified / "checksums.sha256")
+          required_checksums = {
+              "validation/holdout/manifest.json": manifest_sha256,
+              "validation/holdout/evaluation-metadata.json": metadata_sha256,
+              "validation/expected/sarif-regress-holdout.json":
+                  report_hashes[report_names[0]],
+              "validation/expected/sarif-multitool-baseline.json":
+                  report_hashes[report_names[1]],
+              "validation/expected/v3.1-to-v3.2-delta.json":
+                  report_hashes[report_names[2]],
+              "validation/history/matcher-v3.1/checksums.sha256":
+                  matcher_v31_history_manifest_hash,
+              "validation/history/matcher-v3.1/sarif-regress-holdout.json":
+                  matcher_v31_report_hash,
+          }
+          for name, expected in required_checksums.items():
+              if checksums.get(name) != expected:
+                  raise SystemExit(f"checksums.sha256 does not bind {name!r}.")
+
+          comparison = load_json(verified / "comparison-summary.json")
+          comparison_hashes = comparison.get("reportHashes", {})
+          expected_comparison_hashes = {
+              "holdoutManifestSha256": manifest_sha256,
+              "evaluationMetadataSha256": metadata_sha256,
+              "sarifRegressReportSha256": report_hashes[report_names[0]],
+              "sarifMultitoolBaselineReportSha256": report_hashes[report_names[1]],
+              "matcherV31ReportSha256": matcher_v31_report_hash,
+              "v31ToV32DeltaReportSha256": report_hashes[report_names[2]],
+          }
+          if comparison_hashes != expected_comparison_hashes:
+              raise SystemExit("comparison-summary.json does not bind the base inputs.")
+
+          run_id = required_decimal("GITHUB_RUN_ID")
+          run_attempt = required_decimal("GITHUB_RUN_ATTEMPT", maximum=1000)
+          workflow_head = os.environ["CHECKED_OUT_SOURCE_SHA"]
+          if commit_pattern.fullmatch(workflow_head) is None:
+              raise SystemExit(
+                  "CHECKED_OUT_SOURCE_SHA is not a lowercase commit SHA.")
+
+          base_report_digests = {
+              "sarifRegressHoldoutSha256": report_hashes[report_names[0]],
+              "sarifMultitoolBaselineSha256": report_hashes[report_names[1]],
+              "v31ToV32DeltaSha256": report_hashes[report_names[2]],
+          }
+          candidate = {
+              "schemaVersion": "4",
+              "repository": "ppcdaniel/sarif-regress",
+              "repositoryCommitSha": frozen_commit,
+              "holdoutManifestSha256": manifest_sha256,
+              "evaluationMetadataSha256": metadata_sha256,
+              "baseReports": base_report_digests,
+              "githubActions": {
+                  "workflowPath": ".github/workflows/holdout-validation.yml",
+                  "runId": run_id,
+                  "runAttempt": run_attempt,
+                  "runUrl": (
+                      "https://github.com/ppcdaniel/sarif-regress/actions/runs/"
+                      f"{run_id}"),
+                  "workflowHeadSha": workflow_head,
+                  "workflowConclusion": "success",
+                  "coordinatorJobConclusion": "success",
+                  "coordinatorJobName":
+                      "Compare Linux and Windows normalized bytes",
+              },
+              "artifacts": {
+                  "linux": {
+                      "name": "holdout-linux",
+                      "artifactId": linux_artifact_id,
+                      "archiveSha256": linux_artifact_digest,
+                      "reportDigests": dict(base_report_digests),
+                  },
+                  "windows": {
+                      "name": "holdout-windows",
+                      "artifactId": windows_artifact_id,
+                      "archiveSha256": windows_artifact_digest,
+                      "reportDigests": dict(base_report_digests),
+                  },
+              },
+              "byteIdentity": {
+                  "sarifRegressHoldout": True,
+                  "sarifMultitoolBaseline": True,
+                  "v31ToV32Delta": True,
+              },
+          }
+          candidate_bytes = (
+              json.dumps(candidate, ensure_ascii=False, indent=2) + "\n"
+          ).encode("utf-8")
+          candidate_path = verified / "cross-platform-attestation.json"
+          candidate_path.write_bytes(candidate_bytes)
+
+          coordinator_files = (
+              "checksums.sha256",
+              "comparison-summary.json",
+              "cross-platform-attestation.json",
+              "development-corpus-report.json",
+              "sarif-multitool-baseline.json",
+              "sarif-regress-holdout.json",
+              "sparse-experiment-release-projection.json",
+              "v3.1-to-v3.2-delta.json",
+          )
+          coordinator_manifest = "".join(
+              f"{sha256(verified / name)}  {name}\n"
+              for name in coordinator_files)
+          (verified / "cross-platform-checksums.sha256").write_bytes(
+              coordinator_manifest.encode("ascii"))
+          PY
+
+      - name: Upload cross-platform evidence
+        id: upload-cross-platform-evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: holdout-cross-platform
+          path: artifacts/verified
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,574 @@
+{
+  "schemaVersion": "1",
+  "familyId": "pmd-clean-b",
+  "producerFamily": "pmd",
+  "ruleId": "AvoidPrintStackTrace",
+  "baselineSarif": "baseline.sarif",
+  "candidateSarif": "candidate.sarif",
+  "relationships": [
+    {
+      "id": "relationship-b-01",
+      "expectedClassification": "unchanged",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "app/JobProcessor.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "app/JobProcessor.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "unchanged-call",
+        "description": "The execute method and its printStackTrace call are byte-identical and remain at the same natural source location.",
+        "baselineSourcePath": "baseline/source/app/JobProcessor.java",
+        "baselineFileSha256": "2a6f768ef2cfd017b0c32ec527466dd4eeb5816e02cc881bec58f38d4b03baff",
+        "candidateSourcePath": "candidate/source/app/JobProcessor.java",
+        "candidateFileSha256": "9547c3be7c79b2d46ba48e03fe2e36c482ce48bd71d9523030647a93e29aabec"
+      }
+    },
+    {
+      "id": "relationship-b-02",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "app/JobProcessor.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "app/JobProcessor.java",
+        "region": {
+          "startLine": 10,
+          "startColumn": 9,
+          "endLine": 10,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "region-drift",
+        "description": "One blank line is inserted immediately before the unchanged call in the finish method; a later separator is removed so unrelated regions do not inherit the shift.",
+        "baselineSourcePath": "baseline/source/app/JobProcessor.java",
+        "baselineFileSha256": "2a6f768ef2cfd017b0c32ec527466dd4eeb5816e02cc881bec58f38d4b03baff",
+        "candidateSourcePath": "candidate/source/app/JobProcessor.java",
+        "candidateFileSha256": "9547c3be7c79b2d46ba48e03fe2e36c482ce48bd71d9523030647a93e29aabec"
+      }
+    },
+    {
+      "id": "relationship-b-03",
+      "expectedClassification": "unchanged",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "app/JobProcessor.java",
+        "region": {
+          "startLine": 13,
+          "startColumn": 9,
+          "endLine": 13,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "app/JobProcessor.java",
+        "region": {
+          "startLine": 13,
+          "startColumn": 9,
+          "endLine": 13,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "unchanged-call",
+        "description": "The cancel method and finding remain unchanged even though another finding in the same file moves by one line.",
+        "baselineSourcePath": "baseline/source/app/JobProcessor.java",
+        "baselineFileSha256": "2a6f768ef2cfd017b0c32ec527466dd4eeb5816e02cc881bec58f38d4b03baff",
+        "candidateSourcePath": "candidate/source/app/JobProcessor.java",
+        "candidateFileSha256": "9547c3be7c79b2d46ba48e03fe2e36c482ce48bd71d9523030647a93e29aabec"
+      }
+    },
+    {
+      "id": "relationship-b-04",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "io/BatchReader.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "io/BatchReader.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "method-reorder",
+        "description": "The complete read method moves below decode without changing its body; the two methods exchange their former finding regions.",
+        "baselineSourcePath": "baseline/source/io/BatchReader.java",
+        "baselineFileSha256": "8dc0185b1fd98a5600b526f819154913f2199137f89dd783119c684bc5319d27",
+        "candidateSourcePath": "candidate/source/io/BatchReader.java",
+        "candidateFileSha256": "55f0eee2c2a585afffcc8dc4437875d53cdeee2ec02330a0ec03dcf049b9ca63"
+      }
+    },
+    {
+      "id": "relationship-b-05",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "io/BatchReader.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "io/BatchReader.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "method-reorder",
+        "description": "The complete decode method moves above read without changing its body; exact old coordinates now belong to the other natural method.",
+        "baselineSourcePath": "baseline/source/io/BatchReader.java",
+        "baselineFileSha256": "8dc0185b1fd98a5600b526f819154913f2199137f89dd783119c684bc5319d27",
+        "candidateSourcePath": "candidate/source/io/BatchReader.java",
+        "candidateFileSha256": "55f0eee2c2a585afffcc8dc4437875d53cdeee2ec02330a0ec03dcf049b9ca63"
+      }
+    },
+    {
+      "id": "relationship-b-06",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "service/ReportService.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "delivery/ReportService.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "file-move",
+        "description": "The ReportService class moves from the service package to delivery; the publish method body and finding region remain unchanged.",
+        "baselineSourcePath": "baseline/source/service/ReportService.java",
+        "baselineFileSha256": "9023e2fe76548a0596c8a39237a835b42b79efb77c4764f8a743111bc9bace0f",
+        "candidateSourcePath": "candidate/source/delivery/ReportService.java",
+        "candidateFileSha256": "fb1d7da8c09fca234fa04e673c335a38dc4fc9e2adf4358ab17e0e8f964fa3b5"
+      }
+    },
+    {
+      "id": "relationship-b-07",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "service/ReportService.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "delivery/ReportService.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "file-move",
+        "description": "The archive method moves with the same ReportService package relocation and retains its statement and region.",
+        "baselineSourcePath": "baseline/source/service/ReportService.java",
+        "baselineFileSha256": "9023e2fe76548a0596c8a39237a835b42b79efb77c4764f8a743111bc9bace0f",
+        "candidateSourcePath": "candidate/source/delivery/ReportService.java",
+        "candidateFileSha256": "fb1d7da8c09fca234fa04e673c335a38dc4fc9e2adf4358ab17e0e8f964fa3b5"
+      }
+    },
+    {
+      "id": "relationship-b-08",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "workflow/TaskRunner.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "audit/AuditTrail.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "method-move",
+        "description": "The unchanged record method moves from TaskRunner into AuditTrail below an existing enabled helper.",
+        "baselineSourcePath": "baseline/source/workflow/TaskRunner.java",
+        "baselineFileSha256": "f2d71b423254519666fb554724725fcd028fa21850c50e8c02bd7f9121145156",
+        "candidateSourcePath": "candidate/source/audit/AuditTrail.java",
+        "candidateFileSha256": "ece6e0535ed6bd71cccd3ae49d58f270c3014ce082dd60751b61f23da00ec1ca"
+      }
+    },
+    {
+      "id": "relationship-b-09",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "queue/QueueWorker.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "queue/QueueWorker.java",
+        "region": {
+          "startLine": 6,
+          "startColumn": 9,
+          "endLine": 6,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "region-drift",
+        "description": "One blank line is inserted before the unchanged call in handle, shifting its region without changing the surrounding Java tokens or PMD message.",
+        "baselineSourcePath": "baseline/source/queue/QueueWorker.java",
+        "baselineFileSha256": "10e3f9ffd298f6850fb011e67ab797bc10e894e707ed85915073bbdff80d08c9",
+        "candidateSourcePath": "candidate/source/queue/QueueWorker.java",
+        "candidateFileSha256": "696043b00b0c27160a7865e354a00a0129e42cdbbda6b0b0c9915252898f8f10"
+      }
+    },
+    {
+      "id": "relationship-b-10",
+      "expectedClassification": "moved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "queue/QueueWorker.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "queue/QueueWorker.java",
+        "region": {
+          "startLine": 11,
+          "startColumn": 9,
+          "endLine": 11,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "region-drift",
+        "description": "A second blank line is inserted before the unchanged call in retry after the earlier method grows, producing cumulative two-line drift with equivalent token context.",
+        "baselineSourcePath": "baseline/source/queue/QueueWorker.java",
+        "baselineFileSha256": "10e3f9ffd298f6850fb011e67ab797bc10e894e707ed85915073bbdff80d08c9",
+        "candidateSourcePath": "candidate/source/queue/QueueWorker.java",
+        "candidateFileSha256": "696043b00b0c27160a7865e354a00a0129e42cdbbda6b0b0c9915252898f8f10"
+      }
+    },
+    {
+      "id": "relationship-b-11",
+      "expectedClassification": "unchanged",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "metrics/MetricsWriter.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "metrics/MetricsWriter.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "unchanged-file",
+        "description": "The complete MetricsWriter file is byte-identical across snapshots and supplies an unchanged finding among similar findings in other files.",
+        "baselineSourcePath": "baseline/source/metrics/MetricsWriter.java",
+        "baselineFileSha256": "b68cf775f096bbef776b800d846f2520bd72ae2d06fba38271a5576c5259d26f",
+        "candidateSourcePath": "candidate/source/metrics/MetricsWriter.java",
+        "candidateFileSha256": "b68cf775f096bbef776b800d846f2520bd72ae2d06fba38271a5576c5259d26f"
+      }
+    }
+  ],
+  "new": [
+    {
+      "id": "new-b-01",
+      "expectedClassification": "new",
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "monitor/HealthCheck.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "file-addition",
+        "description": "HealthCheck is introduced only in the candidate snapshot; its inspect finding has no baseline predecessor.",
+        "candidateSourcePath": "candidate/source/monitor/HealthCheck.java",
+        "candidateFileSha256": "5fc08b1f5ac155952dc969588ecd494e7e7bbba1cd8b1376b0323073d9833aba"
+      }
+    },
+    {
+      "id": "new-b-02",
+      "expectedClassification": "new",
+      "candidate": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "monitor/HealthCheck.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "file-addition",
+        "description": "HealthCheck is introduced only in the candidate snapshot; its recover finding has no baseline predecessor.",
+        "candidateSourcePath": "candidate/source/monitor/HealthCheck.java",
+        "candidateFileSha256": "5fc08b1f5ac155952dc969588ecd494e7e7bbba1cd8b1376b0323073d9833aba"
+      }
+    }
+  ],
+  "resolved": [
+    {
+      "id": "resolved-b-01",
+      "expectedClassification": "resolved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "archive/ImportTask.java",
+        "region": {
+          "startLine": 5,
+          "startColumn": 9,
+          "endLine": 5,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "file-removal",
+        "description": "ImportTask exists only in the baseline snapshot; removing the file resolves its load finding.",
+        "baselineSourcePath": "baseline/source/archive/ImportTask.java",
+        "baselineFileSha256": "1c452358866b8e1ce60cd18638ba06143ffc10bc4d2d2b1890897951b4ec5106"
+      }
+    },
+    {
+      "id": "resolved-b-02",
+      "expectedClassification": "resolved",
+      "baseline": {
+        "ruleId": "AvoidPrintStackTrace",
+        "artifactUri": "archive/ImportTask.java",
+        "region": {
+          "startLine": 9,
+          "startColumn": 9,
+          "endLine": 9,
+          "endColumn": 36
+        },
+        "message": "Avoid printStackTrace(); use a logger call instead."
+      },
+      "sourceTransformation": {
+        "kind": "file-removal",
+        "description": "ImportTask exists only in the baseline snapshot; removing the file resolves its reject finding.",
+        "baselineSourcePath": "baseline/source/archive/ImportTask.java",
+        "baselineFileSha256": "1c452358866b8e1ce60cd18638ba06143ffc10bc4d2d2b1890897951b4ec5106"
+      }
+    }
+  ],
+  "ambiguities": [
+    {
+      "id": "ambiguity-b-one-to-many",
+      "shape": "one-to-many",
+      "baseline": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "sync/RetryHandler.java",
+          "region": {
+            "startLine": 5,
+            "startColumn": 9,
+            "endLine": 5,
+            "endColumn": 36
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        }
+      ],
+      "candidate": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "sync/RetryHandler.java",
+          "region": {
+            "startLine": 6,
+            "startColumn": 13,
+            "endLine": 6,
+            "endColumn": 40
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "sync/RetryHandler.java",
+          "region": {
+            "startLine": 8,
+            "startColumn": 13,
+            "endLine": 8,
+            "endColumn": 40
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        }
+      ],
+      "expected": "refuse",
+      "sourceTransformation": {
+        "kind": "branch-duplication",
+        "description": "One baseline call is duplicated into equivalent candidate branches. Source history does not privilege either candidate occurrence as the unique continuation.",
+        "baselineSourcePath": "baseline/source/sync/RetryHandler.java",
+        "baselineFileSha256": "d05ee1c3344a6d9b625477c046da8b0caa75d5c680c5e8e63580170fbb361cde",
+        "candidateSourcePath": "candidate/source/sync/RetryHandler.java",
+        "candidateFileSha256": "c8cd14c4d663a97ca34c490136b022c044a9cdc16c6e825285b96208793e9493"
+      }
+    },
+    {
+      "id": "ambiguity-b-many-to-one",
+      "shape": "many-to-one",
+      "baseline": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "cache/CacheLoader.java",
+          "region": {
+            "startLine": 6,
+            "startColumn": 13,
+            "endLine": 6,
+            "endColumn": 40
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "cache/CacheLoader.java",
+          "region": {
+            "startLine": 8,
+            "startColumn": 13,
+            "endLine": 8,
+            "endColumn": 40
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        }
+      ],
+      "candidate": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "artifactUri": "cache/CacheLoader.java",
+          "region": {
+            "startLine": 5,
+            "startColumn": 9,
+            "endLine": 5,
+            "endColumn": 36
+          },
+          "message": "Avoid printStackTrace(); use a logger call instead."
+        }
+      ],
+      "expected": "refuse",
+      "sourceTransformation": {
+        "kind": "branch-collapse",
+        "description": "Two equivalent baseline branch calls collapse into one candidate call. Source history does not select either baseline occurrence as the unique predecessor.",
+        "baselineSourcePath": "baseline/source/cache/CacheLoader.java",
+        "baselineFileSha256": "1f19a77250668ef05a4a9ae07d43ca7af5e25510ef1251213d39c44e4012667c",
+        "candidateSourcePath": "candidate/source/cache/CacheLoader.java",
+        "candidateFileSha256": "52fc9ca7d06b191892ad8deedd4241f4f7746e407a03b65cf7abc9df061fc2c1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset
+  xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+  name="PMD clean sparse-SARIF research family B">
+  <description>
+    Local PMD 7.26.0 rules for the second clean sparse-SARIF fixture family.
+  </description>
+  <rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace"/>
+</ruleset>

@@ -1,0 +1,417 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "PMD",
+          "version": "7.26.0",
+          "informationUri": "https://docs.pmd-code.org/latest/",
+          "rules": [
+            {
+              "id": "AvoidPrintStackTrace",
+              "shortDescription": {
+                "text": "Avoid printStackTrace(); use a logger call instead."
+              },
+              "fullDescription": {
+                "text": "\nAvoid printStackTrace(); use a logger call instead.\n        "
+              },
+              "helpUri": "https://docs.pmd-code.org/snapshot/pmd_rules_java_bestpractices.html#avoidprintstacktrace",
+              "help": {
+                "text": "\nAvoid printStackTrace(); use a logger call instead.\n        "
+              },
+              "properties": {
+                "ruleset": "Best Practices",
+                "priority": 3,
+                "tags": [
+                  "Best Practices"
+                ]
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/JobProcessor.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/JobProcessor.java"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 9,
+                  "endLine": 9,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/JobProcessor.java"
+                },
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 9,
+                  "endLine": 13,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "archive/ImportTask.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "archive/ImportTask.java"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 9,
+                  "endLine": 9,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "cache/CacheLoader.java"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 13,
+                  "endLine": 6,
+                  "endColumn": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "cache/CacheLoader.java"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 13,
+                  "endLine": 8,
+                  "endColumn": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "io/BatchReader.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "io/BatchReader.java"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 9,
+                  "endLine": 9,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "metrics/MetricsWriter.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "queue/QueueWorker.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "queue/QueueWorker.java"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 9,
+                  "endLine": 9,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "service/ReportService.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "service/ReportService.java"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 9,
+                  "endLine": 9,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sync/RetryHandler.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "workflow/TaskRunner.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolConfigurationNotifications": [],
+          "toolExecutionNotifications": []
+        }
+      ]
+    }
+  ]
+}

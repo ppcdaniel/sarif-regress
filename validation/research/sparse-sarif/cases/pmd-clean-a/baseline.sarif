@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "PMD",
+          "version": "7.26.0",
+          "informationUri": "https://docs.pmd-code.org/latest/",
+          "rules": [
+            {
+              "id": "AvoidPrintStackTrace",
+              "shortDescription": {
+                "text": "Avoid printStackTrace(); use a logger call instead."
+              },
+              "fullDescription": {
+                "text": "\nAvoid printStackTrace(); use a logger call instead.\n        "
+              },
+              "helpUri": "https://docs.pmd-code.org/snapshot/pmd_rules_java_bestpractices.html#avoidprintstacktrace",
+              "help": {
+                "text": "\nAvoid printStackTrace(); use a logger call instead.\n        "
+              },
+              "properties": {
+                "ruleset": "Best Practices",
+                "priority": 3,
+                "tags": [
+                  "Best Practices"
+                ]
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/cache/CacheRefresher.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/dispatch/RequestDispatcher.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/health/ConnectionHealth.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/imports/InvoiceImporter.java"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 13,
+                  "endLine": 8,
+                  "endColumn": 38
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/jobs/ArchiveWorker.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/ledger/LedgerService.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/recovery/RecoveryCoordinator.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 41
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/recovery/RecoveryCoordinator.java"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 9,
+                  "endLine": 6,
+                  "endColumn": 43
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/recovery/RecoveryCoordinator.java"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 9,
+                  "endLine": 10,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AvoidPrintStackTrace",
+          "ruleIndex": 0,
+          "message": {
+            "text": "Avoid printStackTrace(); use a logger call instead."
+          },
+          "level": "warning",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "com/riverton/routing/NotificationRouter.java"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 9,
+                  "endLine": 5,
+                  "endColumn": 34
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolConfigurationNotifications": [],
+          "toolExecutionNotifications": []
+        }
+      ]
+    }
+  ]
+}

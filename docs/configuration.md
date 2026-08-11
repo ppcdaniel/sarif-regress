@@ -11,6 +11,12 @@ configuration diagnostics.
 {
   "schemaVersion": "1",
   "repoRoot": "../source",
+  "uriBaseMappings": [
+    {
+      "id": "WORKSPACE_ROOT",
+      "uri": "repo:/"
+    }
+  ],
   "pathRebases": [
     {
       "from": "file:///C:/agent/_work/1/s/",
@@ -67,9 +73,34 @@ Omitted sections use deterministic defaults.
 directory, never the process current directory. `--repo` is resolved against the invocation
 directory and overrides `repoRoot`.
 
+Both inputs use this one shared approved root. Configuration schema `1` has no side-specific root
+fields, and the CLI has no `--baseline-repo` or `--candidate-repo` options. The clean sparse-SARIF
+experiment did not change that contract.
+
 Repository context is used only when `matching.enableRepoContext` is true. It remains read-only,
 bounded by file size and snippet radius, and contained below the approved root. A missing,
 escaping, symlinked, or junction path fails closed.
+
+## External URI bases
+
+`uriBaseMappings` explicitly define logical bases that an input references but does not define in
+`run.originalUriBaseIds`. Each entry has an ordinal `id`, a directory-form `uri`, and optionally a
+parent `uriBaseId`. A configured definition fills only a missing base: a valid SARIF-defined base
+with the same identifier always wins and is never silently replaced.
+
+Root targets are limited to `repo:/`, local POSIX or drive-absolute directories, and hostless local
+`file:` directories. A child target must be repository-relative and end in a directory separator.
+UNC, network, authority-bearing repository URIs, queries, fragments, control characters, and parent
+traversal are rejected. References remain lexical; SarifRegress never fetches a URI. Unknown bases,
+cycles, and chains deeper than 32 continue to fail closed. Successful use records a
+`configured-uri-base` transformation with algorithm
+`sarifregress/configured-uri-base/v1` in the finding explanation. The record identifies the
+configured logical base but omits its raw target, so equivalent local roots do not expose machine
+paths or make stable reports platform-specific.
+
+Resolving an artifact through `uriBaseMappings` establishes a safe logical path; it is not identity
+proof and cannot admit a correspondence by itself. Matching still requires another qualifying
+fingerprint or context signal.
 
 ## Path rebases and aliases
 
@@ -114,6 +145,17 @@ remain ambiguous.
 
 Missing evidence is unavailable, not contradictory. `enclosingSymbol` is not required by the MVP
 matcher.
+
+Automatic correspondence is supported when there is a reliable non-colliding producer fingerprint;
+reliable embedded source context or bounded token context from the shared root; or safe URI-base
+resolution combined with another qualifying identity signal. Explicit rule aliases still require
+qualifying path and context evidence. When there is no reliable fingerprint, no embedded snippet,
+no trusted source snapshot, and only non-unique rule/path/message/location evidence, SarifRegress
+leaves findings unmatched. Missing source evidence never promotes path or message coincidence.
+This is the endorsed pre-release evidence profile. Matcher v3.2 makes its two reviewed admission
+boundaries implementation invariants: conflicting context vetoes collided or weak admission, and
+code-flow anchors cannot admit an edge. Exact-head hosted product tests on Ubuntu and Windows cover
+both boundaries. Outputs outside the supported profile are still not release-backed claims.
 
 `enableTokenWindows` opts into repository-backed `token-window/v1` evidence. The adapter derives a
 bounded sequence of terms around the finding region after normalising whitespace and ignoring

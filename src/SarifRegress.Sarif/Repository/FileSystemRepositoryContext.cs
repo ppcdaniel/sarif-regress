@@ -29,8 +29,10 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         throwOnInvalidBytes: true);
 
     private readonly string repositoryRoot;
+    private readonly RepositoryRootHandle repositoryRootHandle;
     private readonly ResourceLimits limits;
     private readonly StringComparison pathComparison;
+    private int disposed;
 
     /// <summary>
     /// Initializes a bounded repository adapter.
@@ -46,6 +48,8 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         this.limits.Validate();
         this.repositoryRoot = Path.TrimEndingDirectorySeparator(
             Path.GetFullPath(repositoryRoot));
+        repositoryRootHandle = RepositoryFileHandleOpener.OpenRoot(
+            this.repositoryRoot);
         pathComparison = OperatingSystem.IsWindows()
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
@@ -60,6 +64,9 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         CancellationToken cancellationToken = default,
         bool includeTokenWindow = false)
     {
+        ObjectDisposedException.ThrowIf(
+            Volatile.Read(ref disposed) != 0,
+            this);
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRelativePath);
         if (lineRadius < 0 || lineRadius > limits.MaximumSnippetRadius)
         {
@@ -80,9 +87,7 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        var openResult = RepositoryFileHandleOpener.Open(
-            repositoryRoot,
-            safeRelativePath);
+        var openResult = repositoryRootHandle.Open(safeRelativePath);
         if (openResult.Stream is not FileStream sourceStream)
         {
             return CreateOpenFailureResult(
@@ -236,6 +241,17 @@ public sealed class FileSystemRepositoryContext : IRepositoryContext
             lastIncludedLine);
 
         return CreateResult(exists: true, snippet, evidence, diagnostics);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref disposed, 1) != 0)
+        {
+            return;
+        }
+
+        repositoryRootHandle.Dispose();
     }
 
     private bool TryResolveContainedPath(

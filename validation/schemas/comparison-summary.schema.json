@@ -1,0 +1,1082 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/comparison-summary.schema.json",
+  "title": "SarifRegress holdout external-baseline comparison summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportKind",
+    "evaluation",
+    "reportHashes",
+    "thresholds",
+    "releaseConditions",
+    "sarifRegress",
+    "sarifMultitool",
+    "aggregate",
+    "producers",
+    "relationships",
+    "nonComparableRelationships",
+    "semanticDifferences",
+    "releaseRecommendation",
+    "recommendationReasons"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "4"
+    },
+    "reportKind": {
+      "const": "holdout-external-baseline-comparison"
+    },
+    "evaluation": {
+      "$ref": "#/$defs/evaluation"
+    },
+    "reportHashes": {
+      "$ref": "#/$defs/reportHashes"
+    },
+    "thresholds": {
+      "$ref": "#/$defs/thresholds"
+    },
+    "releaseConditions": {
+      "$ref": "#/$defs/releaseConditions"
+    },
+    "sarifRegress": {
+      "$ref": "#/$defs/sarifRegressSummary"
+    },
+    "sarifMultitool": {
+      "$ref": "#/$defs/multitoolSummary"
+    },
+    "aggregate": {
+      "$ref": "#/$defs/comparisonMetrics"
+    },
+    "producers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/producerComparison"
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000000,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/relationshipComparison"
+      }
+    },
+    "nonComparableRelationships": {
+      "type": "array",
+      "maxItems": 1000000,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonComparableRelationship"
+      }
+    },
+    "semanticDifferences": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/semanticDifference"
+      }
+    },
+    "releaseRecommendation": {
+      "enum": [
+        "ready",
+        "blocked",
+        "inconclusive"
+      ]
+    },
+    "recommendationReasons": {
+      "type": "array",
+      "maxItems": 11,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "precision-below-threshold",
+          "recall-below-threshold",
+          "per-producer-precision-below-threshold",
+          "per-producer-recall-below-threshold",
+          "incorrectly-auto-matched-ambiguity",
+          "unexplained-ingestion-failure",
+          "structural-failure",
+          "complete-label-graph-failed",
+          "cross-platform-determinism-failed",
+          "changed-decision-explanation-missing",
+          "evaluation-incomplete"
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "releaseRecommendation": {
+            "const": "ready"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "releaseConditions": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "precisionMet",
+              "recallMet",
+              "allProducerPrecisionMet",
+              "allProducerRecallMet",
+              "zeroIncorrectAmbiguityMatches",
+              "noUnexplainedIngestionFailures",
+              "noStructuralFailures",
+              "completeLabelGraphSatisfied",
+              "crossPlatformByteIdentity",
+              "evaluationCompleted",
+              "everyChangedDecisionExplained"
+            ],
+            "properties": {
+              "precisionMet": {
+                "const": true
+              },
+              "recallMet": {
+                "const": true
+              },
+              "allProducerPrecisionMet": {
+                "const": true
+              },
+              "allProducerRecallMet": {
+                "const": true
+              },
+              "zeroIncorrectAmbiguityMatches": {
+                "const": true
+              },
+              "noUnexplainedIngestionFailures": {
+                "const": true
+              },
+              "noStructuralFailures": {
+                "const": true
+              },
+              "completeLabelGraphSatisfied": {
+                "const": true
+              },
+              "crossPlatformByteIdentity": {
+                "const": true
+              },
+              "evaluationCompleted": {
+                "const": true
+              },
+              "everyChangedDecisionExplained": {
+                "const": true
+              }
+            }
+          },
+          "recommendationReasons": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "releaseRecommendation": {
+            "const": "inconclusive"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "releaseConditions": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "precisionMet",
+              "recallMet",
+              "allProducerPrecisionMet",
+              "allProducerRecallMet",
+              "zeroIncorrectAmbiguityMatches",
+              "noUnexplainedIngestionFailures",
+              "noStructuralFailures",
+              "completeLabelGraphSatisfied",
+              "crossPlatformByteIdentity",
+              "evaluationCompleted",
+              "everyChangedDecisionExplained"
+            ],
+            "properties": {
+              "precisionMet": {
+                "type": "boolean"
+              },
+              "recallMet": {
+                "type": "boolean"
+              },
+              "allProducerPrecisionMet": {
+                "type": "boolean"
+              },
+              "allProducerRecallMet": {
+                "type": "boolean"
+              },
+              "zeroIncorrectAmbiguityMatches": {
+                "type": "boolean"
+              },
+              "noUnexplainedIngestionFailures": {
+                "type": "boolean"
+              },
+              "noStructuralFailures": {
+                "type": "boolean"
+              },
+              "completeLabelGraphSatisfied": {
+                "type": "boolean"
+              },
+              "crossPlatformByteIdentity": {
+                "type": "boolean"
+              },
+              "evaluationCompleted": {
+                "const": false
+              },
+              "everyChangedDecisionExplained": {
+                "type": "boolean"
+              }
+            }
+          },
+          "recommendationReasons": {
+            "type": "array",
+            "maxItems": 11,
+            "contains": {
+              "const": "evaluation-incomplete"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "releaseRecommendation": {
+            "const": "blocked"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "releaseConditions": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "precisionMet",
+              "recallMet",
+              "allProducerPrecisionMet",
+              "allProducerRecallMet",
+              "zeroIncorrectAmbiguityMatches",
+              "noUnexplainedIngestionFailures",
+              "noStructuralFailures",
+              "completeLabelGraphSatisfied",
+              "crossPlatformByteIdentity",
+              "evaluationCompleted",
+              "everyChangedDecisionExplained"
+            ],
+            "properties": {
+              "precisionMet": {
+                "type": "boolean"
+              },
+              "recallMet": {
+                "type": "boolean"
+              },
+              "allProducerPrecisionMet": {
+                "type": "boolean"
+              },
+              "allProducerRecallMet": {
+                "type": "boolean"
+              },
+              "zeroIncorrectAmbiguityMatches": {
+                "type": "boolean"
+              },
+              "noUnexplainedIngestionFailures": {
+                "type": "boolean"
+              },
+              "noStructuralFailures": {
+                "type": "boolean"
+              },
+              "completeLabelGraphSatisfied": {
+                "type": "boolean"
+              },
+              "crossPlatformByteIdentity": {
+                "type": "boolean"
+              },
+              "evaluationCompleted": {
+                "const": true
+              },
+              "everyChangedDecisionExplained": {
+                "type": "boolean"
+              }
+            },
+            "anyOf": [
+              {
+                "properties": {
+                  "precisionMet": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "recallMet": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "allProducerPrecisionMet": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "allProducerRecallMet": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "zeroIncorrectAmbiguityMatches": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "noUnexplainedIngestionFailures": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "noStructuralFailures": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "completeLabelGraphSatisfied": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "crossPlatformByteIdentity": {
+                    "const": false
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "everyChangedDecisionExplained": {
+                    "const": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "nonAmbientString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!\\\\\\\\)[^\\u0000\\r\\n]+$"
+    },
+    "gitCommitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?![vV]?[lL][aA][tT][eE][sS][tT]$)(?!.*[ *xX^~><=|])[0-9A-Za-z][0-9A-Za-z._+-]*$"
+    },
+    "schemaVersionValue": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[0-9]+(?:\\.[0-9]+)*$"
+    },
+    "algorithmVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+/-]*$"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "namedAlgorithm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "version": {
+          "$ref": "#/$defs/algorithmVersion"
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositoryCommitSha",
+        "sourceTreeSha256",
+        "sarifRegressToolVersion",
+        "matcherAlgorithmVersion",
+        "fingerprintAlgorithmVersions",
+        "outputSchemaVersion",
+        "configurationSchemaVersion",
+        "holdoutManifestSha256"
+      ],
+      "properties": {
+        "repositoryCommitSha": {
+          "$ref": "#/$defs/gitCommitSha"
+        },
+        "sourceTreeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "sarifRegressToolVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "matcherAlgorithmVersion": {
+          "$ref": "#/$defs/algorithmVersion"
+        },
+        "fingerprintAlgorithmVersions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/namedAlgorithm"
+          }
+        },
+        "outputSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "configurationSchemaVersion": {
+          "$ref": "#/$defs/schemaVersionValue"
+        },
+        "holdoutManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "reportHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "holdoutManifestSha256",
+        "evaluationMetadataSha256",
+        "sarifRegressReportSha256",
+        "sarifMultitoolBaselineReportSha256",
+        "matcherV31ReportSha256",
+        "v31ToV32DeltaReportSha256"
+      ],
+      "properties": {
+        "holdoutManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "evaluationMetadataSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "sarifRegressReportSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "sarifMultitoolBaselineReportSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "matcherV31ReportSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "v31ToV32DeltaReportSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumPrecision",
+        "minimumRecall",
+        "minimumPerProducerPrecision",
+        "minimumPerProducerRecall",
+        "maximumIncorrectlyAutoMatchedAmbiguousCases",
+        "maximumUnexplainedIngestionFailures",
+        "maximumStructuralFailures",
+        "requireCompleteLabelGraph",
+        "requireCrossPlatformByteIdentity",
+        "requireCompletedEvaluation",
+        "requireChangedDecisionExplanations"
+      ],
+      "properties": {
+        "minimumPrecision": {
+          "const": 0.95
+        },
+        "minimumRecall": {
+          "const": 0.9
+        },
+        "minimumPerProducerPrecision": {
+          "const": 0.95
+        },
+        "minimumPerProducerRecall": {
+          "const": 0.8
+        },
+        "maximumIncorrectlyAutoMatchedAmbiguousCases": {
+          "const": 0
+        },
+        "maximumUnexplainedIngestionFailures": {
+          "const": 0
+        },
+        "maximumStructuralFailures": {
+          "const": 0
+        },
+        "requireCompleteLabelGraph": {
+          "const": true
+        },
+        "requireCrossPlatformByteIdentity": {
+          "const": true
+        },
+        "requireCompletedEvaluation": {
+          "const": true
+        },
+        "requireChangedDecisionExplanations": {
+          "const": true
+        }
+      }
+    },
+    "releaseConditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "precisionMet",
+        "recallMet",
+        "allProducerPrecisionMet",
+        "allProducerRecallMet",
+        "zeroIncorrectAmbiguityMatches",
+        "noUnexplainedIngestionFailures",
+        "noStructuralFailures",
+        "completeLabelGraphSatisfied",
+        "crossPlatformByteIdentity",
+        "evaluationCompleted",
+        "everyChangedDecisionExplained"
+      ],
+      "properties": {
+        "precisionMet": {
+          "type": "boolean"
+        },
+        "recallMet": {
+          "type": "boolean"
+        },
+        "allProducerPrecisionMet": {
+          "type": "boolean"
+        },
+        "allProducerRecallMet": {
+          "type": "boolean"
+        },
+        "zeroIncorrectAmbiguityMatches": {
+          "type": "boolean"
+        },
+        "noUnexplainedIngestionFailures": {
+          "type": "boolean"
+        },
+        "noStructuralFailures": {
+          "type": "boolean"
+        },
+        "completeLabelGraphSatisfied": {
+          "type": "boolean"
+        },
+        "crossPlatformByteIdentity": {
+          "type": "boolean"
+        },
+        "evaluationCompleted": {
+          "type": "boolean"
+        },
+        "everyChangedDecisionExplained": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sarifRegressMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groundTruthUnits",
+        "labelledRelationships",
+        "labelledMatches",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "classificationMismatches",
+        "expectedNewClassifications",
+        "correctNewClassifications",
+        "incorrectNewClassifications",
+        "newClassificationAccuracy",
+        "expectedResolvedClassifications",
+        "correctResolvedClassifications",
+        "incorrectResolvedClassifications",
+        "resolvedClassificationAccuracy",
+        "correctAmbiguityRefusals",
+        "incorrectlyAutoMatchedAmbiguousCases",
+        "ingestionFailures",
+        "unexplainedIngestionFailures",
+        "structuralFailures",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "groundTruthUnits": {
+          "$ref": "#/$defs/count"
+        },
+        "labelledRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "labelledMatches": {
+          "$ref": "#/$defs/count"
+        },
+        "truePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falsePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "classificationMismatches": {
+          "$ref": "#/$defs/count"
+        },
+        "expectedNewClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "correctNewClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "incorrectNewClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "newClassificationAccuracy": {
+          "$ref": "#/$defs/ratio"
+        },
+        "expectedResolvedClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "correctResolvedClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "incorrectResolvedClassifications": {
+          "$ref": "#/$defs/count"
+        },
+        "resolvedClassificationAccuracy": {
+          "$ref": "#/$defs/ratio"
+        },
+        "correctAmbiguityRefusals": {
+          "$ref": "#/$defs/count"
+        },
+        "incorrectlyAutoMatchedAmbiguousCases": {
+          "$ref": "#/$defs/count"
+        },
+        "ingestionFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "unexplainedIngestionFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "structuralFailures": {
+          "$ref": "#/$defs/count"
+        },
+        "precision": {
+          "$ref": "#/$defs/ratio"
+        },
+        "recall": {
+          "$ref": "#/$defs/ratio"
+        },
+        "f1": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "sarifRegressSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metrics"
+      ],
+      "properties": {
+        "metrics": {
+          "$ref": "#/$defs/sarifRegressMetrics"
+        }
+      }
+    },
+    "multitoolMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groundTruthUnits",
+        "labelledRelationships",
+        "comparableRelationships",
+        "nonComparableRelationships",
+        "truePositives",
+        "falsePositives",
+        "falseNegatives",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "properties": {
+        "groundTruthUnits": {
+          "$ref": "#/$defs/count"
+        },
+        "labelledRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "comparableRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "nonComparableRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "truePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falsePositives": {
+          "$ref": "#/$defs/count"
+        },
+        "falseNegatives": {
+          "$ref": "#/$defs/count"
+        },
+        "precision": {
+          "$ref": "#/$defs/ratio"
+        },
+        "recall": {
+          "$ref": "#/$defs/ratio"
+        },
+        "f1": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "multitoolSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolName",
+        "exactVersion",
+        "metrics"
+      ],
+      "properties": {
+        "toolName": {
+          "const": "Microsoft SARIF Multitool"
+        },
+        "exactVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "metrics": {
+          "$ref": "#/$defs/multitoolMetrics"
+        }
+      }
+    },
+    "comparisonMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groundTruthUnits",
+        "positiveMatchRelationships",
+        "comparableUnits",
+        "bothToolsAgree",
+        "bothToolsCorrect",
+        "sarifRegressOnlyCorrect",
+        "multitoolOnlyCorrect",
+        "bothIncorrect",
+        "nonComparable"
+      ],
+      "properties": {
+        "groundTruthUnits": {
+          "$ref": "#/$defs/count"
+        },
+        "positiveMatchRelationships": {
+          "$ref": "#/$defs/count"
+        },
+        "comparableUnits": {
+          "$ref": "#/$defs/count"
+        },
+        "bothToolsAgree": {
+          "$ref": "#/$defs/count"
+        },
+        "bothToolsCorrect": {
+          "$ref": "#/$defs/count"
+        },
+        "sarifRegressOnlyCorrect": {
+          "$ref": "#/$defs/count"
+        },
+        "multitoolOnlyCorrect": {
+          "$ref": "#/$defs/count"
+        },
+        "bothIncorrect": {
+          "$ref": "#/$defs/count"
+        },
+        "nonComparable": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "producerComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producerId",
+        "sarifRegress",
+        "sarifMultitool",
+        "comparison",
+        "qualityGates"
+      ],
+      "properties": {
+        "producerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "sarifRegress": {
+          "$ref": "#/$defs/sarifRegressMetrics"
+        },
+        "sarifMultitool": {
+          "$ref": "#/$defs/multitoolMetrics"
+        },
+        "comparison": {
+          "$ref": "#/$defs/comparisonMetrics"
+        },
+        "qualityGates": {
+          "$ref": "#/$defs/producerQualityGates"
+        }
+      }
+    },
+    "producerQualityGates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumPrecision",
+        "minimumRecall",
+        "precisionMet",
+        "recallMet"
+      ],
+      "properties": {
+        "minimumPrecision": {
+          "const": 0.95
+        },
+        "minimumRecall": {
+          "const": 0.8
+        },
+        "precisionMet": {
+          "type": "boolean"
+        },
+        "recallMet": {
+          "type": "boolean"
+        }
+      }
+    },
+    "comparabilityReason": {
+      "enum": [
+        "multitool-taxonomy-not-equivalent",
+        "multitool-does-not-express-ambiguity",
+        "unsupported-sarif-shape",
+        "tool-error",
+        "missing-correspondence-data",
+        "run-to-run-not-applicable",
+        "path-rebase-configuration-not-supported"
+      ]
+    },
+    "relationshipComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationshipId",
+        "caseId",
+        "producerId",
+        "sarifRegressCorrect",
+        "multitoolCorrect",
+        "toolsAgree",
+        "correctnessCategory",
+        "nonComparableReason"
+      ],
+      "properties": {
+        "relationshipId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "caseId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "producerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "sarifRegressCorrect": {
+          "type": "boolean"
+        },
+        "multitoolCorrect": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "toolsAgree": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "correctnessCategory": {
+          "enum": [
+            "both-correct",
+            "sarif-regress-only-correct",
+            "multitool-only-correct",
+            "both-incorrect",
+            "non-comparable"
+          ]
+        },
+        "nonComparableReason": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/comparabilityReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "correctnessCategory": {
+                "const": "non-comparable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "multitoolCorrect": {
+                "type": "null"
+              },
+              "toolsAgree": {
+                "type": "null"
+              },
+              "nonComparableReason": {
+                "$ref": "#/$defs/comparabilityReason"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "multitoolCorrect": {
+                "type": "boolean"
+              },
+              "toolsAgree": {
+                "type": "boolean"
+              },
+              "nonComparableReason": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "nonComparableRelationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationshipId",
+        "caseId",
+        "producerId",
+        "reason"
+      ],
+      "properties": {
+        "relationshipId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "caseId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "producerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "reason": {
+          "$ref": "#/$defs/comparabilityReason"
+        }
+      }
+    },
+    "semanticDifference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "affectedRelationshipIds",
+        "explanation"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "taxonomy-granularity",
+            "ambiguity-semantics",
+            "identity-semantics",
+            "run-to-run-scope",
+            "unsupported-input",
+            "tool-error"
+          ]
+        },
+        "affectedRelationshipIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "explanation": {
+          "$ref": "#/$defs/nonAmbientString"
+        }
+      }
+    }
+  }
+}

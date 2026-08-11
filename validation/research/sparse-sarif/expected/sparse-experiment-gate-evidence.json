@@ -1,0 +1,3323 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-gates/v1",
+  "corpusManifestSha256": "351cfb362d798a47054993708ecfbec6c42d289f2e1d3bdc0b514c2d3b9f9435",
+  "observationsSha256": "566894dce897843c169a18354a6e867650c0bc74172a729f65cea7912f1e04c9",
+  "variants": [
+    {
+      "id": "sarif-only-control",
+      "metrics": {
+        "acceptedPairs": 0,
+        "truePositives": 0,
+        "falsePositives": 0,
+        "falseNegatives": 19,
+        "precision": 1,
+        "recall": 0,
+        "f1": 0
+      },
+      "byFamily": [
+        {
+          "familyId": "pmd-clean-a",
+          "metrics": {
+            "acceptedPairs": 0,
+            "truePositives": 0,
+            "falsePositives": 0,
+            "falseNegatives": 8,
+            "precision": 1,
+            "recall": 0,
+            "f1": 0
+          }
+        },
+        {
+          "familyId": "pmd-clean-b",
+          "metrics": {
+            "acceptedPairs": 0,
+            "truePositives": 0,
+            "falsePositives": 0,
+            "falseNegatives": 11,
+            "precision": 1,
+            "recall": 0,
+            "f1": 0
+          }
+        }
+      ],
+      "classification": {
+        "matchedRelationships": 0,
+        "classificationMismatches": 0
+      },
+      "lifecycle": {
+        "expectedNew": 3,
+        "correctNew": 3,
+        "incorrectNew": 0,
+        "expectedResolved": 3,
+        "correctResolved": 3,
+        "incorrectResolved": 0
+      },
+      "ambiguity": {
+        "labelledUnits": 3,
+        "correctRefusals": 3,
+        "incorrectAutoMatches": 0
+      },
+      "ingestion": {
+        "casesEvaluated": 4,
+        "failures": 0,
+        "structuralFailures": 0
+      },
+      "security": {
+        "baselineReadsFromCandidateRoot": 0,
+        "candidateReadsFromBaselineRoot": 0,
+        "containmentViolations": 0,
+        "rootConfusions": 0
+      },
+      "productionApplicability": {
+        "trustedTreeHashPreflightEnabled": false,
+        "metricsWithoutTrustedTreeHashes": {
+          "acceptedPairs": 0,
+          "truePositives": 0,
+          "falsePositives": 0,
+          "falseNegatives": 19,
+          "precision": 1,
+          "recall": 0,
+          "f1": 0
+        },
+        "scenariosWithoutTrustedTreeHashes": [
+          {
+            "scenarioId": "exact-unchanged-source-location",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "region-drift-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "file-method-movement-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "repeated-context-ambiguity",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "missing-source-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "mismatched-source-snapshot",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "baseline-root-bound-to-candidate",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "candidate-root-bound-to-baseline",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "both-roots-swapped",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "same-observation-different-method-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          }
+        ],
+        "corpusSpecificPreflightRequired": false
+      },
+      "scenarios": [
+        {
+          "scenarioId": "exact-unchanged-source-location",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "region-drift-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "file-method-movement-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "repeated-context-ambiguity",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "missing-source-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "mismatched-source-snapshot",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "baseline-root-bound-to-candidate",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "candidate-root-bound-to-baseline",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "both-roots-swapped",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "same-observation-different-method-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exact-region-snippet",
+      "metrics": {
+        "acceptedPairs": 2,
+        "truePositives": 2,
+        "falsePositives": 0,
+        "falseNegatives": 17,
+        "precision": 1,
+        "recall": 0.105263,
+        "f1": 0.190476
+      },
+      "byFamily": [
+        {
+          "familyId": "pmd-clean-a",
+          "metrics": {
+            "acceptedPairs": 2,
+            "truePositives": 2,
+            "falsePositives": 0,
+            "falseNegatives": 6,
+            "precision": 1,
+            "recall": 0.25,
+            "f1": 0.4
+          }
+        },
+        {
+          "familyId": "pmd-clean-b",
+          "metrics": {
+            "acceptedPairs": 0,
+            "truePositives": 0,
+            "falsePositives": 0,
+            "falseNegatives": 11,
+            "precision": 1,
+            "recall": 0,
+            "f1": 0
+          }
+        }
+      ],
+      "classification": {
+        "matchedRelationships": 2,
+        "classificationMismatches": 0
+      },
+      "lifecycle": {
+        "expectedNew": 3,
+        "correctNew": 3,
+        "incorrectNew": 0,
+        "expectedResolved": 3,
+        "correctResolved": 3,
+        "incorrectResolved": 0
+      },
+      "ambiguity": {
+        "labelledUnits": 3,
+        "correctRefusals": 3,
+        "incorrectAutoMatches": 0
+      },
+      "ingestion": {
+        "casesEvaluated": 4,
+        "failures": 0,
+        "structuralFailures": 0
+      },
+      "security": {
+        "baselineReadsFromCandidateRoot": 0,
+        "candidateReadsFromBaselineRoot": 0,
+        "containmentViolations": 0,
+        "rootConfusions": 0
+      },
+      "productionApplicability": {
+        "trustedTreeHashPreflightEnabled": false,
+        "metricsWithoutTrustedTreeHashes": {
+          "acceptedPairs": 2,
+          "truePositives": 2,
+          "falsePositives": 0,
+          "falseNegatives": 17,
+          "precision": 1,
+          "recall": 0.105263,
+          "f1": 0.190476
+        },
+        "scenariosWithoutTrustedTreeHashes": [
+          {
+            "scenarioId": "exact-unchanged-source-location",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "region-drift-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "file-method-movement-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "repeated-context-ambiguity",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "missing-source-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "mismatched-source-snapshot",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "baseline-root-bound-to-candidate",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "candidate-root-bound-to-baseline",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "both-roots-swapped",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "same-observation-different-method-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          }
+        ],
+        "corpusSpecificPreflightRequired": true
+      },
+      "scenarios": [
+        {
+          "scenarioId": "exact-unchanged-source-location",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "region-drift-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "file-method-movement-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 2,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "repeated-context-ambiguity",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "missing-source-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "mismatched-source-snapshot",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "baseline-root-bound-to-candidate",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "candidate-root-bound-to-baseline",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "both-roots-swapped",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "same-observation-different-method-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 2,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "token-window",
+      "metrics": {
+        "acceptedPairs": 4,
+        "truePositives": 4,
+        "falsePositives": 0,
+        "falseNegatives": 15,
+        "precision": 1,
+        "recall": 0.210526,
+        "f1": 0.347826
+      },
+      "byFamily": [
+        {
+          "familyId": "pmd-clean-a",
+          "metrics": {
+            "acceptedPairs": 3,
+            "truePositives": 3,
+            "falsePositives": 0,
+            "falseNegatives": 5,
+            "precision": 1,
+            "recall": 0.375,
+            "f1": 0.545455
+          }
+        },
+        {
+          "familyId": "pmd-clean-b",
+          "metrics": {
+            "acceptedPairs": 1,
+            "truePositives": 1,
+            "falsePositives": 0,
+            "falseNegatives": 10,
+            "precision": 1,
+            "recall": 0.090909,
+            "f1": 0.166667
+          }
+        }
+      ],
+      "classification": {
+        "matchedRelationships": 4,
+        "classificationMismatches": 0
+      },
+      "lifecycle": {
+        "expectedNew": 3,
+        "correctNew": 3,
+        "incorrectNew": 0,
+        "expectedResolved": 3,
+        "correctResolved": 3,
+        "incorrectResolved": 0
+      },
+      "ambiguity": {
+        "labelledUnits": 3,
+        "correctRefusals": 3,
+        "incorrectAutoMatches": 0
+      },
+      "ingestion": {
+        "casesEvaluated": 4,
+        "failures": 0,
+        "structuralFailures": 0
+      },
+      "security": {
+        "baselineReadsFromCandidateRoot": 0,
+        "candidateReadsFromBaselineRoot": 0,
+        "containmentViolations": 0,
+        "rootConfusions": 0
+      },
+      "productionApplicability": {
+        "trustedTreeHashPreflightEnabled": false,
+        "metricsWithoutTrustedTreeHashes": {
+          "acceptedPairs": 4,
+          "truePositives": 4,
+          "falsePositives": 0,
+          "falseNegatives": 15,
+          "precision": 1,
+          "recall": 0.210526,
+          "f1": 0.347826
+        },
+        "scenariosWithoutTrustedTreeHashes": [
+          {
+            "scenarioId": "exact-unchanged-source-location",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "region-drift-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "file-method-movement-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "repeated-context-ambiguity",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "missing-source-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "mismatched-source-snapshot",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "baseline-root-bound-to-candidate",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 4,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "candidate-root-bound-to-baseline",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 4,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "both-roots-swapped",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "same-observation-different-method-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          }
+        ],
+        "corpusSpecificPreflightRequired": true
+      },
+      "scenarios": [
+        {
+          "scenarioId": "exact-unchanged-source-location",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 2,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 1,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "region-drift-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "file-method-movement-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 1,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "repeated-context-ambiguity",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "missing-source-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "mismatched-source-snapshot",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "baseline-root-bound-to-candidate",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "candidate-root-bound-to-baseline",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "both-roots-swapped",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "same-observation-different-method-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 3,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 1,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "relative-context",
+      "metrics": {
+        "acceptedPairs": 9,
+        "truePositives": 9,
+        "falsePositives": 0,
+        "falseNegatives": 10,
+        "precision": 1,
+        "recall": 0.473684,
+        "f1": 0.642857
+      },
+      "byFamily": [
+        {
+          "familyId": "pmd-clean-a",
+          "metrics": {
+            "acceptedPairs": 3,
+            "truePositives": 3,
+            "falsePositives": 0,
+            "falseNegatives": 5,
+            "precision": 1,
+            "recall": 0.375,
+            "f1": 0.545455
+          }
+        },
+        {
+          "familyId": "pmd-clean-b",
+          "metrics": {
+            "acceptedPairs": 6,
+            "truePositives": 6,
+            "falsePositives": 0,
+            "falseNegatives": 5,
+            "precision": 1,
+            "recall": 0.545455,
+            "f1": 0.705883
+          }
+        }
+      ],
+      "classification": {
+        "matchedRelationships": 9,
+        "classificationMismatches": 0
+      },
+      "lifecycle": {
+        "expectedNew": 3,
+        "correctNew": 3,
+        "incorrectNew": 0,
+        "expectedResolved": 3,
+        "correctResolved": 3,
+        "incorrectResolved": 0
+      },
+      "ambiguity": {
+        "labelledUnits": 3,
+        "correctRefusals": 3,
+        "incorrectAutoMatches": 0
+      },
+      "ingestion": {
+        "casesEvaluated": 4,
+        "failures": 0,
+        "structuralFailures": 0
+      },
+      "security": {
+        "baselineReadsFromCandidateRoot": 0,
+        "candidateReadsFromBaselineRoot": 0,
+        "containmentViolations": 0,
+        "rootConfusions": 0
+      },
+      "productionApplicability": {
+        "trustedTreeHashPreflightEnabled": false,
+        "metricsWithoutTrustedTreeHashes": {
+          "acceptedPairs": 9,
+          "truePositives": 9,
+          "falsePositives": 0,
+          "falseNegatives": 10,
+          "precision": 1,
+          "recall": 0.473684,
+          "f1": 0.642857
+        },
+        "scenariosWithoutTrustedTreeHashes": [
+          {
+            "scenarioId": "exact-unchanged-source-location",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "region-drift-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "file-method-movement-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "repeated-context-ambiguity",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "missing-source-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "mismatched-source-snapshot",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 6,
+                "affectedEndpointMatches": 3,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "baseline-root-bound-to-candidate",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "candidate-root-bound-to-baseline",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "both-roots-swapped",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "same-observation-different-method-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 6,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          }
+        ],
+        "corpusSpecificPreflightRequired": true
+      },
+      "scenarios": [
+        {
+          "scenarioId": "exact-unchanged-source-location",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 2,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 3,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "region-drift-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 3,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "file-method-movement-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 1,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "repeated-context-ambiguity",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "missing-source-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "mismatched-source-snapshot",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "baseline-root-bound-to-candidate",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "candidate-root-bound-to-baseline",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "both-roots-swapped",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "same-observation-different-method-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 3,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 6,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "agreement-only-combination",
+      "metrics": {
+        "acceptedPairs": 9,
+        "truePositives": 9,
+        "falsePositives": 0,
+        "falseNegatives": 10,
+        "precision": 1,
+        "recall": 0.473684,
+        "f1": 0.642857
+      },
+      "byFamily": [
+        {
+          "familyId": "pmd-clean-a",
+          "metrics": {
+            "acceptedPairs": 3,
+            "truePositives": 3,
+            "falsePositives": 0,
+            "falseNegatives": 5,
+            "precision": 1,
+            "recall": 0.375,
+            "f1": 0.545455
+          }
+        },
+        {
+          "familyId": "pmd-clean-b",
+          "metrics": {
+            "acceptedPairs": 6,
+            "truePositives": 6,
+            "falsePositives": 0,
+            "falseNegatives": 5,
+            "precision": 1,
+            "recall": 0.545455,
+            "f1": 0.705883
+          }
+        }
+      ],
+      "classification": {
+        "matchedRelationships": 9,
+        "classificationMismatches": 0
+      },
+      "lifecycle": {
+        "expectedNew": 3,
+        "correctNew": 3,
+        "incorrectNew": 0,
+        "expectedResolved": 3,
+        "correctResolved": 3,
+        "incorrectResolved": 0
+      },
+      "ambiguity": {
+        "labelledUnits": 3,
+        "correctRefusals": 3,
+        "incorrectAutoMatches": 0
+      },
+      "ingestion": {
+        "casesEvaluated": 4,
+        "failures": 0,
+        "structuralFailures": 0
+      },
+      "security": {
+        "baselineReadsFromCandidateRoot": 0,
+        "candidateReadsFromBaselineRoot": 0,
+        "containmentViolations": 0,
+        "rootConfusions": 0
+      },
+      "productionApplicability": {
+        "trustedTreeHashPreflightEnabled": false,
+        "metricsWithoutTrustedTreeHashes": {
+          "acceptedPairs": 9,
+          "truePositives": 9,
+          "falsePositives": 0,
+          "falseNegatives": 10,
+          "precision": 1,
+          "recall": 0.473684,
+          "f1": 0.642857
+        },
+        "scenariosWithoutTrustedTreeHashes": [
+          {
+            "scenarioId": "exact-unchanged-source-location",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "region-drift-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "file-method-movement-equivalent-token-context",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 1,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "repeated-context-ambiguity",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 0,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "missing-source-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "mismatched-source-snapshot",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 6,
+                "affectedEndpointMatches": 3,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "baseline-root-bound-to-candidate",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "candidate-root-bound-to-baseline",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "both-roots-swapped",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 2,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 10,
+                "candidateReadsFromBaselineRoot": 11,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": false,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 16,
+                "candidateReadsFromBaselineRoot": 16,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          },
+          {
+            "scenarioId": "same-observation-different-method-file",
+            "families": [
+              {
+                "familyId": "pmd-clean-a",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 3,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              },
+              {
+                "familyId": "pmd-clean-b",
+                "assertionsPassed": true,
+                "preflightAccepted": true,
+                "acceptedRelationships": 6,
+                "affectedEndpointMatches": 0,
+                "baselineReadsFromCandidateRoot": 0,
+                "candidateReadsFromBaselineRoot": 0,
+                "containmentViolations": 0,
+                "unexplainedIngestionFailures": 0,
+                "structuralFailures": 0
+              }
+            ]
+          }
+        ],
+        "corpusSpecificPreflightRequired": true
+      },
+      "scenarios": [
+        {
+          "scenarioId": "exact-unchanged-source-location",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 2,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 3,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "region-drift-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 3,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "file-method-movement-equivalent-token-context",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 1,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "repeated-context-ambiguity",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "missing-source-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "mismatched-source-snapshot",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "baseline-root-bound-to-candidate",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "candidate-root-bound-to-baseline",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "both-roots-swapped",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": false,
+              "acceptedRelationships": 0,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        },
+        {
+          "scenarioId": "same-observation-different-method-file",
+          "families": [
+            {
+              "familyId": "pmd-clean-a",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 3,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            },
+            {
+              "familyId": "pmd-clean-b",
+              "assertionsPassed": true,
+              "preflightAccepted": true,
+              "acceptedRelationships": 6,
+              "affectedEndpointMatches": 0,
+              "baselineReadsFromCandidateRoot": 0,
+              "candidateReadsFromBaselineRoot": 0,
+              "containmentViolations": 0,
+              "unexplainedIngestionFailures": 0,
+              "structuralFailures": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

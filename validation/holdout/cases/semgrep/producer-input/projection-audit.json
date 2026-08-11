@@ -1,0 +1,718 @@
+{
+  "casePlanSha256": "598a39149e2746e8b4485247aa1852c1edf836ec1178227048e5369c12ce8246",
+  "producer": "semgrep",
+  "producerVersion": "1.172.0",
+  "projectionVersion": "holdout-projection/v1",
+  "schemaVersion": "1",
+  "sides": {
+    "baseline": {
+      "rawCaptureSha256": "11bd204f25bc8ac38f688eeb429eb421414033050bce82f56c881f1dcb7ac7a2",
+      "resultOrdering": "producer-emitted",
+      "results": [
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "15c9c69b46cfa88e03a990cb84fb4c19901391cade251a80a25e0d75b21d81a0",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/ambiguous.py",
+          "projectedResultIndex": 0,
+          "rawResultIndex": 0,
+          "semanticId": "semgrep-ambiguous-01",
+          "sourcePath": "src/ambiguous.py"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "15c9c69b46cfa88e03a990cb84fb4c19901391cade251a80a25e0d75b21d81a0",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/ambiguous.py",
+          "projectedResultIndex": 1,
+          "rawResultIndex": 1,
+          "semanticId": "semgrep-ambiguous-02",
+          "sourcePath": "src/ambiguous.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "95155bf190b18c1c201503d2c0bb465d4f85c31f4ab97a142fe0d97c4362eba2",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-old/renamed.py",
+          "projectedResultIndex": 2,
+          "rawResultIndex": 2,
+          "semanticId": "semgrep-renamed-01",
+          "sourcePath": "src/renamed-old/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "95155bf190b18c1c201503d2c0bb465d4f85c31f4ab97a142fe0d97c4362eba2",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-old/renamed.py",
+          "projectedResultIndex": 3,
+          "rawResultIndex": 3,
+          "semanticId": "semgrep-renamed-02",
+          "sourcePath": "src/renamed-old/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "95155bf190b18c1c201503d2c0bb465d4f85c31f4ab97a142fe0d97c4362eba2",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-old/renamed.py",
+          "projectedResultIndex": 4,
+          "rawResultIndex": 4,
+          "semanticId": "semgrep-renamed-03",
+          "sourcePath": "src/renamed-old/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "95155bf190b18c1c201503d2c0bb465d4f85c31f4ab97a142fe0d97c4362eba2",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-old/renamed.py",
+          "projectedResultIndex": 5,
+          "rawResultIndex": 5,
+          "semanticId": "semgrep-renamed-04",
+          "sourcePath": "src/renamed-old/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "95155bf190b18c1c201503d2c0bb465d4f85c31f4ab97a142fe0d97c4362eba2",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-old/renamed.py",
+          "projectedResultIndex": 6,
+          "rawResultIndex": 6,
+          "semanticId": "semgrep-renamed-05",
+          "sourcePath": "src/renamed-old/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "373f89b10fbb0e464fa06220817c04267ccb40723011bbc81cb96a18fbbc6c6e",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/resolved.py",
+          "projectedResultIndex": 7,
+          "rawResultIndex": 7,
+          "semanticId": "semgrep-resolved-01",
+          "sourcePath": "src/resolved.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "373f89b10fbb0e464fa06220817c04267ccb40723011bbc81cb96a18fbbc6c6e",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/resolved.py",
+          "projectedResultIndex": 8,
+          "rawResultIndex": 8,
+          "semanticId": "semgrep-resolved-02",
+          "sourcePath": "src/resolved.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "373f89b10fbb0e464fa06220817c04267ccb40723011bbc81cb96a18fbbc6c6e",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/resolved.py",
+          "projectedResultIndex": 9,
+          "rawResultIndex": 9,
+          "semanticId": "semgrep-resolved-03",
+          "sourcePath": "src/resolved.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 10,
+          "rawResultIndex": 10,
+          "semanticId": "semgrep-exact-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 11,
+          "rawResultIndex": 11,
+          "semanticId": "semgrep-exact-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/ensured-missing-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 12,
+          "rawResultIndex": 12,
+          "semanticId": "semgrep-exact-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 13,
+          "rawResultIndex": 13,
+          "semanticId": "semgrep-exact-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 14,
+          "rawResultIndex": 14,
+          "semanticId": "semgrep-exact-05",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 15,
+          "rawResultIndex": 15,
+          "semanticId": "semgrep-message-modified-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 16,
+          "rawResultIndex": 16,
+          "semanticId": "semgrep-message-modified-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 17,
+          "rawResultIndex": 17,
+          "semanticId": "semgrep-message-modified-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 18,
+          "rawResultIndex": 18,
+          "semanticId": "semgrep-message-modified-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 19,
+          "rawResultIndex": 19,
+          "semanticId": "semgrep-message-modified-05",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 20,
+          "rawResultIndex": 20,
+          "semanticId": "semgrep-moved-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 21,
+          "rawResultIndex": 21,
+          "semanticId": "semgrep-moved-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 22,
+          "rawResultIndex": 22,
+          "semanticId": "semgrep-moved-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 23,
+          "rawResultIndex": 23,
+          "semanticId": "semgrep-moved-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 24,
+          "rawResultIndex": 24,
+          "semanticId": "semgrep-moved-05",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 25,
+          "rawResultIndex": 25,
+          "semanticId": "semgrep-line-shift-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 26,
+          "rawResultIndex": 26,
+          "semanticId": "semgrep-line-shift-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 27,
+          "rawResultIndex": 27,
+          "semanticId": "semgrep-line-shift-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 28,
+          "rawResultIndex": 28,
+          "semanticId": "semgrep-line-shift-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "path/windows-posix-rebase-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "file:///opt/sarif-regress-holdout/semgrep/baseline/src/stable.py",
+          "projectedResultIndex": 29,
+          "rawResultIndex": 29,
+          "semanticId": "semgrep-line-shift-05",
+          "sourcePath": "src/stable.py"
+        }
+      ],
+      "runMutations": []
+    },
+    "candidate": {
+      "rawCaptureSha256": "20249271acd267810b036318d35d84bbb717a78fad949286a59a6679bec13cf5",
+      "resultOrdering": "producer-emitted",
+      "results": [
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "15c9c69b46cfa88e03a990cb84fb4c19901391cade251a80a25e0d75b21d81a0",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/ambiguous.py",
+          "projectedResultIndex": 0,
+          "rawResultIndex": 0,
+          "semanticId": "semgrep-ambiguous-01",
+          "sourcePath": "src/ambiguous.py"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "15c9c69b46cfa88e03a990cb84fb4c19901391cade251a80a25e0d75b21d81a0",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/ambiguous.py",
+          "projectedResultIndex": 1,
+          "rawResultIndex": 1,
+          "semanticId": "semgrep-ambiguous-02",
+          "sourcePath": "src/ambiguous.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "64c815f173079806cee9731ba37d586d5d347fe1bcb16198466432ac5e8619cc",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/new.py",
+          "projectedResultIndex": 2,
+          "rawResultIndex": 2,
+          "semanticId": "semgrep-new-01",
+          "sourcePath": "src/new.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "64c815f173079806cee9731ba37d586d5d347fe1bcb16198466432ac5e8619cc",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/new.py",
+          "projectedResultIndex": 3,
+          "rawResultIndex": 3,
+          "semanticId": "semgrep-new-02",
+          "sourcePath": "src/new.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "64c815f173079806cee9731ba37d586d5d347fe1bcb16198466432ac5e8619cc",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/new.py",
+          "projectedResultIndex": 4,
+          "rawResultIndex": 4,
+          "semanticId": "semgrep-new-03",
+          "sourcePath": "src/new.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "90496a1e89b482b241e078aa72640a8466c67a9de3e0cb771185429f248b4847",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-new/renamed.py",
+          "projectedResultIndex": 5,
+          "rawResultIndex": 5,
+          "semanticId": "semgrep-renamed-01",
+          "sourcePath": "src/renamed-new/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "90496a1e89b482b241e078aa72640a8466c67a9de3e0cb771185429f248b4847",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-new/renamed.py",
+          "projectedResultIndex": 6,
+          "rawResultIndex": 6,
+          "semanticId": "semgrep-renamed-02",
+          "sourcePath": "src/renamed-new/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "90496a1e89b482b241e078aa72640a8466c67a9de3e0cb771185429f248b4847",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-new/renamed.py",
+          "projectedResultIndex": 7,
+          "rawResultIndex": 7,
+          "semanticId": "semgrep-renamed-03",
+          "sourcePath": "src/renamed-new/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "90496a1e89b482b241e078aa72640a8466c67a9de3e0cb771185429f248b4847",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-new/renamed.py",
+          "projectedResultIndex": 8,
+          "rawResultIndex": 8,
+          "semanticId": "semgrep-renamed-04",
+          "sourcePath": "src/renamed-new/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "90496a1e89b482b241e078aa72640a8466c67a9de3e0cb771185429f248b4847",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/renamed-new/renamed.py",
+          "projectedResultIndex": 9,
+          "rawResultIndex": 9,
+          "semanticId": "semgrep-renamed-05",
+          "sourcePath": "src/renamed-new/renamed.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 10,
+          "rawResultIndex": 10,
+          "semanticId": "semgrep-exact-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 11,
+          "rawResultIndex": 11,
+          "semanticId": "semgrep-exact-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/ensured-missing-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 12,
+          "rawResultIndex": 12,
+          "semanticId": "semgrep-exact-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 13,
+          "rawResultIndex": 13,
+          "semanticId": "semgrep-exact-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 14,
+          "rawResultIndex": 14,
+          "semanticId": "semgrep-exact-05",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 15,
+          "rawResultIndex": 15,
+          "semanticId": "semgrep-message-modified-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 16,
+          "rawResultIndex": 16,
+          "semanticId": "semgrep-message-modified-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 17,
+          "rawResultIndex": 17,
+          "semanticId": "semgrep-message-modified-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 18,
+          "rawResultIndex": 18,
+          "semanticId": "semgrep-message-modified-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 19,
+          "rawResultIndex": 19,
+          "semanticId": "semgrep-message-modified-05",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 20,
+          "rawResultIndex": 20,
+          "semanticId": "semgrep-moved-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 21,
+          "rawResultIndex": 21,
+          "semanticId": "semgrep-moved-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 22,
+          "rawResultIndex": 22,
+          "semanticId": "semgrep-moved-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 23,
+          "rawResultIndex": 23,
+          "semanticId": "semgrep-moved-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 24,
+          "rawResultIndex": 24,
+          "semanticId": "semgrep-moved-05",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 25,
+          "rawResultIndex": 25,
+          "semanticId": "semgrep-line-shift-01",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 26,
+          "rawResultIndex": 26,
+          "semanticId": "semgrep-line-shift-02",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 27,
+          "rawResultIndex": 27,
+          "semanticId": "semgrep-line-shift-03",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "src/stable.py",
+          "projectedResultIndex": 28,
+          "rawResultIndex": 28,
+          "semanticId": "semgrep-line-shift-04",
+          "sourcePath": "src/stable.py"
+        },
+        {
+          "appliedMutations": [
+            "path/windows-posix-rebase-v1"
+          ],
+          "originalArtifactUriSha256": "43352663db73780e3a4c64069f13e2812a460d640d2864f535d7b243a048c77f",
+          "originalFingerprintsSha256": "429aaf3e65c4aa4aa13183a9fcefa3b4903b9e02e5a069649d310d1559947996",
+          "originalMessageSha256": "98b8097c144790f02ac3c3376b3364e01eedacd9acb8f2fff7bd2d172f1d0d89",
+          "projectedArtifactUri": "file:///C:/sarif-regress-holdout/semgrep/candidate/src/stable.py",
+          "projectedResultIndex": 29,
+          "rawResultIndex": 29,
+          "semanticId": "semgrep-line-shift-05",
+          "sourcePath": "src/stable.py"
+        }
+      ],
+      "runMutations": [
+        {
+          "fields": [
+            "semanticVersion"
+          ],
+          "mutation": "producer-version/candidate-controlled-change-v1",
+          "originalVersionMetadataSha256": "dc8916463d830427972c2ef32c37e4696ed62c497eaefedb5542aba61bf34fcd",
+          "projectedVersion": "1.172.0+holdout-candidate-projection"
+        }
+      ]
+    }
+  }
+}

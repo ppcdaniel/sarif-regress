@@ -1,0 +1,1426 @@
+{
+  "schemaVersion": "4",
+  "reportKind": "holdout-external-baseline-comparison",
+  "evaluation": {
+    "repositoryCommitSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
+    "sourceTreeSha256": "ff2cfc9e8b42b0465b11e85030413f706b465663c322b91351974c4d750fe6e6",
+    "sarifRegressToolVersion": "0.1.0",
+    "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
+    "fingerprintAlgorithmVersions": [
+      {
+        "name": "derived-fingerprint",
+        "version": "rule-path-context/v2"
+      },
+      {
+        "name": "derived-fingerprint-compare",
+        "version": "sarifregress/derived-fingerprint-compare/v2"
+      },
+      {
+        "name": "embedded-snippet",
+        "version": "embedded-snippet/v1"
+      },
+      {
+        "name": "producer-fingerprint-common",
+        "version": "sarifregress/producer-fingerprint-common-version/v1"
+      }
+    ],
+    "outputSchemaVersion": "1",
+    "configurationSchemaVersion": "1",
+    "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379"
+  },
+  "reportHashes": {
+    "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
+    "evaluationMetadataSha256": "d720dc7f9a419f7e599ca7d2f514c9f53a4214cb7e3e9a66057e1e4e9475e158",
+    "sarifRegressReportSha256": "9757712b37e54ad32c0c0eaadbd4bf3621b59cf3d6d84203b284099212395ea7",
+    "sarifMultitoolBaselineReportSha256": "cb81bb3f3e6bc6dd07caa1960a4219e9ffc5329af20e2e3fda7dd75ce1d9b8f9",
+    "matcherV31ReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
+    "v31ToV32DeltaReportSha256": "5201a376cba27aab8e3e9dbcc005f522132576e96b66bd5ff9b4faf455918f17"
+  },
+  "thresholds": {
+    "minimumPrecision": 0.95,
+    "minimumRecall": 0.90,
+    "minimumPerProducerPrecision": 0.95,
+    "minimumPerProducerRecall": 0.80,
+    "maximumIncorrectlyAutoMatchedAmbiguousCases": 0,
+    "maximumUnexplainedIngestionFailures": 0,
+    "maximumStructuralFailures": 0,
+    "requireCompleteLabelGraph": true,
+    "requireCrossPlatformByteIdentity": true,
+    "requireCompletedEvaluation": true,
+    "requireChangedDecisionExplanations": true
+  },
+  "releaseConditions": {
+    "precisionMet": true,
+    "recallMet": false,
+    "allProducerPrecisionMet": true,
+    "allProducerRecallMet": false,
+    "zeroIncorrectAmbiguityMatches": true,
+    "noUnexplainedIngestionFailures": true,
+    "noStructuralFailures": true,
+    "completeLabelGraphSatisfied": false,
+    "crossPlatformByteIdentity": true,
+    "evaluationCompleted": true,
+    "everyChangedDecisionExplained": true
+  },
+  "sarifRegress": {
+    "metrics": {
+      "groundTruthUnits": 99,
+      "labelledRelationships": 75,
+      "labelledMatches": 50,
+      "truePositives": 50,
+      "falsePositives": 0,
+      "falseNegatives": 25,
+      "classificationMismatches": 0,
+      "expectedNewClassifications": 9,
+      "correctNewClassifications": 9,
+      "incorrectNewClassifications": 0,
+      "newClassificationAccuracy": 1,
+      "expectedResolvedClassifications": 9,
+      "correctResolvedClassifications": 9,
+      "incorrectResolvedClassifications": 0,
+      "resolvedClassificationAccuracy": 1,
+      "correctAmbiguityRefusals": 4,
+      "incorrectlyAutoMatchedAmbiguousCases": 0,
+      "ingestionFailures": 0,
+      "unexplainedIngestionFailures": 0,
+      "structuralFailures": 0,
+      "precision": 1,
+      "recall": 0.666667,
+      "f1": 0.800000
+    }
+  },
+  "sarifMultitool": {
+    "toolName": "Microsoft SARIF Multitool",
+    "exactVersion": "5.5.0",
+    "metrics": {
+      "groundTruthUnits": 99,
+      "labelledRelationships": 75,
+      "comparableRelationships": 72,
+      "nonComparableRelationships": 3,
+      "truePositives": 47,
+      "falsePositives": 17,
+      "falseNegatives": 25,
+      "precision": 0.734375,
+      "recall": 0.652778,
+      "f1": 0.691177
+    }
+  },
+  "aggregate": {
+    "groundTruthUnits": 99,
+    "positiveMatchRelationships": 75,
+    "comparableUnits": 90,
+    "bothToolsAgree": 61,
+    "bothToolsCorrect": 48,
+    "sarifRegressOnlyCorrect": 18,
+    "multitoolOnlyCorrect": 11,
+    "bothIncorrect": 13,
+    "nonComparable": 9
+  },
+  "producers": [
+    {
+      "producerId": "gitleaks",
+      "sarifRegress": {
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "labelledMatches": 25,
+        "truePositives": 25,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "classificationMismatches": 0,
+        "expectedNewClassifications": 3,
+        "correctNewClassifications": 3,
+        "incorrectNewClassifications": 0,
+        "newClassificationAccuracy": 1,
+        "expectedResolvedClassifications": 3,
+        "correctResolvedClassifications": 3,
+        "incorrectResolvedClassifications": 0,
+        "resolvedClassificationAccuracy": 1,
+        "correctAmbiguityRefusals": 2,
+        "incorrectlyAutoMatchedAmbiguousCases": 0,
+        "ingestionFailures": 0,
+        "unexplainedIngestionFailures": 0,
+        "structuralFailures": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "sarifMultitool": {
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "comparableRelationships": 24,
+        "nonComparableRelationships": 1,
+        "truePositives": 17,
+        "falsePositives": 0,
+        "falseNegatives": 7,
+        "precision": 1,
+        "recall": 0.708333,
+        "f1": 0.829268
+      },
+      "comparison": {
+        "groundTruthUnits": 33,
+        "positiveMatchRelationships": 25,
+        "comparableUnits": 30,
+        "bothToolsAgree": 23,
+        "bothToolsCorrect": 23,
+        "sarifRegressOnlyCorrect": 7,
+        "multitoolOnlyCorrect": 0,
+        "bothIncorrect": 0,
+        "nonComparable": 3
+      },
+      "qualityGates": {
+        "minimumPrecision": 0.95,
+        "minimumRecall": 0.80,
+        "precisionMet": true,
+        "recallMet": true
+      }
+    },
+    {
+      "producerId": "pmd",
+      "sarifRegress": {
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "labelledMatches": 0,
+        "truePositives": 0,
+        "falsePositives": 0,
+        "falseNegatives": 25,
+        "classificationMismatches": 0,
+        "expectedNewClassifications": 3,
+        "correctNewClassifications": 3,
+        "incorrectNewClassifications": 0,
+        "newClassificationAccuracy": 1,
+        "expectedResolvedClassifications": 3,
+        "correctResolvedClassifications": 3,
+        "incorrectResolvedClassifications": 0,
+        "resolvedClassificationAccuracy": 1,
+        "correctAmbiguityRefusals": 0,
+        "incorrectlyAutoMatchedAmbiguousCases": 0,
+        "ingestionFailures": 0,
+        "unexplainedIngestionFailures": 0,
+        "structuralFailures": 0,
+        "precision": 1,
+        "recall": 0,
+        "f1": 0
+      },
+      "sarifMultitool": {
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "comparableRelationships": 24,
+        "nonComparableRelationships": 1,
+        "truePositives": 11,
+        "falsePositives": 14,
+        "falseNegatives": 13,
+        "precision": 0.44,
+        "recall": 0.458333,
+        "f1": 0.448979
+      },
+      "comparison": {
+        "groundTruthUnits": 33,
+        "positiveMatchRelationships": 25,
+        "comparableUnits": 30,
+        "bothToolsAgree": 13,
+        "bothToolsCorrect": 0,
+        "sarifRegressOnlyCorrect": 6,
+        "multitoolOnlyCorrect": 11,
+        "bothIncorrect": 13,
+        "nonComparable": 3
+      },
+      "qualityGates": {
+        "minimumPrecision": 0.95,
+        "minimumRecall": 0.80,
+        "precisionMet": true,
+        "recallMet": false
+      }
+    },
+    {
+      "producerId": "semgrep",
+      "sarifRegress": {
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "labelledMatches": 25,
+        "truePositives": 25,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "classificationMismatches": 0,
+        "expectedNewClassifications": 3,
+        "correctNewClassifications": 3,
+        "incorrectNewClassifications": 0,
+        "newClassificationAccuracy": 1,
+        "expectedResolvedClassifications": 3,
+        "correctResolvedClassifications": 3,
+        "incorrectResolvedClassifications": 0,
+        "resolvedClassificationAccuracy": 1,
+        "correctAmbiguityRefusals": 2,
+        "incorrectlyAutoMatchedAmbiguousCases": 0,
+        "ingestionFailures": 0,
+        "unexplainedIngestionFailures": 0,
+        "structuralFailures": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "sarifMultitool": {
+        "groundTruthUnits": 33,
+        "labelledRelationships": 25,
+        "comparableRelationships": 24,
+        "nonComparableRelationships": 1,
+        "truePositives": 19,
+        "falsePositives": 3,
+        "falseNegatives": 5,
+        "precision": 0.863636,
+        "recall": 0.791667,
+        "f1": 0.826087
+      },
+      "comparison": {
+        "groundTruthUnits": 33,
+        "positiveMatchRelationships": 25,
+        "comparableUnits": 30,
+        "bothToolsAgree": 25,
+        "bothToolsCorrect": 25,
+        "sarifRegressOnlyCorrect": 5,
+        "multitoolOnlyCorrect": 0,
+        "bothIncorrect": 0,
+        "nonComparable": 3
+      },
+      "qualityGates": {
+        "minimumPrecision": 0.95,
+        "minimumRecall": 0.80,
+        "precisionMet": true,
+        "recallMet": true
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipId": "gitleaks-ambiguous-001",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "gitleaks-ambiguous-002",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "gitleaks-match-001",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-002",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "path-rebase-configuration-not-supported"
+    },
+    {
+      "relationshipId": "gitleaks-match-003",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-004",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-005",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-006",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-007",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-008",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-009",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-010",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-011",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-012",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-013",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-014",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-015",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-016",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-017",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-018",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-019",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-020",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-021",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-022",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-023",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-024",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-match-025",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-new-001",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-new-002",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-new-003",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-resolved-001",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-resolved-002",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "gitleaks-resolved-003",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-ambiguous-001",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "pmd-ambiguous-002",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "pmd-match-001",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-002",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-003",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-004",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-005",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-006",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-007",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-008",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-009",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-010",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-011",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-012",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-013",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-014",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-015",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "path-rebase-configuration-not-supported"
+    },
+    {
+      "relationshipId": "pmd-match-016",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-017",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-018",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-019",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-020",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": false,
+      "toolsAgree": true,
+      "correctnessCategory": "both-incorrect",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-021",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-022",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-023",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-024",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-match-025",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": false,
+      "multitoolCorrect": true,
+      "toolsAgree": false,
+      "correctnessCategory": "multitool-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-new-001",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-new-002",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-new-003",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-resolved-001",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-resolved-002",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "pmd-resolved-003",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-ambiguous-001",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "semgrep-ambiguous-002",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "semgrep-match-001",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-002",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-003",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-004",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-005",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-006",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-007",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-008",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-009",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-010",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-011",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-012",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-013",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-014",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-015",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-016",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": false,
+      "toolsAgree": false,
+      "correctnessCategory": "sarif-regress-only-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-017",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-018",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-019",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-020",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-021",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": null,
+      "toolsAgree": null,
+      "correctnessCategory": "non-comparable",
+      "nonComparableReason": "path-rebase-configuration-not-supported"
+    },
+    {
+      "relationshipId": "semgrep-match-022",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-023",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-024",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-match-025",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-new-001",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-new-002",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-new-003",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-resolved-001",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-resolved-002",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    },
+    {
+      "relationshipId": "semgrep-resolved-003",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "sarifRegressCorrect": true,
+      "multitoolCorrect": true,
+      "toolsAgree": true,
+      "correctnessCategory": "both-correct",
+      "nonComparableReason": null
+    }
+  ],
+  "nonComparableRelationships": [
+    {
+      "relationshipId": "gitleaks-ambiguous-001",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "reason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "gitleaks-ambiguous-002",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "reason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "gitleaks-match-002",
+      "caseId": "gitleaks",
+      "producerId": "gitleaks",
+      "reason": "path-rebase-configuration-not-supported"
+    },
+    {
+      "relationshipId": "pmd-ambiguous-001",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "reason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "pmd-ambiguous-002",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "reason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "pmd-match-015",
+      "caseId": "pmd",
+      "producerId": "pmd",
+      "reason": "path-rebase-configuration-not-supported"
+    },
+    {
+      "relationshipId": "semgrep-ambiguous-001",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "reason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "semgrep-ambiguous-002",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "reason": "multitool-does-not-express-ambiguity"
+    },
+    {
+      "relationshipId": "semgrep-match-021",
+      "caseId": "semgrep",
+      "producerId": "semgrep",
+      "reason": "path-rebase-configuration-not-supported"
+    }
+  ],
+  "semanticDifferences": [
+    {
+      "code": "ambiguity-semantics",
+      "affectedRelationshipIds": [
+        "gitleaks-ambiguous-001",
+        "gitleaks-ambiguous-002",
+        "pmd-ambiguous-001",
+        "pmd-ambiguous-002",
+        "semgrep-ambiguous-001",
+        "semgrep-ambiguous-002"
+      ],
+      "explanation": "Multitool run-to-run states do not express SarifRegress ambiguity refusal semantics."
+    },
+    {
+      "code": "taxonomy-granularity",
+      "affectedRelationshipIds": [
+        "gitleaks-match-001",
+        "gitleaks-match-002",
+        "gitleaks-match-003",
+        "gitleaks-match-004",
+        "gitleaks-match-005",
+        "gitleaks-match-006",
+        "gitleaks-match-007",
+        "gitleaks-match-008",
+        "gitleaks-match-009",
+        "gitleaks-match-010",
+        "gitleaks-match-012",
+        "gitleaks-match-013",
+        "gitleaks-match-014",
+        "gitleaks-match-015",
+        "gitleaks-match-016",
+        "gitleaks-match-017",
+        "gitleaks-match-018",
+        "gitleaks-match-023",
+        "gitleaks-match-024",
+        "gitleaks-match-025",
+        "pmd-match-001",
+        "pmd-match-002",
+        "pmd-match-003",
+        "pmd-match-004",
+        "pmd-match-005",
+        "pmd-match-006",
+        "pmd-match-007",
+        "pmd-match-008",
+        "pmd-match-009",
+        "pmd-match-010",
+        "pmd-match-011",
+        "pmd-match-012",
+        "pmd-match-013",
+        "pmd-match-014",
+        "pmd-match-015",
+        "pmd-match-016",
+        "pmd-match-017",
+        "pmd-match-018",
+        "pmd-match-019",
+        "pmd-match-020",
+        "semgrep-match-006",
+        "semgrep-match-007",
+        "semgrep-match-008",
+        "semgrep-match-009",
+        "semgrep-match-010",
+        "semgrep-match-011",
+        "semgrep-match-012",
+        "semgrep-match-013",
+        "semgrep-match-014",
+        "semgrep-match-015",
+        "semgrep-match-016",
+        "semgrep-match-017",
+        "semgrep-match-018",
+        "semgrep-match-019",
+        "semgrep-match-020",
+        "semgrep-match-021",
+        "semgrep-match-022",
+        "semgrep-match-023",
+        "semgrep-match-024",
+        "semgrep-match-025"
+      ],
+      "explanation": "The comparison uses common identity and lifecycle semantics; Multitool updated does not distinguish moved from modified, and project path-rebase configuration has no equivalent external state."
+    }
+  ],
+  "releaseRecommendation": "blocked",
+  "recommendationReasons": [
+    "recall-below-threshold",
+    "per-producer-recall-below-threshold",
+    "complete-label-graph-failed"
+  ]
+}

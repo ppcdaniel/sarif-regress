@@ -12,6 +12,9 @@ internal sealed record OutputArtifact(string Path, byte[] Bytes);
 /// </summary>
 internal static class AtomicOutputWriter
 {
+    private const int StreamBufferBytes = 16 * 1024;
+    private const int MaximumSiblingReservationAttempts = 32;
+
     /// <summary>
     /// Writes a set of outputs transactionally within each destination filesystem.
     /// </summary>
@@ -38,21 +41,25 @@ internal static class AtomicOutputWriter
                     ?? throw new IOException(
                         "The output path has no containing directory.");
                 Directory.CreateDirectory(directory);
-                var temporaryPath = CreateSiblingPath(
+                var reservedFile = ReserveSiblingFile(
                     directory,
                     System.IO.Path.GetFileName(artifact.Path),
                     ".tmp");
                 staged.Add(
                     new StagedArtifact(
                         artifact.Path,
-                        temporaryPath,
+                        reservedFile.Path,
                         BackupPath: null,
                         DestinationReplaced: false));
-                await File.WriteAllBytesAsync(
-                        temporaryPath,
-                        artifact.Bytes,
-                        cancellationToken)
-                    .ConfigureAwait(false);
+                await using (var temporaryStream = reservedFile.Stream)
+                {
+                    await temporaryStream
+                        .WriteAsync(artifact.Bytes, cancellationToken)
+                        .ConfigureAwait(false);
+                    await temporaryStream
+                        .FlushAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
 
             ValidateDistinctPaths(artifacts);
@@ -189,9 +196,50 @@ internal static class AtomicOutputWriter
         return path;
     }
 
+    private static ReservedSiblingFile ReserveSiblingFile(
+        string directory,
+        string fileName,
+        string suffix)
+    {
+        IOException? lastCollision = null;
+        for (var attempt = 0;
+             attempt < MaximumSiblingReservationAttempts;
+             attempt++)
+        {
+            var path = System.IO.Path.Combine(
+                directory,
+                $".{fileName}.{System.IO.Path.GetRandomFileName()}{suffix}");
+            try
+            {
+                var stream = new FileStream(
+                    path,
+                    new FileStreamOptions
+                    {
+                        Access = FileAccess.Write,
+                        Mode = FileMode.CreateNew,
+                        Share = FileShare.None,
+                        Options = FileOptions.Asynchronous,
+                        BufferSize = StreamBufferBytes,
+                    });
+                return new ReservedSiblingFile(path, stream);
+            }
+            catch (IOException exception)
+            {
+                lastCollision = exception;
+            }
+        }
+
+        throw new IOException(
+            $"A unique sibling staging file could not be reserved after "
+            + $"{MaximumSiblingReservationAttempts} attempts.",
+            lastCollision);
+    }
+
     private sealed record StagedArtifact(
         string DestinationPath,
         string TemporaryPath,
         string? BackupPath,
         bool DestinationReplaced);
+
+    private sealed record ReservedSiblingFile(string Path, FileStream Stream);
 }

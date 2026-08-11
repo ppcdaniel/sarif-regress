@@ -1,0 +1,7 @@
+title = "SarifRegress controlled Gitleaks holdout rules"
+
+[[rules]]
+id = "holdout-synthetic-token"
+description = "Controlled synthetic holdout token"
+regex = '''HOLDOUT_TOKEN_[A-Z0-9_]{16,64}'''
+keywords = ["HOLDOUT_TOKEN_"]

@@ -1,0 +1,718 @@
+{
+  "casePlanSha256": "43ab0a9d65faf2861e248ba7d6ab37d6927c57725bf46bc5909f320db2818c1d",
+  "producer": "gitleaks",
+  "producerVersion": "8.30.1",
+  "projectionVersion": "holdout-projection/v1",
+  "schemaVersion": "1",
+  "sides": {
+    "baseline": {
+      "rawCaptureSha256": "8ed8b94d440520aeb028479aad47ea5d2579604275fe6db80a70c87cefe5058a",
+      "resultOrdering": "gitleaks-result-order/v1",
+      "results": [
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "e710647793bfe37049d9b34d1a239f1252b002ed9956fe1ca0bc82056aa8ed12",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "4925a55af831c1cc47784ab7d541268026326edf1928aaef3d9b63bbe3b797eb",
+          "projectedArtifactUri": "src/ambiguous.env",
+          "projectedResultIndex": 0,
+          "rawResultIndex": 0,
+          "semanticId": "gitleaks-ambiguous-01",
+          "sourcePath": "src/ambiguous.env"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "e710647793bfe37049d9b34d1a239f1252b002ed9956fe1ca0bc82056aa8ed12",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "4925a55af831c1cc47784ab7d541268026326edf1928aaef3d9b63bbe3b797eb",
+          "projectedArtifactUri": "src/ambiguous.env",
+          "projectedResultIndex": 1,
+          "rawResultIndex": 1,
+          "semanticId": "gitleaks-ambiguous-02",
+          "sourcePath": "src/ambiguous.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "46a569d0257e77ac3966050dab768cf049696c92be8ef09cbd0d4e99d4c79a91",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "e51b2e6685972963ee131b5ba1e47cc97e396f791ecd70847857862adcc73faf",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-01.env",
+          "projectedResultIndex": 2,
+          "rawResultIndex": 2,
+          "semanticId": "gitleaks-exact-01",
+          "sourcePath": "src/exact/gitleaks-exact-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "1de6495ba8dac07f58ddbb58121645b5826e3a418c70834fee7c6d8a89cc3735",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "333bbb362c1ddfaf364623d137ba5fd214c499f014a680682d38c938eb2deca4",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-02.env",
+          "projectedResultIndex": 3,
+          "rawResultIndex": 3,
+          "semanticId": "gitleaks-exact-02",
+          "sourcePath": "src/exact/gitleaks-exact-02.env"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/ensured-missing-v1"
+          ],
+          "originalArtifactUriSha256": "0643d4f7818176953d976e4bd14d4a0ecd674daeacd08b2ada5470ade394f83a",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "8a6798c75651b8d8d09e83f3f6b78d2b176e44cbd419eea28a44a2ee06dd1af9",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-03.env",
+          "projectedResultIndex": 4,
+          "rawResultIndex": 4,
+          "semanticId": "gitleaks-exact-03",
+          "sourcePath": "src/exact/gitleaks-exact-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "786bd474dd1fab6dc116ae18d33b7e3c428ba8179fce689fb1b2f64dc2bb9fb4",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "03d2e9e78564c905a06b076c6a6ddebbea2e8c39bf320a3ec4e70dfbc671813b",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-04.env",
+          "projectedResultIndex": 5,
+          "rawResultIndex": 5,
+          "semanticId": "gitleaks-exact-04",
+          "sourcePath": "src/exact/gitleaks-exact-04.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "12366389da36b7be56f4dd9779bdd3fcbf6193408256bd6aefca15fe15b50dcd",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "5deadbdb0e09d136f645ac50c8ea031dde3d1ad2e72ab2ca2ca1d4a4efde9e0c",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-05.env",
+          "projectedResultIndex": 6,
+          "rawResultIndex": 6,
+          "semanticId": "gitleaks-exact-05",
+          "sourcePath": "src/exact/gitleaks-exact-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "5dc0390482878f6aef34d726bb4a5e74d5d9641c922250a0ac830ce027a9bb6f",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "87a847e951b607d5f7925e15b5647d4108dc810b3b653e859a2e56da1341def3",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-01.env",
+          "projectedResultIndex": 7,
+          "rawResultIndex": 7,
+          "semanticId": "gitleaks-line-shift-01",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "81374b6c25d6d9f94b7342ef5b2e8b95c72bc6c368ec9c75c50d0e1721173755",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "0fef8a1c8546daeb3e9a03bed8542756f43cf65641a79b604631124316a3ca17",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-02.env",
+          "projectedResultIndex": 8,
+          "rawResultIndex": 8,
+          "semanticId": "gitleaks-line-shift-02",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "eb2c4206efb933738ee6f496e42932477caee04c290706a5855151e2b3b16470",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "2b5a9b9e815c7cc353ed20aedc0f0d011bff76d7162d71749e751294a158b070",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-03.env",
+          "projectedResultIndex": 9,
+          "rawResultIndex": 9,
+          "semanticId": "gitleaks-line-shift-03",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "ebc95728f2922a115128a7228c3535ef18cb7e982b5733635ea1844fbf602129",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "865a189c9f691f8ec9fb40da6b782b4432a81269da5bed20a0062ef76d33bc3e",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-04.env",
+          "projectedResultIndex": 10,
+          "rawResultIndex": 10,
+          "semanticId": "gitleaks-line-shift-04",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-04.env"
+        },
+        {
+          "appliedMutations": [
+            "path/windows-posix-rebase-v1"
+          ],
+          "originalArtifactUriSha256": "f8d39a32615eebd5020d214abf7447cdb133442b61c9d2197a0a45e14b044156",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "bbd46467cbb28400e9bedf23b2c7b3995268d747384b2555da67adbd714a5ce5",
+          "projectedArtifactUri": "file:///opt/sarif-regress-holdout/gitleaks/baseline/src/line-shift/gitleaks-line-shift-05.env",
+          "projectedResultIndex": 11,
+          "rawResultIndex": 11,
+          "semanticId": "gitleaks-line-shift-05",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "411860902fc979966246bcef68d816b375560f138edcba7850b6531e866611a9",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "2adde328cefc7d528264f1ce39e690ce830ab688f50b271a218bf17697a526e3",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-01.env",
+          "projectedResultIndex": 12,
+          "rawResultIndex": 12,
+          "semanticId": "gitleaks-message-modified-01",
+          "sourcePath": "src/message/gitleaks-message-modified-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "791335978bc340e82c47ac9d105986af7d9bac838e19ba17df38df71954ac661",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "add6f0ad1fb268cb6f5526238eb33426eed062dd51bae755dbe12b43a7e9c7f9",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-02.env",
+          "projectedResultIndex": 13,
+          "rawResultIndex": 13,
+          "semanticId": "gitleaks-message-modified-02",
+          "sourcePath": "src/message/gitleaks-message-modified-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "08041a3c4341aca50a825405a22586a5d7289c0fcf3e7fc6ce8c89d0b2b686a9",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "2d2488aba5e46b59939fc4e1ac25938c944f7d60c4366674b1482833f9288497",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-03.env",
+          "projectedResultIndex": 14,
+          "rawResultIndex": 14,
+          "semanticId": "gitleaks-message-modified-03",
+          "sourcePath": "src/message/gitleaks-message-modified-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "9c4edf0813b0acc93d4d4bb49a538a1d72dd6b7da154a7a17acc0581311e19d3",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "65204e14b320806550b0bbf7361350ce87676f8c766742be9171cfea260445dc",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-04.env",
+          "projectedResultIndex": 15,
+          "rawResultIndex": 15,
+          "semanticId": "gitleaks-message-modified-04",
+          "sourcePath": "src/message/gitleaks-message-modified-04.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "49993ecce33a8f763e9f7a9491a3fde6fbf400e66a5a1e5c1882169410930a02",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "c786834162fd8b02895706c4b45aa2a71818df76a495f5b9d7450737bb19c61b",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-05.env",
+          "projectedResultIndex": 16,
+          "rawResultIndex": 16,
+          "semanticId": "gitleaks-message-modified-05",
+          "sourcePath": "src/message/gitleaks-message-modified-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "b5c76c959af54f477acef4eac407c120a200390177220a63c227f9f4b3cf43ae",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "cf0117d991385054b1e195270df5499842ae3d86c5077478a5c6c2e7545e8f9c",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-01.env",
+          "projectedResultIndex": 17,
+          "rawResultIndex": 17,
+          "semanticId": "gitleaks-moved-01",
+          "sourcePath": "src/moved/gitleaks-moved-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "6ad639b6e21a816a2602e656629a5ebba029e9388d9e2f4e23ee3f455f7d5942",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "65b395d05d55f285a8171530ee1bc8cd6fa74262607187f8ba85e9e4627e3763",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-02.env",
+          "projectedResultIndex": 18,
+          "rawResultIndex": 18,
+          "semanticId": "gitleaks-moved-02",
+          "sourcePath": "src/moved/gitleaks-moved-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "17b78ec9812d67150c8073f77759c3de68753396da7468f049208846d7147b96",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "4a493eaa5abc1b9ab2cff873ddd82b980bed6f0c75e742911fd207a1c46d5114",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-03.env",
+          "projectedResultIndex": 19,
+          "rawResultIndex": 19,
+          "semanticId": "gitleaks-moved-03",
+          "sourcePath": "src/moved/gitleaks-moved-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "e92901720cebd754c3b3045aac6d9ce76fa18c1d1a9b21710b044ce9a6677c6f",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "130fef58dfbf8dd94a971b3da688dfd7e17937c8cf32bf3f832677196ce60d01",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-04.env",
+          "projectedResultIndex": 20,
+          "rawResultIndex": 20,
+          "semanticId": "gitleaks-moved-04",
+          "sourcePath": "src/moved/gitleaks-moved-04.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "33b51aedc9f784a1465bd1798c5d9ba92a90ba64a7e0adb25c024e2d8207dfcf",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "106b43aa55763bc0c067e3684e7950204d59d56c1f4f5f516b9031499f7fc0b5",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-05.env",
+          "projectedResultIndex": 21,
+          "rawResultIndex": 21,
+          "semanticId": "gitleaks-moved-05",
+          "sourcePath": "src/moved/gitleaks-moved-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "4f7d9431ad636212099ed74bb413c34d36c4e0f6dabe8b13ff20f19e24ec9f8c",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "3171316be36918eeeb0c40ed9eff52bbbee2269e203f1e465df41700a49962b7",
+          "projectedArtifactUri": "src/renamed-old/gitleaks-renamed-01.env",
+          "projectedResultIndex": 22,
+          "rawResultIndex": 22,
+          "semanticId": "gitleaks-renamed-01",
+          "sourcePath": "src/renamed-old/gitleaks-renamed-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "8d541fb83de0f221bef3f390044aeaf355ff74d85931453fd011aec9fd7ada88",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "1fedbb79ee0756eabd9433ce3a63a246262880a406a157349837ec8f0b04d42b",
+          "projectedArtifactUri": "src/renamed-old/gitleaks-renamed-02.env",
+          "projectedResultIndex": 23,
+          "rawResultIndex": 23,
+          "semanticId": "gitleaks-renamed-02",
+          "sourcePath": "src/renamed-old/gitleaks-renamed-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "28c52dde5fbd9b7f1334c024b35bb7de67e9ec07e0f44cc29b0b04ff644134eb",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "ad44a7683228ee53fc77dd5e6540d7b93928d3f54c61fe0ae0541bd6ba3c656a",
+          "projectedArtifactUri": "src/renamed-old/gitleaks-renamed-03.env",
+          "projectedResultIndex": 24,
+          "rawResultIndex": 24,
+          "semanticId": "gitleaks-renamed-03",
+          "sourcePath": "src/renamed-old/gitleaks-renamed-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "4bd84d702f1a4b51c8f0ead354d12fd1e73054ec49a1d2bc008fa16ed386d831",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "003e980aee8b41bcbabb2045e9bd89df3d69ddbc01d0f570209fd3a6ebb187b0",
+          "projectedArtifactUri": "src/renamed-old/gitleaks-renamed-04.env",
+          "projectedResultIndex": 25,
+          "rawResultIndex": 25,
+          "semanticId": "gitleaks-renamed-04",
+          "sourcePath": "src/renamed-old/gitleaks-renamed-04.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "0258d9777cecd7cff3a4f40952d929d6e4451f563aa56ec989cc2d75df5a0984",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "5faf28f7ccc22d11bceda9156ce112310e3407a444a6f07b0ddac77b25904ae8",
+          "projectedArtifactUri": "src/renamed-old/gitleaks-renamed-05.env",
+          "projectedResultIndex": 26,
+          "rawResultIndex": 26,
+          "semanticId": "gitleaks-renamed-05",
+          "sourcePath": "src/renamed-old/gitleaks-renamed-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "ff35a32b6a35b53aba6c704e657e25367d0297baf58bf6b1fdd65135c02576fa",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "e97c2eac164e106d67a0ae4f5e1700fd0f145966b639e577eec87059ccdf3f5b",
+          "projectedArtifactUri": "src/resolved/gitleaks-resolved-01.env",
+          "projectedResultIndex": 27,
+          "rawResultIndex": 27,
+          "semanticId": "gitleaks-resolved-01",
+          "sourcePath": "src/resolved/gitleaks-resolved-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "678843f629d2d8b97b87ec7c00cd68732da72133d1b3b52f99e9648bd21d0ee8",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "c8aa46acb679a8e8a5f7676cb13192cc32ab2499ae600d0a3185bf97d34c4e68",
+          "projectedArtifactUri": "src/resolved/gitleaks-resolved-02.env",
+          "projectedResultIndex": 28,
+          "rawResultIndex": 28,
+          "semanticId": "gitleaks-resolved-02",
+          "sourcePath": "src/resolved/gitleaks-resolved-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "ad115317db687452ba0a6d93d0e06395ee69d2d8f118e8f87143b8393d7101bb",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "2ffe8f10baf6dad9e278fe3de1c133836f2ae919fee5f4e8240208b15c7b1077",
+          "projectedArtifactUri": "src/resolved/gitleaks-resolved-03.env",
+          "projectedResultIndex": 29,
+          "rawResultIndex": 29,
+          "semanticId": "gitleaks-resolved-03",
+          "sourcePath": "src/resolved/gitleaks-resolved-03.env"
+        }
+      ],
+      "runMutations": []
+    },
+    "candidate": {
+      "rawCaptureSha256": "51c156706f2680353587f3fc21e10094fac1d4581488f8c447bd2f3a1afe2a13",
+      "resultOrdering": "gitleaks-result-order/v1",
+      "results": [
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "e710647793bfe37049d9b34d1a239f1252b002ed9956fe1ca0bc82056aa8ed12",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "4925a55af831c1cc47784ab7d541268026326edf1928aaef3d9b63bbe3b797eb",
+          "projectedArtifactUri": "src/ambiguous.env",
+          "projectedResultIndex": 0,
+          "rawResultIndex": 0,
+          "semanticId": "gitleaks-ambiguous-01",
+          "sourcePath": "src/ambiguous.env"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "e710647793bfe37049d9b34d1a239f1252b002ed9956fe1ca0bc82056aa8ed12",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "4925a55af831c1cc47784ab7d541268026326edf1928aaef3d9b63bbe3b797eb",
+          "projectedArtifactUri": "src/ambiguous.env",
+          "projectedResultIndex": 1,
+          "rawResultIndex": 1,
+          "semanticId": "gitleaks-ambiguous-02",
+          "sourcePath": "src/ambiguous.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "46a569d0257e77ac3966050dab768cf049696c92be8ef09cbd0d4e99d4c79a91",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "e51b2e6685972963ee131b5ba1e47cc97e396f791ecd70847857862adcc73faf",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-01.env",
+          "projectedResultIndex": 2,
+          "rawResultIndex": 2,
+          "semanticId": "gitleaks-exact-01",
+          "sourcePath": "src/exact/gitleaks-exact-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "1de6495ba8dac07f58ddbb58121645b5826e3a418c70834fee7c6d8a89cc3735",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "333bbb362c1ddfaf364623d137ba5fd214c499f014a680682d38c938eb2deca4",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-02.env",
+          "projectedResultIndex": 3,
+          "rawResultIndex": 3,
+          "semanticId": "gitleaks-exact-02",
+          "sourcePath": "src/exact/gitleaks-exact-02.env"
+        },
+        {
+          "appliedMutations": [
+            "fingerprint/ensured-missing-v1"
+          ],
+          "originalArtifactUriSha256": "0643d4f7818176953d976e4bd14d4a0ecd674daeacd08b2ada5470ade394f83a",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "8a6798c75651b8d8d09e83f3f6b78d2b176e44cbd419eea28a44a2ee06dd1af9",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-03.env",
+          "projectedResultIndex": 4,
+          "rawResultIndex": 4,
+          "semanticId": "gitleaks-exact-03",
+          "sourcePath": "src/exact/gitleaks-exact-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "786bd474dd1fab6dc116ae18d33b7e3c428ba8179fce689fb1b2f64dc2bb9fb4",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "03d2e9e78564c905a06b076c6a6ddebbea2e8c39bf320a3ec4e70dfbc671813b",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-04.env",
+          "projectedResultIndex": 5,
+          "rawResultIndex": 5,
+          "semanticId": "gitleaks-exact-04",
+          "sourcePath": "src/exact/gitleaks-exact-04.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "12366389da36b7be56f4dd9779bdd3fcbf6193408256bd6aefca15fe15b50dcd",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "5deadbdb0e09d136f645ac50c8ea031dde3d1ad2e72ab2ca2ca1d4a4efde9e0c",
+          "projectedArtifactUri": "src/exact/gitleaks-exact-05.env",
+          "projectedResultIndex": 6,
+          "rawResultIndex": 6,
+          "semanticId": "gitleaks-exact-05",
+          "sourcePath": "src/exact/gitleaks-exact-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "5dc0390482878f6aef34d726bb4a5e74d5d9641c922250a0ac830ce027a9bb6f",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "87a847e951b607d5f7925e15b5647d4108dc810b3b653e859a2e56da1341def3",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-01.env",
+          "projectedResultIndex": 7,
+          "rawResultIndex": 7,
+          "semanticId": "gitleaks-line-shift-01",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "81374b6c25d6d9f94b7342ef5b2e8b95c72bc6c368ec9c75c50d0e1721173755",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "0fef8a1c8546daeb3e9a03bed8542756f43cf65641a79b604631124316a3ca17",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-02.env",
+          "projectedResultIndex": 8,
+          "rawResultIndex": 8,
+          "semanticId": "gitleaks-line-shift-02",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "eb2c4206efb933738ee6f496e42932477caee04c290706a5855151e2b3b16470",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "2b5a9b9e815c7cc353ed20aedc0f0d011bff76d7162d71749e751294a158b070",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-03.env",
+          "projectedResultIndex": 9,
+          "rawResultIndex": 9,
+          "semanticId": "gitleaks-line-shift-03",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "ebc95728f2922a115128a7228c3535ef18cb7e982b5733635ea1844fbf602129",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "865a189c9f691f8ec9fb40da6b782b4432a81269da5bed20a0062ef76d33bc3e",
+          "projectedArtifactUri": "src/line-shift/gitleaks-line-shift-04.env",
+          "projectedResultIndex": 10,
+          "rawResultIndex": 10,
+          "semanticId": "gitleaks-line-shift-04",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-04.env"
+        },
+        {
+          "appliedMutations": [
+            "path/windows-posix-rebase-v1"
+          ],
+          "originalArtifactUriSha256": "f8d39a32615eebd5020d214abf7447cdb133442b61c9d2197a0a45e14b044156",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "bbd46467cbb28400e9bedf23b2c7b3995268d747384b2555da67adbd714a5ce5",
+          "projectedArtifactUri": "file:///C:/sarif-regress-holdout/gitleaks/candidate/src/line-shift/gitleaks-line-shift-05.env",
+          "projectedResultIndex": 11,
+          "rawResultIndex": 11,
+          "semanticId": "gitleaks-line-shift-05",
+          "sourcePath": "src/line-shift/gitleaks-line-shift-05.env"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "411860902fc979966246bcef68d816b375560f138edcba7850b6531e866611a9",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "2adde328cefc7d528264f1ce39e690ce830ab688f50b271a218bf17697a526e3",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-01.env",
+          "projectedResultIndex": 12,
+          "rawResultIndex": 12,
+          "semanticId": "gitleaks-message-modified-01",
+          "sourcePath": "src/message/gitleaks-message-modified-01.env"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "791335978bc340e82c47ac9d105986af7d9bac838e19ba17df38df71954ac661",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "add6f0ad1fb268cb6f5526238eb33426eed062dd51bae755dbe12b43a7e9c7f9",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-02.env",
+          "projectedResultIndex": 13,
+          "rawResultIndex": 13,
+          "semanticId": "gitleaks-message-modified-02",
+          "sourcePath": "src/message/gitleaks-message-modified-02.env"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "08041a3c4341aca50a825405a22586a5d7289c0fcf3e7fc6ce8c89d0b2b686a9",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "2d2488aba5e46b59939fc4e1ac25938c944f7d60c4366674b1482833f9288497",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-03.env",
+          "projectedResultIndex": 14,
+          "rawResultIndex": 14,
+          "semanticId": "gitleaks-message-modified-03",
+          "sourcePath": "src/message/gitleaks-message-modified-03.env"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "9c4edf0813b0acc93d4d4bb49a538a1d72dd6b7da154a7a17acc0581311e19d3",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "65204e14b320806550b0bbf7361350ce87676f8c766742be9171cfea260445dc",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-04.env",
+          "projectedResultIndex": 15,
+          "rawResultIndex": 15,
+          "semanticId": "gitleaks-message-modified-04",
+          "sourcePath": "src/message/gitleaks-message-modified-04.env"
+        },
+        {
+          "appliedMutations": [
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "49993ecce33a8f763e9f7a9491a3fde6fbf400e66a5a1e5c1882169410930a02",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "c786834162fd8b02895706c4b45aa2a71818df76a495f5b9d7450737bb19c61b",
+          "projectedArtifactUri": "src/message/gitleaks-message-modified-05.env",
+          "projectedResultIndex": 16,
+          "rawResultIndex": 16,
+          "semanticId": "gitleaks-message-modified-05",
+          "sourcePath": "src/message/gitleaks-message-modified-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "b5c76c959af54f477acef4eac407c120a200390177220a63c227f9f4b3cf43ae",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "cf0117d991385054b1e195270df5499842ae3d86c5077478a5c6c2e7545e8f9c",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-01.env",
+          "projectedResultIndex": 17,
+          "rawResultIndex": 17,
+          "semanticId": "gitleaks-moved-01",
+          "sourcePath": "src/moved/gitleaks-moved-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "6ad639b6e21a816a2602e656629a5ebba029e9388d9e2f4e23ee3f455f7d5942",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "65b395d05d55f285a8171530ee1bc8cd6fa74262607187f8ba85e9e4627e3763",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-02.env",
+          "projectedResultIndex": 18,
+          "rawResultIndex": 18,
+          "semanticId": "gitleaks-moved-02",
+          "sourcePath": "src/moved/gitleaks-moved-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "17b78ec9812d67150c8073f77759c3de68753396da7468f049208846d7147b96",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "4a493eaa5abc1b9ab2cff873ddd82b980bed6f0c75e742911fd207a1c46d5114",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-03.env",
+          "projectedResultIndex": 19,
+          "rawResultIndex": 19,
+          "semanticId": "gitleaks-moved-03",
+          "sourcePath": "src/moved/gitleaks-moved-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "e92901720cebd754c3b3045aac6d9ce76fa18c1d1a9b21710b044ce9a6677c6f",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "130fef58dfbf8dd94a971b3da688dfd7e17937c8cf32bf3f832677196ce60d01",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-04.env",
+          "projectedResultIndex": 20,
+          "rawResultIndex": 20,
+          "semanticId": "gitleaks-moved-04",
+          "sourcePath": "src/moved/gitleaks-moved-04.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "33b51aedc9f784a1465bd1798c5d9ba92a90ba64a7e0adb25c024e2d8207dfcf",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "106b43aa55763bc0c067e3684e7950204d59d56c1f4f5f516b9031499f7fc0b5",
+          "projectedArtifactUri": "src/moved/gitleaks-moved-05.env",
+          "projectedResultIndex": 21,
+          "rawResultIndex": 21,
+          "semanticId": "gitleaks-moved-05",
+          "sourcePath": "src/moved/gitleaks-moved-05.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "f1d932e35d09a36d1a09e0fa97f0b64e901255fc1370e87ca0c833f5e1fab5b1",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "a0e43f480c89d7bf16912355fd71c3b9b8cb2a756d028c1fa0200fb154c06b7d",
+          "projectedArtifactUri": "src/new/gitleaks-new-01.env",
+          "projectedResultIndex": 22,
+          "rawResultIndex": 22,
+          "semanticId": "gitleaks-new-01",
+          "sourcePath": "src/new/gitleaks-new-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "e18f0f1d045d49300f6bc8269087d75b10cbf9d139b508c0068ba5ff7c952a47",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "354fb72e3fa7adac33b9d9d75a20b68eb38e7085328e53969b5a6faac01e7266",
+          "projectedArtifactUri": "src/new/gitleaks-new-02.env",
+          "projectedResultIndex": 23,
+          "rawResultIndex": 23,
+          "semanticId": "gitleaks-new-02",
+          "sourcePath": "src/new/gitleaks-new-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "134dcfa0577912e135e749f7c978409bc3af9b18121e0af69a9ae84b77ad3cde",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "cd62f1c36464f7ef03309be7c6c8a34911a6c167b79841b5dd5a97b60643c676",
+          "projectedArtifactUri": "src/new/gitleaks-new-03.env",
+          "projectedResultIndex": 24,
+          "rawResultIndex": 24,
+          "semanticId": "gitleaks-new-03",
+          "sourcePath": "src/new/gitleaks-new-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "cc894b2eea8d928278671d97ca0dfe893a7605cf845bcbfe79fa40644b203397",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "581d892e6e660b12b9ba1b8eba53553c9d0e6e9de77deb702b2f4960641c89ad",
+          "projectedArtifactUri": "src/renamed-new/gitleaks-renamed-01.env",
+          "projectedResultIndex": 25,
+          "rawResultIndex": 25,
+          "semanticId": "gitleaks-renamed-01",
+          "sourcePath": "src/renamed-new/gitleaks-renamed-01.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "75871c3d2610398838b68af1cfaf1a687818424a91cc9693814565ae5ddc710c",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "ee856a7e17fd8c8d19d95de910bcb32b092c5cf783a3dcf922a55b8697978ad5",
+          "projectedArtifactUri": "src/renamed-new/gitleaks-renamed-02.env",
+          "projectedResultIndex": 26,
+          "rawResultIndex": 26,
+          "semanticId": "gitleaks-renamed-02",
+          "sourcePath": "src/renamed-new/gitleaks-renamed-02.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "cab5a3a7230b6df4286a9975663a3da87bf3faec3895af8205052a3e9fd0dbc5",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "ecd3162a3a7844ee7f98776f9857446ba42e0ad5d7d10cf7557cbbc065a662cd",
+          "projectedArtifactUri": "src/renamed-new/gitleaks-renamed-03.env",
+          "projectedResultIndex": 27,
+          "rawResultIndex": 27,
+          "semanticId": "gitleaks-renamed-03",
+          "sourcePath": "src/renamed-new/gitleaks-renamed-03.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "ec4368759daaf1e5cfcc601463ff41f6eb5aa5ef2d8f5a7cc37fc19ecb5ffc67",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "b441192030dc07dbd0dbffdc8461bdc9fa974c06846edfafa62a527a3d71bcc8",
+          "projectedArtifactUri": "src/renamed-new/gitleaks-renamed-04.env",
+          "projectedResultIndex": 28,
+          "rawResultIndex": 28,
+          "semanticId": "gitleaks-renamed-04",
+          "sourcePath": "src/renamed-new/gitleaks-renamed-04.env"
+        },
+        {
+          "appliedMutations": [],
+          "originalArtifactUriSha256": "8f74d8d02beefe75a169beec5ca5f0136896688f8c6b7241e5ea29d013999235",
+          "originalFingerprintsSha256": "d49308131e26483c097cb1835f5a7617128d619851c3fceb86074094c54e7703",
+          "originalMessageSha256": "f606a2ced936f8dd821416a78d448cf9034dd81e1791489eddecb9f8bf46acf1",
+          "projectedArtifactUri": "src/renamed-new/gitleaks-renamed-05.env",
+          "projectedResultIndex": 29,
+          "rawResultIndex": 29,
+          "semanticId": "gitleaks-renamed-05",
+          "sourcePath": "src/renamed-new/gitleaks-renamed-05.env"
+        }
+      ],
+      "runMutations": [
+        {
+          "fields": [
+            "semanticVersion"
+          ],
+          "mutation": "producer-version/candidate-controlled-change-v1",
+          "originalVersionMetadataSha256": "6af3def89b9f985a5c31c5bb400c0233b3c1a1f05609e8eac9fc17da49d166e3",
+          "projectedVersion": "v8.0.0+holdout-candidate-projection"
+        }
+      ]
+    }
+  }
+}

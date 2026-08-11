@@ -156,6 +156,9 @@ public sealed class SarifConfigurationReader
         }
 
         ValidateString(wire.RepositoryRoot, "/repoRoot", diagnostics);
+        var uriBaseMappings = ValidateUriBaseMappings(
+            wire.UriBaseMappings,
+            diagnostics);
         var pathRebases = ValidatePathRebases(wire.PathRebases, diagnostics);
         var pathAliases = ValidatePathAliases(wire.PathAliases, diagnostics);
         var ruleAliases = ValidateRuleAliases(wire.RuleAliases, diagnostics);
@@ -178,7 +181,133 @@ public sealed class SarifConfigurationReader
             matching,
             policy,
             reporting,
-            limits);
+            limits,
+            uriBaseMappings);
+    }
+
+    private ImmutableArray<UriBaseMapping> ValidateUriBaseMappings(
+        List<UriBaseMappingWire?>? values,
+        ICollection<Diagnostic> diagnostics)
+    {
+        ValidateCollectionCount(
+            values?.Count ?? 0,
+            "/uriBaseMappings",
+            diagnostics);
+        var result = ImmutableArray.CreateBuilder<UriBaseMapping>();
+        var definitionsById =
+            new Dictionary<string, UriBaseMapping>(StringComparer.Ordinal);
+
+        for (var index = 0; index < (values?.Count ?? 0); index++)
+        {
+            var value = values![index];
+            var pointer = $"/uriBaseMappings/{index}";
+            if (value is null)
+            {
+                diagnostics.Add(
+                    CreateDiagnostic(
+                        "SCHEMA0009",
+                        DiagnosticSeverity.Error,
+                        DiagnosticStage.Schema,
+                        "A URI-base mapping cannot be null.",
+                        pointer));
+                continue;
+            }
+
+            ReportUnknownProperties(
+                value.AdditionalProperties,
+                diagnostics,
+                pointer);
+            var validId = ValidateRequiredString(
+                value.Id,
+                pointer + "/id",
+                diagnostics);
+            var validUri = ValidateRequiredString(
+                value.Uri,
+                pointer + "/uri",
+                diagnostics);
+            var valid = validId && validUri;
+            if (value.UriBaseId is not null)
+            {
+                valid &= ValidateRequiredString(
+                    value.UriBaseId,
+                    pointer + "/uriBaseId",
+                    diagnostics);
+            }
+
+            if (!valid)
+            {
+                continue;
+            }
+
+            var mapping = new UriBaseMapping(
+                value.Id!,
+                value.Uri!,
+                value.UriBaseId);
+            if (!ConfiguredUriBasePolicy.IsSafeIdentifier(mapping.Id))
+            {
+                diagnostics.Add(
+                    CreateDiagnostic(
+                        "SCHEMA0012",
+                        DiagnosticSeverity.Error,
+                        DiagnosticStage.Schema,
+                        "A URI-base identifier cannot contain control characters.",
+                        pointer + "/id"));
+                continue;
+            }
+
+            if (mapping.UriBaseId is not null &&
+                !ConfiguredUriBasePolicy.IsSafeIdentifier(
+                    mapping.UriBaseId))
+            {
+                diagnostics.Add(
+                    CreateDiagnostic(
+                        "SCHEMA0012",
+                        DiagnosticSeverity.Error,
+                        DiagnosticStage.Schema,
+                        "A parent URI-base identifier cannot contain control characters.",
+                        pointer + "/uriBaseId"));
+                continue;
+            }
+
+            if (!ConfiguredUriBasePolicy.IsSafeTarget(mapping))
+            {
+                diagnostics.Add(
+                    CreateDiagnostic(
+                        "SCHEMA0012",
+                        DiagnosticSeverity.Error,
+                        DiagnosticStage.Schema,
+                        "A configured URI base must be a bounded local logical root or a relative child of another URI base.",
+                        pointer + "/uri"));
+                continue;
+            }
+
+            if (definitionsById.TryGetValue(
+                    mapping.Id,
+                    out var existing) &&
+                existing != mapping)
+            {
+                diagnostics.Add(
+                    CreateDiagnostic(
+                        "SCHEMA0011",
+                        DiagnosticSeverity.Error,
+                        DiagnosticStage.Schema,
+                        "A URI-base identifier cannot map to multiple definitions.",
+                        pointer));
+                continue;
+            }
+
+            definitionsById[mapping.Id] = mapping;
+            result.Add(mapping);
+        }
+
+        return result
+            .Distinct()
+            .OrderBy(item => item.Id, StringComparer.Ordinal)
+            .ThenBy(item => item.Uri, StringComparer.Ordinal)
+            .ThenBy(
+                item => item.UriBaseId ?? string.Empty,
+                StringComparer.Ordinal)
+            .ToImmutableArray();
     }
 
     private ImmutableArray<PathRebase> ValidatePathRebases(
@@ -787,6 +916,9 @@ public sealed class SarifConfigurationReader
         [JsonPropertyName("repoRoot")]
         public string? RepositoryRoot { get; init; }
 
+        [JsonPropertyName("uriBaseMappings")]
+        public List<UriBaseMappingWire?>? UriBaseMappings { get; init; }
+
         [JsonPropertyName("pathRebases")]
         public List<PathRebaseWire?>? PathRebases { get; init; }
 
@@ -807,6 +939,21 @@ public sealed class SarifConfigurationReader
 
         [JsonPropertyName("limits")]
         public LimitsWire? Limits { get; init; }
+
+        [JsonExtensionData]
+        public Dictionary<string, object?>? AdditionalProperties { get; init; }
+    }
+
+    private sealed class UriBaseMappingWire
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; init; }
+
+        [JsonPropertyName("uri")]
+        public string? Uri { get; init; }
+
+        [JsonPropertyName("uriBaseId")]
+        public string? UriBaseId { get; init; }
 
         [JsonExtensionData]
         public Dictionary<string, object?>? AdditionalProperties { get; init; }

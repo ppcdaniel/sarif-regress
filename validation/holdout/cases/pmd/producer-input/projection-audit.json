@@ -1,0 +1,823 @@
+{
+  "casePlanSha256": "91613c3a74a7f9dc81b9caa7efc66b1d3110abd832375e7c35d829f4202a23f1",
+  "producer": "pmd",
+  "producerVersion": "7.26.0",
+  "projectionVersion": "holdout-projection/v1",
+  "schemaVersion": "1",
+  "sides": {
+    "baseline": {
+      "rawCaptureSha256": "63380178376227012b407482f0e4f6284b5f6eb8528a210d1d73c6199ceb8b6d",
+      "resultOrdering": "producer-emitted",
+      "results": [
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "5da3a3b489d71b26d52904c356b49fa025db36ec91a6f38fc109428c3e092f9d",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/AmbiguousCases.java",
+          "projectedResultIndex": 0,
+          "rawResultIndex": 0,
+          "semanticId": "pmd-ambiguous-01",
+          "sourcePath": "src/AmbiguousCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "5da3a3b489d71b26d52904c356b49fa025db36ec91a6f38fc109428c3e092f9d",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/AmbiguousCases.java",
+          "projectedResultIndex": 1,
+          "rawResultIndex": 1,
+          "semanticId": "pmd-ambiguous-02",
+          "sourcePath": "src/AmbiguousCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "96bed905d9347b168b71d8302dd29674d44138ebf51430cc664f01c98a6fe013",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/ResolvedCases.java",
+          "projectedResultIndex": 2,
+          "rawResultIndex": 2,
+          "semanticId": "pmd-resolved-01",
+          "sourcePath": "src/ResolvedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "96bed905d9347b168b71d8302dd29674d44138ebf51430cc664f01c98a6fe013",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/ResolvedCases.java",
+          "projectedResultIndex": 3,
+          "rawResultIndex": 3,
+          "semanticId": "pmd-resolved-02",
+          "sourcePath": "src/ResolvedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "96bed905d9347b168b71d8302dd29674d44138ebf51430cc664f01c98a6fe013",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/ResolvedCases.java",
+          "projectedResultIndex": 4,
+          "rawResultIndex": 4,
+          "semanticId": "pmd-resolved-03",
+          "sourcePath": "src/ResolvedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 5,
+          "rawResultIndex": 5,
+          "semanticId": "pmd-exact-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 6,
+          "rawResultIndex": 6,
+          "semanticId": "pmd-exact-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "fingerprint/ensured-missing-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 7,
+          "rawResultIndex": 7,
+          "semanticId": "pmd-exact-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 8,
+          "rawResultIndex": 8,
+          "semanticId": "pmd-exact-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 9,
+          "rawResultIndex": 9,
+          "semanticId": "pmd-exact-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 10,
+          "rawResultIndex": 10,
+          "semanticId": "pmd-message-modified-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 11,
+          "rawResultIndex": 11,
+          "semanticId": "pmd-message-modified-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 12,
+          "rawResultIndex": 12,
+          "semanticId": "pmd-message-modified-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 13,
+          "rawResultIndex": 13,
+          "semanticId": "pmd-message-modified-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 14,
+          "rawResultIndex": 14,
+          "semanticId": "pmd-message-modified-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 15,
+          "rawResultIndex": 15,
+          "semanticId": "pmd-moved-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 16,
+          "rawResultIndex": 16,
+          "semanticId": "pmd-moved-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 17,
+          "rawResultIndex": 17,
+          "semanticId": "pmd-moved-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 18,
+          "rawResultIndex": 18,
+          "semanticId": "pmd-moved-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 19,
+          "rawResultIndex": 19,
+          "semanticId": "pmd-moved-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 20,
+          "rawResultIndex": 20,
+          "semanticId": "pmd-line-shift-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 21,
+          "rawResultIndex": 21,
+          "semanticId": "pmd-line-shift-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 22,
+          "rawResultIndex": 22,
+          "semanticId": "pmd-line-shift-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 23,
+          "rawResultIndex": 23,
+          "semanticId": "pmd-line-shift-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/windows-posix-rebase-v1"
+          ],
+          "originalArtifactUriSha256": "612803ca67b04ba2e8fa0bc94aac9132ea63682412a758603732487a0f69cc22",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "file:///opt/sarif-regress-holdout/pmd/baseline/src/StableCases.java",
+          "projectedResultIndex": 24,
+          "rawResultIndex": 24,
+          "semanticId": "pmd-line-shift-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5f767c4f15349a798ab52669f58723d2db9c149b9e4e79377648337338df3cb",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-old/RenamedCases.java",
+          "projectedResultIndex": 25,
+          "rawResultIndex": 25,
+          "semanticId": "pmd-renamed-01",
+          "sourcePath": "src/renamed-old/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5f767c4f15349a798ab52669f58723d2db9c149b9e4e79377648337338df3cb",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-old/RenamedCases.java",
+          "projectedResultIndex": 26,
+          "rawResultIndex": 26,
+          "semanticId": "pmd-renamed-02",
+          "sourcePath": "src/renamed-old/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5f767c4f15349a798ab52669f58723d2db9c149b9e4e79377648337338df3cb",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-old/RenamedCases.java",
+          "projectedResultIndex": 27,
+          "rawResultIndex": 27,
+          "semanticId": "pmd-renamed-03",
+          "sourcePath": "src/renamed-old/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5f767c4f15349a798ab52669f58723d2db9c149b9e4e79377648337338df3cb",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-old/RenamedCases.java",
+          "projectedResultIndex": 28,
+          "rawResultIndex": 28,
+          "semanticId": "pmd-renamed-04",
+          "sourcePath": "src/renamed-old/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5f767c4f15349a798ab52669f58723d2db9c149b9e4e79377648337338df3cb",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-old/RenamedCases.java",
+          "projectedResultIndex": 29,
+          "rawResultIndex": 29,
+          "semanticId": "pmd-renamed-05",
+          "sourcePath": "src/renamed-old/RenamedCases.java"
+        }
+      ],
+      "runMutations": []
+    },
+    "candidate": {
+      "rawCaptureSha256": "5ddc7b6fd00e0a84ea82e88f821c3e7126489530c9390915365a367fc036654d",
+      "resultOrdering": "producer-emitted",
+      "results": [
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "a6d66641afda8fb4b63c1da211e33326a9f97201f3eeb2cfbc6d5328f79a5129",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/AmbiguousCases.java",
+          "projectedResultIndex": 0,
+          "rawResultIndex": 0,
+          "semanticId": "pmd-ambiguous-01",
+          "sourcePath": "src/AmbiguousCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "fingerprint/controlled-duplicate-v1"
+          ],
+          "originalArtifactUriSha256": "a6d66641afda8fb4b63c1da211e33326a9f97201f3eeb2cfbc6d5328f79a5129",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/AmbiguousCases.java",
+          "projectedResultIndex": 1,
+          "rawResultIndex": 1,
+          "semanticId": "pmd-ambiguous-02",
+          "sourcePath": "src/AmbiguousCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "d02048de6209b158e35ee4f0cb158294769707f24db422f4a2b7473bb25f5f01",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/NewCases.java",
+          "projectedResultIndex": 2,
+          "rawResultIndex": 2,
+          "semanticId": "pmd-new-01",
+          "sourcePath": "src/NewCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "d02048de6209b158e35ee4f0cb158294769707f24db422f4a2b7473bb25f5f01",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/NewCases.java",
+          "projectedResultIndex": 3,
+          "rawResultIndex": 3,
+          "semanticId": "pmd-new-02",
+          "sourcePath": "src/NewCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "d02048de6209b158e35ee4f0cb158294769707f24db422f4a2b7473bb25f5f01",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/NewCases.java",
+          "projectedResultIndex": 4,
+          "rawResultIndex": 4,
+          "semanticId": "pmd-new-03",
+          "sourcePath": "src/NewCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 5,
+          "rawResultIndex": 5,
+          "semanticId": "pmd-exact-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 6,
+          "rawResultIndex": 6,
+          "semanticId": "pmd-exact-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "fingerprint/ensured-missing-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 7,
+          "rawResultIndex": 7,
+          "semanticId": "pmd-exact-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 8,
+          "rawResultIndex": 8,
+          "semanticId": "pmd-exact-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 9,
+          "rawResultIndex": 9,
+          "semanticId": "pmd-exact-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 10,
+          "rawResultIndex": 10,
+          "semanticId": "pmd-message-modified-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 11,
+          "rawResultIndex": 11,
+          "semanticId": "pmd-message-modified-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 12,
+          "rawResultIndex": 12,
+          "semanticId": "pmd-message-modified-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 13,
+          "rawResultIndex": 13,
+          "semanticId": "pmd-message-modified-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1",
+            "message/candidate-controlled-change-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 14,
+          "rawResultIndex": 14,
+          "semanticId": "pmd-message-modified-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 15,
+          "rawResultIndex": 15,
+          "semanticId": "pmd-moved-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 16,
+          "rawResultIndex": 16,
+          "semanticId": "pmd-moved-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 17,
+          "rawResultIndex": 17,
+          "semanticId": "pmd-moved-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 18,
+          "rawResultIndex": 18,
+          "semanticId": "pmd-moved-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 19,
+          "rawResultIndex": 19,
+          "semanticId": "pmd-moved-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 20,
+          "rawResultIndex": 20,
+          "semanticId": "pmd-line-shift-01",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 21,
+          "rawResultIndex": 21,
+          "semanticId": "pmd-line-shift-02",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 22,
+          "rawResultIndex": 22,
+          "semanticId": "pmd-line-shift-03",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/StableCases.java",
+          "projectedResultIndex": 23,
+          "rawResultIndex": 23,
+          "semanticId": "pmd-line-shift-04",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/windows-posix-rebase-v1"
+          ],
+          "originalArtifactUriSha256": "4521733487d89f55de3bcdef16e87d00b5741e1f1d36c0f16220e846270bfe2c",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "file:///C:/sarif-regress-holdout/pmd/candidate/src/StableCases.java",
+          "projectedResultIndex": 24,
+          "rawResultIndex": 24,
+          "semanticId": "pmd-line-shift-05",
+          "sourcePath": "src/StableCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5cf2624cc930d058b58e0ebf774dfedc8ec21728d096dce16730034fd1f8cca",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-new/RenamedCases.java",
+          "projectedResultIndex": 25,
+          "rawResultIndex": 25,
+          "semanticId": "pmd-renamed-01",
+          "sourcePath": "src/renamed-new/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5cf2624cc930d058b58e0ebf774dfedc8ec21728d096dce16730034fd1f8cca",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-new/RenamedCases.java",
+          "projectedResultIndex": 26,
+          "rawResultIndex": 26,
+          "semanticId": "pmd-renamed-02",
+          "sourcePath": "src/renamed-new/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5cf2624cc930d058b58e0ebf774dfedc8ec21728d096dce16730034fd1f8cca",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-new/RenamedCases.java",
+          "projectedResultIndex": 27,
+          "rawResultIndex": 27,
+          "semanticId": "pmd-renamed-03",
+          "sourcePath": "src/renamed-new/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5cf2624cc930d058b58e0ebf774dfedc8ec21728d096dce16730034fd1f8cca",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-new/RenamedCases.java",
+          "projectedResultIndex": 28,
+          "rawResultIndex": 28,
+          "semanticId": "pmd-renamed-04",
+          "sourcePath": "src/renamed-new/RenamedCases.java"
+        },
+        {
+          "appliedMutations": [
+            "path/ambient-checkout-removal-v1"
+          ],
+          "originalArtifactUriSha256": "a5cf2624cc930d058b58e0ebf774dfedc8ec21728d096dce16730034fd1f8cca",
+          "originalFingerprintsSha256": null,
+          "originalMessageSha256": "631fef6d9fb97733e480915dc56e662aa759ba0b611be97d505ad24b4e9af695",
+          "projectedArtifactUri": "src/renamed-new/RenamedCases.java",
+          "projectedResultIndex": 29,
+          "rawResultIndex": 29,
+          "semanticId": "pmd-renamed-05",
+          "sourcePath": "src/renamed-new/RenamedCases.java"
+        }
+      ],
+      "runMutations": [
+        {
+          "fields": [
+            "version"
+          ],
+          "mutation": "producer-version/candidate-controlled-change-v1",
+          "originalVersionMetadataSha256": "ec08ddaa11724ba98d90601999daad455ac0bec564637ac472c467f55b78aac0",
+          "projectedVersion": "7.26.0+holdout-candidate-projection"
+        }
+      ]
+    }
+  }
+}

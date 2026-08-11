@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/release-gate-policy.schema.json",
+  "title": "SarifRegress release-channel readiness policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "policyKind",
+    "criteriaDocument",
+    "channels"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "schemas/release-gate-policy.schema.json"
+    },
+    "schemaVersion": {
+      "const": "1"
+    },
+    "policyKind": {
+      "const": "release-channel-readiness"
+    },
+    "criteriaDocument": {
+      "const": "docs/release-readiness.md#preview-and-stable-criteria"
+    },
+    "channels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preview",
+        "stable"
+      ],
+      "properties": {
+        "preview": {
+          "$ref": "#/$defs/channel"
+        },
+        "stable": {
+          "$ref": "#/$defs/channel"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recommendation",
+        "reasonIds"
+      ],
+      "properties": {
+        "recommendation": {
+          "enum": [
+            "blocked",
+            "ready"
+          ]
+        },
+        "reasonIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "recommendation": {
+                "const": "ready"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reasonIds": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reasonIds": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

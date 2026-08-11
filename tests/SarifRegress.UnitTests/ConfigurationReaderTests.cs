@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using SarifRegress.Core.Configuration;
 using SarifRegress.Core.Diagnostics;
 using SarifRegress.Core.Matching;
 using SarifRegress.Core.Paths;
@@ -18,6 +19,10 @@ public sealed class ConfigurationReaderTests
             {
               "schemaVersion": "1",
               "repoRoot": ".",
+              "uriBaseMappings": [
+                { "id": "CHILD", "uri": "src/", "uriBaseId": "ROOT" },
+                { "id": "ROOT", "uri": "repo:/" }
+              ],
               "pathRebases": [
                 { "from": "file:///agent/", "to": "repo:/" }
               ],
@@ -58,6 +63,9 @@ public sealed class ConfigurationReaderTests
             SarifRegress.Core.Configuration.SarifRegressConfiguration>(
                 result.Configuration);
         Assert.Equal(".", configuration.RepositoryRoot);
+        Assert.Equal(["CHILD", "ROOT"], configuration.UriBaseMappings.Select(
+            item => item.Id));
+        Assert.Equal("ROOT", configuration.UriBaseMappings[0].UriBaseId);
         Assert.Single(configuration.PathRebases);
         Assert.Single(configuration.PathAliases);
         Assert.Single(configuration.RuleAliases);
@@ -440,6 +448,180 @@ public sealed class ConfigurationReaderTests
             () => new SarifConfigurationReader()
                 .ReadAsync(input, cancellation.Token)
                 .AsTask());
+    }
+
+    [Fact]
+    public async Task Uri_base_mappings_are_parsed_and_sorted_deterministically()
+    {
+        const string firstJson =
+            """
+            {
+              "schemaVersion": "1",
+              "uriBaseMappings": [
+                { "id": "ROOT", "uri": "repo:/" },
+                { "id": "CHILD", "uri": "source/", "uriBaseId": "ROOT" }
+              ]
+            }
+            """;
+        const string secondJson =
+            """
+            {
+              "schemaVersion": "1",
+              "uriBaseMappings": [
+                { "id": "CHILD", "uri": "source/", "uriBaseId": "ROOT" },
+                { "id": "ROOT", "uri": "repo:/" }
+              ]
+            }
+            """;
+
+        var first = await ReadAsync(firstJson);
+        var second = await ReadAsync(secondJson);
+
+        Assert.True(first.IsValid);
+        Assert.True(second.IsValid);
+        var firstConfiguration = Assert.IsType<SarifRegressConfiguration>(
+            first.Configuration);
+        var secondConfiguration = Assert.IsType<SarifRegressConfiguration>(
+            second.Configuration);
+        Assert.Equal(
+            [
+                new UriBaseMapping("CHILD", "source/", "ROOT"),
+                new UriBaseMapping("ROOT", "repo:/"),
+            ],
+            firstConfiguration.UriBaseMappings);
+        Assert.Equal(
+            firstConfiguration.UriBaseMappings.ToArray(),
+            secondConfiguration.UriBaseMappings.ToArray());
+        Assert.Equal(
+            first.Diagnostics.ToArray(),
+            second.Diagnostics.ToArray());
+    }
+
+    [Fact]
+    public async Task Conflicting_uri_base_mapping_ids_are_rejected()
+    {
+        const string json =
+            """
+            {
+              "schemaVersion": "1",
+              "uriBaseMappings": [
+                { "id": "ROOT", "uri": "repo:/one/" },
+                { "id": "ROOT", "uri": "repo:/two/" }
+              ]
+            }
+            """;
+
+        var result = await ReadAsync(json);
+
+        Assert.False(result.IsValid);
+        var diagnostic = Assert.Single(
+            result.Diagnostics,
+            item => item.Code == "SCHEMA0011");
+        Assert.Equal(
+            "/uriBaseMappings/1",
+            diagnostic.SourceReference?.JsonPointer);
+    }
+
+    [Theory]
+    [InlineData("https://example.invalid/source/")]
+    [InlineData("file://server/share/")]
+    [InlineData(@"\\server\share\")]
+    [InlineData(@"/\server\share\")]
+    [InlineData(@"repo:/\server\share\")]
+    [InlineData("relative/")]
+    [InlineData("repo:/../outside/")]
+    [InlineData("repo:/%2e%2e/outside/")]
+    [InlineData("repo:/.%2E/outside/")]
+    [InlineData("repo:/source/?query=true")]
+    [InlineData("repo:/directory-without-trailing-slash")]
+    public async Task Unsafe_uri_base_mapping_targets_are_rejected(
+        string target)
+    {
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                schemaVersion = "1",
+                uriBaseMappings = new[]
+                {
+                    new
+                    {
+                        id = "ROOT",
+                        uri = target,
+                    },
+                },
+            });
+
+        var result = await ReadAsync(json);
+
+        Assert.False(result.IsValid);
+        var diagnostic = Assert.Single(
+            result.Diagnostics,
+            item => item.Code == "SCHEMA0012");
+        Assert.Equal(
+            "/uriBaseMappings/0/uri",
+            diagnostic.SourceReference?.JsonPointer);
+    }
+
+    [Fact]
+    public async Task Relative_uri_base_mapping_requires_directory_form()
+    {
+        var result = await ReadAsync(
+            """
+            {
+              "schemaVersion": "1",
+              "uriBaseMappings": [
+                { "id": "ROOT", "uri": "repo:/" },
+                { "id": "CHILD", "uri": "directory", "uriBaseId": "ROOT" }
+              ]
+            }
+            """);
+
+        Assert.False(result.IsValid);
+        var diagnostic = Assert.Single(
+            result.Diagnostics,
+            item => item.Code == "SCHEMA0012");
+        Assert.Equal(
+            "/uriBaseMappings/1/uri",
+            diagnostic.SourceReference?.JsonPointer);
+    }
+
+    [Fact]
+    public void Published_schema_defines_the_bounded_uri_base_mapping_shape()
+    {
+        var schemaPath = Path.Combine(
+            RepositoryLayout.Root,
+            "schemas",
+            "config.schema.json");
+        using var schema = JsonDocument.Parse(File.ReadAllBytes(schemaPath));
+        var root = schema.RootElement;
+        var mappings = root
+            .GetProperty("properties")
+            .GetProperty("uriBaseMappings");
+        var definition = root
+            .GetProperty("$defs")
+            .GetProperty("uriBaseMapping");
+
+        Assert.Equal(
+            ResourceLimits.Default.MaximumRunCollectionItems,
+            mappings.GetProperty("maxItems").GetInt32());
+        Assert.Equal(
+            "#/$defs/uriBaseMapping",
+            mappings.GetProperty("items").GetProperty("$ref").GetString());
+        Assert.False(definition.GetProperty("additionalProperties").GetBoolean());
+        Assert.Equal(
+            ["id", "uri"],
+            definition
+                .GetProperty("required")
+                .EnumerateArray()
+                .Select(item => item.GetString()!)
+                .ToArray());
+        Assert.Equal(
+            ["id", "uri", "uriBaseId"],
+            definition
+                .GetProperty("properties")
+                .EnumerateObject()
+                .Select(item => item.Name)
+                .ToArray());
     }
 
     [Fact]

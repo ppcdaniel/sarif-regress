@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-resource-projection/v1",
+  "corpusManifestSha256": "351cfb362d798a47054993708ecfbec6c42d289f2e1d3bdc0b514c2d3b9f9435",
+  "implementationManifestSha256": "7e985d0f7ececfc86408785d1f0219e7299ccd7f8021b5d43f080807dd869110",
+  "variants": [
+    {
+      "id": "sarif-only-control",
+      "value": {
+        "withinDocumentedLimits": true,
+        "sourceContextProjectionBenchmarked": false,
+        "evidencePath": "expected/sparse-experiment-resource-observations.json",
+        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+      }
+    },
+    {
+      "id": "exact-region-snippet",
+      "value": {
+        "withinDocumentedLimits": true,
+        "sourceContextProjectionBenchmarked": false,
+        "evidencePath": "expected/sparse-experiment-resource-observations.json",
+        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+      }
+    },
+    {
+      "id": "token-window",
+      "value": {
+        "withinDocumentedLimits": true,
+        "sourceContextProjectionBenchmarked": false,
+        "evidencePath": "expected/sparse-experiment-resource-observations.json",
+        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+      }
+    },
+    {
+      "id": "relative-context",
+      "value": {
+        "withinDocumentedLimits": true,
+        "sourceContextProjectionBenchmarked": false,
+        "evidencePath": "expected/sparse-experiment-resource-observations.json",
+        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+      }
+    },
+    {
+      "id": "agreement-only-combination",
+      "value": {
+        "withinDocumentedLimits": true,
+        "sourceContextProjectionBenchmarked": false,
+        "evidencePath": "expected/sparse-experiment-resource-observations.json",
+        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+      }
+    }
+  ]
+}

@@ -30,9 +30,19 @@ budgets, not guaranteed performance on every machine.
   probes matched terminal pairs; unrelated aliases do not multiply pair-scoring work.
 - Coarse pairs are preflighted before scoring, with limits of 256 pairs on either side of a finding
   and 1,000,000 pairs for one comparison.
+- Admissible pairs are first retained as fixed-size 16-byte descriptors containing only the two
+  finding indexes and byte-sized decision bands. This explanation-free pass still unions every
+  complete-graph component and counts every admissible and exact-producer edge.
+- Compact descriptors are sorted by the same indisputable-exact, semantic-vector, and ordinal
+  stable-identity order as full edges, then capacity-filtered in place. Full `MatchEdge`, evidence,
+  and transformation objects are materialized only for the retained descriptors.
 - A comparison-wide preflight refusal emits one source-less top-level diagnostic; every affected
   finding retains a minimal structured `refuse` trace without copying that global diagnostic.
 - Retained candidate edges are capped per finding.
+- Context evidence is counted within each input-side producer/rule bucket. Unique context retains
+  its normal tier; duplicated context is explicitly degraded, and collision-only cross-path edges
+  are refused before they can merge otherwise separable components. Occurrence evidence is bounded
+  and reported with `sarifregress/evidence-occurrence/v1`.
 - The assignment graph is split into connected components.
 - Components within the exact bound use a maximum-cardinality lexicographic solver.
 - Larger components are classified as ambiguous and produce a bounded explanation.
@@ -49,9 +59,39 @@ Token-window evidence is omitted rather than partially compared when a bound is 
 exceeding `maximumStringCharacters`. The source read remains independently capped by
 `maximumRepositoryFileBytes`.
 
-The benchmark harness records finding count, candidate-edge count, component-size distribution,
-classification counts, and process measurements. It never changes matching policy based on
-timing.
+## Candidate-edge global-cap stress evidence
+
+`CandidateEdgeMemoryTests.Many_small_buckets_at_the_global_cap_remain_bounded_and_complete`
+constructs 244 independent 64-by-64 buckets plus one 24-by-24 bucket: 15,640 findings per side and
+exactly 1,000,000 admissible pairs, the default comparison-wide cap. It lowers the retained-edge
+limit to one without raising any other limit, then verifies all 245 complete components and all
+31,280 findings are refused as ambiguous. A test-only observer also proves that exactly 15,640
+retained edges—not all 1,000,000 admissible pairs—receive full evidence materialization. A separate
+parity test orders retained and non-retained candidates through both the compact descriptor and
+former full-edge comparers. The stress test records elapsed time, total-allocation proxy, and
+process peak working set on every run.
+
+The focused Release run on Windows 10.0.26200, .NET SDK 10.0.302/runtime 10.0.10, observed
+4,057.035 ms and a 153,182,208-byte process peak working set (about 146.1 MiB). Process peak is an
+advisory whole-test-host observation, not a deterministic threshold; the deterministic assertions
+are the descriptor/full-edge ordering parity plus pair, materialization, component, ambiguity, and
+diagnostic counts. Re-run them with:
+
+```powershell
+dotnet test tests/SarifRegress.UnitTests/SarifRegress.UnitTests.csproj `
+  --configuration Release `
+  --filter FullyQualifiedName~CandidateEdgeMemoryTests `
+  --logger "console;verbosity=detailed"
+```
+
+The benchmark harness records finding count, configured per-finding/global candidate limits,
+candidate-edge count, component-size distribution, classification counts, and process
+measurements. Hosted resource evidence pairs that report with a stable limit record emitted by the
+validation executable from `ResourceLimits.Default`, including the configured assignment-side
+limit. It never changes matching policy based on timing. Resource evidence distinguishes the
+largest component observed before refusal from the largest component admitted to bounded
+assignment; an oversized component is reported at its real size and an admitted size of zero
+rather than being rewritten to the configured limit.
 
 Run the deterministic synthetic datasets with:
 
@@ -74,8 +114,9 @@ deterministic projection that excludes observations and their derived pass/failu
 determinism workflow compares those application-emitted bytes directly on Windows and Linux; the
 embedded comparison-output SHA-256 must agree.
 
-`.github/workflows/benchmarks.yml` runs weekly and on manual dispatch. Its matrix measures both
-dataset shapes at 10,000 and 100,000 findings on standard Ubuntu and Windows runners. Ubuntu
+`.github/workflows/benchmarks.yml` runs for matcher-affecting pull requests, weekly, and on manual
+dispatch. Its matrix measures both
+dataset shapes at 1,000, 10,000, and 100,000 findings on standard Ubuntu and Windows runners. Ubuntu
 enforces the published latency, memory, and refusal budgets; Windows records the same deterministic
 operation projection without applying Ubuntu-calibrated runtime ceilings. Every matrix cell
 uploads the full observation report, deterministic projection, and checksums. A coordinator

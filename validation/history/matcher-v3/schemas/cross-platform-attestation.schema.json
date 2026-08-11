@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/cross-platform-attestation.schema.json",
+  "title": "SarifRegress hosted cross-platform holdout attestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "repository",
+    "repositoryCommitSha",
+    "holdoutManifestSha256",
+    "evaluationMetadataSha256",
+    "baseReports",
+    "githubActions",
+    "artifacts",
+    "byteIdentity"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2"
+    },
+    "repository": {
+      "const": "ppcdaniel/sarif-regress"
+    },
+    "repositoryCommitSha": {
+      "$ref": "#/$defs/gitCommitSha"
+    },
+    "holdoutManifestSha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "evaluationMetadataSha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "baseReports": {
+      "$ref": "#/$defs/reportDigests"
+    },
+    "githubActions": {
+      "$ref": "#/$defs/githubActions"
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "linux",
+        "windows"
+      ],
+      "properties": {
+        "linux": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/artifact"
+            },
+            {
+              "properties": {
+                "name": {
+                  "const": "holdout-linux"
+                }
+              }
+            }
+          ]
+        },
+        "windows": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/artifact"
+            },
+            {
+              "properties": {
+                "name": {
+                  "const": "holdout-windows"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "byteIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sarifRegressHoldout",
+        "sarifMultitoolBaseline",
+        "v2ToV3Delta"
+      ],
+      "properties": {
+        "sarifRegressHoldout": {
+          "const": true
+        },
+        "sarifMultitoolBaseline": {
+          "const": true
+        },
+        "v2ToV3Delta": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "gitCommitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "reportDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sarifRegressHoldoutSha256",
+        "sarifMultitoolBaselineSha256",
+        "v2ToV3DeltaSha256"
+      ],
+      "properties": {
+        "sarifRegressHoldoutSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "sarifMultitoolBaselineSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "v2ToV3DeltaSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "githubActions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflowPath",
+        "runId",
+        "runAttempt",
+        "runUrl",
+        "workflowHeadSha",
+        "conclusion",
+        "coordinatorJobName"
+      ],
+      "properties": {
+        "workflowPath": {
+          "const": ".github/workflows/holdout-validation.yml"
+        },
+        "runId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "runAttempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "runUrl": {
+          "type": "string",
+          "minLength": 57,
+          "maxLength": 256,
+          "pattern": "^https://github\\.com/ppcdaniel/sarif-regress/actions/runs/[1-9][0-9]*$"
+        },
+        "workflowHeadSha": {
+          "$ref": "#/$defs/gitCommitSha"
+        },
+        "conclusion": {
+          "const": "success"
+        },
+        "coordinatorJobName": {
+          "const": "Compare Linux and Windows normalized bytes"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "artifactId",
+        "archiveSha256",
+        "reportDigests"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "artifactId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "archiveSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "reportDigests": {
+          "$ref": "#/$defs/reportDigests"
+        }
+      }
+    }
+  }
+}

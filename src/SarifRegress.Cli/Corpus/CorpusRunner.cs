@@ -169,7 +169,7 @@ public sealed class CorpusRunner
             .ConfigureAwait(false);
         var configuration = configurationResult.Configuration;
         var configurationDiagnostics = configurationResult.Diagnostics;
-        var repositoryContext = CreateRepositoryContext(configuration);
+        using var repositoryContext = CreateRepositoryContext(configuration);
         var ingestor = new SarifIngestor(repositoryContext);
         var baseline = await IngestAsync(
                 ingestor,
@@ -336,16 +336,7 @@ public sealed class CorpusRunner
         }
 
         return new CorpusConfigurationReadResult(
-            new SarifRegressConfiguration(
-                configuration.SchemaVersion,
-                repositoryRoot,
-                configuration.PathRebases,
-                configuration.PathAliases,
-                configuration.RuleAliases,
-                configuration.Matching,
-                configuration.Policy,
-                configuration.Reporting,
-                configuration.Limits),
+            configuration.WithRepositoryRoot(repositoryRoot),
             diagnostics);
     }
 

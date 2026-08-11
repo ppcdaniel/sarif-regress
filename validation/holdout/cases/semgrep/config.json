@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1",
+  "uriBaseMappings": [
+    {
+      "id": "%SRCROOT%",
+      "uri": "repo:/"
+    }
+  ],
+  "pathRebases": [
+    {
+      "from": "file:///opt/sarif-regress-holdout/semgrep/baseline/",
+      "to": "repo:/"
+    },
+    {
+      "from": "file:///C:/sarif-regress-holdout/semgrep/candidate/",
+      "to": "repo:/"
+    }
+  ],
+  "pathAliases": [
+    {
+      "baseline": "src/renamed-old/",
+      "candidate": "src/renamed-new/"
+    }
+  ]
+}

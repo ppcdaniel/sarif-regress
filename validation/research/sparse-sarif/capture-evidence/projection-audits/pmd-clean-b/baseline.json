@@ -1,0 +1,115 @@
+{
+  "algorithmVersion": "pmd-file-uri-prefix-projection/v1",
+  "captureContractSha256": "3f01bf4ecf7c39138b4d67e4547b43140002e964ce0b05a2084adebec9e21526",
+  "changes": [
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "f3a0ce4a506ef2477b48be715e787309344b26ccc090cc022c798b0061fe7afd",
+      "pointer": "/runs/0/results/0/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "app/JobProcessor.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "f3a0ce4a506ef2477b48be715e787309344b26ccc090cc022c798b0061fe7afd",
+      "pointer": "/runs/0/results/1/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "app/JobProcessor.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "f3a0ce4a506ef2477b48be715e787309344b26ccc090cc022c798b0061fe7afd",
+      "pointer": "/runs/0/results/2/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "app/JobProcessor.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "26f7ced528b7422b580c863ade771f54ee8e616ee9d4f7a452a3e085e6577c59",
+      "pointer": "/runs/0/results/3/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "archive/ImportTask.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "26f7ced528b7422b580c863ade771f54ee8e616ee9d4f7a452a3e085e6577c59",
+      "pointer": "/runs/0/results/4/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "archive/ImportTask.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c3438e9352dc8c9e533fdece21962783112a018c48deccbc6237442d96fce679",
+      "pointer": "/runs/0/results/5/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "cache/CacheLoader.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c3438e9352dc8c9e533fdece21962783112a018c48deccbc6237442d96fce679",
+      "pointer": "/runs/0/results/6/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "cache/CacheLoader.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c349db98572b7ef0b0aa2418ca1c2da3dc2d590ddb095eb3caa432800b5efa80",
+      "pointer": "/runs/0/results/7/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "io/BatchReader.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "c349db98572b7ef0b0aa2418ca1c2da3dc2d590ddb095eb3caa432800b5efa80",
+      "pointer": "/runs/0/results/8/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "io/BatchReader.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "d9af3e57477c13c183160c34a54926442d3c066dfa741c73b0864ec88260b4f2",
+      "pointer": "/runs/0/results/9/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "metrics/MetricsWriter.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "16891a66d81ea41c22720b1432fd83dc69aad48a5c4fc0454dbfaec14e74020d",
+      "pointer": "/runs/0/results/10/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "queue/QueueWorker.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "16891a66d81ea41c22720b1432fd83dc69aad48a5c4fc0454dbfaec14e74020d",
+      "pointer": "/runs/0/results/11/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "queue/QueueWorker.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "63bc3138af24cf68eab0e856c231f31866de2d666ded58f39413c5de94e7f55e",
+      "pointer": "/runs/0/results/12/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "service/ReportService.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "63bc3138af24cf68eab0e856c231f31866de2d666ded58f39413c5de94e7f55e",
+      "pointer": "/runs/0/results/13/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "service/ReportService.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "d860e98c5eb52d175db064be4916e5410a10decdaee9827504647209c24ab45e",
+      "pointer": "/runs/0/results/14/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "sync/RetryHandler.java"
+    },
+    {
+      "kind": "checkout-file-uri-prefix-removal",
+      "originalValueSha256": "41005f33f913df7aa726f396b129ed211ee5b4db53cb239d592f520182795952",
+      "pointer": "/runs/0/results/15/locations/0/physicalLocation/artifactLocation/uri",
+      "projectedValue": "workflow/TaskRunner.java"
+    }
+  ],
+  "familyId": "pmd-clean-b",
+  "logicalSourceRoot": "cases/pmd-clean-b/baseline/source",
+  "projectedSarif": {
+    "bytes": 11623,
+    "resultCount": 16,
+    "sha256": "6ec0644dcf717977c061cbfe009c76cd208fbedd32257c600bc8857dc1289a39"
+  },
+  "rawSarif": {
+    "bytes": 13543,
+    "sha256": "0958bd9310e01e0eb4efa4b2b114d81c9e0e84ded88d85898dff23eb398b4986"
+  },
+  "schemaVersion": "1",
+  "side": "baseline"
+}

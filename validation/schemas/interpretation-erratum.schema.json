@@ -1,0 +1,372 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/validation/schemas/interpretation-erratum.schema.json",
+  "title": "SarifRegress holdout interpretation erratum",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "interpretationPolicy",
+    "independentBaseline",
+    "corrections",
+    "currentReportBinding",
+    "integrity"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2"
+    },
+    "kind": {
+      "const": "holdout-interpretation-erratum/v2"
+    },
+    "interpretationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "independentClaimScope",
+        "futureIndependentClaimRequirement"
+      ],
+      "properties": {
+        "independentClaimScope": {
+          "const": "matcher-v2-first-evaluation-only"
+        },
+        "futureIndependentClaimRequirement": {
+          "const": "new-untouched-or-blinded-corpus"
+        }
+      }
+    },
+    "independentBaseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherAlgorithmVersion",
+        "interpretation",
+        "artifacts"
+      ],
+      "properties": {
+        "matcherAlgorithmVersion": {
+          "const": "sarifregress/matcher/v2"
+        },
+        "interpretation": {
+          "const": "independent-first-evaluation"
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/matcherV2ReportBinding"
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "corrections": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/matcherV3Correction"
+        },
+        {
+          "$ref": "#/$defs/matcherV31Correction"
+        }
+      ],
+      "items": false
+    },
+    "currentReportBinding": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/unboundCurrentReport"
+        },
+        {
+          "$ref": "#/$defs/boundCurrentReport"
+        }
+      ]
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "historicalArtifactsRewritten",
+        "holdoutLabelsChanged",
+        "qualityThresholdsChanged"
+      ],
+      "properties": {
+        "historicalArtifactsRewritten": {
+          "const": false
+        },
+        "holdoutLabelsChanged": {
+          "const": false
+        },
+        "qualityThresholdsChanged": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "matcherV2ReportBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        {
+          "properties": {
+            "path": {
+              "const": "validation/history/matcher-v2/sarif-regress-holdout.json"
+            }
+          }
+        }
+      ]
+    },
+    "matcherV3MetadataBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        {
+          "properties": {
+            "path": {
+              "const": "validation/history/matcher-v3/metadata.json"
+            }
+          }
+        }
+      ]
+    },
+    "matcherV3ReportBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        {
+          "properties": {
+            "path": {
+              "const": "validation/history/matcher-v3/sarif-regress-holdout.json"
+            }
+          }
+        }
+      ]
+    },
+    "matcherV31ReportBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        {
+          "properties": {
+            "path": {
+              "const": "validation/history/matcher-v3.1/sarif-regress-holdout.json"
+            }
+          }
+        }
+      ]
+    },
+    "matcherV32ReportBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        {
+          "properties": {
+            "path": {
+              "const": "validation/expected/sarif-regress-holdout.json"
+            }
+          }
+        }
+      ]
+    },
+    "unboundCurrentReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherAlgorithmVersion",
+        "status"
+      ],
+      "properties": {
+        "matcherAlgorithmVersion": {
+          "const": "sarifregress/matcher/v3.2"
+        },
+        "status": {
+          "enum": [
+            "candidate-unbound",
+            "refresh-unbound"
+          ]
+        }
+      }
+    },
+    "boundCurrentReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherAlgorithmVersion",
+        "status",
+        "artifact"
+      ],
+      "properties": {
+        "matcherAlgorithmVersion": {
+          "const": "sarifregress/matcher/v3.2"
+        },
+        "status": {
+          "const": "bound"
+        },
+        "artifact": {
+          "$ref": "#/$defs/matcherV32ReportBinding"
+        }
+      }
+    },
+    "artifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "matcherV3Correction": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/correction"
+        },
+        {
+          "properties": {
+            "matcherAlgorithmVersion": {
+              "const": "sarifregress/matcher/v3"
+            },
+            "legacyClaims": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                {
+                  "const": "frozen-independent-holdout-evaluation"
+                },
+                {
+                  "const": "sarif-regress-independent-holdout"
+                }
+              ],
+              "items": false
+            },
+            "artifacts": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                {
+                  "$ref": "#/$defs/matcherV3MetadataBinding"
+                },
+                {
+                  "$ref": "#/$defs/matcherV3ReportBinding"
+                }
+              ],
+              "items": false
+            }
+          }
+        }
+      ]
+    },
+    "matcherV31Correction": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/correction"
+        },
+        {
+          "properties": {
+            "matcherAlgorithmVersion": {
+              "const": "sarifregress/matcher/v3.1"
+            },
+            "legacyClaims": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "prefixItems": [
+                {
+                  "const": "sarif-regress-independent-holdout"
+                }
+              ],
+              "items": false
+            },
+            "artifacts": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "prefixItems": [
+                {
+                  "$ref": "#/$defs/matcherV31ReportBinding"
+                }
+              ],
+              "items": false
+            }
+          }
+        }
+      ]
+    },
+    "correction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matcherAlgorithmVersion",
+        "legacyClaims",
+        "correctedInterpretation",
+        "reasonCode",
+        "metricsChanged",
+        "artifacts"
+      ],
+      "properties": {
+        "matcherAlgorithmVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "legacyClaims": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "correctedInterpretation": {
+          "const": "exposed-holdout-regression-evidence"
+        },
+        "reasonCode": {
+          "const": "implementation-informed-by-frozen-holdout"
+        },
+        "metricsChanged": {
+          "const": false
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/artifactBinding"
+          }
+        }
+      }
+    }
+  }
+}

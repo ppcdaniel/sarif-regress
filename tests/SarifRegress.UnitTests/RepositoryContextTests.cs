@@ -285,6 +285,163 @@ public sealed class RepositoryContextTests
     }
 
     [Fact]
+    public async Task Symbolic_link_in_repository_root_ancestry_is_rejected()
+    {
+        var parent = Directory.CreateTempSubdirectory(
+            "sarif-regress-root-ancestor-");
+        try
+        {
+            var physicalAncestor = Directory.CreateDirectory(
+                Path.Combine(parent.FullName, "physical"));
+            var approvedRoot = Directory.CreateDirectory(
+                Path.Combine(physicalAncestor.FullName, "repository"));
+            await File.WriteAllTextAsync(
+                Path.Combine(approvedRoot.FullName, "source.txt"),
+                "approved content",
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
+            var linkedAncestor = Path.Combine(
+                parent.FullName,
+                "linked-ancestor");
+            try
+            {
+                Directory.CreateSymbolicLink(
+                    linkedAncestor,
+                    physicalAncestor.FullName);
+            }
+            catch (Exception exception)
+                when (exception is IOException
+                    or UnauthorizedAccessException
+                    or PlatformNotSupportedException)
+            {
+                return;
+            }
+
+            using var context = new FileSystemRepositoryContext(
+                Path.Combine(linkedAncestor, "repository"));
+
+            var result = await context.ReadAsync(
+                "source.txt",
+                new Region(1, null, null, null),
+                lineRadius: 0,
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.True(result.Exists);
+            Assert.Null(result.Snippet);
+            Assert.Contains(
+                result.Diagnostics,
+                diagnostic => diagnostic.Code == "SECURITY0002");
+        }
+        finally
+        {
+            parent.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Repository_root_replacement_does_not_redirect_later_reads()
+    {
+        var parent = Directory.CreateTempSubdirectory(
+            "sarif-regress-root-replacement-");
+        try
+        {
+            var repositoryPath = Path.Combine(parent.FullName, "repository");
+            var retainedRepositoryPath = Path.Combine(
+                parent.FullName,
+                "retained-repository");
+            Directory.CreateDirectory(repositoryPath);
+            await File.WriteAllTextAsync(
+                Path.Combine(repositoryPath, "source.txt"),
+                "approved content",
+                Encoding.UTF8,
+                TestContext.Current.CancellationToken);
+
+            using (var context = new FileSystemRepositoryContext(
+                       repositoryPath))
+            {
+                Directory.Move(repositoryPath, retainedRepositoryPath);
+                Directory.CreateDirectory(repositoryPath);
+                await File.WriteAllTextAsync(
+                    Path.Combine(repositoryPath, "source.txt"),
+                    "replacement content",
+                    Encoding.UTF8,
+                    TestContext.Current.CancellationToken);
+
+                var result = await context.ReadAsync(
+                    "source.txt",
+                    new Region(1, null, null, null),
+                    lineRadius: 0,
+                    cancellationToken:
+                        TestContext.Current.CancellationToken);
+
+                Assert.Equal("approved content", result.Snippet);
+                Assert.Empty(result.Diagnostics);
+            }
+        }
+        finally
+        {
+            parent.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Disposed_repository_context_refuses_later_reads()
+    {
+        var root = Directory.CreateTempSubdirectory(
+            "sarif-regress-disposed-root-");
+        try
+        {
+            var context = new FileSystemRepositoryContext(root.FullName);
+            context.Dispose();
+            context.Dispose();
+
+            await Assert.ThrowsAsync<ObjectDisposedException>(
+                async () => await context.ReadAsync(
+                    "source.txt",
+                    new Region(1, null, null, null),
+                    lineRadius: 0,
+                    cancellationToken:
+                        TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Windows_network_and_device_roots_are_rejected()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var networkContext = new FileSystemRepositoryContext(
+            @"\\server\share\repository");
+        using var deviceContext = new FileSystemRepositoryContext(
+            @"\\?\C:\repository");
+
+        var networkResult = await networkContext.ReadAsync(
+            "source.txt",
+            new Region(1, null, null, null),
+            lineRadius: 0,
+            cancellationToken: TestContext.Current.CancellationToken);
+        var deviceResult = await deviceContext.ReadAsync(
+            "source.txt",
+            new Region(1, null, null, null),
+            lineRadius: 0,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Contains(
+            networkResult.Diagnostics,
+            diagnostic => diagnostic.Code == "SECURITY0002");
+        Assert.Contains(
+            deviceResult.Diagnostics,
+            diagnostic => diagnostic.Code == "SECURITY0002");
+    }
+
+    [Fact]
     public async Task Windows_intermediate_junction_is_rejected()
     {
         if (!OperatingSystem.IsWindows())
@@ -479,8 +636,30 @@ public sealed class RepositoryContextTests
         Assert.Equal(
             RepositoryFileOpenFailure.UnsupportedFileType,
             WindowsRepositoryFileOpener.ClassifyStatus(
-                WindowsRepositoryFileOpener.StatusFileIsDirectory,
+            WindowsRepositoryFileOpener.StatusFileIsDirectory,
                 WindowsRepositoryFileOpener.ErrorAccessDenied));
+    }
+
+    [Theory]
+    [InlineData(LinuxRepositoryFileOpener.AndrewFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.AndrewFileSystemKernelMagic)]
+    [InlineData(LinuxRepositoryFileOpener.CephFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.CifsFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.CodaFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.FuseFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.NetworkControlProtocolMagic)]
+    [InlineData(LinuxRepositoryFileOpener.NetworkFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.NinePFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.ProcFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.SmbFileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.Smb2FileSystemMagic)]
+    [InlineData(LinuxRepositoryFileOpener.SysFileSystemMagic)]
+    public void Linux_repository_filesystem_denylist_is_complete(
+        long fileSystemMagic)
+    {
+        Assert.True(
+            LinuxRepositoryFileOpener.IsUnsafeFileSystem(
+                fileSystemMagic));
     }
 
     [Fact]

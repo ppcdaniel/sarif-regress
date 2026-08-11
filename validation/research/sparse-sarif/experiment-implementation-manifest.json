@@ -1,0 +1,539 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-implementation-manifest/v1",
+  "algorithm": "sha256",
+  "files": [
+    {
+      "path": "Directory.Build.props",
+      "sha256": "a4c9e69de8b7cd5725ce78251697b242deefdc5406b7b24f1440ce2e86be26d3"
+    },
+    {
+      "path": "Directory.Packages.props",
+      "sha256": "0abf4c071938be7bad8ff140be12e32ff2c4293ac5870b6454b65ea346a43fd7"
+    },
+    {
+      "path": "global.json",
+      "sha256": "0588e32d44bdf884e0305ded21820b13a59b1518efd39976c34d909eff3b1044"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Benchmarking/BenchmarkContracts.cs",
+      "sha256": "175e0281201875e3a4f8fdea91e03ec0df8ee4d25f369181f1258f997497cdf8"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Benchmarking/BenchmarkDatasetGenerator.cs",
+      "sha256": "a4b803f66f74428434e1371cdd2a52d9abd0c6a113e4b8672d97c4311b956f6b"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Benchmarking/BenchmarkReportSerializer.cs",
+      "sha256": "f4092a6b4c9ebf66aa0ed7e748bf8dc5eec48a690dfd319612e942bdbc51da7a"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Benchmarking/BenchmarkRunner.cs",
+      "sha256": "c5c6e30fff02915db9cd5391e4ffa7b26e0af4bed3bde7c1205d40135e996274"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CliApplication.cs",
+      "sha256": "08c6778cfe140bda71cbfdd31e2d754bc82e1e98159834e9b2afeff39acbd5ae"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/AtomicOutputWriter.cs",
+      "sha256": "c0e72490fecf757310e22c6b6af1ae1b583f8ee22469d67666b9f8bc4cd9c730"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/BenchCommandFactory.cs",
+      "sha256": "41d27ca306d6eb926b48a0dbc8f945fc2df49d19c7136099fc0efefe60b81795"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/BenchCommandHandler.cs",
+      "sha256": "13f31f80e19f0b74156ed38c4c7354442849b2b08bfdd0d7be89c8a0b28f57b8"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/BenchCommandRequest.cs",
+      "sha256": "98a99dcac9e37e629e796cff2c8822ae9c564f8141650512597ca910594c087f"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CanonicaliseCommandFactory.cs",
+      "sha256": "35238ac3232caa795de9444f29528f7faf9395bb62ebd804f665cf0304f4e4d3"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CanonicaliseCommandHandler.cs",
+      "sha256": "6c8b105cab305ad25d9516bcfe90090fef4d66539250fc7e00ad19330c30dc9a"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CanonicaliseCommandRequest.cs",
+      "sha256": "bb3f0fa03410ba28c858323e3cce15f898f22f6e1b1bf78efb8027e713fe6bdd"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CanonicaliseSarifSerializer.cs",
+      "sha256": "eddac8a9a3dfc8cbd5bfebd917e643ada6e72d9e103df62ad142ba5eb4b53c0e"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CliCommandFactory.cs",
+      "sha256": "48bff73c6419c03672cff846df5fd8d82ceb266c92d39ef29d1724222c51eacd"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CompareCommandFactory.cs",
+      "sha256": "d4ad4b40fac07445fab7631f35ea9be2993fa11d02cb30658a394646fbadab7c"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CompareCommandHandler.cs",
+      "sha256": "505a97d1f93f77bf60245859826dbc416c8187cbd6c57125ea583d457572b6ab"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CompareCommandRequest.cs",
+      "sha256": "c076af5d07281a47a04485864337a4f7a5118a00c021493c942a3030155592a0"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CorpusCommandFactory.cs",
+      "sha256": "938934a9b053db60906aa018a781b7f0893cb1471ff696a580196d36e515a2d7"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CorpusCommandHandler.cs",
+      "sha256": "a11c96cd009e990daf8d743f8f496d6b40dbda5d12033de922344fcc3cc0f393"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/CorpusCommandRequest.cs",
+      "sha256": "ae3b1ad965dc31bd6d0e82d8d27feddd258060826d40c8c8ba5e1c6fea1c87d0"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/PathIdentityResolver.cs",
+      "sha256": "88fa098360c2fc1fd21e976eaf1c4f9d5a94fab21c11f043db9dd89f80c18058"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/ValidateCommandFactory.cs",
+      "sha256": "180273dec34546d9874c40841a668af08faf438dd834cf0c2835bc982a01c7d3"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/ValidateCommandHandler.cs",
+      "sha256": "02fc965177981e2fa0ab66ac199314225bc1d364a18c1d3d1a5d9ef0dc22ca83"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/ValidateCommandRequest.cs",
+      "sha256": "23faec6cfb3e67d70194933e848b546e211662cc517eae1367b093138e612bf0"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/ValidateCommandSupport.cs",
+      "sha256": "39679c1abd13fb29c316096e03ee43699a80179a44b824b8d43df135ff45b67b"
+    },
+    {
+      "path": "src/SarifRegress.Cli/CommandLine/ValidateSummarySerializer.cs",
+      "sha256": "f85fd3d3b906a91713a1693d60aa3aeec73ea005abcc22542fcaeb5695c79e98"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusCaseArtifactSerializer.cs",
+      "sha256": "e0f32885effb368273c03808400889ea121d617a14ce7617d5ac5f917dba9254"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusContracts.cs",
+      "sha256": "d85c70a17c816617587bca238e81a5bcf7e33026ea59f515011b02c027366b44"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusEvaluator.cs",
+      "sha256": "b9de1aa17ac4c46317a67511cffc28fb9930cbf71263d990c511715c9294cbec"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusExpectationEvaluator.cs",
+      "sha256": "84140127584187b1e3aaee6128aff87618f1af7b593425cd379455fcba907609"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusLabelReader.cs",
+      "sha256": "11ee36409a8ca854ab59fa51042622712d8e3d50dafd995939b005cd5f104f42"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusQualityGate.cs",
+      "sha256": "ed0a429ec164c21701fad6311bcd368d2c297f967b919b00985370d746a7679c"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusRunReportSerializer.cs",
+      "sha256": "d92b988bfcfc87440aef97b8a57e2c8aff2cb5c5a2709f2f8e8bbbdc32a5af59"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Corpus/CorpusRunner.cs",
+      "sha256": "529339063bff42d93f1cc1864cec54cbff4db376fb0637740d25a2449c879b3a"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Diagnostics/StableDiagnosticFormatter.cs",
+      "sha256": "14cadd9aa4d827ec8e989d8c67dec81537830ed8f7be6b100762e615b88ff49b"
+    },
+    {
+      "path": "src/SarifRegress.Cli/ExitCodes.cs",
+      "sha256": "b8883cbc4a31a9dcf9c14b4f444ec1d144751958d94d0f912106e3efe35a07d5"
+    },
+    {
+      "path": "src/SarifRegress.Cli/Program.cs",
+      "sha256": "686b47f19e74b7f01c34f584b3473d02ca7ba4289685a9e0c5664d8d16c208b9"
+    },
+    {
+      "path": "src/SarifRegress.Cli/SarifRegress.Cli.csproj",
+      "sha256": "a96346f93bc4f9c488d8f02578e86ef1d18110432760e0c17d5e0ee455ccc1d2"
+    },
+    {
+      "path": "src/SarifRegress.Cli/packages.lock.json",
+      "sha256": "0f80024465e6f2d895cd3ac0a50311beebc4d8dc89a0e349a32fb6932615e3c2"
+    },
+    {
+      "path": "src/SarifRegress.Core/Configuration/ConfigurationContracts.cs",
+      "sha256": "bed1e54dc2ed9e0967904f1f3dce51aa7f382993cf66421684e9db5b10230bd9"
+    },
+    {
+      "path": "src/SarifRegress.Core/Diagnostics/DiagnosticContracts.cs",
+      "sha256": "67f2d6911e45fd9b4498de848baa3cf3c3783f0ff83f504b04801a691bb3cd83"
+    },
+    {
+      "path": "src/SarifRegress.Core/Findings/FindingContracts.cs",
+      "sha256": "632734590a9e5cf28d6f65e4d0c46f68756ce5b4aad9cb8865a7202351e9392d"
+    },
+    {
+      "path": "src/SarifRegress.Core/Findings/ProducerIdentityResolver.cs",
+      "sha256": "68f468941fbe7e61ab10fccad0297a71a95ea6a80c6207df9cdf40faa76aa5e9"
+    },
+    {
+      "path": "src/SarifRegress.Core/Matching/MatchingContracts.cs",
+      "sha256": "90ac3f199b05c704407fe6e6591d3a479f5ef216abee91628ef1b00b57c41d68"
+    },
+    {
+      "path": "src/SarifRegress.Core/Paths/CompletePrefixIndex.cs",
+      "sha256": "1528a2bc6c1b186ce2ec47e7d2a7a4a7c3b1f3434e24b3206d551cbad6861cdc"
+    },
+    {
+      "path": "src/SarifRegress.Core/Paths/PathContracts.cs",
+      "sha256": "6230cb04350971351e763bf59934ae1ad30a5201bb144304d237ab62979955c1"
+    },
+    {
+      "path": "src/SarifRegress.Core/ProductInformation.cs",
+      "sha256": "065f96248a937771c2f4db04f08dc4517cbd59fe888749c1f9169645c1bdf399"
+    },
+    {
+      "path": "src/SarifRegress.Core/Reporting/ReportContracts.cs",
+      "sha256": "06e5176ec5bd90bd84c2aedef66ede269f3c4b133fea63ecd16e20b7a73d77c5"
+    },
+    {
+      "path": "src/SarifRegress.Core/SarifRegress.Core.csproj",
+      "sha256": "da6362e4e9f1b1cfaa251b4405ddfde0f882008455d49786a5160efc4c9afcc4"
+    },
+    {
+      "path": "src/SarifRegress.Core/Security/ResourceLimits.cs",
+      "sha256": "d0c9c41a2a4f666874673039c04ea029a003752998453fdb56b380c226f8f4d0"
+    },
+    {
+      "path": "src/SarifRegress.Core/Utility/VersionedHash.cs",
+      "sha256": "f0f850fd1ecf9e9ee7974a0be4e5baa979860973382b4ca7dd97c8fdffb58759"
+    },
+    {
+      "path": "src/SarifRegress.Core/packages.lock.json",
+      "sha256": "1624731bf151ec2ac6993023046a4abbac7c6ddc71ed2e242e8285bbc69d561e"
+    },
+    {
+      "path": "src/SarifRegress.Match/BoundedAssignmentSolver.cs",
+      "sha256": "208bb61b7694ba8654a9fe4399612765f9796f6a9db715612baa578e1f50ce47"
+    },
+    {
+      "path": "src/SarifRegress.Match/CandidateEdgeFactory.cs",
+      "sha256": "3d0e2d139c5a60818ec45332ba54179a78ce5e4db7d0b253a43aabc436a690b0"
+    },
+    {
+      "path": "src/SarifRegress.Match/CodeFlowAnchorOccurrenceIndex.cs",
+      "sha256": "e78360fb42a2a23aa9f31d8f7ddc18059e4cedc05023eb2f178589cab0c08fdc"
+    },
+    {
+      "path": "src/SarifRegress.Match/ContextFingerprintOccurrenceIndex.cs",
+      "sha256": "6fcea90934ea2ba6cea4e906d98f95f6673c038c2a9a361ebf0e662abfe7b217"
+    },
+    {
+      "path": "src/SarifRegress.Match/FindingMatcher.cs",
+      "sha256": "97ff92400ac10a725fb3794cab31a4e433323578cf3b86b17a6a2ff73652687d"
+    },
+    {
+      "path": "src/SarifRegress.Match/MatchingAlgorithms.cs",
+      "sha256": "1e454aae5a58255ef23645156d7f54c7f81ab6797c4c2988ed9fc1977dacb96f"
+    },
+    {
+      "path": "src/SarifRegress.Match/MessageLocationTemplateClassifier.cs",
+      "sha256": "8d7505f9f9ead49c3356c510bbedd3db54647c2afa76d0985b2a8f8082f41050"
+    },
+    {
+      "path": "src/SarifRegress.Match/PathAliasIndex.cs",
+      "sha256": "f3415f53598c41e2b47fe1082d5cecbd72ae5fe441b14a6495b92d85368cf6c7"
+    },
+    {
+      "path": "src/SarifRegress.Match/SarifRegress.Match.csproj",
+      "sha256": "cb1c3c24e93f299b73de2dc8451324a9b6851f3a409ada1c972f1d8e12c5f1d3"
+    },
+    {
+      "path": "src/SarifRegress.Match/packages.lock.json",
+      "sha256": "d12e4bedc9c5141ad6246357c60bc16fb0b7bfbc17a74a5323e7449bc05f7acb"
+    },
+    {
+      "path": "src/SarifRegress.Report/CanonicalSarifExporter.cs",
+      "sha256": "cd802d70650181061e94e0266ae0cab640fb47b4d8467facde5501b226eec0ec"
+    },
+    {
+      "path": "src/SarifRegress.Report/ComparisonReportFactory.cs",
+      "sha256": "5f87811df9b38b5fc99660d3459fff70ae2dd812e94994b5e85aea3c95c0f44a"
+    },
+    {
+      "path": "src/SarifRegress.Report/ReportContractVersions.cs",
+      "sha256": "c5492305101422049725a26ca824d5386305d9bca6485f52b9e815f94195b468"
+    },
+    {
+      "path": "src/SarifRegress.Report/SarifRegress.Report.csproj",
+      "sha256": "2f33239f4eeb1bfd18b34a79ba83a673b512948664ba9086620a96888b6714d8"
+    },
+    {
+      "path": "src/SarifRegress.Report/StableComparisonReport.cs",
+      "sha256": "421dd2ab671364b82ff27e22a29b81ac8552d58ddeddc47272d88b652d44ad02"
+    },
+    {
+      "path": "src/SarifRegress.Report/StableJsonNames.cs",
+      "sha256": "b598052b317ad6f6f7ed5d6059bd2778306bdc58e2be9e9a58835514c507ebf6"
+    },
+    {
+      "path": "src/SarifRegress.Report/StableJsonReportSerializer.cs",
+      "sha256": "2c0e0b933ed65f6d28122326ffb21c14c1f941048b06536d752ee5f4d6b26bac"
+    },
+    {
+      "path": "src/SarifRegress.Report/StableJsonReportWriter.cs",
+      "sha256": "ad02ed6c6e0d577137506d8c1dd6472fca95ef11743c4b3ecbed7b1ed6e4dfc7"
+    },
+    {
+      "path": "src/SarifRegress.Report/StableJsonSerializationMeasurement.cs",
+      "sha256": "547e32dd0629e7db3bfce5a6ed22b7f62efb696f433f56a19a20d7d512d17175"
+    },
+    {
+      "path": "src/SarifRegress.Report/StableJsonWireMapper.cs",
+      "sha256": "fa3ea9a26151ca360522bfcf61de087b1f33fb37ccc4032bc68121aef218bdb0"
+    },
+    {
+      "path": "src/SarifRegress.Report/StableJsonWireModels.cs",
+      "sha256": "27aea83090b90f442d556f28c80a344db5f985004fa5d015503f690c6e36fa80"
+    },
+    {
+      "path": "src/SarifRegress.Report/StaticHtmlReportRenderer.cs",
+      "sha256": "b5c19b5901d91f06321d0a3c807affca37731dc16e634c16f497e14238d606dd"
+    },
+    {
+      "path": "src/SarifRegress.Report/packages.lock.json",
+      "sha256": "d12e4bedc9c5141ad6246357c60bc16fb0b7bfbc17a74a5323e7449bc05f7acb"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Canonicalization/CompletePrefixRebaseIndex.cs",
+      "sha256": "9346c076a15d153347aeaff65ab5972373e9a68800b97699ca26dc135542f4ae"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Canonicalization/MessageCanonicalizer.cs",
+      "sha256": "131175e4a925557542a6fa56d0634a6eb81da0ed284c86c2ec7008161315445d"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Canonicalization/PathCanonicalizer.cs",
+      "sha256": "eb41c6b38b6d99a19c5c295f3e224b68ec66c3b5d2b6b587b0073a12cd8ec6a9"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Compatibility/GithubCompatibilityChecker.cs",
+      "sha256": "1d7fca4283b7d2d2c6d56685b418c8617cede8821ebe2fd2bede9210ce6f54c5"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Configuration/ConfiguredUriBasePolicy.cs",
+      "sha256": "7d1b6f55203fbdd4af0b4f5d7a823fe8fb20c3659627487a8b1d5ef0e09e34c5"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Configuration/SarifConfigurationReader.cs",
+      "sha256": "db4c1bb2baf2288b3f722e00a9af6c192472f886ecb6836dae6285de1c3c64cc"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Fingerprints/FingerprintProcessor.cs",
+      "sha256": "72892782ed0d58c8e0e6e881f3661edf46d5f8fa0a211e62f97ff255b674ccac"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Ingestion/BoundedJsonConverters.cs",
+      "sha256": "fd4aa7f56911cb5a47444b0606eaebd8c5bdc3f1b218ff72d67b660c001a7b1e"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Ingestion/BoundedReadStream.cs",
+      "sha256": "0f0d9bc50707039628c346f2e10efa4e7345b4320654f38355e37ceeb5433bb7"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Ingestion/RuleAliasResolutionIndex.cs",
+      "sha256": "997fcba00591ed9b385eb7030057f97a5106c8cdbe037db15e04d325cc387062"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Ingestion/SarifIngestionContracts.cs",
+      "sha256": "563b4f9cb068fa193f60fe9b81b45b58164db1ac503ed11a774317d15b03ffa5"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Ingestion/SarifIngestor.cs",
+      "sha256": "b75171eb8208f0a7180999738051104fa16e9d81cb4e1e2dbb1634e5520e4359"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Ingestion/SarifWireModels.cs",
+      "sha256": "2ba459790e4004d5efdbdd593edd28e2770ba82c76c37bcbeb7afd538dd769ee"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Repository/FileSystemRepositoryContext.cs",
+      "sha256": "137a6575c4277bf81c4ffc754ff72f7c92fe0ecce668632721f8bbd8ccdaf894"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Repository/IRepositoryContext.cs",
+      "sha256": "9fd2f32c85b07e17ff57a740638bcadecefe9336121117c3d2694419644c75da"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Repository/RepositoryFileHandleOpener.cs",
+      "sha256": "eaf91c47e59590d8b9a8f617b9ef6c44628ceca4b5efa6143dc4ce6653a4b895"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/Repository/TokenWindowCanonicalizer.cs",
+      "sha256": "98d9a04bb3f57808fbd91010ca258bd49bc28b5143864f0048019d7ed7cba3bd"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/SarifRegress.Sarif.csproj",
+      "sha256": "cb1c3c24e93f299b73de2dc8451324a9b6851f3a409ada1c972f1d8e12c5f1d3"
+    },
+    {
+      "path": "src/SarifRegress.Sarif/packages.lock.json",
+      "sha256": "d12e4bedc9c5141ad6246357c60bc16fb0b7bfbc17a74a5323e7449bc05f7acb"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/AmbientDataGuard.cs",
+      "sha256": "b7d36ce9324579632ebc4fdcbd1924002fd9f62c9826d3f7f66944720c0e9fd1"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/BoundedJsonFile.cs",
+      "sha256": "6614bf75fc2da22389326e5bd0bab1b8105586a4b20e98be5a12b8255d807630"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/BoundedJsonSchemaEvaluator.cs",
+      "sha256": "7ba02c1cf3cb6a66e356f9b716def3ad543afb87e91f5083cbe26686122f00cb"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/BoundedProcessRunner.cs",
+      "sha256": "1a4b4d9b2c3c83aa2abe25889daae491910c8f1982b19ec2aacf2241419c99b6"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/ChecksumManifest.cs",
+      "sha256": "82193703120bd077baf2cc90406ca7d73316f6cb0bd1d7e9ea4a86e5dd1bf2b6"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/ComparisonSummary.cs",
+      "sha256": "00e5e80f828d407cd0dc04391ebf1b4eb06b6b56cdd559c7a70ae41b0987669c"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/CrossPlatformAttestation.cs",
+      "sha256": "ba5fc8b75cc4953c32f65b1cfa5bbbfe5ee7c7617310983a2421a06476ca4b5e"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/DecisionTraceProjection.cs",
+      "sha256": "9c83a6795f5bab293a4e71f44819287c458b9bdda28b6e9fec3173681b6123a1"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/Ecma262RegexTranslator.cs",
+      "sha256": "e782164c82540d36822e54d759dd6828eae4437f93c0c0be67386192a6feccb9"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/EvaluationMetadata.cs",
+      "sha256": "0e09bffd990be89754a952aaf87274464295bc80145b5087a9f97ef6decbbcd8"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/EvaluationServices.cs",
+      "sha256": "e9de036560a8923cf3dff49711b359f1df034faec7c0b5625a265c9e8b851ab0"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/ExpectedOutputVerifier.cs",
+      "sha256": "0fc7aee1554b2c6932a052bf554ad70e9ee5c2d2c80dfefa6bf8d1f0768a4b13"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/GitSourceTreeHasher.cs",
+      "sha256": "1a72d0e492707005c8ca3d9a23ea31e3c62ad08e53d7e842a8b47870e9d14edd"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/HoldoutCorpusRunnerAdapter.cs",
+      "sha256": "0f14a9c867e22ab15136cdce3fadb2e4448ce185ee42b8508bb7ea923c1f6149"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/HoldoutEvaluation.cs",
+      "sha256": "b875d6ea4130ace049728a7acde98b63888d644014fcbccc936f29d27d1aefc8"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/HoldoutInterpretationErratum.cs",
+      "sha256": "989b3aac282e329a6c9b48e83be9adb765236da3608f657a7b38869817efabef"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/HoldoutManifest.cs",
+      "sha256": "e9671901bd0968ed27a1f522523bc801a88f4ce9e30c14d069d41a3a968dbb3b"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/JsonSchemaValidator.cs",
+      "sha256": "5198ff2bf77b2f19cc9e1e4932117115eaf6852e44ca825dc4ba8791b4e77ac7"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/MatcherV2ToV3DeltaReport.cs",
+      "sha256": "da5e38fa4e5122cf986e235d32ef264d69cd9653320d76f09cc934fad5b06b79"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/MatcherV31ToV32DeltaReport.cs",
+      "sha256": "3c7e6ced18aff24ca00766437b23d34553250d63cd596ec85d9a427614d0d639"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/MatcherV3ToV31DeltaReport.cs",
+      "sha256": "dad26f260d1fc8422d27bb2bdf9c5e22c928d83e02f43d24255191d03525f692"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/MultitoolValidation.cs",
+      "sha256": "011968792be1cd4ccd5b31e389c749529b097e85975b91389f07edbac93e75f2"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/Program.cs",
+      "sha256": "c1d775711b582e61ba09a833718131751b445bd6cdd84550381ca0e645d46ccc"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/ResourceLimitEvidenceSerializer.cs",
+      "sha256": "8d7073a1add354cca35974380a937f1f770a5a701d0b07cb0c71a14825c0857e"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj",
+      "sha256": "b453f3c21bb73d3da7799dc380365b0bac7999ed89cbe2985358a6d17a769db7"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentContracts.cs",
+      "sha256": "b940cbd79f375f6de1704efb5988bf9a8dea23a891fe0eff9a0e3f4b2b4c7bba"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentEvaluator.cs",
+      "sha256": "0ea17247bc8068ee5c9c9a665d3f4361191b5c948061f5c71beabb50a4797f11"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentIO.cs",
+      "sha256": "17faf63cd2e31648dec4add2ebb6c80b3deca33b9e2b04e2ce1694f2ac496a26"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentRunner.cs",
+      "sha256": "80aac2bccc33b08c51316d3e5c40b3f91aef20313cc26ce440d6edb95bb73f5b"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/StableJson.cs",
+      "sha256": "dc438597b5e32860fe4009544024fbdb4c8a5793b6763d86e48f8d8b6b67b4de"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/StablePath.cs",
+      "sha256": "ab59098505ed6800d24459024fbb686afdb14d645a5a1d12706296948fc13316"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/StableReportSerializer.cs",
+      "sha256": "6304caaa9f48efc74f51a3a83d0b54d13d79d4c212f536c5300ac0c4b66a5826"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/ValidationApplication.cs",
+      "sha256": "5bd568ffc76bf9aba6f2a3fe580a4169dbf178ef4ce0efaa6c4535b135322065"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/ValidationLimits.cs",
+      "sha256": "79be16c969ccb2308ec544eae9a80e25b2d9c32b5593965c98c18d8c156bbdda"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/ValidationOptions.cs",
+      "sha256": "fbbce921168f36c83a889bc61e69a54f2a16bf4ebab077bb2eebde4111df5c13"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/packages.lock.json",
+      "sha256": "ee7231def843c53bdc5874f17a784391db272b5d32df11cdf8981fb4258bcfff"
+    }
+  ]
+}

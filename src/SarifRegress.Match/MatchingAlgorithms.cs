@@ -1,24 +1,31 @@
 using System.Collections.Immutable;
+using SarifRegress.Core;
 using SarifRegress.Core.Matching;
 
 namespace SarifRegress.Match;
 
 internal static class MatchingAlgorithms
 {
-    public const string MatcherVersion = "sarifregress/matcher/v2";
+    public const string MatcherVersion = ProductInformation.MatcherAlgorithmVersion;
     public const string RuleIdentityVersion = "sarifregress/rule-identity/v2";
     public const string RuleAliasVersion = "sarifregress/rule-alias/v2";
     public const string ProducerFingerprintVersion =
         "sarifregress/producer-fingerprint-common-version/v1";
     public const string DerivedFingerprintVersion =
-        "sarifregress/derived-fingerprint-compare/v1";
+        "sarifregress/derived-fingerprint-compare/v2";
     public const string PathVersion = "sarifregress/path-evidence/v1";
     public const string PathAliasVersion = "sarifregress/path-alias/v1";
-    public const string ContextVersion = "sarifregress/context-evidence/v1";
+    public const string ContextVersion = "sarifregress/context-evidence/v2";
+    public const string EvidenceOccurrenceVersion =
+        "sarifregress/evidence-occurrence/v1";
     public const string MessageVersion = "sarifregress/message-evidence/v1";
+    public const string MessageLocationTemplateVersion =
+        "sarifregress/message-location-template/v1";
     public const string RegionVersion = "sarifregress/region-evidence/v1";
     public const string CodeFlowAnchorVersion = "sarifregress/code-flow-anchor/v1";
     public const string CodeFlowSetVersion = "sarifregress/code-flow-set/v1";
+    public const string CodeFlowOccurrenceVersion =
+        "sarifregress/code-flow-occurrence/v1";
     public const string RelatedLocationSetVersion =
         "sarifregress/related-location-set/v1";
     public const string AssignmentOutcomeVersion =
