@@ -215,14 +215,16 @@ jobs:
         working-directory: artifacts/release
         run: |
           set -euo pipefail
-          LC_ALL=C sha256sum \
-            ./*.nupkg \
-            ./benchmark-*.json \
-            ./corpus-report.json \
-            ./sarif-regress-linux-x64 \
-            ./sarif-regress-win-x64.exe \
-            ./source-commit.txt |
-            sed 's#  \./#  #' > checksums.sha256
+          mapfile -d '' release_files < <(
+            find . \
+              -maxdepth 1 \
+              -type f \
+              ! -name 'checksums.sha256' \
+              -printf '%f\0' |
+              LC_ALL=C sort -z
+          )
+          test "${#release_files[@]}" -gt 0
+          LC_ALL=C sha256sum "${release_files[@]}" > checksums.sha256
 
       - name: Verify release checksums
         shell: bash
@@ -291,11 +293,38 @@ jobs:
             cd release
             sha256sum --check checksums.sha256
           )
+          declare -A notice_sources=(
+            [DOTNET_RUNTIME_LICENSE.txt]=notices/DOTNET_RUNTIME_LICENSE.txt
+            [DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt]=notices/DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt
+            [LICENSE]=LICENSE
+            [SYSTEM_COMMANDLINE_LICENSE.md]=notices/SYSTEM_COMMANDLINE_LICENSE.md
+            [THIRD_PARTY_NOTICES.md]=THIRD_PARTY_NOTICES.md
+          )
+          for notice_name in "${!notice_sources[@]}"; do
+            cmp --silent -- \
+              "${notice_sources[${notice_name}]}" \
+              "release/${notice_name}"
+            expected_line="$(
+              sha256sum "release/${notice_name}" |
+                sed 's#  release/#  #'
+            )"
+            grep --fixed-strings --line-regexp -- \
+              "${expected_line}" \
+              release/checksums.sha256 >/dev/null
+          done
           chmod 755 release/sarif-regress-linux-x64
           release/sarif-regress-linux-x64 --help >/dev/null
           shopt -s nullglob
           package_files=(release/SarifRegress.Tool.*.nupkg)
           test "${#package_files[@]}" -eq 1
+          unzip -p "${package_files[0]}" LICENSE |
+            cmp --silent -- LICENSE -
+          unzip -p "${package_files[0]}" THIRD_PARTY_NOTICES.md |
+            cmp --silent -- THIRD_PARTY_NOTICES.md -
+          unzip -p \
+            "${package_files[0]}" \
+            notices/SYSTEM_COMMANDLINE_LICENSE.md |
+            cmp --silent -- notices/SYSTEM_COMMANDLINE_LICENSE.md -
           package_name="$(basename -- "${package_files[0]}")"
           package_version="${package_name#SarifRegress.Tool.}"
           package_version="${package_version%.nupkg}"
@@ -316,6 +345,10 @@ jobs:
             "${package_files[0]}" \
             "${installed_package_files[0]}"
           release-tool/sarif-regress --help >/dev/null
+          bash scripts/smoke-comparison.sh \
+            release/sarif-regress-linux-x64 \
+            release-tool/sarif-regress \
+            "${RUNNER_TEMP}/release-comparison-smoke"
 
       - name: Verify and execute exact Windows assets
         if: runner.os == 'Windows'
@@ -340,6 +373,38 @@ jobs:
             }
           }
 
+          $noticeSources = [ordered]@{
+            'DOTNET_RUNTIME_LICENSE.txt' = 'notices/DOTNET_RUNTIME_LICENSE.txt'
+            'DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt' = `
+              'notices/DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt'
+            'LICENSE' = 'LICENSE'
+            'SYSTEM_COMMANDLINE_LICENSE.md' = `
+              'notices/SYSTEM_COMMANDLINE_LICENSE.md'
+            'THIRD_PARTY_NOTICES.md' = 'THIRD_PARTY_NOTICES.md'
+          }
+          $checksumLines = @(Get-Content release/checksums.sha256)
+          foreach ($noticeName in $noticeSources.Keys) {
+            $sourceHash = (
+              Get-FileHash `
+                -LiteralPath $noticeSources[$noticeName] `
+                -Algorithm SHA256
+            ).Hash.ToLowerInvariant()
+            $releasePath = Join-Path release $noticeName
+            $releaseHash = (
+              Get-FileHash -LiteralPath $releasePath -Algorithm SHA256
+            ).Hash.ToLowerInvariant()
+            $sourceLength = (Get-Item -LiteralPath $noticeSources[$noticeName]).Length
+            $releaseLength = (Get-Item -LiteralPath $releasePath).Length
+            if ($releaseLength -ne $sourceLength -or $releaseHash -cne $sourceHash) {
+              throw "Release notice differs from its audited source: $noticeName"
+            }
+
+            $expectedLine = "$releaseHash  $noticeName"
+            if ($checksumLines -cnotcontains $expectedLine) {
+              throw "Release checksum manifest omits $noticeName."
+            }
+          }
+
           & .\release\sarif-regress-win-x64.exe --help | Out-Null
           if ($LASTEXITCODE -ne 0) {
             throw "The exact Windows release executable failed."
@@ -358,6 +423,54 @@ jobs:
           }
           if ($packageFiles.Count -ne 1 -or -not $packageMatch.Success) {
             throw 'Expected exactly one versioned .NET tool package.'
+          }
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $packageNoticeSources = [ordered]@{
+            'LICENSE' = 'LICENSE'
+            'THIRD_PARTY_NOTICES.md' = 'THIRD_PARTY_NOTICES.md'
+            'notices/SYSTEM_COMMANDLINE_LICENSE.md' = `
+              'notices/SYSTEM_COMMANDLINE_LICENSE.md'
+          }
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($packageFiles[0].FullName)
+          try {
+            foreach ($entryName in $packageNoticeSources.Keys) {
+              $entries = @(
+                $archive.Entries |
+                  Where-Object { $_.FullName -ceq $entryName }
+              )
+              if ($entries.Count -ne 1) {
+                throw "Expected one package entry named $entryName."
+              }
+
+              $entryStream = $entries[0].Open()
+              try {
+                $hasher = [System.Security.Cryptography.SHA256]::Create()
+                try {
+                  $entryHash = [System.BitConverter]::ToString(
+                    $hasher.ComputeHash($entryStream)
+                  ).Replace('-', '').ToLowerInvariant()
+                }
+                finally {
+                  $hasher.Dispose()
+                }
+              }
+              finally {
+                $entryStream.Dispose()
+              }
+
+              $sourcePath = $packageNoticeSources[$entryName]
+              $sourceHash = (
+                Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256
+              ).Hash.ToLowerInvariant()
+              $sourceLength = (Get-Item -LiteralPath $sourcePath).Length
+              if ($entries[0].Length -ne $sourceLength -or $entryHash -cne $sourceHash) {
+                throw "Package entry differs from its audited source: $entryName"
+              }
+            }
+          }
+          finally {
+            $archive.Dispose()
           }
 
           $packageVersion = $packageMatch.Groups[1].Value
@@ -404,6 +517,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "The exact installed .NET tool failed."
           }
+          .\scripts\smoke-comparison.ps1 `
+            -StandaloneExecutable .\release\sarif-regress-win-x64.exe `
+            -InstalledToolExecutable .\release-tool\sarif-regress.exe `
+            -OutputRoot (Join-Path `
+              $env:RUNNER_TEMP `
+              'release-comparison-smoke')
 
   create-release-draft:
     name: Create tagged GitHub release draft
@@ -503,6 +622,11 @@ jobs:
             release/*.nupkg \
             release/benchmark-*.json \
             release/corpus-report.json \
+            release/DOTNET_RUNTIME_LICENSE.txt \
+            release/DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt \
+            release/LICENSE \
+            release/SYSTEM_COMMANDLINE_LICENSE.md \
+            release/THIRD_PARTY_NOTICES.md \
             release/sarif-regress-linux-x64 \
             release/sarif-regress-win-x64.exe \
             release/source-commit.txt \

@@ -135,24 +135,21 @@ Total recorded findings: 49.
   interpretation on hosted Ubuntu and Windows at exact head
   `d880bd0a0495650a34ae2faa8521f170af80d7a9`.
 
-### H-03 — Required validation uses binaries with unresolved maintenance terms
+### H-03 — Required validation previously used binaries with unresolved maintenance terms
 
-- **Evidence and code area:** `Directory.Packages.props` pins `JsonSchema.Net 9.4.0`;
-  `validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj` references it; the lock
-  file resolves `JsonPointer.Net 7.0.2`, `Json.More.Net 3.0.1`, and `Humanizer.Core 3.0.10`. PR #8
-  introduced this chain. The exact JsonSchema, JsonPointer, and Json.More NuGet binary releases each
-  include an Open Source Maintenance Fee Agreement.
-- **Why it matters:** the packages are validation-only and are not redistributed in product
-  artifacts, but required CI and owner verification execute upstream precompiled binaries. Their
-  terms depend on user revenue/use/exemptions that cannot be inferred from the repository. This
-  review does not conclude that a fee is owed; it concludes that no applicability disposition is
-  recorded.
-- **Smallest safe remediation:** obtain and record an owner-appropriate applicability/exemption
-  decision. To eliminate the uncertainty technically, use a conventionally licensed bounded
-  validator or independently build pinned MIT sources with complete provenance.
-- **Blocks merging PR #8:** yes pending disposition.
-- **Blocks merging PR #13:** yes because it is stacked.
-- **Blocks release:** yes.
+- **Current evidence and code area:** the validation dependency chain tracked by issue #17 is
+  absent from `Directory.Packages.props`, the validation project, and all current lock files.
+  Required schema checks now use a repository-owned bounded evaluator that supports only the
+  committed schema vocabulary and fails closed on unsupported constructs or resource-limit
+  violations.
+- **Why it mattered:** required CI and owner verification had executed upstream precompiled
+  validation binaries whose applicability depended on owner-specific facts that cannot be inferred
+  from this repository.
+- **Disposition:** resolved technically by removing that binary dependency chain. This records the
+  owner's implementation disposition without making or requiring a legal applicability conclusion
+  about packages that are no longer used.
+- **Blocks merging PR #8/#13 or release:** no after direct verification of the locked dependency
+  graph and bounded evaluator tests.
 - **Tracking:** [#17](https://github.com/ppcdaniel/sarif-regress/issues/17).
 
 ### H-04 — Release artifacts omit project and third-party notice material
@@ -172,6 +169,11 @@ Total recorded findings: 49.
 - **Blocks merging PR #13:** no.
 - **Blocks release:** yes.
 - **Tracking:** [#18](https://github.com/ppcdaniel/sarif-regress/issues/18).
+- **Disposition:** resolved in the release-hardening completion. The audited product graph and
+  verbatim upstream material are retained in `THIRD_PARTY_NOTICES.md` and `notices/`; packaging
+  embeds the applicable project/dependency material in the nupkg, places the project/runtime/
+  dependency files beside the standalone executables, checks exact source bytes on both operating
+  systems, and binds every release file in `checksums.sha256`.
 
 ### H-05 — Tagged release drafts ignore the blocked holdout recommendation
 
@@ -255,6 +257,15 @@ Total recorded findings: 49.
 - **Blocks merging PR #13:** no if tracked independently, although v3 can admit more edges.
 - **Blocks release:** yes.
 - **Tracking:** [#22](https://github.com/ppcdaniel/sarif-regress/issues/22).
+- **Disposition:** candidate scoring now records only fixed-size 16-byte descriptors while it
+  preserves complete-graph union/count accounting, sorts those descriptors in the former exact
+  full-edge order, and materialises evidence only for capacity-retained pairs. The focused Release
+  stress test covered 244 independent 64-by-64 buckets plus one 24-by-24 bucket (exactly 1,000,000
+  admissible pairs), retained and fully materialised exactly 15,640 edges, preserved all 245
+  ambiguous components, and observed a 153,182,208-byte process peak working set on the recorded
+  Windows run. A second regression test proves compact-descriptor ordering parity with the former
+  full-edge preference order across both retained and discarded candidates. Final exact-head
+  cross-platform verification is still required before closing the tracking issue.
 
 ### H-09 — Sparse-experiment supporting projections can self-attest semantics
 
@@ -343,6 +354,11 @@ Total recorded findings: 49.
   directory handle for the context lifetime, and open all files relative to it. Test ancestor links
   and root replacement independently for both sides.
 - **Blocks PR #8/#13:** no. **Blocks release:** repository-context guarantee; **blocks v4:** yes.
+- **Disposition:** resolved in the release-hardening completion. Linux and Windows component-walk
+  the root without following links, retain the physical directory handle for the context lifetime,
+  open repository files relative to that handle, and cover ancestor-link, root-replacement,
+  disposal, remote/device, and known unsafe-filesystem cases. Hosted Linux runtime confirmation is
+  still required for the exact completion head.
 
 ### M-06 — Corpus JSON output may overwrite a corpus input
 
@@ -352,6 +368,9 @@ Total recorded findings: 49.
 - **Smallest safe remediation:** conservatively forbid output under the physical corpus root or
   reject every consumed input identity, including symlink aliases.
 - **Blocks PR #8/#13:** no. **Blocks release:** yes.
+- **Disposition:** resolved in the release-hardening completion. `corpus run --json-out` rejects
+  both lexical descendants and destinations whose existing parent resolves beneath the physical
+  corpus tree; focused tests cover direct and aliased-parent destinations.
 
 ### M-07 — Package cleanup follows an `artifacts` symlink/junction
 
@@ -363,6 +382,10 @@ Total recorded findings: 49.
 - **Smallest safe remediation:** reuse the existing real-directory/reparse checks before recursive
   cleanup and test a Linux symlink and Windows junction.
 - **Blocks PR #8/#13:** no. **Blocks release:** yes.
+- **Disposition:** resolved in the release-hardening completion by verifying that `artifacts` and
+  each managed direct child are the expected physical non-link directories, rejecting nested
+  links/reparse points before recursive cleanup, and exercising Linux symlink and Windows junction
+  canaries in package CI.
 
 ### M-08 — Atomic outputs rely on pathname checks across a TOCTOU window
 
@@ -375,6 +398,10 @@ Total recorded findings: 49.
   retain/revalidate the parent identity, and use platform-safe rename/replace; otherwise narrow the
   documented output-directory threat model.
 - **Blocks PR #8/#13:** no. **Blocks release:** security claim.
+- **Disposition:** partially remediated and the claim narrowed. Staging names are exclusively
+  reserved with `CreateNew`, the handle remains held through write and flush, and ordinary failures
+  preserve the destination. A hostile local peer that can replace the parent during pathname-based
+  commit remains outside the guarantee and is documented in `SECURITY.md`.
 
 ### M-09 — Vulnerability reporting is not concretely discoverable
 
@@ -386,6 +413,9 @@ Total recorded findings: 49.
 - **Smallest safe remediation:** confirm GitHub Private Vulnerability Reporting and document the
   exact route plus supported versions; otherwise provide an owner-approved private channel.
 - **Blocks PR #8/#13:** no. **Blocks release:** yes.
+- **Disposition:** resolved in the release-hardening completion. Top-level `SECURITY.md` documents
+  supported versions, response expectations, and the exact private-reporting route; GitHub Private
+  Vulnerability Reporting is enabled for the repository.
 
 ### M-10 — Deterministic reports do not prove reproducible package bytes
 
@@ -438,6 +468,9 @@ Total recorded findings: 49.
 - **Smallest safe remediation:** execute one tiny checked fixture comparison on Linux and Windows
   with the tool package and standalone executable; validate JSON and inspect the HTML contract.
 - **Blocks PR #8/#13:** no. **Blocks release:** yes.
+- **Disposition:** resolved in the release-hardening completion. CI and release smoke run the
+  checked `github-supported-subset` fixture through both distribution forms, assert the exact JSON
+  schema/version/summary contract and offline HTML CSP, and require byte-identical reports.
 
 ## Low findings
 
@@ -931,11 +964,14 @@ merged pull request.
 - **Blocks merging PR #8/#13:** no. **Blocks the hardening PR:** until the manifest is refreshed and
   hosted candidates are produced. **Blocks release:** yes for any current sparse-evidence claim.
 - **Tracking:** [#31](https://github.com/ppcdaniel/sarif-regress/issues/31).
-- **Disposition:** the immediate evidence blocker is resolved. The exact 131-file implementation
+- **Disposition:** the original evidence blocker was resolved. The exact 131-file implementation
   inventory and 67-file corpus inventory were deterministically refreshed, the strict scanner
   passed, and exact-head runs `30761620623`, `30761620626`, and `30761620637` produced authenticated
-  replacement candidates bound to those manifest hashes. Issue #31 remains open for a reusable
-  supported refresh command so future changes do not require a manual mechanical update.
+  replacement candidates bound to those manifest hashes. The release-hardening completion adds a
+  reusable bounded deterministic `--check`/`--write` refresh command, focused mutation tests, and a
+  required workflow freshness check. Its new inventory must still pass the strict scanner and the
+  hosted evidence cascade before issue #31 closes; historical metric evidence is not rebound by a
+  manifest-only refresh.
 
 ### M-24 — The assignment-solver regression test depended on code-flow edge admission
 

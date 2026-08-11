@@ -151,6 +151,80 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.lock.json'
 
+      - name: Reject linked package cleanup target on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sentinel_directory="${RUNNER_TEMP}/package-cleanup-sentinel"
+          failure_log="${RUNNER_TEMP}/package-cleanup-link-failure.log"
+          mkdir -- "${sentinel_directory}" artifacts
+          printf 'must remain\n' > "${sentinel_directory}/canary.txt"
+          ln -s -- "${sentinel_directory}" artifacts/packages
+          if ./scripts/package.sh >"${failure_log}" 2>&1; then
+            echo 'Packaging accepted a linked cleanup target.' >&2
+            exit 1
+          fi
+          grep --fixed-strings -- \
+            "Refusing to use linked packaging path" \
+            "${failure_log}" >/dev/null
+          test -L artifacts/packages
+          test "$(cat -- "${sentinel_directory}/canary.txt")" = 'must remain'
+          rm -- artifacts/packages
+
+      - name: Reject junction package cleanup target on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sentinelDirectory = Join-Path `
+            $env:RUNNER_TEMP `
+            'package-cleanup-sentinel'
+          $failureLog = Join-Path `
+            $env:RUNNER_TEMP `
+            'package-cleanup-junction-failure.log'
+          New-Item -ItemType Directory -Path $sentinelDirectory | Out-Null
+          New-Item -ItemType Directory -Path artifacts | Out-Null
+          Set-Content `
+            -LiteralPath (Join-Path $sentinelDirectory 'canary.txt') `
+            -Value 'must remain'
+          $junction = New-Item `
+            -ItemType Junction `
+            -Path artifacts/packages `
+            -Target $sentinelDirectory
+          $caughtFailure = $null
+          try {
+            & .\scripts\package.ps1 *> $failureLog
+          }
+          catch {
+            $caughtFailure = $_
+          }
+          if ($null -eq $caughtFailure) {
+            throw 'Packaging accepted a junction cleanup target.'
+          }
+          $failureText = $caughtFailure.Exception.Message + "`n" + (
+            Get-Content -LiteralPath $failureLog -Raw)
+          if ($failureText.IndexOf(
+              'Refusing to use reparseable packaging path',
+              [StringComparison]::Ordinal) -lt 0) {
+            throw 'Packaging failed for an unexpected junction-test reason.'
+          }
+          if (
+            (Get-Content `
+              -LiteralPath (Join-Path $sentinelDirectory 'canary.txt') `
+              -Raw).Trim() -cne 'must remain'
+          ) {
+            throw 'Packaging changed content through the cleanup junction.'
+          }
+          $junctionInfo = Get-Item -LiteralPath $junction.FullName -Force
+          if (
+            ($junctionInfo.Attributes -band
+              [System.IO.FileAttributes]::ReparsePoint) -eq 0
+          ) {
+            throw 'The cleanup test did not create a reparse point.'
+          }
+          $junctionInfo.Delete()
+
       - name: Package and smoke-test on Linux
         if: runner.os == 'Linux'
         shell: bash
@@ -188,6 +262,10 @@ jobs:
             "${package_files[0]}" \
             "${installed_package_files[0]}"
           artifacts/tool/sarif-regress --help >/dev/null
+          bash scripts/smoke-comparison.sh \
+            artifacts/release/sarif-regress-linux-x64 \
+            artifacts/tool/sarif-regress \
+            "${RUNNER_TEMP}/package-comparison-smoke"
 
       - name: Package and smoke-test on Windows
         if: runner.os == 'Windows'
@@ -272,3 +350,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "The installed .NET tool failed."
           }
+          .\scripts\smoke-comparison.ps1 `
+            -StandaloneExecutable `
+              .\artifacts\release\sarif-regress-win-x64.exe `
+            -InstalledToolExecutable .\artifacts\tool\sarif-regress.exe `
+            -OutputRoot (Join-Path `
+              $env:RUNNER_TEMP `
+              'package-comparison-smoke')

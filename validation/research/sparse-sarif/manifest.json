@@ -156,7 +156,7 @@
     "files": [
       {
         "path": "README.md",
-        "sha256": "04636da1d58e6a2ac36a85b58d188fa4ff68940cdd5a25d2f3db3f9908a54e84"
+        "sha256": "d33e46927411b2cfc19fb4dfc02a0610c5fe869810f176e6a20be69ff356e3e0"
       },
       {
         "path": "capture-evidence/projection-audits/pmd-clean-a/baseline.json",
@@ -348,7 +348,7 @@
       },
       {
         "path": "experiment-implementation-manifest.json",
-        "sha256": "c2765f2b3cd5a3961ae46deb1866bbff5b5e3a63dbe53783167d79f68e0ac348"
+        "sha256": "69d17ee4c1cd28d0f6eb9e8ce55af9028eb42c259870e0c2d082ddcd47772bae"
       },
       {
         "path": "schemas/experiment-gate-evidence.schema.json",
@@ -403,6 +403,10 @@
         "sha256": "aeb8bb7b5d1b61cedb3631d3f76389a2fd86277e2b4dbd8d06d6d1ecbe4ed886"
       },
       {
+        "path": "tools/refresh_sparse_manifests.py",
+        "sha256": "bc6d81e44882f715c808abc0e401c399c1e76aef12a9d37b98efdbdda2731f6b"
+      },
+      {
         "path": "tools/scan_contamination.py",
         "sha256": "38814cedfebb0cd1cf0f2d70e2be972d5fdf44a20319b6babb6c5fd0de7d76e2"
       },
@@ -413,6 +417,10 @@
       {
         "path": "tools/test_project_release_evidence.py",
         "sha256": "ad7e10266e9380eef3ca3ba12f8264dec464fba1a9e0432efc667a4cbf117ec8"
+      },
+      {
+        "path": "tools/test_refresh_sparse_manifests.py",
+        "sha256": "38d3141ae28ec558d441a5b5afdbb8ff482072ed44f638f4f68b4d3168de0e84"
       },
       {
         "path": "tools/test_scan_contamination.py",

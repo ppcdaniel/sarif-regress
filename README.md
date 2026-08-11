@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/ppcdaniel/sarif-regress/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ppcdaniel/sarif-regress/actions/workflows/ci.yml)
 [![Cross-platform determinism](https://github.com/ppcdaniel/sarif-regress/actions/workflows/determinism.yml/badge.svg?branch=main)](https://github.com/ppcdaniel/sarif-regress/actions/workflows/determinism.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f.svg)](https://github.com/ppcdaniel/sarif-regress/blob/main/LICENSE)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512bd4.svg)](https://github.com/ppcdaniel/sarif-regress/blob/main/global.json)
 
 **Explainable, deterministic regression matching for SARIF 2.1.0.**
 
@@ -10,8 +12,19 @@ is this the same finding after code, paths, line numbers, messages, or tool meta
 produces deterministic one-to-one decisions, refuses unsafe ambiguity, and explains the evidence
 behind every result.
 
+![Two SARIF result streams flowing through a deterministic matching graph into classified outcomes](https://raw.githubusercontent.com/ppcdaniel/sarif-regress/main/docs/assets/readme/sarif-regress-hero.png)
+
 > [!NOTE]
-> SarifRegress is pre-release. Build from source until the first tagged release is published.
+> SarifRegress is pre-release. Build from source until the first tagged release is published. The
+> supported fingerprint/context profile is ready for evaluation; sparse fingerprint-free SARIF is
+> intentionally conservative and remains a documented limitation.
+
+| What you get | Contract |
+|---|---|
+| Regression lifecycle | `new`, `unchanged`, `moved`, `modified`, `resolved`, or explicitly `ambiguous` |
+| Auditable evidence | Stable JSON decision traces plus offline HTML and canonical-SARIF projections |
+| Repeatability | Ordinal ordering, versioned hashes, transactional outputs, and Windows/Linux byte checks |
+| Bounded execution | 1k, 10k, and 100k gates; no repository-code execution, package restore, telemetry, or network fetches |
 
 ## Same finding, different line
 
@@ -69,7 +82,7 @@ The summary is an unmodified browser capture of the offline HTML emitted by `--h
 finding image is a deterministic crop from the same generated report. It confirms a high-confidence
 `exact-canonical` decision with ambiguity explicitly false.
 
-## Try it from source
+## Quick start
 
 The repository pins .NET SDK `10.0.302` in `global.json`.
 

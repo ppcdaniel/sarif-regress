@@ -462,6 +462,71 @@ public sealed class AuxiliaryCommandTests
     }
 
     [Fact]
+    public async Task Corpus_rejects_output_inside_its_input_tree()
+    {
+        using var workspace = new TestWorkspace();
+        Directory.CreateDirectory(Path.Combine(workspace.Root, "corpus"));
+
+        var invocation = await InvokeAsync(
+            CorpusCommandFactory.Create(workspace.Root),
+            TestContext.Current.CancellationToken,
+            "corpus",
+            "run",
+            "--corpus",
+            "corpus",
+            "--json-out",
+            "corpus/report.json");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains(
+            "CORPUS0006 error: Corpus output must be outside the corpus input tree.",
+            invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.False(
+            File.Exists(Path.Combine(workspace.Root, "corpus", "report.json")));
+    }
+
+    [Fact]
+    public async Task Corpus_rejects_output_through_a_parent_directory_alias()
+    {
+        using var workspace = new TestWorkspace();
+        string corpusRoot = Path.Combine(workspace.Root, "corpus");
+        Directory.CreateDirectory(corpusRoot);
+        try
+        {
+            Directory.CreateSymbolicLink(
+                Path.Combine(workspace.Root, "corpus-alias"),
+                corpusRoot);
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                or UnauthorizedAccessException
+                or PlatformNotSupportedException)
+        {
+            return;
+        }
+
+        var invocation = await InvokeAsync(
+            CorpusCommandFactory.Create(workspace.Root),
+            TestContext.Current.CancellationToken,
+            "corpus",
+            "run",
+            "--corpus",
+            "corpus",
+            "--json-out",
+            "corpus-alias/report.json");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains(
+            "CORPUS0006 error: Corpus output must be outside the corpus input tree.",
+            invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(corpusRoot, "report.json")));
+    }
+
+    [Fact]
     public async Task Bench_restores_existing_output_when_second_commit_fails()
     {
         using var workspace = new TestWorkspace();

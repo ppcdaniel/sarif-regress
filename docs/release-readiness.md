@@ -215,28 +215,29 @@ from a trusted channel; assets, packages, and manifests are not currently signed
 publisher provenance attestation.
 
 Current evidence proves deterministic project-owned reports, not reproducible package bytes.
-Independent same-commit builds do not compare `.nupkg` or executable bytes. Package smoke also stops
-at startup/help and does not run a real JSON/HTML-producing comparison through every installed and
-self-contained form. No release should claim reproducible binaries.
+Independent same-commit builds do not compare `.nupkg` or executable bytes, so no release should
+claim reproducible binaries. Package smoke now runs one checked JSON/HTML-producing comparison
+through every installed and self-contained form on Windows and Linux, verifies the exact report
+contract, and requires the two distribution forms to emit identical bytes.
 
-The release bundle is not distribution-ready because it omits the top-level project licence and
-verified third-party notice material. Packaging cleanup also recursively removes children below
-`artifacts` without first proving that `artifacts` is a real directory rather than a symlink or
-junction. Both are release blockers.
+The release bundle now includes the top-level project licence and the exact audited dependency and
+runtime notice material, all bound by the release checksum manifest. Packaging verifies physical
+non-link artifact targets and rejects linked descendants before recursive cleanup; package CI
+exercises a Linux symlink and a Windows junction against external canaries.
 
 ## Supply-chain and licence audit
 
 - The project is MIT licensed and the `.nupkg` includes the repository `LICENSE`.
 - The sole direct product package is `System.CommandLine 2.0.10`, pinned by the central package
   file and lock file. The self-contained builds also redistribute .NET runtime components.
-- The repository does not contain the upstream licence/notice texts needed to assemble and verify
-  the complete binary redistribution notice set. `THIRD_PARTY_NOTICES.md` therefore records an
-  incomplete, release-blocking inventory rather than inventing text.
-- `JsonSchema.Net 9.4.0`, `JsonPointer.Net 7.0.2`, and `Json.More.Net 3.0.1` are validation-only and
-  are not product artifacts. Their named maintenance terms require an owner-specific applicability
-  decision; issue #17 remains open. `Humanizer.Core 3.0.10` is another locked validation transitive
-  whose licence/notice disposition remains part of the incomplete inventory, not issue #17's named
-  maintenance-terms question.
+- `THIRD_PARTY_NOTICES.md` records the exact product distribution graph, audited package/source
+  identities, and primary upstream records. Verbatim retained files cover `System.CommandLine` and
+  the .NET runtime/host packs; source and release manifests bind their exact bytes.
+- The validation-only dependency chain tracked by #17 was removed from the central package file,
+  validation project, and current lock files. Required schema validation now uses the
+  repository-owned bounded evaluator and fails closed on unsupported vocabulary or resource-limit
+  violations. This is the owner implementation disposition and makes no legal conclusion about
+  packages that are no longer used.
 - Semgrep `1.172.0` (LGPL-2.1-only), Gitleaks `8.30.1` (MIT), and PMD `7.26.0`
   (`LicenseRef-PMD-BSD-Style`; its archive includes Apache-2.0-licensed components) are capture
   tools only. Their versions, source commits, download sizes, and SHA-256 values are recorded; no
@@ -258,15 +259,17 @@ junction. Both are release blockers.
 Positive controls include bounded streaming SARIF/configuration parsing, network URI refusal,
 explicit URI-base validation, repository-relative no-link file opens, regular-file and UTF-8
 checks, bounded explanations, escaped JSON/HTML, an offline Content Security Policy, transactional
-multi-output writes, safe capture archive extraction, immutable Action pins, and least-privilege
-workflow defaults.
+multi-output writes, guarded non-link packaging cleanup, safe capture archive extraction, immutable
+Action pins, and least-privilege workflow defaults.
 
 The security claims must remain qualified by these unresolved or not-yet-verified findings:
 
-- candidate edges are fully materialised before the retained-edge cap (#22);
-- repository roots are reopened by path rather than held as one immutable directory identity;
-- `corpus run --json-out` can target an input under the corpus root;
-- package cleanup can follow an `artifacts` symlink or junction;
+- candidate scoring now applies the retained-edge cap to fixed-size descriptors before full
+  explanation materialisation, and the exact-global-cap stress test passes locally, but final
+  exact-head cross-platform verification remains for #22;
+- repository contexts now retain a component-walked physical root capability, reject linked
+  ancestors plus known remote/device roots, and keep later reads anchored across root replacement;
+- `corpus run --json-out` now refuses lexical and physical destinations under its input tree;
 - transactional output still has a hostile-parent TOCTOU window; and
 - the sparse experiment's release/determinism/resource projections are exact-head authenticated,
   and the scanner derives the stable resource subset from the full volatile shape, but no complete
@@ -277,7 +280,7 @@ exploit payloads to a public issue.
 
 ## Open release blockers
 
-GitHub issue state was checked on 2026-08-03. A code change that appears to address an open issue is
+GitHub issue state was checked on 2026-08-12. A code change that appears to address an open issue is
 not treated as closed evidence until its acceptance criteria and final exact-head run are recorded.
 
 | Tracking | Blocker |
@@ -285,23 +288,21 @@ not treated as closed evidence until its acceptance criteria and final exact-hea
 | #7 / PR #8 | Independent holdout infrastructure remains an open, unmerged draft stack dependency |
 | #11 / #12 / PR #13 | Sparse SARIF remains unsupported; aggregate and PMD recall miss fixed gates; the matcher work remains draft and unmerged |
 | PR #23 | Nightly hardening, release audit, and limitation evidence remain draft and unmerged |
-| #17 | Owner-specific disposition for validation dependency maintenance terms is absent |
-| #18 | Release bundle and package do not contain verified project/runtime/dependency notices |
 | #19 | Authenticated release gating is implemented and test-covered, but no tagged-commit run was performed because this mission forbids tags |
-| #22 | Global candidate-edge memory behavior is not bounded before object materialisation |
+| #22 | Compact pre-materialisation edge retention and exact-global-cap stress coverage are implemented; final exact-head cross-platform verification remains |
 | #25 | Sparse decision/evidence gate tracking remains open; no v4 may be authorised |
 | #27 | Composite evidence needs an explicit full-resource-to-stable-projection derivation and cross-binding |
 
-The untracked Medium findings listed in the adversarial review also require release disposition:
-lifecycle metric naming, vacuous precision, repository-root lifetime, corpus output/input aliasing,
-package cleanup, atomic-output threat-model wording, binary reproducibility wording, configuration
-schema-v1 evolution, runner-provided release tooling, real comparison smoke through distribution
-artifacts, durable retention of raw runtime measurements, and a stricter stable-projection schema
-and behavioral test.
+The remaining Medium findings listed in the adversarial review require release disposition:
+lifecycle metric naming, vacuous precision, the hostile-parent atomic-output boundary, binary
+reproducibility wording, configuration schema-v1 evolution, runner-provided release tooling,
+durable retention of raw runtime measurements, and a stricter stable-projection schema and
+behavioral test.
 
-Issue #31 remains open as a maintainability follow-up: the immediate manifest/evidence cascade is
-current and normal-mode verified, but the repository still lacks a reusable bounded deterministic
-refresh command.
+Issue #31 now has a reusable bounded deterministic `--check`/`--write` refresh command plus focused
+tests and a required workflow freshness check. The current implementation and corpus inventories
+must still be refreshed and exercised through the exact-head hosted evidence cascade before the
+issue can close; historical metric bytes are not rebound by the inventory refresh.
 
 ## Preview and stable criteria
 

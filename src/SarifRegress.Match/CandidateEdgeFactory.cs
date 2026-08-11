@@ -40,7 +40,45 @@ internal sealed class CandidateEdgeFactory
         ruleAliases = RuleAliasIndex.Create(configuration.RuleAliases);
     }
 
+    /// <summary>
+    /// Evaluates whether a pair is admissible without materializing explanation records.
+    /// </summary>
+    public bool TryEvaluate(
+        Finding baseline,
+        Finding candidate,
+        out DecisionVector decisionVector) =>
+        TryEvaluateCore(
+            baseline,
+            candidate,
+            evidence: null,
+            out decisionVector);
+
     public MatchEdge? Create(Finding baseline, Finding candidate)
+    {
+        var evidence = new List<EvidenceDraft>(capacity: 8);
+        if (!TryEvaluateCore(
+                baseline,
+                candidate,
+                evidence,
+                out var decisionVector))
+        {
+            return null;
+        }
+
+        return new MatchEdge(
+            baseline,
+            candidate,
+            decisionVector,
+            CreateStableIdentityKey(baseline.FindingKey, candidate.FindingKey),
+            CreateEvidence(evidence, decisionVector.PrecedenceTier),
+            GetTransformations(baseline, candidate));
+    }
+
+    private bool TryEvaluateCore(
+        Finding baseline,
+        Finding candidate,
+        ICollection<EvidenceDraft>? evidence,
+        out DecisionVector decisionVector)
     {
         var sameDefaultRule = IsSameDefaultRule(baseline, candidate);
         var applicableAliases = sameDefaultRule
@@ -48,10 +86,10 @@ internal sealed class CandidateEdgeFactory
             : FindApplicableAliases(baseline, candidate);
         if (!sameDefaultRule && applicableAliases.IsEmpty)
         {
-            return null;
+            decisionVector = default;
+            return false;
         }
 
-        var evidence = new List<EvidenceDraft>(capacity: 8);
         AddRuleEvidence(evidence, baseline, candidate, applicableAliases);
 
         var producerFingerprint = CompareProducerFingerprints(baseline, candidate, evidence);
@@ -74,7 +112,8 @@ internal sealed class CandidateEdgeFactory
             messageAgreement);
         if (precedence.Tier == PrecedenceTier.Refuse)
         {
-            return null;
+            decisionVector = default;
+            return false;
         }
 
         if (precedence.CollisionOnly)
@@ -84,7 +123,7 @@ internal sealed class CandidateEdgeFactory
             regionDriftBand = 0;
         }
 
-        var decisionVector = new DecisionVector(
+        decisionVector = new DecisionVector(
             precedence.Tier,
             producerFingerprint.Strength,
             pathMatchKind,
@@ -92,14 +131,7 @@ internal sealed class CandidateEdgeFactory
             supportingAgreement,
             messageAgreement,
             regionDriftBand);
-
-        return new MatchEdge(
-            baseline,
-            candidate,
-            decisionVector,
-            CreateStableIdentityKey(baseline.FindingKey, candidate.FindingKey),
-            CreateEvidence(evidence, precedence.Tier),
-            GetTransformations(baseline, candidate));
+        return true;
     }
 
     private static ImmutableArray<EvidenceRecord> CreateEvidence(
@@ -139,11 +171,16 @@ internal sealed class CandidateEdgeFactory
         ruleAliases.FindApplicable(baseline, candidate);
 
     private static void AddRuleEvidence(
-        ICollection<EvidenceDraft> evidence,
+        ICollection<EvidenceDraft>? evidence,
         Finding baseline,
         Finding candidate,
         ImmutableArray<RuleAlias> aliases)
     {
+        if (evidence is null)
+        {
+            return;
+        }
+
         if (aliases.IsEmpty)
         {
             evidence.Add(new EvidenceDraft(
@@ -171,8 +208,14 @@ internal sealed class CandidateEdgeFactory
     private ProducerFingerprintComparison CompareProducerFingerprints(
         Finding baseline,
         Finding candidate,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
+        if (baseline.ProducerFingerprints.IsDefaultOrEmpty
+            || candidate.ProducerFingerprints.IsDefaultOrEmpty)
+        {
+            return ProducerFingerprintComparison.None;
+        }
+
         if (baseline.ProducerFingerprints.Length == 1
             && candidate.ProducerFingerprints.Length == 1)
         {
@@ -282,10 +325,10 @@ internal sealed class CandidateEdgeFactory
     }
 
     private static void AddProducerFingerprintEvidence(
-        ICollection<EvidenceDraft> evidence,
+        ICollection<EvidenceDraft>? evidence,
         ProducerFingerprintComparison comparison)
     {
-        if (comparison.Strength <= 0)
+        if (evidence is null || comparison.Strength <= 0)
         {
             return;
         }
@@ -329,8 +372,14 @@ internal sealed class CandidateEdgeFactory
     private DerivedFingerprintComparison CompareDerivedFingerprints(
         Finding baseline,
         Finding candidate,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
+        if (baseline.DerivedFingerprints.IsDefaultOrEmpty
+            || candidate.DerivedFingerprints.IsDefaultOrEmpty)
+        {
+            return DerivedFingerprintComparison.None;
+        }
+
         var candidateByIdentity = candidate.DerivedFingerprints
             .ToLookup(
                 item => new DerivedFingerprintIdentity(item.Name, item.AlgorithmVersion));
@@ -373,26 +422,29 @@ internal sealed class CandidateEdgeFactory
         }
 
         var match = matches[0];
-        evidence.Add(new EvidenceDraft(
-            "derived-fingerprint",
-            $"{match.Baseline.Name}:{match.Baseline.Value}",
-            $"{match.Candidate.Name}:{match.Candidate.Value}",
-            EvidenceOrigin.System,
-            Lossy: false,
-            MatchingAlgorithms.DerivedFingerprintVersion));
-        if (!match.IsUnique)
+        if (evidence is not null)
         {
             evidence.Add(new EvidenceDraft(
-                "derived-fingerprint-collision",
-                ContextFingerprintOccurrenceIndex.FormatDerivedFingerprint(
-                    match.Baseline,
-                    match.BaselineCount),
-                ContextFingerprintOccurrenceIndex.FormatDerivedFingerprint(
-                    match.Candidate,
-                    match.CandidateCount),
+                "derived-fingerprint",
+                $"{match.Baseline.Name}:{match.Baseline.Value}",
+                $"{match.Candidate.Name}:{match.Candidate.Value}",
                 EvidenceOrigin.System,
                 Lossy: false,
-                MatchingAlgorithms.EvidenceOccurrenceVersion));
+                MatchingAlgorithms.DerivedFingerprintVersion));
+            if (!match.IsUnique)
+            {
+                evidence.Add(new EvidenceDraft(
+                    "derived-fingerprint-collision",
+                    ContextFingerprintOccurrenceIndex.FormatDerivedFingerprint(
+                        match.Baseline,
+                        match.BaselineCount),
+                    ContextFingerprintOccurrenceIndex.FormatDerivedFingerprint(
+                        match.Candidate,
+                        match.CandidateCount),
+                    EvidenceOrigin.System,
+                    Lossy: false,
+                    MatchingAlgorithms.EvidenceOccurrenceVersion));
+            }
         }
 
         return new DerivedFingerprintComparison(
@@ -403,7 +455,7 @@ internal sealed class CandidateEdgeFactory
     private PathMatchKind ComparePaths(
         Finding baseline,
         Finding candidate,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
         var baselinePath = baseline.PrimaryLocation?.Path;
         var candidatePath = candidate.PrimaryLocation?.Path;
@@ -414,7 +466,7 @@ internal sealed class CandidateEdgeFactory
 
         if (PathEquals(baselinePath.CanonicalUri, candidatePath.CanonicalUri))
         {
-            evidence.Add(new EvidenceDraft(
+            evidence?.Add(new EvidenceDraft(
                 "canonical-path",
                 baselinePath.CanonicalUri,
                 candidatePath.CanonicalUri,
@@ -431,7 +483,7 @@ internal sealed class CandidateEdgeFactory
             out _);
         if (alias is not null)
         {
-            evidence.Add(new EvidenceDraft(
+            evidence?.Add(new EvidenceDraft(
                 "path-alias",
                 alias.Baseline,
                 alias.Candidate,
@@ -441,7 +493,7 @@ internal sealed class CandidateEdgeFactory
             return PathMatchKind.Aliased;
         }
 
-        evidence.Add(new EvidenceDraft(
+        evidence?.Add(new EvidenceDraft(
             "canonical-path",
             baselinePath.CanonicalUri,
             candidatePath.CanonicalUri,
@@ -452,13 +504,23 @@ internal sealed class CandidateEdgeFactory
         return PathMatchKind.None;
     }
 
-    private static bool HasLossyTransform(CanonicalPath path) =>
-        path.Transformations.Any(item => item.IsLossy);
+    private static bool HasLossyTransform(CanonicalPath path)
+    {
+        foreach (var transformation in path.Transformations)
+        {
+            if (transformation.IsLossy)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private ContextComparison CompareContext(
         Finding baseline,
         Finding candidate,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
         var baselineContext = baseline.Context;
         var candidateContext = candidate.Context;
@@ -512,7 +574,7 @@ internal sealed class CandidateEdgeFactory
         ref int uniqueHashCount,
         ref int collidedHashCount,
         ref int conflictingHashCount,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
         if (baseline is null || candidate is null)
         {
@@ -538,19 +600,22 @@ internal sealed class CandidateEdgeFactory
             else
             {
                 collidedHashCount++;
-                evidence.Add(new EvidenceDraft(
-                    "context-collision",
-                    ContextFingerprintOccurrenceIndex.FormatContextOccurrence(
-                        kind,
-                        baseline,
-                        baselineCount),
-                    ContextFingerprintOccurrenceIndex.FormatContextOccurrence(
-                        kind,
-                        candidate,
-                        candidateCount),
-                    EvidenceOrigin.System,
-                    Lossy: false,
-                    MatchingAlgorithms.EvidenceOccurrenceVersion));
+                if (evidence is not null)
+                {
+                    evidence.Add(new EvidenceDraft(
+                        "context-collision",
+                        ContextFingerprintOccurrenceIndex.FormatContextOccurrence(
+                            kind,
+                            baseline,
+                            baselineCount),
+                        ContextFingerprintOccurrenceIndex.FormatContextOccurrence(
+                            kind,
+                            candidate,
+                            candidateCount),
+                        EvidenceOrigin.System,
+                        Lossy: false,
+                        MatchingAlgorithms.EvidenceOccurrenceVersion));
+                }
             }
         }
         else
@@ -558,7 +623,7 @@ internal sealed class CandidateEdgeFactory
             conflictingHashCount++;
         }
 
-        evidence.Add(new EvidenceDraft(
+        evidence?.Add(new EvidenceDraft(
             kind,
             baseline,
             candidate,
@@ -570,7 +635,7 @@ internal sealed class CandidateEdgeFactory
     private static AgreementBand CompareMessages(
         MessageIdentity baseline,
         MessageIdentity candidate,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
         AgreementBand agreement;
         if (string.Equals(
@@ -592,6 +657,11 @@ internal sealed class CandidateEdgeFactory
             agreement = AgreementBand.None;
         }
 
+        if (evidence is null)
+        {
+            return agreement;
+        }
+
         var messageEvidence = EvidenceDraft.CreateBounded(
             "message",
             baseline.CanonicalText,
@@ -611,20 +681,24 @@ internal sealed class CandidateEdgeFactory
     private AgreementBand CompareSupportingEvidence(
         Finding baseline,
         Finding candidate,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
         var codeFlowAgreement = CompareCodeFlow(baseline, candidate, evidence);
-        _ = CompareRelatedLocations(
-            baseline.RelatedLocations,
-            candidate.RelatedLocations,
-            evidence);
+        if (evidence is not null)
+        {
+            _ = CompareRelatedLocations(
+                baseline.RelatedLocations,
+                candidate.RelatedLocations,
+                evidence);
+        }
+
         return codeFlowAgreement;
     }
 
     private AgreementBand CompareCodeFlow(
         Finding baselineFinding,
         Finding candidateFinding,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
         var baseline = baselineFinding.CodeFlow;
         var candidate = candidateFinding.CodeFlow;
@@ -659,16 +733,19 @@ internal sealed class CandidateEdgeFactory
                     candidateFinding,
                     anchor) == 1)
             .ToHashSet();
-        var collidedIntersection = intersection
-            .Where(anchor => !reliableIntersection.Contains(anchor))
-            .ToArray();
-        if (collidedIntersection.Length > 0)
+        if (evidence is not null)
         {
-            AddCodeFlowCollisionEvidence(
-                baselineFinding,
-                candidateFinding,
-                collidedIntersection,
-                evidence);
+            var collidedIntersection = intersection
+                .Where(anchor => !reliableIntersection.Contains(anchor))
+                .ToArray();
+            if (collidedIntersection.Length > 0)
+            {
+                AddCodeFlowCollisionEvidence(
+                    baselineFinding,
+                    candidateFinding,
+                    collidedIntersection,
+                    evidence);
+            }
         }
 
         var baselineReliableAnchors = baselineAnchors
@@ -685,19 +762,23 @@ internal sealed class CandidateEdgeFactory
             .ToHashSet();
         var isExact = reliableIntersection.Count > 0
             && baselineReliableAnchors.SetEquals(candidateReliableAnchors);
-        var baselineHash = HashOrderedSet(
-            MatchingAlgorithms.CodeFlowSetVersion,
-            baselineAnchors.Select(CodeFlowAnchorOccurrenceIndex.GetStableValue));
-        var candidateHash = HashOrderedSet(
-            MatchingAlgorithms.CodeFlowSetVersion,
-            candidateAnchors.Select(CodeFlowAnchorOccurrenceIndex.GetStableValue));
-        evidence.Add(new EvidenceDraft(
-            "code-flow",
-            baselineHash,
-            candidateHash,
-            EvidenceOrigin.System,
-            Lossy: false,
-            MatchingAlgorithms.CodeFlowSetVersion));
+        if (evidence is not null)
+        {
+            var baselineHash = HashOrderedSet(
+                MatchingAlgorithms.CodeFlowSetVersion,
+                baselineAnchors.Select(CodeFlowAnchorOccurrenceIndex.GetStableValue));
+            var candidateHash = HashOrderedSet(
+                MatchingAlgorithms.CodeFlowSetVersion,
+                candidateAnchors.Select(CodeFlowAnchorOccurrenceIndex.GetStableValue));
+            evidence.Add(new EvidenceDraft(
+                "code-flow",
+                baselineHash,
+                candidateHash,
+                EvidenceOrigin.System,
+                Lossy: false,
+                MatchingAlgorithms.CodeFlowSetVersion));
+        }
+
         if (reliableIntersection.Count == 0)
         {
             return AgreementBand.None;
@@ -778,24 +859,27 @@ internal sealed class CandidateEdgeFactory
     private static int CompareRegions(
         Region? baseline,
         Region? candidate,
-        ICollection<EvidenceDraft> evidence)
+        ICollection<EvidenceDraft>? evidence)
     {
         if (baseline is null || candidate is null)
         {
             return 0;
         }
 
-        var baselineValue = FormatRegion(baseline);
-        var candidateValue = baseline == candidate
-            ? baselineValue
-            : FormatRegion(candidate);
-        evidence.Add(new EvidenceDraft(
-            "region",
-            baselineValue,
-            candidateValue,
-            EvidenceOrigin.System,
-            Lossy: false,
-            MatchingAlgorithms.RegionVersion));
+        if (evidence is not null)
+        {
+            var baselineValue = FormatRegion(baseline);
+            var candidateValue = baseline == candidate
+                ? baselineValue
+                : FormatRegion(candidate);
+            evidence.Add(new EvidenceDraft(
+                "region",
+                baselineValue,
+                candidateValue,
+                EvidenceOrigin.System,
+                Lossy: false,
+                MatchingAlgorithms.RegionVersion));
+        }
 
         if (baseline == candidate)
         {
@@ -968,8 +1052,15 @@ internal sealed class CandidateEdgeFactory
             ? (char)(value + ('a' - 'A'))
             : value;
 
+    internal static string CreateStableFindingKey(string findingKey) =>
+        string.Create(
+            System.Globalization.CultureInfo.InvariantCulture,
+            $"{findingKey.Length}:{findingKey}");
+
     private static string CreateStableIdentityKey(string baselineKey, string candidateKey) =>
-        $"{baselineKey.Length}:{baselineKey}{candidateKey.Length}:{candidateKey}";
+        string.Concat(
+            CreateStableFindingKey(baselineKey),
+            CreateStableFindingKey(candidateKey));
 
     private sealed class EvidenceRecordComparer : IComparer<EvidenceRecord>
     {

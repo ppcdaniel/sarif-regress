@@ -114,6 +114,7 @@ historical artifact.
 validation/research/sparse-sarif/
   README.md
   manifest.json                         # capture hashes and provenance
+  experiment-implementation-manifest.json # exact admitted implementation hashes
   capture-evidence/
     projection-audits/
       pmd-clean-a/{baseline,candidate}.json
@@ -144,7 +145,9 @@ validation/research/sparse-sarif/
   tools/
     capture_pmd.sh                       # pinned hosted capture entry point
     project_pmd_sarif.py                 # URI-only projector
+    refresh_sparse_manifests.py          # bounded deterministic inventory refresh
     scan_contamination.py
+    test_refresh_sparse_manifests.py
     test_scan_contamination.py
     test_pmd_capture_tools.py
     verify_pmd_capture.py
@@ -156,7 +159,9 @@ The workflow is intentionally ordered so labels cannot be changed in response to
 
 1. Verify the frozen Java and `labels.json` hashes, recompute every side-bound transformation proof
    hash, and validate labels against `schemas/labels.schema.json`.
-2. Run `python3 -B tools/test_scan_contamination.py`.
+2. Run `python3 -B tools/test_scan_contamination.py`, `python3 -B
+   tools/test_refresh_sparse_manifests.py`, and `python3 -B
+   tools/refresh_sparse_manifests.py --check`.
 3. Before producer output or `manifest.json` exists, run `python3 -B
    tools/scan_contamination.py --research-root validation/research/sparse-sarif --source-only`;
    any diagnostic rejects the source/label topology. Normal mode remains fail-closed when the
@@ -178,3 +183,26 @@ analysed call, result-index ground truth, fingerprints or snippets in the sparse
 selector gaps, order leakage, absolute local paths, hostnames, timestamps, unsafe filesystem
 entries, checksum drift, and resource-limit violations. Passing the scanner is an admission check,
 not evidence that hosted capture or matching succeeded.
+
+## Refreshing deterministic inventories
+
+Any admitted matcher, ingestion, reporting, CLI, or validation-harness byte change makes
+`experiment-implementation-manifest.json` stale. Any non-`expected/` file change in this research
+directory also makes `manifest.json` stale. Refresh both inventories from the repository root with:
+
+```text
+python -B validation/research/sparse-sarif/tools/refresh_sparse_manifests.py --write
+python -B validation/research/sparse-sarif/tools/refresh_sparse_manifests.py --check
+python -B validation/research/sparse-sarif/tools/scan_contamination.py --research-root validation/research/sparse-sarif
+```
+
+The refresh command enumerates the same implementation roots, file kinds, ordinal ordering, and
+256-file limit enforced independently by the .NET evaluator and contamination scanner. It rejects
+links, junctions, special files, oversized inputs, unstable reads, and over-limit trees. Corpus
+integrity covers every physical file except `manifest.json` itself and the historical `expected/`
+evidence tree, keeping the corpus manifest deliberately non-self-hashing.
+
+Refreshing inventories authenticates current source bytes only. It never edits labels, gates,
+thresholds, metrics, or expected evidence, and it does not rebind historical observations to the
+current implementation. Promote a new evidence cascade only from authenticated exact-head hosted
+artifacts.

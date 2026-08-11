@@ -14,7 +14,11 @@ public sealed record ValidationLimits(
     int MaximumStringCharacters,
     int MaximumDecisionTracesPerRelationship,
     int MaximumDecisionTraceItems,
+    int MaximumSchemaEvaluationDepth,
+    int MaximumSchemaEvaluationSteps,
+    int MaximumSchemaNumberCharacters,
     int MaximumProcessOutputCharacters,
+    TimeSpan SchemaRegexTimeout,
     TimeSpan ProcessTimeout)
 {
     /// <summary>Gets conservative defaults suitable for the small committed holdout.</summary>
@@ -29,7 +33,11 @@ public sealed record ValidationLimits(
         MaximumStringCharacters: 64 * 1024,
         MaximumDecisionTracesPerRelationship: 2,
         MaximumDecisionTraceItems: 100,
+        MaximumSchemaEvaluationDepth: 256,
+        MaximumSchemaEvaluationSteps: 10_000_000,
+        MaximumSchemaNumberCharacters: 1024,
         MaximumProcessOutputCharacters: 1024 * 1024,
+        SchemaRegexTimeout: TimeSpan.FromMilliseconds(100),
         ProcessTimeout: TimeSpan.FromMinutes(2));
 
     /// <summary>Fails fast when a caller supplies an internally inconsistent limit set.</summary>
@@ -48,7 +56,20 @@ public sealed record ValidationLimits(
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
             MaximumDecisionTraceItems);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
+            MaximumSchemaEvaluationDepth);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
+            MaximumSchemaEvaluationSteps);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
+            MaximumSchemaNumberCharacters);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(
             MaximumProcessOutputCharacters);
+        if (SchemaRegexTimeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(SchemaRegexTimeout),
+                "The schema regular-expression timeout must be positive.");
+        }
+
         if (ProcessTimeout <= TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(

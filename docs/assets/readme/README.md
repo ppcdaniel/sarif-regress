@@ -29,6 +29,11 @@ The script writes generated reports and provenance checksums beneath
 generated outputs, only the reviewed GIF and PNG files are committed here.
 The committed assets were generated with Pillow 11.3.0 and DejaVu Sans Mono.
 
+The wide `sarif-regress-hero.png` is an illustrative, non-evidentiary README asset generated with
+OpenAI image generation on 2026-08-12 and stored as an optimized 1600×533 PNG. It contains no
+product output or benchmark claim; the terminal and report captures below remain the reproducible
+demonstrations of actual behavior.
+
 ## Committed-asset provenance
 
 The committed bytes came from hosted capture

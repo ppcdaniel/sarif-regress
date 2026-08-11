@@ -85,7 +85,8 @@ internal sealed class CompareCommandHandler
                 return ExitCodes.CommandOrInputError;
             }
 
-            var ingestor = new SarifIngestor(repositoryContextResult.Context);
+            using var repositoryContext = repositoryContextResult.Context;
+            var ingestor = new SarifIngestor(repositoryContext);
             var baseline = await IngestAsync(
                     ingestor,
                     resolved.BaselinePath,

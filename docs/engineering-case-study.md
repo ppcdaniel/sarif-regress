@@ -11,8 +11,9 @@ safe stop for evidence-poor PMD output. It did not make the release gates pass.
 JSON contract plus optional offline HTML and canonical SARIF projections. Matching is local,
 deterministic, and one-to-one, with configured candidate and assignment limits. It distinguishes
 correspondence from the later classification of an accepted pair as unchanged, moved, or modified.
-The pre-release audit found that candidate-edge objects can still be materialised before the
-retained-edge cap, so memory boundedness is not yet a release guarantee.
+The pre-release audit found that candidate-edge objects were materialised before the retained-edge
+cap. The matcher now performs complete-graph accounting with compact descriptors and materialises
+full explanations only for retained pairs; its default-global-cap stress case records peak memory.
 
 **Interpretation.** The useful product thesis is narrower than “diff arbitrary SARIF.” It is:
 accept a regression relationship only when the available evidence supports a defensible identity
@@ -279,13 +280,16 @@ CI run `30763347889`, holdout run `30763347894`, determinism run `30763347908`, 
 
 Repository context uses bounded, regular-file-only, strict-decoding reads; rejects traversal,
 encoded traversal, network and UNC paths, Windows device paths, symbolic links, junctions, and
-other reparse points; and fails closed if the safe platform primitive is unavailable. Output
-writes are staged transactionally for ordinary failures, explanations are bounded, and HTML is
-escaped offline output derived from stable JSON. These positive controls do not close every threat:
-repository roots are reopened between reads, and hostile-parent output TOCTOU, corpus output/input
-aliasing, package cleanup through filesystem links, and pre-cap edge materialisation remain release
-blockers. Matcher v3.2's conflicting-context veto and ranking-only code-flow behavior passed the
-exact-head Ubuntu and Windows product suites.
+other reparse points; and fails closed if the safe platform primitive is unavailable. The context
+retains the component-walked physical root for its lifetime, so later reads do not reopen a
+replacement pathname. Corpus output refuses lexical and physical destinations under its input
+tree, package cleanup refuses linked or reparseable managed trees, explanations are bounded, and
+HTML is escaped offline output derived from stable JSON. Staged output is transactional for
+ordinary failures; a hostile peer that can replace the output parent during commit remains outside
+that guarantee. Matcher v3.2's
+conflicting-context veto and ranking-only code-flow behavior passed the exact-head Ubuntu and
+Windows product suites; the compact candidate-edge implementation still needs the final
+exact-head cross-platform run before issue #22 can close.
 
 **Interpretation.** Determinism is part of correctness because assignment ties and diagnostics can
 otherwise change with input order, dictionary enumeration, platform path syntax, or checkout
@@ -374,8 +378,9 @@ own definitions still take precedence.
 
 That would hide an evidence-quality problem behind more work. Occurrence-aware reliability removes
 the tested unsafe edges before components form, preserves the configured solver limits, and keeps
-deliberate ambiguity visible. The separate pre-cap edge-materialisation finding still blocks a
-claim of complete memory boundedness.
+deliberate ambiguity visible. Candidate scoring now uses fixed-size descriptors for the globally
+bounded pair set, preserves complete-component accounting, and creates full explanation objects
+only after deterministic per-finding retention.
 
 ### Why did the side-specific experiment not become matcher v4 despite zero false positives?
 

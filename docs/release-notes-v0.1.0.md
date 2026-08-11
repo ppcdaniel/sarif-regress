@@ -100,14 +100,18 @@ regular-file-only, UTF-8 checked, and handle-relative beneath an approved root. 
 offline under a restrictive Content Security Policy.
 
 These are report-determinism and bounded-input guarantees, not a claim that independent builds
-produce byte-identical packages. Local Windows execution was not performed by the agent. The owner
-must complete the separate clean-Windows checklist.
+produce byte-identical packages. The release-hardening completion passed a local Windows package,
+local-feed installation, and real comparison smoke; the exact completion head still requires the
+hosted Ubuntu and Windows gates in the release checklist.
 
-Open release-blocking security findings include global edge-object materialisation,
-repository-root lifetime, corpus output/input aliasing, package cleanup through filesystem links,
-and an output-directory TOCTOU boundary. Matcher v3.2 closes the conflicting-context and
-code-flow-admission gaps without raising graph limits. See `docs/release-readiness.md` and
-`SECURITY.md`.
+Repository reads now retain a component-walked physical root, corpus output refuses lexical and
+physical destinations under the input tree, and package cleanup refuses linked or reparseable
+managed trees. A narrower output-directory TOCTOU boundary remains when a hostile local peer can
+replace a parent directory during commit; `SECURITY.md` states that limit explicitly.
+Matcher v3.2 closes the conflicting-context and code-flow-admission gaps without raising graph
+limits. Candidate scoring now keeps compact descriptors through complete-graph accounting and
+materialises full explanations only for deterministically retained edges; its exact-global-cap
+stress test records peak working set. See `docs/release-readiness.md` and `SECURITY.md`.
 
 ## Packaging
 

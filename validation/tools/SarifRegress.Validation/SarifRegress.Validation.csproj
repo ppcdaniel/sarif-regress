@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JsonSchema.Net" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="../../../src/SarifRegress.Cli/SarifRegress.Cli.csproj" />
   </ItemGroup>
 

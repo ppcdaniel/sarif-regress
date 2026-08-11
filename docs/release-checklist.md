@@ -48,19 +48,24 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
 ## Security and dependency disposition
 
 - [x] Matcher issues #20 and #21 are closed with exact normal-mode Ubuntu/Windows evidence.
-- [ ] Prove bounded candidate-edge memory at the documented global cap or narrow the release
-  guarantee (#22).
-- [ ] Resolve repository-root lifetime, corpus output/input aliasing, package cleanup, and atomic
-  output threat-model findings.
-- [ ] Confirm GitHub Private Vulnerability Reporting or approve another private reporting route;
-  update `SECURITY.md` without publishing private contact data accidentally.
-- [ ] Record the owner-specific decision for JsonSchema/JsonPointer/Json.More maintenance terms
-  (#17).
-- [ ] Produce an exact final distribution inventory and verify upstream primary licence/notice
+- [ ] Complete final exact-head cross-platform verification for compact candidate-edge retention;
+  the exact 1,000,000-pair local stress case is implemented and recorded (#22).
+- [x] Retain a physical repository-root handle, reject linked ancestors and known remote/device
+  roots, and cover root replacement and disposal.
+- [x] Refuse lexical and physical `corpus run --json-out` destinations under the corpus input tree.
+- [ ] Close the remaining hostile-parent atomic-output boundary or retain the documented
+  private-output-directory requirement.
+- [x] Reject linked/reparseable package cleanup roots and descendants, with Linux symlink and
+  Windows junction canary coverage.
+- [x] Enable GitHub Private Vulnerability Reporting and link the direct private-advisory route from
+  `SECURITY.md` without publishing private contact data.
+- [x] Record the owner implementation disposition for #17: remove the validation-only package
+  chain and use the bounded, fail-closed repository evaluator without making a legal conclusion.
+- [x] Produce an exact final distribution inventory and verify upstream primary licence/notice
   texts.
-- [ ] Replace the incomplete status in `THIRD_PARTY_NOTICES.md` with the verified applicable
+- [x] Replace the incomplete status in `THIRD_PARTY_NOTICES.md` with the verified applicable
   notices; do not paraphrase licence terms.
-- [ ] Include project `LICENSE` and all required notices in the release bundle and package, include
+- [x] Include project `LICENSE` and all required notices in the release bundle and package, include
   them in `checksums.sha256`, and assert exact contents on both operating systems (#18).
 - [x] Confirm every external Action uses a full immutable commit SHA.
 - [x] Confirm workflow defaults are least privilege and checkout credentials are not persisted.
@@ -110,8 +115,12 @@ git status --short
 
 ## Windows owner and hosted verification
 
-On a clean owner clone, follow `docs/windows-owner-verification.md`; this agent does not claim local
-Windows execution. At minimum run:
+The release-hardening completion ran locally on Windows x64 with SDK `10.0.302`: the locked
+verification pipeline passed 581 tests, package checksums verified, the local-only package install
+was byte-identical, and the standalone and installed commands produced identical JSON/HTML from a
+real fixture. Holdout validation reached the intentional frozen-source refusal and therefore still
+requires the authenticated hosted evidence-refresh cascade. On a clean owner clone, also follow
+`docs/windows-owner-verification.md` and run:
 
 ```powershell
 .\scripts\verify.ps1
@@ -121,8 +130,8 @@ Windows execution. At minimum run:
 
 - [ ] Owner records Windows version, architecture, .NET SDK `10.0.302`, exact commit, and each exit
   result.
-- [ ] Windows package checksum verification succeeds.
-- [ ] Windows standalone and locally installed tool both run a real fixture comparison and produce
+- [x] Windows package checksum verification succeeds.
+- [x] Windows standalone and locally installed tool both run a real fixture comparison and produce
   expected JSON/HTML.
 - [x] Hosted Ubuntu and Windows full CI succeeded on exact head
   `d880bd0a0495650a34ae2faa8521f170af80d7a9` in run `30763347889`.

@@ -30,6 +30,12 @@ budgets, not guaranteed performance on every machine.
   probes matched terminal pairs; unrelated aliases do not multiply pair-scoring work.
 - Coarse pairs are preflighted before scoring, with limits of 256 pairs on either side of a finding
   and 1,000,000 pairs for one comparison.
+- Admissible pairs are first retained as fixed-size 16-byte descriptors containing only the two
+  finding indexes and byte-sized decision bands. This explanation-free pass still unions every
+  complete-graph component and counts every admissible and exact-producer edge.
+- Compact descriptors are sorted by the same indisputable-exact, semantic-vector, and ordinal
+  stable-identity order as full edges, then capacity-filtered in place. Full `MatchEdge`, evidence,
+  and transformation objects are materialized only for the retained descriptors.
 - A comparison-wide preflight refusal emits one source-less top-level diagnostic; every affected
   finding retains a minimal structured `refuse` trace without copying that global diagnostic.
 - Retained candidate edges are capped per finding.
@@ -52,6 +58,31 @@ Token-window evidence is omitted rather than partially compared when a bound is 
 `CANON0011` identifies a region exceeding `maximumTokenWindowTerms`; `CANON0012` identifies a term
 exceeding `maximumStringCharacters`. The source read remains independently capped by
 `maximumRepositoryFileBytes`.
+
+## Candidate-edge global-cap stress evidence
+
+`CandidateEdgeMemoryTests.Many_small_buckets_at_the_global_cap_remain_bounded_and_complete`
+constructs 244 independent 64-by-64 buckets plus one 24-by-24 bucket: 15,640 findings per side and
+exactly 1,000,000 admissible pairs, the default comparison-wide cap. It lowers the retained-edge
+limit to one without raising any other limit, then verifies all 245 complete components and all
+31,280 findings are refused as ambiguous. A test-only observer also proves that exactly 15,640
+retained edges—not all 1,000,000 admissible pairs—receive full evidence materialization. A separate
+parity test orders retained and non-retained candidates through both the compact descriptor and
+former full-edge comparers. The stress test records elapsed time, total-allocation proxy, and
+process peak working set on every run.
+
+The focused Release run on Windows 10.0.26200, .NET SDK 10.0.302/runtime 10.0.10, observed
+4,057.035 ms and a 153,182,208-byte process peak working set (about 146.1 MiB). Process peak is an
+advisory whole-test-host observation, not a deterministic threshold; the deterministic assertions
+are the descriptor/full-edge ordering parity plus pair, materialization, component, ambiguity, and
+diagnostic counts. Re-run them with:
+
+```powershell
+dotnet test tests/SarifRegress.UnitTests/SarifRegress.UnitTests.csproj `
+  --configuration Release `
+  --filter FullyQualifiedName~CandidateEdgeMemoryTests `
+  --logger "console;verbosity=detailed"
+```
 
 The benchmark harness records finding count, configured per-finding/global candidate limits,
 candidate-edge count, component-size distribution, classification counts, and process

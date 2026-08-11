@@ -47,6 +47,16 @@ internal sealed class CorpusCommandHandler
             string? jsonOutput = request.JsonOutputPath is null
                 ? null
                 : ResolvePath(request.JsonOutputPath);
+            if (jsonOutput is not null
+                && PathIdentityResolver.IsOutputWithinInputDirectory(
+                    jsonOutput,
+                    corpusRoot))
+            {
+                error.Write(
+                    "CORPUS0006 error: Corpus output must be outside the corpus input tree.\n");
+                return ExitCodes.CommandOrInputError;
+            }
+
             var result = await new CorpusRunner()
                 .RunAsync(
                     new CorpusRunRequest(corpusRoot),

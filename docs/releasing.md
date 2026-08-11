@@ -39,15 +39,39 @@ The CLI project declares both runtime identifiers together so one committed lock
 framework-dependent tool and both self-contained publications. Package commands do not evaluate a
 new dependency graph or modify tracked lock files.
 
+Self-contained `RuntimeFrameworkVersion` is pinned to `10.0.10`, the runtime included with the
+repository's pinned SDK `10.0.302`. The framework-dependent tool retains normal .NET 10 runtime
+roll-forward behavior. Changing the self-contained version requires re-auditing the runtime and
+host packs and replacing the retained upstream notice files and their hashes in
+`notices/checksums.sha256`.
+
+Before packaging, each script verifies the retained upstream notice bytes. It then compares every
+notice copied to the release bundle with its repository source and compares the licence and notice
+entries embedded in the NuGet package byte-for-byte. A missing or changed file fails packaging.
+Before recursive cleanup, the scripts also require `artifacts` and the managed `packages`,
+`publish`, and `release` children to be their expected physical non-link directories. A linked
+root, linked target, or linked descendant fails closed; CI protects an external canary with a Linux
+symlink and a Windows junction.
+
 The release directory contains exactly the distribution surface:
 
 ```text
 artifacts/release/
+  DOTNET_RUNTIME_LICENSE.txt
+  DOTNET_RUNTIME_THIRD_PARTY_NOTICES.txt
+  LICENSE
   SarifRegress.Tool.<version>.nupkg
+  SYSTEM_COMMANDLINE_LICENSE.md
+  THIRD_PARTY_NOTICES.md
   sarif-regress-linux-x64
   sarif-regress-win-x64.exe
   checksums.sha256
 ```
+
+The NuGet package contains the project `LICENSE`, `THIRD_PARTY_NOTICES.md`, and the verbatim
+`System.CommandLine` licence. The two .NET notice files accompany the self-contained executables in
+the release bundle. `THIRD_PARTY_NOTICES.md` records the exact package versions, source commit,
+package hashes, and why build/validation/test dependencies are outside the product distribution.
 
 Intermediate publish directories remain under `artifacts/publish/` and are ignored by Git.
 During the release workflow, the labelled-corpus report plus enforced full and deterministic
@@ -127,7 +151,11 @@ workflow refuses to overwrite an existing release.
 
 The release bundle is built once on Linux and uploaded as one immutable workflow artifact. Separate
 Windows and Linux smoke jobs download that exact bundle, verify its complete checksum manifest,
-execute the matching self-contained binary, and install and execute the tool package. Each job
+compare every notice with the checked-out audited source, inspect the NuGet notice entries, execute
+the matching self-contained binary, and install and execute the tool package. Both forms compare
+the checked `github-supported-subset` fixture into runner-temporary JSON and HTML outputs. The smoke
+contract asserts the exact schema version, root shape, summary, classification, empty diagnostics,
+HTML doctype, and offline Content Security Policy, then requires byte-identical outputs. Each job
 isolates NuGet to the downloaded bundle, disables caches, and verifies that the retained installed
 `.nupkg` has the same bytes as the downloaded package (`cmp` on Linux, length plus SHA-256 on
 Windows). A same-version package from another source therefore cannot satisfy the smoke test. Draft

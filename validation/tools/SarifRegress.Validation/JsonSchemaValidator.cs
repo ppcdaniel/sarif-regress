@@ -1,11 +1,9 @@
-using Json.Schema;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace SarifRegress.Validation;
 
 /// <summary>
-/// Evaluates repository JSON against a bounded local JSON Schema using JsonSchema.Net.
+/// Evaluates repository JSON against the bounded Draft 2020-12 vocabulary used by this repository.
 /// </summary>
 public sealed class JsonSchemaValidator
 {
@@ -61,36 +59,28 @@ public sealed class JsonSchemaValidator
             limits.MaximumStringCharacters,
             schemaApprovedRoot);
 
-        JsonSchema schema;
         try
         {
-            schema = JsonSchema.FromText(
-                schemaNode.ToJsonString(),
-                new BuildOptions
-                {
-                    SchemaRegistry = new SchemaRegistry(),
-                });
+            var evaluator = new BoundedJsonSchemaEvaluator(schemaNode, limits);
+            if (!evaluator.IsValid(instanceNode))
+            {
+                throw new InvalidDataException(
+                    $"JSON file '{instanceName}' does not satisfy "
+                    + $"schema '{Path.GetFileName(schemaPath)}'.");
+            }
         }
-        catch (Exception exception) when (
-            exception is JsonException or JsonSchemaException)
+        catch (JsonSchemaDefinitionException exception)
         {
             throw new InvalidDataException(
                 $"Schema '{Path.GetFileName(schemaPath)}' is invalid.",
                 exception);
         }
-
-        JsonElement instanceElement = JsonSerializer.SerializeToElement(instanceNode);
-        EvaluationResults results = schema.Evaluate(
-            instanceElement,
-            new EvaluationOptions
-            {
-                OutputFormat = OutputFormat.List,
-            });
-        if (!results.IsValid)
+        catch (JsonSchemaEvaluationException exception)
         {
             throw new InvalidDataException(
-                $"JSON file '{instanceName}' does not satisfy "
-                + $"schema '{Path.GetFileName(schemaPath)}'.");
+                $"JSON file '{instanceName}' could not be validated within the configured "
+                + "schema evaluation limits.",
+                exception);
         }
 
         return instanceNode;

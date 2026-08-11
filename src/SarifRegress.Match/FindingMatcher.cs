@@ -12,6 +12,20 @@ namespace SarifRegress.Match;
 /// </summary>
 public sealed class FindingMatcher
 {
+    private readonly Action? retainedEdgeMaterialized;
+
+    /// <summary>Creates a matcher with no diagnostic observer.</summary>
+    public FindingMatcher()
+    {
+    }
+
+    /// <summary>Creates a matcher that reports each fully materialized retained edge.</summary>
+    internal FindingMatcher(Action retainedEdgeMaterialized)
+    {
+        ArgumentNullException.ThrowIfNull(retainedEdgeMaterialized);
+        this.retainedEdgeMaterialized = retainedEdgeMaterialized;
+    }
+
     /// <summary>
     /// Matches a baseline input to a candidate input.
     /// </summary>
@@ -68,7 +82,8 @@ public sealed class FindingMatcher
             candidateFindings,
             configuration,
             candidateBuckets,
-            edgeFactory);
+            edgeFactory,
+            retainedEdgeMaterialized);
         return ResolveGraph(
             baselineFindings,
             candidateFindings,
@@ -129,16 +144,17 @@ public sealed class FindingMatcher
     /// Generates admissible edges through producer/rule buckets and unions the complete graph.
     /// Edges retained for solving are independently bounded per baseline finding.
     /// </summary>
-    // Time: O(P × (E + L + log S) + (B + C) α(B + C)); Space: O(P + B + C), where
-    // P is preflight-bounded candidate pairs, E is bounded non-path evidence work, L is
-    // the compared path length (independent of alias count), and S is the per-finding
-    // selection bound.
+    // Time: O(P × (E + L) + P log P + R × E + (B + C) α(B + C));
+    // Space: O(Pc + Rf + B + C), where P is preflight-bounded candidate pairs,
+    // R is retained edges, c is one fixed-size compact descriptor, f is one full
+    // explanation edge, E is bounded evidence work, and L is the compared path length.
     private static CandidateGraph BuildCandidateGraph(
         ImmutableArray<Finding> baselineFindings,
         ImmutableArray<Finding> candidateFindings,
         SarifRegressConfiguration configuration,
         CandidateBucketIndex candidateBuckets,
-        CandidateEdgeFactory edgeFactory)
+        CandidateEdgeFactory edgeFactory,
+        Action? retainedEdgeMaterialized)
     {
         var preflight = PreflightCandidatePairs(
             baselineFindings,
@@ -163,7 +179,11 @@ public sealed class FindingMatcher
         var nodeCount = baselineFindings.Length + candidateFindings.Length;
         var completeGraphSets = new DisjointSet(nodeCount);
         var activeNodes = new bool[nodeCount];
-        var allAdmissibleEdges = new List<MatchEdge>();
+        var descriptorCapacity = preflight.PlannedPairCount <= int.MaxValue
+            ? (int)preflight.PlannedPairCount
+            : 0;
+        var admissibleEdgeDescriptors = new List<CandidateEdgeDescriptor>(
+            descriptorCapacity);
         var admissibleEdgeCountsByBaseline = new int[baselineFindings.Length];
         var admissibleEdgeCountsByCandidate = new int[candidateFindings.Length];
         var exactProducerCountsByBaseline = new int[baselineFindings.Length];
@@ -175,17 +195,22 @@ public sealed class FindingMatcher
             var baseline = baselineFindings[baselineIndex];
             foreach (var candidateIndex in preflight.CandidateIndexesByBaseline[baselineIndex])
             {
-                var edge = edgeFactory.Create(baseline, candidateFindings[candidateIndex]);
-                if (edge is null)
+                if (!edgeFactory.TryEvaluate(
+                        baseline,
+                        candidateFindings[candidateIndex],
+                        out var decisionVector))
                 {
                     continue;
                 }
 
                 candidateEdgeCount++;
-                allAdmissibleEdges.Add(edge);
+                admissibleEdgeDescriptors.Add(new CandidateEdgeDescriptor(
+                    baselineIndex,
+                    candidateIndex,
+                    decisionVector));
                 admissibleEdgeCountsByBaseline[baselineIndex]++;
                 admissibleEdgeCountsByCandidate[candidateIndex]++;
-                if (edge.DecisionVector.PrecedenceTier == PrecedenceTier.ExactProducer)
+                if (decisionVector.PrecedenceTier == PrecedenceTier.ExactProducer)
                 {
                     exactProducerCountsByBaseline[baselineIndex]++;
                     exactProducerCountsByCandidate[candidateIndex]++;
@@ -208,13 +233,22 @@ public sealed class FindingMatcher
             .Where(item => item.count > configuration.Limits.MaximumCandidateEdgesPerFinding)
             .Select(item => item.index)
             .ToImmutableArray();
-        var retainedEdges = RetainBoundedEdges(
-            allAdmissibleEdges,
+        var retainedDescriptorCount = RetainBoundedEdgeDescriptors(
+            admissibleEdgeDescriptors,
             baselineFindings,
             candidateFindings,
             exactProducerCountsByBaseline,
             exactProducerCountsByCandidate,
             configuration.Limits.MaximumCandidateEdgesPerFinding);
+        var retainedEdges = MaterializeRetainedEdges(
+            admissibleEdgeDescriptors,
+            retainedDescriptorCount,
+            baselineFindings,
+            candidateFindings,
+            edgeFactory,
+            retainedEdgeMaterialized);
+        admissibleEdgeDescriptors.Clear();
+        admissibleEdgeDescriptors.TrimExcess();
 
         var completeGraphSummary = SummarizeCompleteGraph(
             completeGraphSets,
@@ -251,65 +285,76 @@ public sealed class FindingMatcher
             PreflightRefusal: null);
     }
 
-    private static ImmutableArray<MatchEdge> RetainBoundedEdges(
-        IEnumerable<MatchEdge> allEdges,
+    private static int RetainBoundedEdgeDescriptors(
+        List<CandidateEdgeDescriptor> allEdges,
         ImmutableArray<Finding> baselineFindings,
         ImmutableArray<Finding> candidateFindings,
         IReadOnlyList<int> exactProducerCountsByBaseline,
         IReadOnlyList<int> exactProducerCountsByCandidate,
         int maximumEdgesPerFinding)
     {
-        var baselineIndexByKey = baselineFindings
-            .Select((finding, index) => (finding.FindingKey, index))
-            .ToDictionary(item => item.FindingKey, item => item.index, StringComparer.Ordinal);
-        var candidateIndexByKey = candidateFindings
-            .Select((finding, index) => (finding.FindingKey, index))
-            .ToDictionary(item => item.FindingKey, item => item.index, StringComparer.Ordinal);
         var retainedCountsByBaseline = new int[baselineFindings.Length];
         var retainedCountsByCandidate = new int[candidateFindings.Length];
-        var retained = ImmutableArray.CreateBuilder<MatchEdge>();
+        allEdges.Sort(new CandidateEdgeDescriptorComparer(
+            baselineFindings,
+            candidateFindings,
+            exactProducerCountsByBaseline,
+            exactProducerCountsByCandidate));
 
-        foreach (var edge in allEdges
-            .OrderByDescending(edge => IsIndisputableExactProducerEdge(
-                edge,
-                baselineIndexByKey,
-                candidateIndexByKey,
-                exactProducerCountsByBaseline,
-                exactProducerCountsByCandidate))
-            .ThenBy(edge => edge, MatchEdgePreferenceComparer.Instance))
+        var retainedCount = 0;
+        for (var edgeIndex = 0; edgeIndex < allEdges.Count; edgeIndex++)
         {
-            var baselineIndex = baselineIndexByKey[edge.Baseline.FindingKey];
-            var candidateIndex = candidateIndexByKey[edge.Candidate.FindingKey];
-            if (retainedCountsByBaseline[baselineIndex] >= maximumEdgesPerFinding
-                || retainedCountsByCandidate[candidateIndex] >= maximumEdgesPerFinding)
+            var edge = allEdges[edgeIndex];
+            if (retainedCountsByBaseline[edge.BaselineIndex] >= maximumEdgesPerFinding
+                || retainedCountsByCandidate[edge.CandidateIndex] >= maximumEdgesPerFinding)
             {
                 continue;
             }
 
-            retained.Add(edge);
-            retainedCountsByBaseline[baselineIndex]++;
-            retainedCountsByCandidate[candidateIndex]++;
+            allEdges[retainedCount] = edge;
+            retainedCount++;
+            retainedCountsByBaseline[edge.BaselineIndex]++;
+            retainedCountsByCandidate[edge.CandidateIndex]++;
         }
 
-        return retained.ToImmutable();
+        return retainedCount;
     }
 
-    private static bool IsIndisputableExactProducerEdge(
-        MatchEdge edge,
-        IReadOnlyDictionary<string, int> baselineIndexByKey,
-        IReadOnlyDictionary<string, int> candidateIndexByKey,
-        IReadOnlyList<int> exactProducerCountsByBaseline,
-        IReadOnlyList<int> exactProducerCountsByCandidate)
+    private static ImmutableArray<MatchEdge> MaterializeRetainedEdges(
+        IReadOnlyList<CandidateEdgeDescriptor> retainedDescriptors,
+        int retainedDescriptorCount,
+        ImmutableArray<Finding> baselineFindings,
+        ImmutableArray<Finding> candidateFindings,
+        CandidateEdgeFactory edgeFactory,
+        Action? retainedEdgeMaterialized)
     {
-        if (edge.DecisionVector.PrecedenceTier != PrecedenceTier.ExactProducer)
+        if (retainedDescriptorCount == 0)
         {
-            return false;
+            return ImmutableArray<MatchEdge>.Empty;
         }
 
-        var baselineIndex = baselineIndexByKey[edge.Baseline.FindingKey];
-        var candidateIndex = candidateIndexByKey[edge.Candidate.FindingKey];
-        return exactProducerCountsByBaseline[baselineIndex] == 1
-            && exactProducerCountsByCandidate[candidateIndex] == 1;
+        var retainedEdges = ImmutableArray.CreateBuilder<MatchEdge>(
+            retainedDescriptorCount);
+        for (var descriptorIndex = 0;
+             descriptorIndex < retainedDescriptorCount;
+             descriptorIndex++)
+        {
+            var descriptor = retainedDescriptors[descriptorIndex];
+            var edge = edgeFactory.Create(
+                baselineFindings[descriptor.BaselineIndex],
+                candidateFindings[descriptor.CandidateIndex]);
+            if (edge is null || edge.DecisionVector != descriptor.DecisionVector)
+            {
+                throw new InvalidOperationException(
+                    "Candidate-edge evaluation changed between graph accounting and "
+                    + "retained-edge materialization.");
+            }
+
+            retainedEdges.Add(edge);
+            retainedEdgeMaterialized?.Invoke();
+        }
+
+        return retainedEdges.MoveToImmutable();
     }
 
     /// <summary>
@@ -385,7 +430,10 @@ public sealed class FindingMatcher
             selections.Add(selection.CandidateIndexes);
         }
 
-        return new CandidatePairPreflight(selections.MoveToImmutable(), Refusal: null);
+        return new CandidatePairPreflight(
+            selections.MoveToImmutable(),
+            plannedPairCount,
+            Refusal: null);
     }
 
     private static CandidatePreflightRefusal CreateGlobalPairRefusal(long globalLimit) =>
@@ -1736,6 +1784,117 @@ public sealed class FindingMatcher
         }
     }
 
+    /// <summary>
+    /// Orders compact edge descriptors exactly as the full-edge retention sort.
+    /// Stable key prefixes are materialized once per finding instead of once per pair.
+    /// </summary>
+    internal sealed class CandidateEdgeDescriptorComparer :
+        IComparer<CandidateEdgeDescriptor>
+    {
+        private readonly string[] baselineStableKeys;
+        private readonly string[] candidateStableKeys;
+        private readonly IReadOnlyList<int> exactProducerCountsByBaseline;
+        private readonly IReadOnlyList<int> exactProducerCountsByCandidate;
+
+        public CandidateEdgeDescriptorComparer(
+            ImmutableArray<Finding> baselineFindings,
+            ImmutableArray<Finding> candidateFindings,
+            IReadOnlyList<int> exactProducerCountsByBaseline,
+            IReadOnlyList<int> exactProducerCountsByCandidate)
+        {
+            baselineStableKeys = baselineFindings
+                .Select(finding => CandidateEdgeFactory.CreateStableFindingKey(
+                    finding.FindingKey))
+                .ToArray();
+            candidateStableKeys = candidateFindings
+                .Select(finding => CandidateEdgeFactory.CreateStableFindingKey(
+                    finding.FindingKey))
+                .ToArray();
+            this.exactProducerCountsByBaseline = exactProducerCountsByBaseline;
+            this.exactProducerCountsByCandidate = exactProducerCountsByCandidate;
+        }
+
+        public int Compare(
+            CandidateEdgeDescriptor left,
+            CandidateEdgeDescriptor right)
+        {
+            var comparison = IsIndisputableExactProducerEdge(right).CompareTo(
+                IsIndisputableExactProducerEdge(left));
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+
+            comparison = DecisionVectorComparer.Instance.Compare(
+                right.DecisionVector,
+                left.DecisionVector);
+            if (comparison != 0)
+            {
+                return comparison;
+            }
+
+            comparison = StringComparer.Ordinal.Compare(
+                baselineStableKeys[left.BaselineIndex],
+                baselineStableKeys[right.BaselineIndex]);
+            return comparison != 0
+                ? comparison
+                : StringComparer.Ordinal.Compare(
+                    candidateStableKeys[left.CandidateIndex],
+                    candidateStableKeys[right.CandidateIndex]);
+        }
+
+        private bool IsIndisputableExactProducerEdge(
+            CandidateEdgeDescriptor edge) =>
+            edge.DecisionVector.PrecedenceTier == PrecedenceTier.ExactProducer
+            && exactProducerCountsByBaseline[edge.BaselineIndex] == 1
+            && exactProducerCountsByCandidate[edge.CandidateIndex] == 1;
+    }
+
+    /// <summary>
+    /// Stores one admissible pair without retaining findings, evidence, transformations,
+    /// or stable-key strings. Byte-sized bands keep the global pair plan compact.
+    /// </summary>
+    internal readonly record struct CandidateEdgeDescriptor
+    {
+        private readonly byte precedenceTier;
+        private readonly byte producerFingerprintStrength;
+        private readonly byte pathMatchKind;
+        private readonly byte contextAgreement;
+        private readonly byte codeFlowAgreement;
+        private readonly byte messageAgreement;
+        private readonly byte regionDriftBand;
+
+        public CandidateEdgeDescriptor(
+            int baselineIndex,
+            int candidateIndex,
+            DecisionVector decisionVector)
+        {
+            BaselineIndex = baselineIndex;
+            CandidateIndex = candidateIndex;
+            precedenceTier = checked((byte)decisionVector.PrecedenceTier);
+            producerFingerprintStrength = checked(
+                (byte)decisionVector.ProducerFingerprintStrength);
+            pathMatchKind = checked((byte)decisionVector.PathMatchKind);
+            contextAgreement = checked((byte)decisionVector.ContextAgreement);
+            codeFlowAgreement = checked((byte)decisionVector.CodeFlowAgreement);
+            messageAgreement = checked((byte)decisionVector.MessageAgreement);
+            regionDriftBand = checked((byte)decisionVector.RegionDriftBand);
+        }
+
+        public int BaselineIndex { get; }
+
+        public int CandidateIndex { get; }
+
+        public DecisionVector DecisionVector => new(
+            (PrecedenceTier)precedenceTier,
+            producerFingerprintStrength,
+            (PathMatchKind)pathMatchKind,
+            (AgreementBand)contextAgreement,
+            (AgreementBand)codeFlowAgreement,
+            (AgreementBand)messageAgreement,
+            regionDriftBand);
+    }
+
     private sealed record CandidateGraph(
         ImmutableArray<MatchEdge> RetainedEdges,
         ImmutableArray<GraphComponent> ForcedAmbiguousComponents,
@@ -1750,10 +1909,14 @@ public sealed class FindingMatcher
 
     private sealed record CandidatePairPreflight(
         ImmutableArray<ImmutableArray<int>> CandidateIndexesByBaseline,
+        long PlannedPairCount,
         CandidatePreflightRefusal? Refusal)
     {
         public static CandidatePairPreflight Refused(CandidatePreflightRefusal refusal) =>
-            new(ImmutableArray<ImmutableArray<int>>.Empty, refusal);
+            new(
+                ImmutableArray<ImmutableArray<int>>.Empty,
+                PlannedPairCount: 0,
+                refusal);
     }
 
     private sealed record CandidatePreflightRefusal(

@@ -69,6 +69,34 @@ function Invoke-Python {
     }
 }
 
+function Get-RepositoryRelativePath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    $trimCharacters = [char[]] @(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+    )
+    $rootWithSeparator = $repositoryRoot.TrimEnd($trimCharacters) +
+        [System.IO.Path]::DirectorySeparatorChar
+    $pathComparison = if (
+        [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
+    ) {
+        [StringComparison]::OrdinalIgnoreCase
+    }
+    else {
+        [StringComparison]::Ordinal
+    }
+    if (-not $fullPath.StartsWith($rootWithSeparator, $pathComparison)) {
+        throw "Snapshot input is outside the repository root: $Path"
+    }
+
+    return $fullPath.Substring($rootWithSeparator.Length).Replace('\', '/')
+}
+
 function Write-HoldoutSnapshot {
     param(
         [Parameter(Mandatory = $true)]
@@ -79,9 +107,7 @@ function Write-HoldoutSnapshot {
     $lines = @(
         Get-ChildItem -LiteralPath $holdoutRoot -File -Recurse |
             ForEach-Object {
-                $relativePath = [System.IO.Path]::GetRelativePath(
-                    $repositoryRoot,
-                    $_.FullName).Replace('\', '/')
+                $relativePath = Get-RepositoryRelativePath -Path $_.FullName
                 [pscustomobject]@{
                     Path = $relativePath
                     Hash = (

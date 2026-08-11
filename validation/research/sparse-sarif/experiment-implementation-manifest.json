@@ -9,7 +9,7 @@
     },
     {
       "path": "Directory.Packages.props",
-      "sha256": "615aebf265d2974edef31f3531af8d3812c7133294a7b2e20e6e53802f18489b"
+      "sha256": "0abf4c071938be7bad8ff140be12e32ff2c4293ac5870b6454b65ea346a43fd7"
     },
     {
       "path": "global.json",
@@ -37,7 +37,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/AtomicOutputWriter.cs",
-      "sha256": "d25424287e23439b5e2239864222fc0cc5c0ad917593fa646562931d6fdc549b"
+      "sha256": "c0e72490fecf757310e22c6b6af1ae1b583f8ee22469d67666b9f8bc4cd9c730"
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/BenchCommandFactory.cs",
@@ -57,7 +57,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/CanonicaliseCommandHandler.cs",
-      "sha256": "8aa5da346a1d5a0ba9494fef8ff5e940bd938e46ce0ae8a6c3a53e5aca9e66f3"
+      "sha256": "6c8b105cab305ad25d9516bcfe90090fef4d66539250fc7e00ad19330c30dc9a"
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/CanonicaliseCommandRequest.cs",
@@ -77,7 +77,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/CompareCommandHandler.cs",
-      "sha256": "737cc6dcadaf3b0339ef8a9d6a4e3e4a944ae2891bef6ef670a069b387e56024"
+      "sha256": "505a97d1f93f77bf60245859826dbc416c8187cbd6c57125ea583d457572b6ab"
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/CompareCommandRequest.cs",
@@ -89,7 +89,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/CorpusCommandHandler.cs",
-      "sha256": "026ca8de20ce695d80263ef8e503f6135f1de3338c1badf28401c03c8ffab854"
+      "sha256": "a11c96cd009e990daf8d743f8f496d6b40dbda5d12033de922344fcc3cc0f393"
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/CorpusCommandRequest.cs",
@@ -97,7 +97,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/PathIdentityResolver.cs",
-      "sha256": "a247ecf1a2f73d646ece1ec4a099f9fd02b0391b1e6de54b61dfe7aa43a7ff10"
+      "sha256": "88fa098360c2fc1fd21e976eaf1c4f9d5a94fab21c11f043db9dd89f80c18058"
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/ValidateCommandFactory.cs",
@@ -105,7 +105,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/ValidateCommandHandler.cs",
-      "sha256": "4e36c8f6b77a273f793e301df257acb4b9fed87a4a231d30a1a945e33f2a5fa6"
+      "sha256": "02fc965177981e2fa0ab66ac199314225bc1d364a18c1d3d1a5d9ef0dc22ca83"
     },
     {
       "path": "src/SarifRegress.Cli/CommandLine/ValidateCommandRequest.cs",
@@ -149,7 +149,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/Corpus/CorpusRunner.cs",
-      "sha256": "85f3b6afab768d5552edd8c741fecac632d6c34ea47f7c4ea41f2f479f464a6e"
+      "sha256": "529339063bff42d93f1cc1864cec54cbff4db376fb0637740d25a2449c879b3a"
     },
     {
       "path": "src/SarifRegress.Cli/Diagnostics/StableDiagnosticFormatter.cs",
@@ -165,7 +165,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/SarifRegress.Cli.csproj",
-      "sha256": "ede7954eb1b8266c59a9222bddc842d3fe1544849245bceb60f8e7de10b80d20"
+      "sha256": "a96346f93bc4f9c488d8f02578e86ef1d18110432760e0c17d5e0ee455ccc1d2"
     },
     {
       "path": "src/SarifRegress.Cli/packages.lock.json",
@@ -229,7 +229,7 @@
     },
     {
       "path": "src/SarifRegress.Match/CandidateEdgeFactory.cs",
-      "sha256": "2e7d5350f2dbae902cb17efa4310e8d2c22858a50c3743bceb5d23fc2f760c77"
+      "sha256": "3d0e2d139c5a60818ec45332ba54179a78ce5e4db7d0b253a43aabc436a690b0"
     },
     {
       "path": "src/SarifRegress.Match/CodeFlowAnchorOccurrenceIndex.cs",
@@ -241,7 +241,7 @@
     },
     {
       "path": "src/SarifRegress.Match/FindingMatcher.cs",
-      "sha256": "bf4e5d57f56a3af53a0baa2da5eb72e33ef21d048c7eb57664a079cee138a760"
+      "sha256": "97ff92400ac10a725fb3794cab31a4e433323578cf3b86b17a6a2ff73652687d"
     },
     {
       "path": "src/SarifRegress.Match/MatchingAlgorithms.cs",
@@ -369,15 +369,15 @@
     },
     {
       "path": "src/SarifRegress.Sarif/Repository/FileSystemRepositoryContext.cs",
-      "sha256": "9839673d24c7537aaa135b0d55d22e4d7158574667e2a0ed3312a51bdb0c2264"
+      "sha256": "137a6575c4277bf81c4ffc754ff72f7c92fe0ecce668632721f8bbd8ccdaf894"
     },
     {
       "path": "src/SarifRegress.Sarif/Repository/IRepositoryContext.cs",
-      "sha256": "7d4884af331e7c923de9e4ba2ea362464056e3bd796c46cc324ce2a11bf11008"
+      "sha256": "9fd2f32c85b07e17ff57a740638bcadecefe9336121117c3d2694419644c75da"
     },
     {
       "path": "src/SarifRegress.Sarif/Repository/RepositoryFileHandleOpener.cs",
-      "sha256": "31375ae858699907179786d103292c4450c270c32e2e4817403f36d85af1798f"
+      "sha256": "eaf91c47e59590d8b9a8f617b9ef6c44628ceca4b5efa6143dc4ce6653a4b895"
     },
     {
       "path": "src/SarifRegress.Sarif/Repository/TokenWindowCanonicalizer.cs",
@@ -400,6 +400,10 @@
       "sha256": "6614bf75fc2da22389326e5bd0bab1b8105586a4b20e98be5a12b8255d807630"
     },
     {
+      "path": "validation/tools/SarifRegress.Validation/BoundedJsonSchemaEvaluator.cs",
+      "sha256": "7ba02c1cf3cb6a66e356f9b716def3ad543afb87e91f5083cbe26686122f00cb"
+    },
+    {
       "path": "validation/tools/SarifRegress.Validation/BoundedProcessRunner.cs",
       "sha256": "1a4b4d9b2c3c83aa2abe25889daae491910c8f1982b19ec2aacf2241419c99b6"
     },
@@ -418,6 +422,10 @@
     {
       "path": "validation/tools/SarifRegress.Validation/DecisionTraceProjection.cs",
       "sha256": "9c83a6795f5bab293a4e71f44819287c458b9bdda28b6e9fec3173681b6123a1"
+    },
+    {
+      "path": "validation/tools/SarifRegress.Validation/Ecma262RegexTranslator.cs",
+      "sha256": "e782164c82540d36822e54d759dd6828eae4437f93c0c0be67386192a6feccb9"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/EvaluationMetadata.cs",
@@ -453,7 +461,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/JsonSchemaValidator.cs",
-      "sha256": "0be7b5f1677a1dd9dd95a89e3bb2d8626553910d1c27c995c4f7f4ad220add8b"
+      "sha256": "5198ff2bf77b2f19cc9e1e4932117115eaf6852e44ca825dc4ba8791b4e77ac7"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/MatcherV2ToV3DeltaReport.cs",
@@ -481,7 +489,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/SarifRegress.Validation.csproj",
-      "sha256": "4c91185e72d54bc4b226b28fca5820cc9efd93709514554c5761984a5b54428e"
+      "sha256": "b453f3c21bb73d3da7799dc380365b0bac7999ed89cbe2985358a6d17a769db7"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentContracts.cs",
@@ -517,7 +525,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationLimits.cs",
-      "sha256": "feb2c60fe9fc2f2f4e64e7a1ce2825932cdbbf08b86ac1e60d7069582c2cd4ca"
+      "sha256": "a9e74e2049c6810b2503630c02ec4e890ec33932f71b347ab941a16bf477337a"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/ValidationOptions.cs",
@@ -525,7 +533,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/packages.lock.json",
-      "sha256": "08b2c073569b127ef56c3328619d07a523ccdaa9310c9c791a3f0a1666b69283"
+      "sha256": "ee7231def843c53bdc5874f17a784391db272b5d32df11cdf8981fb4258bcfff"
     }
   ]
 }

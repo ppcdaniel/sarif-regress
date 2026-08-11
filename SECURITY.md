@@ -50,22 +50,21 @@ research reports, but they must still use redacted fixtures.
 The product is local and read-only with respect to analysed source. It does not execute repository
 code, restore repository dependencies, run analysers, dereference SARIF network URIs, send
 telemetry, or make product network requests. Parsing, repository reads, candidate graphs,
-explanations, and output are bounded. Repository context uses OS-specific handle-relative no-link
-opens and accepts only regular files. JSON/HTML escape source-derived values, and HTML is an offline
-projection of the stable JSON contract.
+explanations, and output are bounded. Repository context retains an OS-specific physical root
+handle, rejects linked ancestors and remote/device roots, opens every source path relative to that
+handle, and accepts only regular files. Candidate matching accounts for the complete bounded graph
+with compact descriptors and materialises full evidence only for capacity-retained edges. JSON/HTML
+escape source-derived values, and HTML is an offline projection of the stable JSON contract.
 
 These controls do not make all inputs safe in all local threat models. Known release-blocking
 limitations include:
 
-- the repository root itself is reopened between reads rather than retained as one immutable root
-  handle;
-- collided context may be admitted when another context channel conflicts;
-- code-flow anchors can qualify an edge without independent identity;
-- full candidate-edge objects are materialised before the retained-edge cap;
-- `corpus run --json-out` can select a corpus input path;
-- packaging cleanup can follow an `artifacts` symlink or junction; and
-- transactional output has a hostile-parent TOCTOU window even though ordinary alias and rollback
-  cases are handled.
+- transactional output has a hostile-parent TOCTOU window even though staging names, ordinary
+  aliases, and rollback cases are handled;
+- packaging cleanup and output commits assume an attacker cannot concurrently rename entries in
+  their writable parent directories after the scripts validate them; and
+- Linux remote-filesystem rejection is a fail list of known filesystem types, so a future unknown
+  remote filesystem requires an explicit classification before it can be claimed as covered.
 
 Separate baseline/candidate repository roots are research-only and are not shipped. Sparse SARIF
 without reliable fingerprints, embedded snippets, trusted source snapshots, and another qualifying

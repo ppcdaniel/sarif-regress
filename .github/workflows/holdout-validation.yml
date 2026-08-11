@@ -108,6 +108,12 @@ jobs:
             validation/research/sparse-sarif/tools/test_scan_contamination.py \
             -v
           python -B \
+            validation/research/sparse-sarif/tools/test_refresh_sparse_manifests.py \
+            -v
+          python -B \
+            validation/research/sparse-sarif/tools/refresh_sparse_manifests.py \
+            --check
+          python -B \
             validation/research/sparse-sarif/tools/test_project_release_evidence.py \
             -v
           python -B \

@@ -169,7 +169,7 @@ public sealed class CorpusRunner
             .ConfigureAwait(false);
         var configuration = configurationResult.Configuration;
         var configurationDiagnostics = configurationResult.Diagnostics;
-        var repositoryContext = CreateRepositoryContext(configuration);
+        using var repositoryContext = CreateRepositoryContext(configuration);
         var ingestor = new SarifIngestor(repositoryContext);
         var baseline = await IngestAsync(
                 ingestor,
