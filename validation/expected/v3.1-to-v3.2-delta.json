@@ -4,7 +4,7 @@
   "inputHashes": {
     "matcherV31HistoryChecksumManifestSha256": "d6b154b440541fa429b1ad1c7b4c6005e0b9e382cb8bcd5544e235617506b22b",
     "matcherV31ReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
-    "matcherV32ReportSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
+    "matcherV32ReportSha256": "9757712b37e54ad32c0c0eaadbd4bf3621b59cf3d6d84203b284099212395ea7",
     "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379"
   },
   "matcherV31": {
@@ -161,8 +161,8 @@
   },
   "matcherV32": {
     "evaluation": {
-      "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
-      "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
+      "repositoryCommitSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
+      "sourceTreeSha256": "ff2cfc9e8b42b0465b11e85030413f706b465663c322b91351974c4d750fe6e6",
       "sarifRegressToolVersion": "0.1.0",
       "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
       "fingerprintAlgorithmVersions": [

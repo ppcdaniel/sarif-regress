@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "kind": "sparse-experiment-gates/v1",
-  "corpusManifestSha256": "f9696478b0247d6b1d5ddc2f6ea24fddcbbf888d5fc15f83de475a73dbc163fd",
-  "observationsSha256": "ff490ba21d5c3f8243a477d140f7bc65dd6cfefd68e407da611303fc01df0db2",
+  "corpusManifestSha256": "351cfb362d798a47054993708ecfbec6c42d289f2e1d3bdc0b514c2d3b9f9435",
+  "observationsSha256": "566894dce897843c169a18354a6e867650c0bc74172a729f65cea7912f1e04c9",
   "variants": [
     {
       "id": "sarif-only-control",

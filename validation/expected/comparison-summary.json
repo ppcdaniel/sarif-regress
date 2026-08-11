@@ -2,8 +2,8 @@
   "schemaVersion": "4",
   "reportKind": "holdout-external-baseline-comparison",
   "evaluation": {
-    "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
-    "sourceTreeSha256": "005ac494d5f35521b9f5e03cc2af3058054845d3d5b725e5ab949bff1cd77732",
+    "repositoryCommitSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
+    "sourceTreeSha256": "ff2cfc9e8b42b0465b11e85030413f706b465663c322b91351974c4d750fe6e6",
     "sarifRegressToolVersion": "0.1.0",
     "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
     "fingerprintAlgorithmVersions": [
@@ -30,11 +30,11 @@
   },
   "reportHashes": {
     "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
-    "evaluationMetadataSha256": "e170ba6f7203e2414f4b27b725996f177c1a04045522b42fe57038782bbf5915",
-    "sarifRegressReportSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
-    "sarifMultitoolBaselineReportSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
+    "evaluationMetadataSha256": "d720dc7f9a419f7e599ca7d2f514c9f53a4214cb7e3e9a66057e1e4e9475e158",
+    "sarifRegressReportSha256": "9757712b37e54ad32c0c0eaadbd4bf3621b59cf3d6d84203b284099212395ea7",
+    "sarifMultitoolBaselineReportSha256": "cb81bb3f3e6bc6dd07caa1960a4219e9ffc5329af20e2e3fda7dd75ce1d9b8f9",
     "matcherV31ReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
-    "v31ToV32DeltaReportSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
+    "v31ToV32DeltaReportSha256": "5201a376cba27aab8e3e9dbcc005f522132576e96b66bd5ff9b4faf455918f17"
   },
   "thresholds": {
     "minimumPrecision": 0.95,
@@ -58,7 +58,7 @@
     "noUnexplainedIngestionFailures": true,
     "noStructuralFailures": true,
     "completeLabelGraphSatisfied": false,
-    "crossPlatformByteIdentity": true,
+    "crossPlatformByteIdentity": false,
     "evaluationCompleted": true,
     "everyChangedDecisionExplained": true
   },
@@ -1421,6 +1421,7 @@
   "recommendationReasons": [
     "recall-below-threshold",
     "per-producer-recall-below-threshold",
-    "complete-label-graph-failed"
+    "complete-label-graph-failed",
+    "cross-platform-determinism-failed"
   ]
 }

@@ -1,43 +1,43 @@
 {
   "schemaVersion": "4",
   "repository": "ppcdaniel/sarif-regress",
-  "repositoryCommitSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+  "repositoryCommitSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
   "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
-  "evaluationMetadataSha256": "e170ba6f7203e2414f4b27b725996f177c1a04045522b42fe57038782bbf5915",
+  "evaluationMetadataSha256": "d720dc7f9a419f7e599ca7d2f514c9f53a4214cb7e3e9a66057e1e4e9475e158",
   "baseReports": {
-    "sarifRegressHoldoutSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
-    "sarifMultitoolBaselineSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
-    "v31ToV32DeltaSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
+    "sarifRegressHoldoutSha256": "9757712b37e54ad32c0c0eaadbd4bf3621b59cf3d6d84203b284099212395ea7",
+    "sarifMultitoolBaselineSha256": "cb81bb3f3e6bc6dd07caa1960a4219e9ffc5329af20e2e3fda7dd75ce1d9b8f9",
+    "v31ToV32DeltaSha256": "5201a376cba27aab8e3e9dbcc005f522132576e96b66bd5ff9b4faf455918f17"
   },
   "githubActions": {
     "workflowPath": ".github/workflows/holdout-validation.yml",
-    "runId": 30761620623,
+    "runId": 31521849208,
     "runAttempt": 1,
-    "runUrl": "https://github.com/ppcdaniel/sarif-regress/actions/runs/30761620623",
-    "workflowHeadSha": "4cc6faf0167d7da385c1d204cba97d1f34ccb479",
+    "runUrl": "https://github.com/ppcdaniel/sarif-regress/actions/runs/31521849208",
+    "workflowHeadSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
     "workflowConclusion": "failure",
     "coordinatorJobConclusion": "success",
     "coordinatorJobName": "Compare Linux and Windows normalized bytes"
   },
   "artifacts": {
     "linux": {
-      "name": "holdout-v3.2-candidate-linux-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
-      "artifactId": 8837651649,
-      "archiveSha256": "2160092e5a3e5263eee3545c7fb749ca58e7e940a360cba271e489cde3d99082",
+      "name": "holdout-v3.2-candidate-linux-db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
+      "artifactId": 9113390154,
+      "archiveSha256": "322a623f1d4bd95a29eefc54b7e10c9ab271657cfd8d58ba06f88650f6c6d0db",
       "reportDigests": {
-        "sarifRegressHoldoutSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
-        "sarifMultitoolBaselineSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
-        "v31ToV32DeltaSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
+        "sarifRegressHoldoutSha256": "9757712b37e54ad32c0c0eaadbd4bf3621b59cf3d6d84203b284099212395ea7",
+        "sarifMultitoolBaselineSha256": "cb81bb3f3e6bc6dd07caa1960a4219e9ffc5329af20e2e3fda7dd75ce1d9b8f9",
+        "v31ToV32DeltaSha256": "5201a376cba27aab8e3e9dbcc005f522132576e96b66bd5ff9b4faf455918f17"
       }
     },
     "windows": {
-      "name": "holdout-v3.2-candidate-windows-4cc6faf0167d7da385c1d204cba97d1f34ccb479",
-      "artifactId": 8837657200,
-      "archiveSha256": "2cf58f6e411a2101ec0c6835db8504c8085b72536da12d627e184eb572cc4217",
+      "name": "holdout-v3.2-candidate-windows-db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
+      "artifactId": 9113607487,
+      "archiveSha256": "715913511bb0f71963d5bbf1a4bee8378b6d067ff676bb20a335567af01b2817",
       "reportDigests": {
-        "sarifRegressHoldoutSha256": "a49a01a2d6f00ba71f1abfff0721224844141f85f53170126c393f64159c4eb5",
-        "sarifMultitoolBaselineSha256": "e5f4de24221359a426ed188b91b01005adcb621203e8d78dfdc5d137edca5486",
-        "v31ToV32DeltaSha256": "e7da8b3622d1e7f2c055a261804c0ce151ec9c11b378ed600fbdde178f45d5ee"
+        "sarifRegressHoldoutSha256": "9757712b37e54ad32c0c0eaadbd4bf3621b59cf3d6d84203b284099212395ea7",
+        "sarifMultitoolBaselineSha256": "cb81bb3f3e6bc6dd07caa1960a4219e9ffc5329af20e2e3fda7dd75ce1d9b8f9",
+        "v31ToV32DeltaSha256": "5201a376cba27aab8e3e9dbcc005f522132576e96b66bd5ff9b4faf455918f17"
       }
     }
   },
