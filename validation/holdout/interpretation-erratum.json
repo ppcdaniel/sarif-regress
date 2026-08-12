@@ -54,7 +54,11 @@
   ],
   "currentReportBinding": {
     "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
-    "status": "refresh-unbound"
+    "status": "bound",
+    "artifact": {
+      "path": "validation/expected/sarif-regress-holdout.json",
+      "sha256": "8414ba57151f447a091467c985e4e4dbe2d2a0af6f5d17f490a9d8a882aacc1d"
+    }
   },
   "integrity": {
     "historicalArtifactsRewritten": false,

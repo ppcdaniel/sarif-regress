@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "kind": "sparse-experiment-resource-projection/v1",
-  "corpusManifestSha256": "351cfb362d798a47054993708ecfbec6c42d289f2e1d3bdc0b514c2d3b9f9435",
-  "implementationManifestSha256": "7e985d0f7ececfc86408785d1f0219e7299ccd7f8021b5d43f080807dd869110",
+  "corpusManifestSha256": "7972294ee1794f726b065b838524e7bdb06b8eb1379bc4132ad972e780eba20c",
+  "implementationManifestSha256": "c11caba9b14ec63dbb725646e24173d23b70e2493019410ba9f7e96d8b299cf7",
   "variants": [
     {
       "id": "sarif-only-control",
@@ -10,7 +10,7 @@
         "withinDocumentedLimits": true,
         "sourceContextProjectionBenchmarked": false,
         "evidencePath": "expected/sparse-experiment-resource-observations.json",
-        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+        "evidenceSha256": "6976f62b6daed4bfe77ae22aeac264687f56b9a8cd5318758558174a5188d81b"
       }
     },
     {
@@ -19,7 +19,7 @@
         "withinDocumentedLimits": true,
         "sourceContextProjectionBenchmarked": false,
         "evidencePath": "expected/sparse-experiment-resource-observations.json",
-        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+        "evidenceSha256": "6976f62b6daed4bfe77ae22aeac264687f56b9a8cd5318758558174a5188d81b"
       }
     },
     {
@@ -28,7 +28,7 @@
         "withinDocumentedLimits": true,
         "sourceContextProjectionBenchmarked": false,
         "evidencePath": "expected/sparse-experiment-resource-observations.json",
-        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+        "evidenceSha256": "6976f62b6daed4bfe77ae22aeac264687f56b9a8cd5318758558174a5188d81b"
       }
     },
     {
@@ -37,7 +37,7 @@
         "withinDocumentedLimits": true,
         "sourceContextProjectionBenchmarked": false,
         "evidencePath": "expected/sparse-experiment-resource-observations.json",
-        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+        "evidenceSha256": "6976f62b6daed4bfe77ae22aeac264687f56b9a8cd5318758558174a5188d81b"
       }
     },
     {
@@ -46,7 +46,7 @@
         "withinDocumentedLimits": true,
         "sourceContextProjectionBenchmarked": false,
         "evidencePath": "expected/sparse-experiment-resource-observations.json",
-        "evidenceSha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+        "evidenceSha256": "6976f62b6daed4bfe77ae22aeac264687f56b9a8cd5318758558174a5188d81b"
       }
     }
   ]
