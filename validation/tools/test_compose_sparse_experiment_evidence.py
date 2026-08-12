@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import io
+import json
 import shutil
 import subprocess
 import sys
@@ -129,7 +130,14 @@ class CompositeEvidenceTests(unittest.TestCase):
 
     def _prepare_complete_fixture(self) -> dict[str, object]:
         repository_root = Path(__file__).resolve().parents[2]
-        expected = repository_root / "validation/research/sparse-sarif/expected"
+        research_root = repository_root / "validation/research/sparse-sarif"
+        expected = research_root / "expected"
+        corpus_sha256 = hashlib.sha256(
+            (research_root / "manifest.json").read_bytes()
+        ).hexdigest()
+        implementation_sha256 = hashlib.sha256(
+            (research_root / "experiment-implementation-manifest.json").read_bytes()
+        ).hexdigest()
         release_root = self.root / "release"
         determinism_root = self.root / "determinism"
         resources_root = self.root / "resources"
@@ -142,6 +150,8 @@ class CompositeEvidenceTests(unittest.TestCase):
             )
         )
         assert isinstance(release_projection, dict)
+        release_projection["corpusManifestSha256"] = corpus_sha256
+        release_projection["implementationManifestSha256"] = implementation_sha256
         release_value = release_projection["variants"][0]["value"]
         assert isinstance(release_value, dict)
         projected_holdout = release_value["holdout"]
@@ -240,12 +250,40 @@ class CompositeEvidenceTests(unittest.TestCase):
             )
         )
         assert isinstance(determinism_projection, dict)
+        determinism_projection["corpusManifestSha256"] = corpus_sha256
+        determinism_projection["implementationManifestSha256"] = (
+            implementation_sha256
+        )
         determinism_cross = determinism_root / "cross-platform-determinism"
         determinism_cross.mkdir()
-        gate_payload = (expected / "sparse-experiment-gate-evidence.json").read_bytes()
-        observation_payload = (
+        observations = load_bounded_json(
             expected / "sparse-experiment-observations.json"
-        ).read_bytes()
+        )
+        gates = load_bounded_json(expected / "sparse-experiment-gate-evidence.json")
+        assert isinstance(observations, dict)
+        assert isinstance(gates, dict)
+        observations["corpusManifestSha256"] = corpus_sha256
+        observations["implementationManifestSha256"] = implementation_sha256
+        observation_payload = (
+            json.dumps(observations, ensure_ascii=False, indent=2) + "\n"
+        ).encode("utf-8")
+        gates["corpusManifestSha256"] = corpus_sha256
+        gates["observationsSha256"] = hashlib.sha256(observation_payload).hexdigest()
+        gate_payload = (
+            json.dumps(gates, ensure_ascii=False, indent=2) + "\n"
+        ).encode("utf-8")
+        gate_sha256 = hashlib.sha256(gate_payload).hexdigest()
+        (release_cross / "sparse-experiment-observations.json").write_bytes(
+            observation_payload
+        )
+        (release_cross / "sparse-experiment-gate-evidence.json").write_bytes(
+            gate_payload
+        )
+        self._write_flat_manifest(release_cross, "cross-platform-checksums.sha256")
+        for variant in determinism_projection["variants"]:
+            for platform in ("linux", "windows"):
+                variant["value"][platform]["firstOutputSha256"] = gate_sha256
+                variant["value"][platform]["secondOutputSha256"] = gate_sha256
         semantic_values = copy.deepcopy(
             determinism_projection["variants"][0]["value"]
         )
@@ -292,6 +330,11 @@ class CompositeEvidenceTests(unittest.TestCase):
         )
         resource_observations = load_bounded_json(resource_observations_path)
         assert isinstance(resource_observations, dict)
+        resource_observations["corpusManifestSha256"] = corpus_sha256
+        resource_observations["implementationManifestSha256"] = implementation_sha256
+        resource_observations_payload = (
+            json.dumps(resource_observations, ensure_ascii=False, indent=2) + "\n"
+        ).encode("utf-8")
         resource_cells = []
         for observed in resource_observations["cells"]:
             operating_system = observed["operatingSystem"]
@@ -338,14 +381,19 @@ class CompositeEvidenceTests(unittest.TestCase):
             expected / "projections/sparse-experiment-resource-projection.json"
         )
         assert isinstance(resource_projection, dict)
+        resource_projection["corpusManifestSha256"] = corpus_sha256
+        resource_projection["implementationManifestSha256"] = implementation_sha256
+        resource_observations_sha256 = hashlib.sha256(
+            resource_observations_payload
+        ).hexdigest()
+        for variant in resource_projection["variants"]:
+            variant["value"]["evidenceSha256"] = resource_observations_sha256
         full_resource_value = {
             "withinDocumentedLimits": True,
             "sourceContextProjectionBenchmarked": False,
             "cells": resource_cells,
             "evidencePath": "expected/sparse-experiment-resource-observations.json",
-            "evidenceSha256": hashlib.sha256(
-                resource_observations_path.read_bytes()
-            ).hexdigest(),
+            "evidenceSha256": resource_observations_sha256,
         }
         full_resources = {
             "schemaVersion": "1",
@@ -375,7 +423,7 @@ class CompositeEvidenceTests(unittest.TestCase):
         )
         (
             resources_cross / "sparse-experiment-resource-observations.json"
-        ).write_bytes(resource_observations_path.read_bytes())
+        ).write_bytes(resource_observations_payload)
         self._write_flat_manifest(resources_cross, "checksums.sha256")
 
         self._write_role_metadata("release", 101, SOURCE_HEAD, 1_000, release_root)

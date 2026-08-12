@@ -132,6 +132,9 @@ jobs:
             validation/tools/test_detect_matcher_v32_evidence_stage.py \
             -v
           python -B \
+            validation/tools/test_bootstrap_matcher_v32_metadata.py \
+            -v
+          python -B \
             validation/research/sparse-sarif/tools/scan_contamination.py \
             --research-root validation/research/sparse-sarif
           python -B - <<'PY'

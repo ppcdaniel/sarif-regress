@@ -85,6 +85,7 @@ python3 -B validation/research/sparse-sarif/tools/test_pmd_capture_tools.py
 python3 -B validation/research/sparse-sarif/tools/test_project_release_evidence.py
 python3 -B validation/research/sparse-sarif/tools/test_analyze_duplicate_symmetry.py
 python3 -B validation/tools/test_compose_sparse_experiment_evidence.py
+python3 -B validation/tools/test_bootstrap_matcher_v32_metadata.py
 python3 -B validation/tools/release/test_create_release_draft.py
 python3 -B validation/research/sparse-sarif/tools/scan_contamination.py \
   --research-root validation/research/sparse-sarif

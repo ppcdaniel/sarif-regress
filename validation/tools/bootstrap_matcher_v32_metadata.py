@@ -14,8 +14,12 @@ from pathlib import Path
 
 
 MATCHER_VERSION = "sarifregress/matcher/v3.2"
+PRODUCT_VERSION_PATH = Path("src/SarifRegress.Core/ProductInformation.cs")
 METADATA_PATH = Path("validation/holdout/evaluation-metadata.json")
 SOURCE_PREFIX = b"sarifregress/source-tree/v1\0"
+PRODUCT_VERSION_PATTERN = re.compile(
+    rb'public const string Version = "([0-9A-Za-z.+-]+)";'
+)
 
 
 def run_git(root: Path, *arguments: str) -> bytes:
@@ -78,6 +82,16 @@ def reject_duplicate_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]
     return result
 
 
+def product_version(root: Path, source_sha: str) -> str:
+    """Read the unique product version from the authenticated source commit."""
+
+    payload = run_git(root, "show", f"{source_sha}:{PRODUCT_VERSION_PATH.as_posix()}")
+    matches = PRODUCT_VERSION_PATTERN.findall(payload)
+    if len(matches) != 1:
+        raise SystemExit("The exact source commit has no unique product version constant.")
+    return matches[0].decode("ascii", errors="strict")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository-root", required=True, type=Path)
@@ -99,6 +113,7 @@ def main() -> int:
         metadata = json.load(stream, object_pairs_hook=reject_duplicate_pairs)
     metadata["repositoryCommitSha"] = source_sha
     metadata["sourceTreeSha256"] = source_tree_hash(root, source_sha)
+    metadata["sarifRegressToolVersion"] = product_version(root, source_sha)
     metadata["matcherAlgorithmVersion"] = MATCHER_VERSION
     candidate = (json.dumps(metadata, ensure_ascii=False, indent=2) + "\n").encode(
         "utf-8"
