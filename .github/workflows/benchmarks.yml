@@ -408,6 +408,11 @@ jobs:
                               "boundedRefusalObserved": refusal,
                               "runtimeBudgetEnforced": runtime_enforced,
                               "withinDocumentedLimits": within,
+                              "artifactPath": (
+                                  "expected/supporting/resources/"
+                                  f"{operating_system}-{size}-{dataset}.json"
+                              ),
+                              "artifactSha256": hashlib.sha256(payload).hexdigest(),
                           }
                       )
                       observed_cells.append(

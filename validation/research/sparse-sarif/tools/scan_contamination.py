@@ -28,6 +28,8 @@ MAX_DIAGNOSTIC_DETAIL: Final = 240
 MAX_DIRECTORIES: Final = 4096
 MAX_DIRECTORY_DEPTH: Final = 64
 MAX_DIRECTORY_ENTRIES: Final = MAX_FILES + MAX_DIRECTORIES
+IMPLEMENTATION_FILE_LIMIT: Final = 256
+IMPLEMENTATION_FILE_BYTE_LIMIT: Final = 4 * 1024 * 1024
 MIN_NORMALIZED_LABEL_ID_LENGTH: Final = 12
 
 TEXT_SUFFIXES: Final = frozenset(
@@ -285,6 +287,17 @@ DOWNLOAD_COMMAND: Final = (
     "<archive-destination>",
     "<archive-url>",
 )
+
+
+def _canonicalize_implementation_bytes(payload: bytes) -> bytes | None:
+    """Return Git-canonical LF bytes, or refuse an ambiguous lone carriage return.
+
+    Time: O(N), where N is the implementation file size.
+    Space: O(N) only when CRLF normalization is required.
+    """
+
+    canonical = payload.replace(b"\r\n", b"\n")
+    return None if b"\r" in canonical else canonical
 
 
 @dataclass(frozen=True, order=True)
@@ -3684,7 +3697,12 @@ class Scanner:
             ):
                 return False
             payload = self._read_repository_implementation_file(path)
-            if payload is None or hashlib.sha256(payload).hexdigest() != digest:
+            canonical = (
+                _canonicalize_implementation_bytes(payload)
+                if payload is not None
+                else None
+            )
+            if canonical is None or hashlib.sha256(canonical).hexdigest() != digest:
                 return False
         return True
 
@@ -3716,13 +3734,22 @@ class Scanner:
                     )
                 ):
                     return None
+                directory_count = 0
+                file_count = 0
+                entry_count = 0
                 for directory, names, filenames in os.walk(
                     root,
                     topdown=True,
                     followlinks=False,
                 ):
+                    directory_count += 1
+                    if directory_count > MAX_DIRECTORIES:
+                        return None
                     directory_path = Path(directory)
                     for name in names:
+                        entry_count += 1
+                        if entry_count > MAX_DIRECTORY_ENTRIES:
+                            return None
                         child = directory_path / name
                         child_status = child.lstat()
                         if (
@@ -3737,6 +3764,13 @@ class Scanner:
                             return None
                     names[:] = [name for name in names if name not in {"bin", "obj"}]
                     for name in filenames:
+                        file_count += 1
+                        entry_count += 1
+                        if (
+                            file_count > MAX_FILES
+                            or entry_count > MAX_DIRECTORY_ENTRIES
+                        ):
+                            return None
                         path = directory_path / name
                         file_status = path.lstat()
                         if (
@@ -3775,7 +3809,10 @@ class Scanner:
             except OSError:
                 return None
         paths.sort()
-        if len(paths) > 256 or len(paths) != len(set(paths)):
+        if (
+            len(paths) > IMPLEMENTATION_FILE_LIMIT
+            or len(paths) != len(set(paths))
+        ):
             return None
         return paths
 
@@ -3815,7 +3852,7 @@ class Scanner:
                     relative,
                     root=self.repository_root,
                 )
-                or before.st_size > 4 * 1024 * 1024
+                or before.st_size > IMPLEMENTATION_FILE_BYTE_LIMIT
             ):
                 return None
             chunks: list[bytes] = []

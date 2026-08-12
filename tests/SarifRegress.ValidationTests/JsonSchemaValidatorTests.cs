@@ -163,6 +163,91 @@ public sealed class JsonSchemaValidatorTests
     }
 
     [Fact]
+    public void Property_names_apply_a_schema_to_every_object_member_name()
+    {
+        const string schemaJson = """
+            {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]+$"
+              }
+            }
+            """;
+        string temporaryRoot = ValidationTestRepository.CreateTemporaryDirectory();
+        try
+        {
+            string schemaPath = WriteSchema(temporaryRoot, schemaJson);
+            var validator = new JsonSchemaValidator();
+
+            _ = validator.ValidateNode(
+                schemaPath,
+                JsonNode.Parse("{\"alpha\":1,\"beta\":2}")!,
+                "valid-property-names.json",
+                temporaryRoot);
+            _ = Assert.Throws<InvalidDataException>(() =>
+                validator.ValidateNode(
+                    schemaPath,
+                    JsonNode.Parse("{\"Alpha\":1}")!,
+                    "invalid-property-name.json",
+                    temporaryRoot));
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData("src/Worker.java", true)]
+    [InlineData("src/nested/worker.cs", true)]
+    [InlineData("../outside.cs", false)]
+    [InlineData("src/../outside.cs", false)]
+    [InlineData("src//worker.cs", false)]
+    [InlineData("src/", false)]
+    [InlineData(".", false)]
+    [InlineData("src/./worker.cs", false)]
+    [InlineData("/absolute.cs", false)]
+    [InlineData("src\\worker.cs", false)]
+    [InlineData("C:/worker.cs", false)]
+    [InlineData("src/café.cs", false)]
+    [InlineData("src/control\u001f.cs", false)]
+    public void Snapshot_manifest_schema_matches_runtime_path_admission(
+        string repositoryPath,
+        bool expectedValid)
+    {
+        string repositoryRoot = ValidationTestRepository.FindRoot();
+        string schemaPath = Path.Combine(
+            repositoryRoot,
+            "schemas",
+            "repository-snapshot-manifest.schema.json");
+        var instance = new JsonObject
+        {
+            ["schemaVersion"] = "1",
+            ["files"] = new JsonObject
+            {
+                [repositoryPath] = new string('a', 64),
+            },
+        };
+
+        Action validate = () => new JsonSchemaValidator().ValidateNode(
+            schemaPath,
+            instance,
+            "snapshot.json",
+            repositoryRoot);
+
+        if (expectedValid)
+        {
+            validate();
+        }
+        else
+        {
+            _ = Assert.Throws<InvalidDataException>(validate);
+        }
+    }
+
+    [Fact]
     public void Unique_items_uses_json_semantic_equality()
     {
         const string schemaJson = """

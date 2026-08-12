@@ -11,7 +11,13 @@ public sealed record RepositoryContextResult(
     bool Exists,
     string? Snippet,
     ContextEvidence? Evidence,
-    ImmutableArray<Diagnostic> Diagnostics);
+    ImmutableArray<Diagnostic> Diagnostics)
+{
+    /// <summary>
+    /// Gets the rule-neutral lexical source atom derived only from manifest-verified bytes.
+    /// </summary>
+    internal string? TrustedLexicalContextHash { get; init; }
+}
 
 /// <summary>
 /// Supplies bounded, read-only source evidence without exposing filesystem access to the core.

@@ -1,6 +1,6 @@
 # ADR 0003: Side-specific repository-context experiment
 
-- **Status:** Accepted safe stop; research complete; no matcher v4
+- **Status:** Superseded in product/provenance implementation by ADR 0004; safe-stop evidence retained
 - **Date:** 2026-08-02
 - **Scope:** Sparse SARIF without fingerprints or snippets; issues #11, #12, #27, and #28
 

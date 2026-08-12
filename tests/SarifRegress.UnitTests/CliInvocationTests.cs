@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text.Json;
 using SarifRegress.Cli;
+using SarifRegress.Sarif.Fingerprints;
 
 namespace SarifRegress.UnitTests;
 
@@ -48,6 +50,26 @@ public sealed class CliInvocationTests
                     "uriBaseId": "EXPLICIT_ROOT"
                   },
                   "region": { "startLine": 2, "startColumn": 1 }
+                }
+              }]
+            }]
+          }]
+        }
+        """;
+
+    private static string SparseFindingSarif(string path, int line) =>
+        $$"""
+        {
+          "version": "2.1.0",
+          "runs": [{
+            "tool": { "driver": { "name": "Sparse Analyzer" } },
+            "results": [{
+              "ruleId": "SPARSE001",
+              "message": { "text": "Sparse finding" },
+              "locations": [{
+                "physicalLocation": {
+                  "artifactLocation": { "uri": "{{path}}" },
+                  "region": { "startLine": {{line}}, "startColumn": 9 }
                 }
               }]
             }]
@@ -115,7 +137,9 @@ public sealed class CliInvocationTests
             "--candidate",
             "candidate.sarif");
 
-        Assert.Equal(0, invocation.ExitCode);
+        Assert.True(
+            invocation.ExitCode == 0,
+            invocation.StandardError + Environment.NewLine + invocation.StandardOutput);
         Assert.Equal(string.Empty, invocation.StandardError);
         using var report = JsonDocument.Parse(invocation.StandardOutput);
         var summary = report.RootElement.GetProperty("summary");
@@ -287,6 +311,187 @@ public sealed class CliInvocationTests
             "configured-uri-base",
             invocation.StandardOutput,
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Trusted_side_specific_snapshots_match_unique_lexical_continuity()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", SparseFindingSarif("jobs/TaskRunner.java", 3));
+        workspace.Write("candidate.sarif", SparseFindingSarif("audit/TaskRunner.java", 4));
+        workspace.Write(
+            "regress.json",
+            "{ \"schemaVersion\": \"1\", \"policy\": { \"failOn\": [] } }");
+        workspace.Write(
+            "baseline-repo/jobs/TaskRunner.java",
+            "final class TaskRunner {\n    void execute(Exception error) {\n        error.printStackTrace();\n    }\n}\n");
+        workspace.Write(
+            "candidate-repo/audit/TaskRunner.java",
+            "final class TaskRunner {\n    void execute(Exception error) {\n        // inserted comment\n        error.printStackTrace();\n    }\n}\n");
+        workspace.WriteSnapshotManifest(
+            "baseline-manifest.json",
+            "baseline-repo/jobs/TaskRunner.java",
+            "jobs/TaskRunner.java");
+        workspace.WriteSnapshotManifest(
+            "candidate-manifest.json",
+            "candidate-repo/audit/TaskRunner.java",
+            "audit/TaskRunner.java");
+
+        var invocation = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline", "baseline.sarif",
+            "--candidate", "candidate.sarif",
+            "--config", "regress.json",
+            "--baseline-repo", "baseline-repo",
+            "--baseline-snapshot-manifest", "baseline-manifest.json",
+            "--candidate-repo", "candidate-repo",
+            "--candidate-snapshot-manifest", "candidate-manifest.json");
+
+        Assert.True(
+            invocation.ExitCode == 0,
+            invocation.StandardError + Environment.NewLine + invocation.StandardOutput);
+        using var report = JsonDocument.Parse(invocation.StandardOutput);
+        var summary = report.RootElement.GetProperty("summary");
+        Assert.Equal(1, summary.GetProperty("moved").GetInt32());
+        Assert.Contains(
+            FingerprintProcessor.TrustedLexicalFingerprintName,
+            invocation.StandardOutput,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            workspace.Root,
+            invocation.StandardOutput,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Side_specific_snapshot_options_are_all_or_nothing_and_exclude_shared_repo()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", SingleFindingSarif);
+        workspace.Write("candidate.sarif", SingleFindingSarif);
+
+        var partial = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline", "baseline.sarif",
+            "--candidate", "candidate.sarif",
+            "--baseline-repo", "baseline-repo");
+        var mixed = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline", "baseline.sarif",
+            "--candidate", "candidate.sarif",
+            "--repo", "shared",
+            "--baseline-repo", "baseline-repo",
+            "--baseline-snapshot-manifest", "baseline-manifest.json",
+            "--candidate-repo", "candidate-repo",
+            "--candidate-snapshot-manifest", "candidate-manifest.json");
+
+        Assert.Equal(1, partial.ExitCode);
+        Assert.Contains("requires --baseline-repo", partial.StandardError, StringComparison.Ordinal);
+        Assert.Equal(1, mixed.ExitCode);
+        Assert.Contains("shared --repo", mixed.StandardError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Snapshot_digest_mismatch_fails_closed_without_a_report()
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write("baseline.sarif", SparseFindingSarif("src/Task.java", 3));
+        workspace.Write("candidate.sarif", SparseFindingSarif("src/Task.java", 3));
+        workspace.Write(
+            "baseline-repo/src/Task.java",
+            "final class Task {\n    void execute() {\n        work();\n    }\n}\n");
+        workspace.Write(
+            "candidate-repo/src/Task.java",
+            "final class Task {\n    void execute() {\n        work();\n    }\n}\n");
+        workspace.Write(
+            "baseline-manifest.json",
+            "{\n  \"schemaVersion\": \"1\",\n  \"files\": {\n    \"src/Task.java\": \"" +
+            new string('0', 64) + "\"\n  }\n}\n");
+        workspace.WriteSnapshotManifest(
+            "candidate-manifest.json",
+            "candidate-repo/src/Task.java",
+            "src/Task.java");
+
+        var invocation = InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline", "baseline.sarif",
+            "--candidate", "candidate.sarif",
+            "--baseline-repo", "baseline-repo",
+            "--baseline-snapshot-manifest", "baseline-manifest.json",
+            "--candidate-repo", "candidate-repo",
+            "--candidate-snapshot-manifest", "candidate-manifest.json");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains("SECURITY0009 error:", invocation.StandardError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Trusted_snapshot_output_cannot_replace_a_source_file()
+    {
+        using var workspace = new TestWorkspace();
+        PrepareTrustedSnapshotComparison(workspace);
+        var originalSource = workspace.Read("baseline-repo/src/Task.java");
+
+        var invocation = InvokeTrustedSnapshotComparison(
+            workspace,
+            "baseline-repo/src/Task.java");
+
+        Assert.Equal(1, invocation.ExitCode);
+        Assert.Equal(string.Empty, invocation.StandardOutput);
+        Assert.Contains(
+            "CLI0006 error: An output path cannot be written inside a trusted repository snapshot.",
+            invocation.StandardError,
+            StringComparison.Ordinal);
+        Assert.Equal(
+            originalSource,
+            workspace.Read("baseline-repo/src/Task.java"));
+    }
+
+    [Fact]
+    public void Trusted_snapshot_output_cannot_enter_through_a_parent_alias()
+    {
+        using var workspace = new TestWorkspace();
+        PrepareTrustedSnapshotComparison(workspace);
+        var repositoryRoot = workspace.PathOf("baseline-repo");
+        var aliasPath = workspace.PathOf("baseline-alias");
+        var originalSource = workspace.Read("baseline-repo/src/Task.java");
+        try
+        {
+            Directory.CreateSymbolicLink(aliasPath, repositoryRoot);
+        }
+        catch (Exception exception)
+            when (exception is IOException
+                or UnauthorizedAccessException
+                or PlatformNotSupportedException)
+        {
+            return;
+        }
+
+        try
+        {
+            var invocation = InvokeTrustedSnapshotComparison(
+                workspace,
+                "baseline-alias/src/Task.java");
+
+            Assert.Equal(1, invocation.ExitCode);
+            Assert.Equal(string.Empty, invocation.StandardOutput);
+            Assert.Contains(
+                "CLI0006 error: An output path cannot be written inside a trusted repository snapshot.",
+                invocation.StandardError,
+                StringComparison.Ordinal);
+            Assert.Equal(
+                originalSource,
+                workspace.Read("baseline-repo/src/Task.java"));
+        }
+        finally
+        {
+            Directory.Delete(aliasPath);
+        }
     }
 
     [Fact]
@@ -625,6 +830,37 @@ public sealed class CliInvocationTests
         return InvokeFromDirectory(Directory.GetCurrentDirectory(), arguments);
     }
 
+    private static void PrepareTrustedSnapshotComparison(TestWorkspace workspace)
+    {
+        workspace.Write("baseline.sarif", SparseFindingSarif("src/Task.java", 3));
+        workspace.Write("candidate.sarif", SparseFindingSarif("src/Task.java", 3));
+        const string source =
+            "final class Task {\n    void execute() {\n        work();\n    }\n}\n";
+        workspace.Write("baseline-repo/src/Task.java", source);
+        workspace.Write("candidate-repo/src/Task.java", source);
+        workspace.WriteSnapshotManifest(
+            "baseline-manifest.json",
+            "baseline-repo/src/Task.java",
+            "src/Task.java");
+        workspace.WriteSnapshotManifest(
+            "candidate-manifest.json",
+            "candidate-repo/src/Task.java",
+            "src/Task.java");
+    }
+
+    private static CliInvocationResult InvokeTrustedSnapshotComparison(
+        TestWorkspace workspace,
+        string outputPath) => InvokeFromDirectory(
+            workspace.Root,
+            "compare",
+            "--baseline", "baseline.sarif",
+            "--candidate", "candidate.sarif",
+            "--baseline-repo", "baseline-repo",
+            "--baseline-snapshot-manifest", "baseline-manifest.json",
+            "--candidate-repo", "candidate-repo",
+            "--candidate-snapshot-manifest", "candidate-manifest.json",
+            "--json-out", outputPath);
+
     private static CliInvocationResult InvokeFromDirectory(
         string currentDirectory,
         params string[] arguments)
@@ -670,6 +906,20 @@ public sealed class CliInvocationTests
                     ?? throw new InvalidOperationException(
                         "The test path has no containing directory."));
             File.WriteAllText(path, contents);
+        }
+
+        public void WriteSnapshotManifest(
+            string manifestRelativePath,
+            string sourceRelativePath,
+            string repositoryRelativePath)
+        {
+            var sourceBytes = File.ReadAllBytes(PathOf(sourceRelativePath));
+            var digest = Convert.ToHexString(
+                SHA256.HashData(sourceBytes)).ToLowerInvariant();
+            Write(
+                manifestRelativePath,
+                "{\n  \"schemaVersion\": \"1\",\n  \"files\": {\n    \"" +
+                repositoryRelativePath + "\": \"" + digest + "\"\n  }\n}\n");
         }
 
         public string Read(string relativePath) =>

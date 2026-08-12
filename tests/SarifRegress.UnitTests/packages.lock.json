@@ -163,28 +163,28 @@
       "sarifregress.match": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[0.1.0, )"
+          "SarifRegress.Core": "[0.1.0-rc.1, )"
         }
       },
       "sarifregress.report": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[0.1.0, )"
+          "SarifRegress.Core": "[0.1.0-rc.1, )"
         }
       },
       "sarifregress.sarif": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[0.1.0, )"
+          "SarifRegress.Core": "[0.1.0-rc.1, )"
         }
       },
       "SarifRegress.Tool": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[0.1.0, )",
-          "SarifRegress.Match": "[0.1.0, )",
-          "SarifRegress.Report": "[0.1.0, )",
-          "SarifRegress.Sarif": "[0.1.0, )",
+          "SarifRegress.Core": "[0.1.0-rc.1, )",
+          "SarifRegress.Match": "[0.1.0-rc.1, )",
+          "SarifRegress.Report": "[0.1.0-rc.1, )",
+          "SarifRegress.Sarif": "[0.1.0-rc.1, )",
           "System.CommandLine": "[2.0.10, )"
         }
       },

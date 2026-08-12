@@ -1,6 +1,6 @@
 # ADR 0002: Safe stop for sparse SARIF continuity
 
-- **Status:** Accepted safe stop; no sparse-continuity tier implemented
+- **Status:** Superseded in part by ADRs 0003 and 0004; exact-location rejection retained
 - **Date:** 2026-08-01
 - **Scope:** [Issue #11](https://github.com/ppcdaniel/sarif-regress/issues/11)
 

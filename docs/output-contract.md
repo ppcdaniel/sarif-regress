@@ -113,9 +113,11 @@ bucket. Repeated anchors emit one bounded lossy finding-local
 `sarifregress/code-flow-occurrence/v1`; the existing code-flow anchor and set hashes remain v1
 because their bytes are unchanged.
 
-The current product emits `sarifregress/matcher/v3.2`. No matcher-v4 or side-specific-source
-evidence identifier exists, and validation-only sparse research algorithm names never enter stable
-product comparison JSON.
+The current product emits `sarifregress/matcher/v3.2`. Opt-in trusted side snapshots can add
+`sarifregress/trusted-filename-lexical-context/v1`, whose algorithm version is
+`trusted-filename-lexical-context/v1`. Its value hashes the ordinal final filename and a
+comment-blind method-header/exact-statement atom derived only from independently digest-verified
+source bytes. The generic matcher contract is unchanged; no matcher-v4 identifier exists.
 
 The active matcher-v3.2 validation report uses schema version `3` and report kind
 `sarif-regress-exposed-holdout-regression`. That envelope makes the erratum's interpretation
@@ -174,14 +176,12 @@ silently extend comparison output schema version `1`.
 - benchmark output separates deterministic operation/hash fields from explicitly advisory runtime
   observations and records the applicable published budget evaluation.
 
-The sparse repository-context experiment is a validation-only contract, not an extension of
-product output schema `1`. Its checked-in decision uses root schema
-`sparse-experiment-limitation/v1` and references separately authenticated observations, gates,
-workflow provenance, resources, and coordinator projections. A composite
-`expected/experiment-report.json` is intentionally absent while issue #27 tracks derivation and
-cross-binding of the stable resource subset. The SARIF-only control preflight defect tracked in
-issue #28 is corrected without changing its `0/0/19` result; the absent composite must not be
-claimed as emitted or validated.
+The original sparse repository-context experiment remains historical validation evidence rather
+than an extension of product output schema `1`. The opt-in product fingerprint is described above.
+The authenticated compositor can derive the existing v2 experiment report and supporting wrappers
+from exact same-head role artifacts, but no committed `expected/experiment-report.json` is claimed
+until that candidate is promoted and accepted by the strict scanner. The SARIF-only control
+preflight defect tracked in issue #28 remains corrected without changing its `0/0/19` result.
 
 `canonicalise` emits deterministic SARIF rather than comparison JSON. See [cli.md](cli.md) for
 stream and file behavior.

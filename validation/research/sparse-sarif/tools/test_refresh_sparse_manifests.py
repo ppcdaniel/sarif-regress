@@ -18,6 +18,7 @@ from refresh_sparse_manifests import (
     IMPLEMENTATION_RELATIVE_PATH_PATTERN,
     MAXIMUM_RELATIVE_PATH_CHARACTERS,
     ManifestRefreshError,
+    SCANNER_RELATIVE_PATH,
     SPARSE_ROOT_RELATIVE,
     _require_valid_implementation_relative_path,
     apply_manifest_updates,
@@ -27,6 +28,7 @@ from scan_contamination import (
     EXPERIMENT_IMPLEMENTATION_KIND,
     EXPERIMENT_IMPLEMENTATION_ROOT_FILES,
     EXPERIMENT_IMPLEMENTATION_ROOTS,
+    POLICY_VERSION,
 )
 
 
@@ -64,7 +66,7 @@ class RefreshSparseManifestsTests(unittest.TestCase):
             "{}\n", encoding="utf-8", newline="\n"
         )
         (self.sparse_root / "tools").mkdir()
-        (self.sparse_root / "tools/policy.py").write_text(
+        (self.sparse_root / SCANNER_RELATIVE_PATH).write_text(
             "POLICY = 1\n", encoding="utf-8", newline="\n"
         )
         _write_json(
@@ -81,6 +83,11 @@ class RefreshSparseManifestsTests(unittest.TestCase):
             {
                 "schemaVersion": "1",
                 "families": [],
+                "contamination": {
+                    "scannerPath": SCANNER_RELATIVE_PATH,
+                    "scannerSha256": "0" * 64,
+                    "policyVersion": POLICY_VERSION,
+                },
                 "integrity": {"algorithm": "sha256", "files": []},
             },
         )
@@ -130,10 +137,17 @@ class RefreshSparseManifestsTests(unittest.TestCase):
         integrity_paths = [item["path"] for item in integrity]
         self.assertEqual(
             integrity_paths,
-            [IMPLEMENTATION_MANIFEST_NAME, "tools/policy.py"],
+            [IMPLEMENTATION_MANIFEST_NAME, SCANNER_RELATIVE_PATH],
         )
         self.assertNotIn(CORPUS_MANIFEST_NAME, integrity_paths)
         self.assertFalse(any(path.startswith("expected/") for path in integrity_paths))
+        scanner_record = next(
+            item for item in integrity if item["path"] == SCANNER_RELATIVE_PATH
+        )
+        self.assertEqual(
+            scanner_record["sha256"],
+            corpus["contamination"]["scannerSha256"],
+        )
         implementation_record = next(
             item for item in integrity if item["path"] == IMPLEMENTATION_MANIFEST_NAME
         )
@@ -155,6 +169,37 @@ class RefreshSparseManifestsTests(unittest.TestCase):
 
         self.assertTrue(any(not update.is_current for update in updates))
         self.assertEqual(before, (implementation_path.read_bytes(), corpus_path.read_bytes()))
+
+    def test_implementation_hashes_use_canonical_lf_bytes(self) -> None:
+        relative = EXPERIMENT_IMPLEMENTATION_ROOT_FILES[0]
+        path = self.repository_root / relative
+        canonical_payload = b"first\nsecond\n"
+        path.write_bytes(b"first\r\nsecond\r\n")
+        implementation_update, _ = build_manifest_updates(self.repository_root)
+        implementation = json.loads(implementation_update.expected_bytes)
+        record = next(item for item in implementation["files"] if item["path"] == relative)
+        self.assertEqual(
+            hashlib.sha256(canonical_payload).hexdigest(),
+            record["sha256"],
+        )
+
+        without_terminal_lf = b"first\nsecond"
+        path.write_bytes(without_terminal_lf)
+        implementation_update, _ = build_manifest_updates(self.repository_root)
+        implementation = json.loads(implementation_update.expected_bytes)
+        record = next(item for item in implementation["files"] if item["path"] == relative)
+        self.assertEqual(
+            hashlib.sha256(without_terminal_lf).hexdigest(),
+            record["sha256"],
+        )
+        self.assertNotEqual(
+            hashlib.sha256(canonical_payload).hexdigest(),
+            record["sha256"],
+        )
+
+        path.write_bytes(b"first\rsecond\n")
+        with self.assertRaisesRegex(ManifestRefreshError, "lone carriage return"):
+            build_manifest_updates(self.repository_root)
 
     def test_rejects_link_inside_implementation_root(self) -> None:
         target = self.repository_root / "target.cs"

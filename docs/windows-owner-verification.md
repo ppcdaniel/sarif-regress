@@ -19,14 +19,13 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 Set-StrictMode -Version Latest
 
-$ReviewBranch = 'agent/nightly-release-hardening'
 $ExpectedHead = '<FINAL_HEAD_SHA>'
 $Checkout = Join-Path $PWD 'sarif-regress-owner-check'
 
 git clone https://github.com/ppcdaniel/sarif-regress.git $Checkout
 Set-Location $Checkout
-git fetch --no-tags origin $ReviewBranch
-git switch --detach "origin/$ReviewBranch"
+git fetch --no-tags origin $ExpectedHead
+git switch --detach $ExpectedHead
 
 $ActualHead = (git rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $ActualHead -ne $ExpectedHead) {
@@ -513,10 +512,10 @@ $Limitation |
     Format-List
 ```
 
-The strongest result, shared by `relative-context` and `agreement-only-combination`, is expected to
-remain below the fixed recall gate: `9 TP / 0 FP / 10 FN`, precision `1.0`, recall `0.473684`, F1
-`0.642857`. All three labelled ambiguity units must be refused. This experiment does not add
-`--baseline-repo` or `--candidate-repo` to the product and does not create matcher v4.
+This section reproduces the historical ADR 0003 result: `9 TP / 0 FP / 10 FN`, precision `1.0`,
+recall `0.473684`, F1 `0.642857`, with all three labelled ambiguity units refused. The current
+preview candidate separately verifies the all-or-nothing side-root/manifest product profile from
+ADR 0004; matcher v4 remains uncreated.
 
 ## 8. Finish and retain the record
 

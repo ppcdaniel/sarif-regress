@@ -5,10 +5,8 @@
   "criteriaDocument": "docs/release-readiness.md#preview-and-stable-criteria",
   "channels": {
     "preview": {
-      "recommendation": "blocked",
-      "reasonIds": [
-        "open-release-blockers"
-      ]
+      "recommendation": "ready",
+      "reasonIds": []
     },
     "stable": {
       "recommendation": "blocked",

@@ -13,7 +13,7 @@ public static class ProductInformation
     /// <summary>
     /// Gets the semantic product version.
     /// </summary>
-    public const string Version = "0.1.0";
+    public const string Version = "0.1.0-rc.1";
 
     /// <summary>
     /// Gets the matching algorithm version recorded in stable reports.

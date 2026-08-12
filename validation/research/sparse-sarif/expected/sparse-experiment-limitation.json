@@ -4,87 +4,87 @@
   "decision": "document-limitation",
   "releaseRecommendation": "blocked",
   "matcherV4Implemented": false,
-  "sourceHeadSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
+  "sourceHeadSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
   "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
-  "corpusManifestSha256": "351cfb362d798a47054993708ecfbec6c42d289f2e1d3bdc0b514c2d3b9f9435",
-  "implementationManifestSha256": "7e985d0f7ececfc86408785d1f0219e7299ccd7f8021b5d43f080807dd869110",
+  "corpusManifestSha256": "7972294ee1794f726b065b838524e7bdb06b8eb1379bc4132ad972e780eba20c",
+  "implementationManifestSha256": "c11caba9b14ec63dbb725646e24173d23b70e2493019410ba9f7e96d8b299cf7",
   "workflowArtifacts": [
     {
       "role": "sparse-candidate",
-      "runId": 31521849208,
-      "sourceHeadSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "name": "sparse-experiment-candidate-db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "artifactId": 9113404761,
-      "digest": "c63ec401449a14e2517a9f0d0317adf6793f5635cc63a5453ee58615cd1adc27"
+      "runId": 31631199990,
+      "sourceHeadSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "name": "sparse-experiment-candidate-bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "artifactId": 9155199770,
+      "digest": "379f1afcccb73612ec3b89d4d5a465d5952eb7ff3d1b83220d7789f7f5dc6bfb"
     },
     {
       "role": "pmd-recapture",
-      "runId": 31521849208,
-      "sourceHeadSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "name": "sparse-sarif-pmd-capture-db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "artifactId": 9113359461,
-      "digest": "66d54bcb0e83ff951f42988691edc882b7476de931dfea90a6c5ecb465add610"
+      "runId": 31631199990,
+      "sourceHeadSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "name": "sparse-sarif-pmd-capture-bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "artifactId": 9155171265,
+      "digest": "8e8a85a0c5e15b2c632b7fe35794a19de6224203129a05b229022dfe4f60ec1c"
     },
     {
       "role": "release",
-      "runId": 31521849208,
-      "sourceHeadSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "name": "holdout-v3.2-cross-platform-candidate-db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "artifactId": 9113625471,
-      "digest": "4396fba40b1a448eaf541f3ea7b5e24d5a530d1e4bb146510ed142e7f0817121"
+      "runId": 31631199990,
+      "sourceHeadSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "name": "holdout-v3.2-cross-platform-candidate-bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "artifactId": 9155240243,
+      "digest": "7dca808a34b29f8c0397d184383cffcea448b93a4f202f42451fb4cbc6a221d3"
     },
     {
       "role": "determinism",
-      "runId": 31521849100,
-      "sourceHeadSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "name": "sparse-determinism-candidate-db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "artifactId": 9113371670,
-      "digest": "aa7661f1aaa6788a34a08da3c69409adad3f55e4d848747ab73cdbc90a90c64d"
+      "runId": 31631199989,
+      "sourceHeadSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "name": "sparse-determinism-candidate-bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "artifactId": 9155172969,
+      "digest": "4deead4c4ec7363fdff3e91fea7abd1a60beb28d4693cd492fe0567a6a5ea430"
     },
     {
       "role": "resources",
-      "runId": 31521849140,
-      "sourceHeadSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "name": "sparse-resource-candidate-db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-      "artifactId": 9113368089,
-      "digest": "7c82d8a0ea47fd46e88c918f0cc352e0187b0b8b9be1109862aa5f092e8963d4"
+      "runId": 31631199982,
+      "sourceHeadSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "name": "sparse-resource-candidate-bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+      "artifactId": 9155176667,
+      "digest": "fe46d6a49f50c681cab0ec5405fd89daa710d80b17cb257d86236d00bb6f4df0"
     }
   ],
   "evidenceFiles": [
     {
       "kind": "sparse-experiment-observations/v1",
       "path": "expected/sparse-experiment-observations.json",
-      "sha256": "566894dce897843c169a18354a6e867650c0bc74172a729f65cea7912f1e04c9"
+      "sha256": "421a037411c91670961a8ef0ce39c5e3968e4fda8493d1d541396b1d30241e44"
     },
     {
       "kind": "sparse-experiment-gates/v1",
       "path": "expected/sparse-experiment-gate-evidence.json",
-      "sha256": "42d5b42ed2ef069c0614a4bf6c9f496797b3cc4fa505758701374aa05f8b41bf"
+      "sha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b"
     },
     {
       "kind": "sparse-experiment-workflow-provenance/v1",
       "path": "expected/sparse-experiment-workflow-provenance.json",
-      "sha256": "d2e9a4f55568a74362210bd79bf912166ca239ec2f7d8490680da3fafe07b1f5"
+      "sha256": "8f373e93fcf122d08809a0165796b2b14ffefe5484ec8be11584562fbbf0d083"
     },
     {
       "kind": "sparse-experiment-resource-observations/v1",
       "path": "expected/sparse-experiment-resource-observations.json",
-      "sha256": "4612700915db82cb44301003e347a715203f345337fb6c32efc327e6ab9ab548"
+      "sha256": "6976f62b6daed4bfe77ae22aeac264687f56b9a8cd5318758558174a5188d81b"
     },
     {
       "kind": "sparse-experiment-release-projection/v1",
       "path": "expected/projections/sparse-experiment-release-projection.json",
-      "sha256": "3653406b23a5b58d00d1345116faf6dc6e5fee659d455a7576c77e178c335400"
+      "sha256": "199d69c4d4b1797255d15e4dc598434dc5a412d5fac99ab73a2f5d21c2319a1d"
     },
     {
       "kind": "sparse-experiment-determinism-projection/v1",
       "path": "expected/projections/sparse-experiment-determinism-projection.json",
-      "sha256": "3b884aac41902a85619971bc396f942f203c0bcdb4ae24d55970a88fd25eec20"
+      "sha256": "0aca4330cf22f5e1fedaa1368e53dd9f4b8c275926e152fe52ae3ef50d561559"
     },
     {
       "kind": "sparse-experiment-resource-projection/v1",
       "path": "expected/projections/sparse-experiment-resource-projection.json",
-      "sha256": "de8267c884cae1542c0dc2745856d7713e58aa3fd55420f31d47e11eff431423"
+      "sha256": "a952d8dad291ee47fc37239d4d5f69b2fbd3f6f7f09e1bc4312ccb56ebb8648b"
     }
   ],
   "cleanPmd": {

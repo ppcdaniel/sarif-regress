@@ -73,9 +73,11 @@ Omitted sections use deterministic defaults.
 directory, never the process current directory. `--repo` is resolved against the invocation
 directory and overrides `repoRoot`.
 
-Both inputs use this one shared approved root. Configuration schema `1` has no side-specific root
-fields, and the CLI has no `--baseline-repo` or `--candidate-repo` options. The clean sparse-SARIF
-experiment did not change that contract.
+Both inputs use this one shared approved root unless `compare` is invoked with the complete
+side-specific trusted-snapshot option set. Configuration schema `1` intentionally has no
+side-specific fields: independent roots are explicit command inputs because each must travel with
+an external raw-byte digest manifest. Side-specific mode cannot be combined with `repoRoot` or
+`--repo`; this avoids an implicit trust-anchor precedence rule.
 
 Repository context is used only when `matching.enableRepoContext` is true. It remains read-only,
 bounded by file size and snippet radius, and contained below the approved root. A missing,
@@ -151,7 +153,10 @@ reliable embedded source context or bounded token context from the shared root; 
 resolution combined with another qualifying identity signal. Explicit rule aliases still require
 qualifying path and context evidence. When there is no reliable fingerprint, no embedded snippet,
 no trusted source snapshot, and only non-unique rule/path/message/location evidence, SarifRegress
-leaves findings unmatched. Missing source evidence never promotes path or message coincidence.
+leaves findings unmatched. In side-specific mode, a verified
+`trusted-filename-lexical-context/v1` atom admits only an ordinally equal final filename plus the
+same comment-free method header and exact statement; digest mismatch, renamed files, and duplicate
+atoms fail closed. Missing source evidence never promotes path or message coincidence.
 This is the endorsed pre-release evidence profile. Matcher v3.2 makes its two reviewed admission
 boundaries implementation invariants: conflicting context vetoes collided or weak admission, and
 code-flow anchors cannot admit an edge. Exact-head hosted product tests on Ubuntu and Windows cover

@@ -2,9 +2,9 @@
   "schemaVersion": "4",
   "reportKind": "holdout-external-baseline-comparison",
   "evaluation": {
-    "repositoryCommitSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-    "sourceTreeSha256": "ff2cfc9e8b42b0465b11e85030413f706b465663c322b91351974c4d750fe6e6",
-    "sarifRegressToolVersion": "0.1.0",
+    "repositoryCommitSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+    "sourceTreeSha256": "3a15b285af5aa7452db9af25b81112096994f962c5d07ca73420e60643ee903d",
+    "sarifRegressToolVersion": "0.1.0-rc.1",
     "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
     "fingerprintAlgorithmVersions": [
       {
@@ -30,11 +30,11 @@
   },
   "reportHashes": {
     "holdoutManifestSha256": "b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379",
-    "evaluationMetadataSha256": "d720dc7f9a419f7e599ca7d2f514c9f53a4214cb7e3e9a66057e1e4e9475e158",
-    "sarifRegressReportSha256": "9757712b37e54ad32c0c0eaadbd4bf3621b59cf3d6d84203b284099212395ea7",
-    "sarifMultitoolBaselineReportSha256": "cb81bb3f3e6bc6dd07caa1960a4219e9ffc5329af20e2e3fda7dd75ce1d9b8f9",
+    "evaluationMetadataSha256": "755f5e5e52b8e7eca006e177a51053ff5706a88a06932e0a873edbb1b6c39a6f",
+    "sarifRegressReportSha256": "8414ba57151f447a091467c985e4e4dbe2d2a0af6f5d17f490a9d8a882aacc1d",
+    "sarifMultitoolBaselineReportSha256": "9a111c15bd6e26cf51b823eaa1e5142c40b0025074bfd98e154b1ab239b55bfa",
     "matcherV31ReportSha256": "c1237ba0af8684eafbed5fc295606c09a0cce012c6e7a9febfed2f6a5a080f8e",
-    "v31ToV32DeltaReportSha256": "5201a376cba27aab8e3e9dbcc005f522132576e96b66bd5ff9b4faf455918f17"
+    "v31ToV32DeltaReportSha256": "fc9a88600a17902212ad456221e7cb674a4a58cb17ab825177ba26fab64e16f5"
   },
   "thresholds": {
     "minimumPrecision": 0.95,

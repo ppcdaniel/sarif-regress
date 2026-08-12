@@ -231,13 +231,23 @@ not prove independent single-side fallback resistance or physical identity acros
 aliases.
 
 Individually authenticated role projections and `sparse-experiment-limitation/v1` preserve this
-safe stop. Issue #27 still requires an explicit full-resource-to-stable-projection derivation and
-cross-binding. The SARIF-only control preflight defect tracked in issue #28 was corrected without
-changing its evidence. No composite report was promoted, and neither source nor resource evidence
-was changed.
+safe stop. At that stage, issue #27 still required explicit full-resource-to-stable-projection
+derivation and cross-binding. The SARIF-only control preflight defect tracked in issue #28 was
+corrected without changing its evidence. No composite report was promoted, and neither source nor
+resource evidence was changed.
 
-**Decision.** No `--baseline-repo` or `--candidate-repo` product options were added, matcher v4 was
-not created, and the product retained the shared `--repo` contract.
+**Historical decision.** No `--baseline-repo` or `--candidate-repo` product options were added at
+that evidence head, matcher v4 was not created, and the product retained the shared `--repo`
+contract.
+
+**Preview-candidate follow-up.** ADR 0004 implements an independently versioned adapter rather than
+changing the generic matcher. The four all-or-nothing side-specific CLI options bind each retained
+physical root to an independently supplied raw-byte digest manifest. Comment-blind method/header
+and statement evidence is bound to the ordinal final filename; equal rivals and renamed files are
+refused. The predeclared controlled clean profile yields `18 TP / 0 FP / 1 FN`, precision `1.0`,
+recall `0.947368`, with zero labelled ambiguity auto-matched. The authenticated compositor now
+implements issue #27's missing derivation; promotion and strict exact-head rerun remain separate
+release steps.
 
 ## 11. Final supported evidence profile
 
@@ -247,6 +257,8 @@ the input supplies enough independently bounded evidence to admit an edge, such 
 - a reliable producer fingerprint that is not degraded by a collision;
 - reliable embedded source context, or optional token context read under the existing single,
   shared approved repository root;
+- a non-colliding manifest-verified filename/lexical atom from the complete side-specific root and
+  digest-manifest option set;
 - explicit safe URI-base configuration that makes repository-relative path evidence resolvable,
   combined with another qualifying identity signal; or
 - an explicit rule alias, still combined with qualifying path and context evidence.
@@ -257,9 +269,9 @@ unique on both input sides. Exact-head normal-mode run `30763347894` confirmed b
 hosted Ubuntu and Windows; the release remains blocked independently by PMD recall and the other
 readiness findings.
 
-`--repo` and configuration `repoRoot` bind both inputs to one shared root. The experiment did
-**not** establish that independently supplied baseline and candidate roots satisfy the production
-security and resource contract, so side-specific roots are not a supported shipped feature.
+`--repo` and configuration `repoRoot` continue to bind both inputs to one shared root. The explicit
+side-specific option set is opt-in, all-or-nothing, and fail-closed; it does not alter existing
+callers or configuration schema `1`.
 
 The unsupported SARIF-only profile has all of these properties: no reliable fingerprint, no
 embedded snippet, no trustworthy source snapshot, and non-unique rule/path/message/location
@@ -324,18 +336,20 @@ ground-truth labels and explicit categories more informative than a single head-
 
 ## 14. Remaining limitations and release decision
 
-The release recommendation remains **blocked**.
+The stable-channel release recommendation remains **blocked**. The `0.1.0-rc.1` preview is eligible
+only after exact-head hosted verification, composite promotion, the immutable-tag run, and draft
+asset inspection.
 
 - Aggregate holdout recall is `0.666667`, below the fixed `0.90` gate.
 - PMD recall is `0`, below the fixed per-producer `0.80` gate.
-- The clean source-backed experiment reached only `0.473684` recall.
-- A general production side-specific repository API has unresolved snapshot-identity, root-alias,
-  TOCTOU, single-side fallback, and source-projection resource-evidence gaps.
+- The first clean source-backed experiment reached only `0.473684` recall; the later bounded
+  filename/lexical preview profile reaches `0.947368` on that controlled corpus.
+- The trusted profile deliberately refuses filename changes and equal lexical rivals; manifests
+  authenticate exact bytes but do not establish general cross-snapshot file lineage.
 - Sparse findings in the unsupported evidence profile remain new/resolved rather than automatically
   paired.
-- Product security findings, incomplete verified licence/notice distribution, authenticated
-  release gating, real-comparison coverage through each distribution form, and binary
-  reproducibility remain blocking; the authoritative inventory is `docs/release-readiness.md`.
+- Binary signing and independent build-byte reproducibility remain absent; the authoritative
+  channel-specific inventory is `docs/release-readiness.md`.
 
 Semgrep and Gitleaks are reproducible against the frozen exposed holdout, but those regression
 results are not a second independent validation and do not justify a broad claim over all SARIF

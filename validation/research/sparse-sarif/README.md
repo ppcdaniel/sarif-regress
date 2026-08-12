@@ -5,11 +5,12 @@ producer supplies neither reliable fingerprints nor embedded snippets. It is del
 from the development corpus and the frozen real-producer holdout. No matcher result was consulted
 when the source transformations or labels were written.
 
-The corpus is not evidence that side-specific repository context is safe to ship. An authentic
-hosted PMD capture and strict exact-head recapture have been promoted; the repository-context
-experiment is still pending. The experiment must pass the fixed gates in
-[ADR 0003](../../../docs/decisions/0003-side-specific-repository-context-experiment.md) before any
-product behavior changes.
+The first repository-context experiment correctly stopped at its safety gates. A later bounded
+analysis proved both a useful safe subset and a duplicate-symmetry boundary. The shipped opt-in
+adapter therefore requires separate physical roots and independent raw-byte digest manifests,
+derives a comment-blind filename/method/statement identity, and refuses renamed files or equal
+rivals. See [ADR 0004](../../../docs/decisions/0004-duplicate-symmetry-boundary.md). The frozen
+labels and thresholds remain unchanged.
 
 ## Independence protocol
 
@@ -114,7 +115,7 @@ historical artifact.
 validation/research/sparse-sarif/
   README.md
   manifest.json                         # capture hashes and provenance
-  experiment-implementation-manifest.json # exact admitted implementation hashes
+  experiment-implementation-manifest.json # canonical-LF admitted implementation hashes
   capture-evidence/
     projection-audits/
       pmd-clean-a/{baseline,candidate}.json
@@ -139,10 +140,13 @@ validation/research/sparse-sarif/
     manifest.schema.json
     projection-audit.schema.json
     experiment-report.schema.json
-  expected/
-    experiment-report.json              # pending; generated only after evaluation
+  expected/                         # post-promotion layout; absent entries are never implied
+    experiment-report.json              # present only after authenticated promotion
+    supporting/{release,determinism,resources}/** # present only after promotion
+    supporting/github/**                # promoted exact REST run/artifact metadata bytes
     checksums.sha256
   tools/
+    analyze_duplicate_symmetry.py        # fixed safe/product/order boundary
     capture_pmd.sh                       # pinned hosted capture entry point
     project_pmd_sarif.py                 # URI-only projector
     refresh_sparse_manifests.py          # bounded deterministic inventory refresh
@@ -176,6 +180,11 @@ The workflow is intentionally ordered so labels cannot be changed in response to
    checks.
 9. Only then run the research experiment described by ADR 0003. The experiment receives SARIF and
    side-specific source roots, never labels; a separate evaluator scores its output afterward.
+10. Run the three authenticated coordinator roles on one exact source SHA, then dispatch
+    `sparse-experiment-composite.yml` with their run IDs. The offline compositor verifies each
+    successful workflow, artifact ID/name/digest, coordinator checksum manifest, raw referenced
+    byte, and resource full-to-stable derivation before atomically emitting the v2 candidate tree.
+    Promote only the exact candidate bytes and rerun the independent contamination scanner.
 
 The contamination policy is `sparse-sarif-contamination/v1`. Its scanner must reject label IDs or
 normalized label keys in source, known marker prefixes, correspondence comments adjacent to an
@@ -196,13 +205,30 @@ python -B validation/research/sparse-sarif/tools/refresh_sparse_manifests.py --c
 python -B validation/research/sparse-sarif/tools/scan_contamination.py --research-root validation/research/sparse-sarif
 ```
 
-The refresh command enumerates the same implementation roots, file kinds, ordinal ordering, and
-256-file limit enforced independently by the .NET evaluator and contamination scanner. It rejects
-links, junctions, special files, oversized inputs, unstable reads, and over-limit trees. Corpus
-integrity covers every physical file except `manifest.json` itself and the historical `expected/`
+The refresh command enumerates the same implementation roots, file kinds, ordinal ordering,
+256 admitted-file limit, 4 MiB per-file limit, and per-root 4,096-file/4,096-directory traversal
+limits enforced independently by the .NET evaluator and contamination scanner. It rejects links,
+junctions, special files, oversized inputs, unstable reads, lone carriage returns, and over-limit
+trees. Implementation entries hash the Git-canonical LF representation so a locked Windows restore
+and an LF checkout authenticate the same committed text. Corpus integrity remains raw-byte exact
+and covers every physical file except `manifest.json` itself and the historical `expected/`
 evidence tree, keeping the corpus manifest deliberately non-self-hashing.
 
 Refreshing inventories authenticates current source bytes only. It never edits labels, gates,
 thresholds, metrics, or expected evidence, and it does not rebind historical observations to the
 current implementation. Promote a new evidence cascade only from authenticated exact-head hosted
 artifacts.
+
+## Duplicate boundary and product profile
+
+`tools/analyze_duplicate_symmetry.py` constructs all source features before opening labels and
+freezes three comparisons. Unrestricted safe uniqueness observes 19/19 clean relationships; the
+implemented preview-candidate filename-bound profile observes 18 TP, 0 FP, and 1 FN (precision 1.0, recall 0.947368), with
+zero labelled ambiguity auto-matched. Source-order alignment recovers all 25 legacy relationships
+but also creates the two forbidden ambiguity pairs, demonstrating why order is not identity.
+
+The legacy 2-by-2 ambiguity component and five labelled 5-by-5 relationship components are
+otherwise complete equal-evidence bipartite graphs. A permutation-invariant matcher cannot safely
+choose the labelled diagonal in the 5-by-5 groups while refusing the 2-by-2 group. The composite
+report therefore retains `decision: document-limitation`; authenticated evidence closes the
+provenance gap without rewriting that scientific result or authorising matcher v4.

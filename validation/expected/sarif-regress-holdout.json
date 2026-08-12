@@ -2,9 +2,9 @@
   "schemaVersion": "3",
   "reportKind": "sarif-regress-exposed-holdout-regression",
   "evaluation": {
-    "repositoryCommitSha": "db5577be7fde1a0209ba905c5c2c0c36bf0f0ec7",
-    "sourceTreeSha256": "ff2cfc9e8b42b0465b11e85030413f706b465663c322b91351974c4d750fe6e6",
-    "sarifRegressToolVersion": "0.1.0",
+    "repositoryCommitSha": "bf89b29a8781f1becb1c34e3195eb7380bb5de3d",
+    "sourceTreeSha256": "3a15b285af5aa7452db9af25b81112096994f962c5d07ca73420e60643ee903d",
+    "sarifRegressToolVersion": "0.1.0-rc.1",
     "matcherAlgorithmVersion": "sarifregress/matcher/v3.2",
     "fingerprintAlgorithmVersions": [
       {
@@ -164,7 +164,7 @@
         "producerInputTreeSha256": "059fcfe68af567e7c97a746e4174afff67932532368973e40a3dc3d8f612fbf3",
         "configSha256": "68b03ba1cfa51168e345f90c25dc7390fcb706a4e7c83de7ae2334c0a5dea190"
       },
-      "engineReportSha256": "d66621caf4bbc7156a312bf3e02195adbe22cfd0c3e145600f557b1b44033bc1",
+      "engineReportSha256": "a84cece251412cb50f34203a63388baccf4d5c89a1c6bc9c09dc98f092fbfda3",
       "metrics": {
         "groundTruthUnits": 33,
         "labelledRelationships": 25,
@@ -3402,7 +3402,7 @@
         "producerInputTreeSha256": "00b679637c742175232888f1b0eafdab0b412e1ccd42b821ffcd42b6e7061a1b",
         "configSha256": "523998dd56b67601c0c03b0d4840082fab210289e58237681ffb7be8824efcf5"
       },
-      "engineReportSha256": "793ccae5f3f758d64daccff4d61ba6e9443696872bc220da239983b2365cdf19",
+      "engineReportSha256": "f3c8a5723e685d87cab8fa99fe5aa0fa27b8dd10c6855b04158e55958f5407c4",
       "metrics": {
         "groundTruthUnits": 33,
         "labelledRelationships": 25,
@@ -5386,7 +5386,7 @@
         "producerInputTreeSha256": "72f47ce7413da4642c14532401fe622b489fbb9abbeb7e3e191fd1fe69ac5eb8",
         "configSha256": "1e975d0afeb1b43b5ce24981e5e3455167d604f4091d8ac80629fdcb9de7bbc1"
       },
-      "engineReportSha256": "bfdece755f201e5bbf67c4a44eee71efab95cf0e44968184ca13f55cb48d44e3",
+      "engineReportSha256": "6cdc43dbb5bb383ad0331f502cc62da6e42d9eee800d92968bd12059d1234071",
       "metrics": {
         "groundTruthUnits": 33,
         "labelledRelationships": 25,

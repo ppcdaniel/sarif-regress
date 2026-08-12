@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ppcdaniel/sarif-regress/schemas/repository-snapshot-manifest.schema.json",
+  "title": "SarifRegress trusted repository snapshot manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "files"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "files": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(?!/)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))[ -9;-\\[\\]-~]*[ -.0-9;-\\[\\]-~]$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "maxProperties": 250000
+    }
+  }
+}

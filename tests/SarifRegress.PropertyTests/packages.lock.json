@@ -163,19 +163,19 @@
       "sarifregress.match": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[0.1.0, )"
+          "SarifRegress.Core": "[0.1.0-rc.1, )"
         }
       },
       "sarifregress.report": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[0.1.0, )"
+          "SarifRegress.Core": "[0.1.0-rc.1, )"
         }
       },
       "sarifregress.sarif": {
         "type": "Project",
         "dependencies": {
-          "SarifRegress.Core": "[0.1.0, )"
+          "SarifRegress.Core": "[0.1.0-rc.1, )"
         }
       }
     }
