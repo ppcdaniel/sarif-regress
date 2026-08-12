@@ -73,6 +73,13 @@ linear in verified source characters and retains at most `maximumJsonDepth` scop
 `maximumTokenWindowTerms` tokens for a header or statement. Overflow omits the identity or fails
 the affected trusted read; no prefix is treated as a complete fingerprint.
 
+Sparse-experiment implementation admission is independently bounded by three authorities: the
+manifest refresher, contamination scanner, and .NET evaluator. Each admits at most 256 selected
+implementation files, reads at most 4 MiB per file, and traverses at most 4,096 files, 4,096
+directories, and 8,192 combined entries per configured implementation root. `bin` and `obj`
+directories are excluded only after their directory entries are counted. Over-limit inventories
+fail closed before evidence generation; no partial inventory is hashed or evaluated.
+
 ## Candidate-edge global-cap stress evidence
 
 `CandidateEdgeMemoryTests.Many_small_buckets_at_the_global_cap_remain_bounded_and_complete`

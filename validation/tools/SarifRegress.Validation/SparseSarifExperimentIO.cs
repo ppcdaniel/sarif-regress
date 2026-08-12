@@ -26,6 +26,14 @@ internal sealed record SparseResearchManifest(
 
 internal static class SparseResearchManifestReader
 {
+    private const byte CarriageReturn = (byte)'\r';
+    private const byte LineFeed = (byte)'\n';
+    private const int MaximumAdmittedImplementationFiles = 256;
+    private const int MaximumImplementationDirectories = 4096;
+    internal const int MaximumImplementationFiles = 4096;
+    private const int MaximumImplementationEntries =
+        MaximumImplementationDirectories + MaximumImplementationFiles;
+    internal const long MaximumImplementationFileBytes = 4L * 1024L * 1024L;
     internal const string SparseRootRelativePath = "validation/research/sparse-sarif";
     internal const string ManifestRelativePath = SparseRootRelativePath + "/manifest.json";
     internal const string ImplementationManifestRelativePath =
@@ -175,10 +183,9 @@ internal static class SparseResearchManifestReader
         {
             JsonObject file = RequireObject(files[index], $"files[{index}]");
             string expected = Sha256(file, "sha256", $"files[{index}]");
-            string actual = BoundedJsonFile.ComputeSha256(
-                StablePath.Resolve(repositoryRoot, paths[index]),
-                limits.MaximumSarifBytes,
-                repositoryRoot);
+            string actual = ComputeCanonicalImplementationFileSha256(
+                repositoryRoot,
+                paths[index]);
             if (!string.Equals(expected, actual, StringComparison.Ordinal))
             {
                 throw new InvalidDataException(
@@ -189,7 +196,62 @@ internal static class SparseResearchManifestReader
         return SparseSarifExperimentSerializer.Sha256(manifestBytes);
     }
 
-    private static ImmutableArray<string> GetImplementationPaths(string repositoryRoot)
+    /// <summary>Reads and hashes one bounded implementation file through the approved root.</summary>
+    internal static string ComputeCanonicalImplementationFileSha256(
+        string repositoryRoot,
+        string relativePath)
+    {
+        byte[] implementationBytes = BoundedJsonFile.ReadBytes(
+            StablePath.Resolve(repositoryRoot, relativePath),
+            MaximumImplementationFileBytes,
+            repositoryRoot);
+        return ComputeCanonicalImplementationSha256(implementationBytes);
+    }
+
+    /// <summary>Hashes the Git-canonical LF representation of implementation text.</summary>
+    /// <remarks>
+    /// Time: O(N), where N is the input byte count. Space: O(N) only when CRLF
+    /// normalization is required. A lone carriage return is refused as ambiguous.
+    /// </remarks>
+    internal static string ComputeCanonicalImplementationSha256(byte[] payload)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        var crlfCount = 0;
+        for (var index = 0; index < payload.Length; index++)
+        {
+            if (payload[index] != CarriageReturn)
+            {
+                continue;
+            }
+
+            if (index + 1 >= payload.Length || payload[index + 1] != LineFeed)
+            {
+                throw new InvalidDataException(
+                    "Sparse implementation bytes contain a lone carriage return.");
+            }
+
+            crlfCount++;
+        }
+
+        if (crlfCount == 0)
+        {
+            return Convert.ToHexString(SHA256.HashData(payload)).ToLowerInvariant();
+        }
+
+        byte[] normalized = new byte[payload.Length - crlfCount];
+        var targetIndex = 0;
+        foreach (byte value in payload)
+        {
+            if (value != CarriageReturn)
+            {
+                normalized[targetIndex++] = value;
+            }
+        }
+
+        return Convert.ToHexString(SHA256.HashData(normalized)).ToLowerInvariant();
+    }
+
+    internal static ImmutableArray<string> GetImplementationPaths(string repositoryRoot)
     {
         var paths = new List<string>
         {
@@ -209,12 +271,21 @@ internal static class SparseResearchManifestReader
 
             var pending = new Stack<string>();
             pending.Push(root);
+            var directoryCount = 1;
+            var fileCount = 0;
+            var entryCount = 0;
             while (pending.Count > 0)
             {
                 foreach (FileSystemInfo entry in new DirectoryInfo(pending.Pop())
-                             .EnumerateFileSystemInfos()
-                             .OrderBy(item => item.Name, StringComparer.Ordinal))
+                             .EnumerateFileSystemInfos())
                 {
+                    entryCount++;
+                    if (entryCount > MaximumImplementationEntries)
+                    {
+                        throw new InvalidDataException(
+                            "The sparse implementation inventory contains too many entries.");
+                    }
+
                     if ((entry.Attributes & FileAttributes.ReparsePoint) != 0)
                     {
                         throw new InvalidDataException(
@@ -228,8 +299,22 @@ internal static class SparseResearchManifestReader
                             continue;
                         }
 
+                        directoryCount++;
+                        if (directoryCount > MaximumImplementationDirectories)
+                        {
+                            throw new InvalidDataException(
+                                "The sparse implementation inventory contains too many directories.");
+                        }
+
                         pending.Push(entry.FullName);
                         continue;
+                    }
+
+                    fileCount++;
+                    if (fileCount > MaximumImplementationFiles)
+                    {
+                        throw new InvalidDataException(
+                            "The sparse implementation inventory contains too many files.");
                     }
 
                     if (!entry.Name.EndsWith(".cs", StringComparison.Ordinal)
@@ -247,7 +332,7 @@ internal static class SparseResearchManifestReader
                     paths.Add(StablePath.RequireRepositoryRelative(
                         relative,
                         "implementation source path"));
-                    if (paths.Count > 256)
+                    if (paths.Count > MaximumAdmittedImplementationFiles)
                     {
                         throw new InvalidDataException(
                             "The sparse implementation source set exceeds its 256-file bound.");

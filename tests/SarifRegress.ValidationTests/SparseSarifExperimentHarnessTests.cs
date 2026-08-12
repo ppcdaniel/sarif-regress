@@ -8,6 +8,91 @@ namespace SarifRegress.ValidationTests;
 public sealed class SparseSarifExperimentHarnessTests
 {
     [Fact]
+    public void Implementation_digest_normalizes_crlf_and_rejects_lone_cr()
+    {
+        byte[] canonical = Encoding.UTF8.GetBytes("first\nsecond\n");
+        byte[] windows = Encoding.UTF8.GetBytes("first\r\nsecond\r\n");
+
+        Assert.Equal(
+            SparseResearchManifestReader.ComputeCanonicalImplementationSha256(canonical),
+            SparseResearchManifestReader.ComputeCanonicalImplementationSha256(windows));
+        Assert.NotEqual(
+            SparseResearchManifestReader.ComputeCanonicalImplementationSha256(canonical),
+            SparseResearchManifestReader.ComputeCanonicalImplementationSha256(
+                Encoding.UTF8.GetBytes("first\nsecond")));
+        Assert.Throws<InvalidDataException>(() =>
+            SparseResearchManifestReader.ComputeCanonicalImplementationSha256(
+                Encoding.UTF8.GetBytes("first\rsecond\n")));
+    }
+
+    [Fact]
+    public void Implementation_digest_refuses_files_above_the_shared_bound()
+    {
+        string root = ValidationTestRepository.CreateTemporaryDirectory();
+        string path = Path.Combine(root, "oversized.cs");
+        try
+        {
+            using (FileStream stream = File.Create(path))
+            {
+                stream.SetLength(
+                    SparseResearchManifestReader.MaximumImplementationFileBytes + 1);
+            }
+
+            Assert.Throws<InvalidDataException>(() =>
+                SparseResearchManifestReader.ComputeCanonicalImplementationFileSha256(
+                    root,
+                    "oversized.cs"));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Implementation_inventory_refuses_excess_ignored_files()
+    {
+        string root = ValidationTestRepository.CreateTemporaryDirectory();
+        try
+        {
+            string firstImplementationRoot = Path.Combine(
+                root,
+                "src",
+                "SarifRegress.Cli");
+            Directory.CreateDirectory(firstImplementationRoot);
+            foreach (string relativeRoot in new[]
+                     {
+                         "src/SarifRegress.Core",
+                         "src/SarifRegress.Match",
+                         "src/SarifRegress.Report",
+                         "src/SarifRegress.Sarif",
+                         "validation/tools/SarifRegress.Validation",
+                     })
+            {
+                Directory.CreateDirectory(Path.Combine(
+                    root,
+                    relativeRoot.Replace('/', Path.DirectorySeparatorChar)));
+            }
+
+            for (var index = 0;
+                 index <= SparseResearchManifestReader.MaximumImplementationFiles;
+                 index++)
+            {
+                File.WriteAllText(
+                    Path.Combine(firstImplementationRoot, $"ignored-{index:D4}.txt"),
+                    string.Empty);
+            }
+
+            Assert.Throws<InvalidDataException>(() =>
+                SparseResearchManifestReader.GetImplementationPaths(root));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Resource_limit_evidence_is_stable_and_executable()
     {
         string outputRoot = ValidationTestRepository.CreateTemporaryDirectory();

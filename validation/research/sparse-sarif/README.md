@@ -115,7 +115,7 @@ historical artifact.
 validation/research/sparse-sarif/
   README.md
   manifest.json                         # capture hashes and provenance
-  experiment-implementation-manifest.json # exact admitted implementation hashes
+  experiment-implementation-manifest.json # canonical-LF admitted implementation hashes
   capture-evidence/
     projection-audits/
       pmd-clean-a/{baseline,candidate}.json
@@ -205,10 +205,13 @@ python -B validation/research/sparse-sarif/tools/refresh_sparse_manifests.py --c
 python -B validation/research/sparse-sarif/tools/scan_contamination.py --research-root validation/research/sparse-sarif
 ```
 
-The refresh command enumerates the same implementation roots, file kinds, ordinal ordering, and
-256-file limit enforced independently by the .NET evaluator and contamination scanner. It rejects
-links, junctions, special files, oversized inputs, unstable reads, and over-limit trees. Corpus
-integrity covers every physical file except `manifest.json` itself and the historical `expected/`
+The refresh command enumerates the same implementation roots, file kinds, ordinal ordering,
+256 admitted-file limit, 4 MiB per-file limit, and per-root 4,096-file/4,096-directory traversal
+limits enforced independently by the .NET evaluator and contamination scanner. It rejects links,
+junctions, special files, oversized inputs, unstable reads, lone carriage returns, and over-limit
+trees. Implementation entries hash the Git-canonical LF representation so a locked Windows restore
+and an LF checkout authenticate the same committed text. Corpus integrity remains raw-byte exact
+and covers every physical file except `manifest.json` itself and the historical `expected/`
 evidence tree, keeping the corpus manifest deliberately non-self-hashing.
 
 Refreshing inventories authenticates current source bytes only. It never edits labels, gates,

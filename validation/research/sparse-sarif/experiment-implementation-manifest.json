@@ -169,7 +169,7 @@
     },
     {
       "path": "src/SarifRegress.Cli/packages.lock.json",
-      "sha256": "af72230a879f78f3780d7bca4dfe7cdb77c5e48f5da8ea29278d318d6aaf62c8"
+      "sha256": "7e25c5335f7f1e10ce36960a3ab1e517c9f6538aaaacf15a6c3d4db1062bdf6c"
     },
     {
       "path": "src/SarifRegress.Core/Configuration/ConfigurationContracts.cs",
@@ -221,7 +221,7 @@
     },
     {
       "path": "src/SarifRegress.Core/packages.lock.json",
-      "sha256": "2241481b7e74dcdcd600303146b730ecc12cbd8e49aa55755ef95ee499fe229a"
+      "sha256": "03eeadc5ef377c17f787ab65f41fb4c8a9c936bb7f7f4171111fdeec8a81cb46"
     },
     {
       "path": "src/SarifRegress.Match/BoundedAssignmentSolver.cs",
@@ -261,7 +261,7 @@
     },
     {
       "path": "src/SarifRegress.Match/packages.lock.json",
-      "sha256": "9f91ad43a9fc30bf3a7471b1a0797dbb5f872f98dfd8776e009da23781918145"
+      "sha256": "01ecedb1deb2504606689699bb432ce9d16bdbccf370294e2494c61798a8f7e2"
     },
     {
       "path": "src/SarifRegress.Report/CanonicalSarifExporter.cs",
@@ -313,7 +313,7 @@
     },
     {
       "path": "src/SarifRegress.Report/packages.lock.json",
-      "sha256": "9f91ad43a9fc30bf3a7471b1a0797dbb5f872f98dfd8776e009da23781918145"
+      "sha256": "01ecedb1deb2504606689699bb432ce9d16bdbccf370294e2494c61798a8f7e2"
     },
     {
       "path": "src/SarifRegress.Sarif/Canonicalization/CompletePrefixRebaseIndex.cs",
@@ -405,7 +405,7 @@
     },
     {
       "path": "src/SarifRegress.Sarif/packages.lock.json",
-      "sha256": "9f91ad43a9fc30bf3a7471b1a0797dbb5f872f98dfd8776e009da23781918145"
+      "sha256": "01ecedb1deb2504606689699bb432ce9d16bdbccf370294e2494c61798a8f7e2"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/AmbientDataGuard.cs",
@@ -517,7 +517,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentIO.cs",
-      "sha256": "17faf63cd2e31648dec4add2ebb6c80b3deca33b9e2b04e2ce1694f2ac496a26"
+      "sha256": "9fe8723227c2fbe3e667e84b11d20025eb3786098314357f4d7f00c9f3d29853"
     },
     {
       "path": "validation/tools/SarifRegress.Validation/SparseSarifExperimentRunner.cs",
@@ -549,7 +549,7 @@
     },
     {
       "path": "validation/tools/SarifRegress.Validation/packages.lock.json",
-      "sha256": "7ebd4bbba953b67df44cb86c736e8c00de85eef24cdc6523bbd2c7cb4b001015"
+      "sha256": "d7fe44f7654c715b88d6ef6492bce90167d5c502097719950b20bc84fc1294f3"
     }
   ]
 }

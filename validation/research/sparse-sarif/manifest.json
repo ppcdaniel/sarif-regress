@@ -148,7 +148,7 @@
   ],
   "contamination": {
     "scannerPath": "tools/scan_contamination.py",
-    "scannerSha256": "38814cedfebb0cd1cf0f2d70e2be972d5fdf44a20319b6babb6c5fd0de7d76e2",
+    "scannerSha256": "f23b1f6afdb142ac43086f242a3ed699f1729351e0fb82518d3b3272169ae318",
     "policyVersion": "sparse-sarif-contamination/v1"
   },
   "integrity": {
@@ -156,7 +156,7 @@
     "files": [
       {
         "path": "README.md",
-        "sha256": "d8f6c14bab838958075fd848f6f1f8331653b3ee50fe972003c882c99d077aff"
+        "sha256": "7b8fc1a6da29af31651b4d79f6eab5640d074d4bf116dcb68e7efe21e72240aa"
       },
       {
         "path": "capture-evidence/projection-audits/pmd-clean-a/baseline.json",
@@ -348,7 +348,7 @@
       },
       {
         "path": "experiment-implementation-manifest.json",
-        "sha256": "728af1dcf6543791b5aad1ad5be8e784577b8400e18071875eda2c53b4f0edd1"
+        "sha256": "c11caba9b14ec63dbb725646e24173d23b70e2493019410ba9f7e96d8b299cf7"
       },
       {
         "path": "schemas/experiment-gate-evidence.schema.json",
@@ -408,11 +408,11 @@
       },
       {
         "path": "tools/refresh_sparse_manifests.py",
-        "sha256": "bc6d81e44882f715c808abc0e401c399c1e76aef12a9d37b98efdbdda2731f6b"
+        "sha256": "4995a3f31a89895dcc7ffe650cd43c3caf8594f899762ed131da23eb266f8845"
       },
       {
         "path": "tools/scan_contamination.py",
-        "sha256": "38814cedfebb0cd1cf0f2d70e2be972d5fdf44a20319b6babb6c5fd0de7d76e2"
+        "sha256": "f23b1f6afdb142ac43086f242a3ed699f1729351e0fb82518d3b3272169ae318"
       },
       {
         "path": "tools/test_analyze_duplicate_symmetry.py",
@@ -428,11 +428,11 @@
       },
       {
         "path": "tools/test_refresh_sparse_manifests.py",
-        "sha256": "38d3141ae28ec558d441a5b5afdbb8ff482072ed44f638f4f68b4d3168de0e84"
+        "sha256": "8b815a9cc480d56af345a58c0ee39db8d472c0277831842826bf37ec6f6dab38"
       },
       {
         "path": "tools/test_scan_contamination.py",
-        "sha256": "b88fe38161d713d293ea43741f4b4b0939dc64da04d76039fb49f4f57e8e162d"
+        "sha256": "12a0fcb36b0b685596cd6f1d5c6579180d6230de62f7cc3bc2a4f786deaf8378"
       },
       {
         "path": "tools/verify_pmd_capture.py",

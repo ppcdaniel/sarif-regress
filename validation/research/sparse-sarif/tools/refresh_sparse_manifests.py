@@ -22,6 +22,7 @@ from scan_contamination import (
     MAX_DIRECTORIES,
     MAX_FILES,
     MAX_TOTAL_BYTES,
+    POLICY_VERSION,
 )
 
 
@@ -33,6 +34,7 @@ MAXIMUM_RELATIVE_PATH_CHARACTERS: Final = 512
 SPARSE_ROOT_RELATIVE: Final = Path("validation/research/sparse-sarif")
 IMPLEMENTATION_MANIFEST_NAME: Final = "experiment-implementation-manifest.json"
 CORPUS_MANIFEST_NAME: Final = "manifest.json"
+SCANNER_RELATIVE_PATH: Final = "tools/scan_contamination.py"
 IMPLEMENTATION_RELATIVE_PATH_PATTERN: Final = re.compile(
     r"^(?:Directory\.Build\.props|Directory\.Packages\.props|global\.json|"
     r"(?:src/SarifRegress\.(?:Cli|Core|Match|Report|Sarif)|"
@@ -318,6 +320,27 @@ def _serialize_json(value: Mapping[str, object]) -> bytes:
     return (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
+def _canonicalize_implementation_bytes(relative: str, payload: bytes) -> bytes:
+    """Return the LF-canonical bytes authenticated across platform worktrees.
+
+    Time: O(N), where N is the implementation file size.
+    Space: O(N) only when CRLF normalization is required.
+
+    Locked .NET restore can rewrite lock files with CRLF on Windows even though Git
+    commits every implementation input with LF. The implementation digest contract
+    therefore authenticates Git-canonical LF bytes and rejects ambiguous lone CRs.
+    """
+
+    canonical = payload.replace(b"\r\n", b"\n")
+    if b"\r" in canonical:
+        raise ManifestRefreshError(
+            "Implementation input contains a lone carriage return and cannot be "
+            "LF-canonicalized: "
+            + relative
+        )
+    return canonical
+
+
 def _build_implementation_manifest(repository_root: Path) -> bytes:
     """Build exact implementation inventory bytes from the current source tree."""
 
@@ -333,7 +356,8 @@ def _build_implementation_manifest(repository_root: Path) -> bytes:
             path,
             IMPLEMENTATION_FILE_BYTE_LIMIT,
         )
-        files.append({"path": relative, "sha256": hashlib.sha256(payload).hexdigest()})
+        canonical = _canonicalize_implementation_bytes(relative, payload)
+        files.append({"path": relative, "sha256": hashlib.sha256(canonical).hexdigest()})
     return _serialize_json(
         {
             "schemaVersion": "1",
@@ -413,14 +437,28 @@ def _build_corpus_manifest(
     manifest_path = sparse_root / CORPUS_MANIFEST_NAME
     manifest = _load_corpus_manifest(manifest_path)
     integrity_files: list[dict[str, str]] = []
+    scanner_sha256: str | None = None
     for relative in _corpus_integrity_paths(sparse_root):
         if relative == IMPLEMENTATION_MANIFEST_NAME:
             payload = implementation_manifest_bytes
         else:
             payload = _read_stable_file(sparse_root / relative, MAX_TOTAL_BYTES)
-        integrity_files.append(
-            {"path": relative, "sha256": hashlib.sha256(payload).hexdigest()}
+        digest = hashlib.sha256(payload).hexdigest()
+        integrity_files.append({"path": relative, "sha256": digest})
+        if relative == SCANNER_RELATIVE_PATH:
+            scanner_sha256 = digest
+
+    contamination = manifest.get("contamination")
+    if (
+        not isinstance(contamination, dict)
+        or contamination.get("scannerPath") != SCANNER_RELATIVE_PATH
+        or contamination.get("policyVersion") != POLICY_VERSION
+        or scanner_sha256 is None
+    ):
+        raise ManifestRefreshError(
+            "Corpus manifest has an unsupported contamination-scanner contract."
         )
+    contamination["scannerSha256"] = scanner_sha256
     manifest["integrity"] = {"algorithm": "sha256", "files": integrity_files}
     return _serialize_json(manifest)
 

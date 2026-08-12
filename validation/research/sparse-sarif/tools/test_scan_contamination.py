@@ -37,6 +37,7 @@ from scan_contamination import (
     PMD_SOURCE_COMMIT,
     PROJECTION_ALGORITHM_VERSION,
     MAX_EXPERIMENT_CANDIDATE_PAIRS_PER_FINDING,
+    MAX_FILES,
     RESOURCE_CELL_KEYS,
     Scanner,
     scan_research_root,
@@ -3146,6 +3147,30 @@ class ContaminationScannerTests(unittest.TestCase):
             / "src/SarifRegress.Core/UnexpectedImplementation.cs"
         )
         extra.write_text("// unexpected admitted source\n", encoding="utf-8")
+
+        self.assertIn("EXPERIMENT022", _codes(self.root))
+
+    def test_implementation_manifest_normalizes_crlf_but_rejects_lone_cr(self) -> None:
+        relative = EXPERIMENT_IMPLEMENTATION_ROOT_FILES[0]
+        source_path = self.root.parents[2] / relative
+        canonical_payload = source_path.read_bytes()
+        self.assertNotIn(b"\r", canonical_payload)
+
+        source_path.write_bytes(canonical_payload.replace(b"\n", b"\r\n"))
+        self.assertNotIn("EXPERIMENT022", _codes(self.root))
+
+        source_path.write_bytes(canonical_payload.removesuffix(b"\n"))
+        self.assertIn("EXPERIMENT022", _codes(self.root))
+
+        source_path.write_bytes(canonical_payload.replace(b"\n", b"\r"))
+        self.assertIn("EXPERIMENT022", _codes(self.root))
+
+    def test_implementation_manifest_refuses_excess_ignored_files(self) -> None:
+        implementation_root = (
+            self.root.parents[2] / EXPERIMENT_IMPLEMENTATION_ROOTS[0]
+        )
+        for index in range(MAX_FILES + 1):
+            (implementation_root / f"ignored-{index:04}.txt").write_bytes(b"")
 
         self.assertIn("EXPERIMENT022", _codes(self.root))
 
