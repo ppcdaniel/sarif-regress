@@ -72,31 +72,50 @@ internal sealed class CompareCommandHandler
                 return ExitCodes.CommandOrInputError;
             }
 
-            var configuration = ResolveRepositoryConfiguration(
-                configurationResult.Configuration!,
-                resolved.RepositoryPath,
-                resolved.ConfigurationPath);
-            var repositoryContextResult = CreateRepositoryContext(
-                configuration,
-                request.RepositoryPath is not null);
-            if (repositoryContextResult.Diagnostic is not null)
+            if (resolved.UsesSideSpecificRepositories &&
+                configurationResult.Configuration!.RepositoryRoot is not null)
             {
-                WriteDiagnostics(error, [repositoryContextResult.Diagnostic]);
+                throw new CommandInputException(
+                    CreateCliDiagnostic(
+                        "CLI0008",
+                        DiagnosticStage.Io,
+                        "Side-specific repository snapshots cannot be combined with configured repoRoot."));
+            }
+
+            var configuration = resolved.UsesSideSpecificRepositories
+                ? configurationResult.Configuration!
+                : ResolveRepositoryConfiguration(
+                    configurationResult.Configuration!,
+                    resolved.RepositoryPath,
+                    resolved.ConfigurationPath);
+            var repositoryContextsResult =
+                await CreateRepositoryContextsAsync(
+                        configuration,
+                        resolved,
+                        request.RepositoryPath is not null,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            if (!repositoryContextsResult.Diagnostics.IsEmpty)
+            {
+                WriteDiagnostics(error, repositoryContextsResult.Diagnostics);
                 return ExitCodes.CommandOrInputError;
             }
 
-            using var repositoryContext = repositoryContextResult.Context;
-            var ingestor = new SarifIngestor(repositoryContext);
+            using var repositoryContexts = repositoryContextsResult.Contexts;
+            var baselineIngestor = new SarifIngestor(
+                repositoryContexts?.Baseline);
             var baseline = await IngestAsync(
-                    ingestor,
+                    baselineIngestor,
                     resolved.BaselinePath,
                     InputKind.Baseline,
                     LogicalInputName(resolved.BaselinePath, "baseline.sarif"),
                     configuration,
                     cancellationToken)
                 .ConfigureAwait(false);
+            var candidateIngestor = new SarifIngestor(
+                repositoryContexts?.Candidate);
             var candidate = await IngestAsync(
-                    ingestor,
+                    candidateIngestor,
                     resolved.CandidatePath,
                     InputKind.Candidate,
                     LogicalInputName(resolved.CandidatePath, "candidate.sarif"),
@@ -233,6 +252,47 @@ internal sealed class CompareCommandHandler
             request.RepositoryPath,
             currentDirectory,
             "The repository path is invalid.");
+        var sideSpecificOptionCount = new[]
+        {
+            request.BaselineRepositoryPath,
+            request.BaselineSnapshotManifestPath,
+            request.CandidateRepositoryPath,
+            request.CandidateSnapshotManifestPath,
+        }.Count(value => value is not null);
+        if (sideSpecificOptionCount is not 0 and not 4)
+        {
+            throw new CommandInputException(
+                CreateCliDiagnostic(
+                    "CLI0008",
+                    DiagnosticStage.Io,
+                    "Side-specific source evidence requires --baseline-repo, --baseline-snapshot-manifest, --candidate-repo, and --candidate-snapshot-manifest together."));
+        }
+
+        if (repositoryPath is not null && sideSpecificOptionCount != 0)
+        {
+            throw new CommandInputException(
+                CreateCliDiagnostic(
+                    "CLI0008",
+                    DiagnosticStage.Io,
+                    "The shared --repo option cannot be combined with side-specific repository snapshots."));
+        }
+
+        var baselineRepositoryPath = ResolveOptionalPath(
+            request.BaselineRepositoryPath,
+            currentDirectory,
+            "The baseline repository path is invalid.");
+        var baselineSnapshotManifestPath = ResolveOptionalPath(
+            request.BaselineSnapshotManifestPath,
+            currentDirectory,
+            "The baseline snapshot manifest path is invalid.");
+        var candidateRepositoryPath = ResolveOptionalPath(
+            request.CandidateRepositoryPath,
+            currentDirectory,
+            "The candidate repository path is invalid.");
+        var candidateSnapshotManifestPath = ResolveOptionalPath(
+            request.CandidateSnapshotManifestPath,
+            currentDirectory,
+            "The candidate snapshot manifest path is invalid.");
         var jsonOutputPath = ResolveOptionalPath(
             request.JsonOutputPath,
             currentDirectory,
@@ -250,6 +310,10 @@ internal sealed class CompareCommandHandler
             baselinePath,
             candidatePath,
             configurationPath,
+            baselineSnapshotManifestPath,
+            candidateSnapshotManifestPath,
+            baselineRepositoryPath,
+            candidateRepositoryPath,
             jsonOutputPath,
             htmlOutputPath,
             sarifOutputPath);
@@ -257,6 +321,10 @@ internal sealed class CompareCommandHandler
             baselinePath,
             candidatePath,
             repositoryPath,
+            baselineRepositoryPath,
+            baselineSnapshotManifestPath,
+            candidateRepositoryPath,
+            candidateSnapshotManifestPath,
             configurationPath,
             jsonOutputPath,
             htmlOutputPath,
@@ -313,14 +381,82 @@ internal sealed class CompareCommandHandler
         return configuration.WithRepositoryRoot(repositoryPath);
     }
 
-    private static RepositoryContextCreationResult CreateRepositoryContext(
+    private static async Task<RepositoryContextsCreationResult>
+        CreateRepositoryContextsAsync(
         SarifRegressConfiguration configuration,
-        bool explicitlySelected)
+        ResolvedCompareRequest request,
+        bool explicitlySelected,
+        CancellationToken cancellationToken)
     {
+        if (request.UsesSideSpecificRepositories)
+        {
+            if (!configuration.Matching.EnableRepositoryContext)
+            {
+                return RepositoryContextsCreationResult.Failure(
+                    CreateCliDiagnostic(
+                        "CLI0008",
+                        DiagnosticStage.Io,
+                        "Side-specific repository snapshots require repository context to be enabled."));
+            }
+
+            if (!Directory.Exists(request.BaselineRepositoryPath) ||
+                !Directory.Exists(request.CandidateRepositoryPath))
+            {
+                return RepositoryContextsCreationResult.Failure(
+                    CreateCliDiagnostic(
+                        "CLI0005",
+                        DiagnosticStage.Io,
+                        "A side-specific repository root does not exist."));
+            }
+
+            var baselineManifest =
+                await RepositorySnapshotManifestReader.ReadAsync(
+                        request.BaselineSnapshotManifestPath!,
+                        configuration.Limits,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            var candidateManifest =
+                await RepositorySnapshotManifestReader.ReadAsync(
+                        request.CandidateSnapshotManifestPath!,
+                        configuration.Limits,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            var manifestDiagnostics = Diagnostic.Sort(
+                baselineManifest.Diagnostics.Concat(
+                    candidateManifest.Diagnostics));
+            if (!manifestDiagnostics.IsEmpty)
+            {
+                return new RepositoryContextsCreationResult(
+                    Contexts: null,
+                    manifestDiagnostics);
+            }
+
+            IRepositoryContext? baselineContext = null;
+            try
+            {
+                baselineContext = new FileSystemRepositoryContext(
+                    request.BaselineRepositoryPath!,
+                    baselineManifest.Manifest!,
+                    configuration.Limits);
+                var candidateContext = new FileSystemRepositoryContext(
+                    request.CandidateRepositoryPath!,
+                    candidateManifest.Manifest!,
+                    configuration.Limits);
+                return RepositoryContextsCreationResult.Success(
+                    baselineContext,
+                    candidateContext);
+            }
+            catch
+            {
+                baselineContext?.Dispose();
+                throw;
+            }
+        }
+
         if (!configuration.Matching.EnableRepositoryContext ||
             configuration.RepositoryRoot is null)
         {
-            return new RepositoryContextCreationResult(null, null);
+            return RepositoryContextsCreationResult.Success(null, null);
         }
 
         if (!Directory.Exists(configuration.RepositoryRoot))
@@ -328,19 +464,19 @@ internal sealed class CompareCommandHandler
             var message = explicitlySelected
                 ? "The explicitly selected repository root does not exist."
                 : "The configured repository root does not exist.";
-            return new RepositoryContextCreationResult(
-                null,
+            return RepositoryContextsCreationResult.Failure(
                 CreateCliDiagnostic(
                     "CLI0005",
                     DiagnosticStage.Io,
                     message));
         }
 
-        return new RepositoryContextCreationResult(
-            new FileSystemRepositoryContext(
-                configuration.RepositoryRoot,
-                configuration.Limits),
-            null);
+        var sharedContext = new FileSystemRepositoryContext(
+            configuration.RepositoryRoot,
+            configuration.Limits);
+        return RepositoryContextsCreationResult.Success(
+            sharedContext,
+            sharedContext);
     }
 
     private static async Task<SarifIngestionResult> IngestAsync(
@@ -417,6 +553,10 @@ internal sealed class CompareCommandHandler
         string baselinePath,
         string candidatePath,
         string? configurationPath,
+        string? baselineSnapshotManifestPath,
+        string? candidateSnapshotManifestPath,
+        string? baselineSnapshotRepositoryPath,
+        string? candidateSnapshotRepositoryPath,
         params string?[] outputPaths)
     {
         var outputs = outputPaths
@@ -443,6 +583,8 @@ internal sealed class CompareCommandHandler
             baselinePath,
             candidatePath,
             configurationPath,
+            baselineSnapshotManifestPath,
+            candidateSnapshotManifestPath,
         }.Where(path => path is not null).Cast<string>();
         var protectedInputPaths = protectedInputs.ToArray();
         var protectedInputIdentities = protectedInputPaths
@@ -462,6 +604,25 @@ internal sealed class CompareCommandHandler
                     "CLI0006",
                     DiagnosticStage.Io,
                     "An output path cannot overwrite an input."));
+        }
+
+        var protectedSnapshotRoots = new[]
+        {
+            baselineSnapshotRepositoryPath,
+            candidateSnapshotRepositoryPath,
+        }.Where(path => path is not null).Cast<string>().ToArray();
+        if (outputs.Any(
+                outputPath => protectedSnapshotRoots.Any(
+                    snapshotRoot =>
+                        PathIdentityResolver.IsOutputWithinInputDirectory(
+                            outputPath,
+                            snapshotRoot))))
+        {
+            throw new CommandInputException(
+                CreateCliDiagnostic(
+                    "CLI0006",
+                    DiagnosticStage.Io,
+                    "An output path cannot be written inside a trusted repository snapshot."));
         }
     }
 
@@ -543,14 +704,52 @@ internal sealed class CompareCommandHandler
         string BaselinePath,
         string CandidatePath,
         string? RepositoryPath,
+        string? BaselineRepositoryPath,
+        string? BaselineSnapshotManifestPath,
+        string? CandidateRepositoryPath,
+        string? CandidateSnapshotManifestPath,
         string? ConfigurationPath,
         string? JsonOutputPath,
         string? HtmlOutputPath,
-        string? SarifOutputPath);
+        string? SarifOutputPath)
+    {
+        public bool UsesSideSpecificRepositories =>
+            BaselineRepositoryPath is not null;
+    }
 
-    private sealed record RepositoryContextCreationResult(
-        IRepositoryContext? Context,
-        Diagnostic? Diagnostic);
+    private sealed record RepositoryContextsCreationResult(
+        RepositoryContexts? Contexts,
+        ImmutableArray<Diagnostic> Diagnostics)
+    {
+        public static RepositoryContextsCreationResult Success(
+            IRepositoryContext? baseline,
+            IRepositoryContext? candidate) =>
+            new(
+                new RepositoryContexts(baseline, candidate),
+                ImmutableArray<Diagnostic>.Empty);
+
+        public static RepositoryContextsCreationResult Failure(
+            Diagnostic diagnostic) =>
+            new(null, [diagnostic]);
+    }
+
+    private sealed class RepositoryContexts(
+        IRepositoryContext? baseline,
+        IRepositoryContext? candidate) : IDisposable
+    {
+        public IRepositoryContext? Baseline { get; } = baseline;
+
+        public IRepositoryContext? Candidate { get; } = candidate;
+
+        public void Dispose()
+        {
+            Baseline?.Dispose();
+            if (!ReferenceEquals(Baseline, Candidate))
+            {
+                Candidate?.Dispose();
+            }
+        }
+    }
 
     private sealed class CommandInputException : Exception
     {

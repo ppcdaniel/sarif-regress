@@ -29,6 +29,10 @@ sarif-regress compare
   --candidate <path>
   [--config <path>]
   [--repo <path>]
+  [--baseline-repo <path>]
+  [--baseline-snapshot-manifest <path>]
+  [--candidate-repo <path>]
+  [--candidate-snapshot-manifest <path>]
   [--json-out <path>]
   [--html-out <path>]
   [--sarif-out <path>]
@@ -37,8 +41,20 @@ sarif-regress compare
 `--baseline` and `--candidate` are required SARIF paths.
 
 `--config` selects schema-versioned matching, policy, aliases, and resource limits. `--repo`
-selects the only root from which bounded source context may be read. Repository reads still obey
+selects one shared root from which bounded source context may be read. Repository reads still obey
 `matching.enableRepoContext`.
+
+The four side-specific options are an all-or-nothing trusted-snapshot mode. Each SARIF side is
+bound to its own read-only root and an independently supplied manifest whose `files` object maps
+canonical repository-relative paths to lowercase SHA-256 digests of the exact raw source bytes.
+The manifest path is resolved from the invocation directory, must be a physical regular file, and
+is governed by [`schemas/repository-snapshot-manifest.schema.json`](../schemas/repository-snapshot-manifest.schema.json).
+The shared `--repo` option and configured `repoRoot` cannot be combined with this mode.
+
+Trusted-snapshot matching verifies each source digest through the retained physical root handle,
+then derives a comment-blind exact statement and method-scope atom bound to the case-sensitive
+final filename. This supports same-filename directory moves while deliberately refusing renamed
+files and repeated equal atoms. Source text and ambient absolute paths are never emitted.
 
 Stable JSON is always the source comparison contract. Without `--json-out`, those bytes are
 written to standard output. `--html-out` writes a static offline rendering produced only from the

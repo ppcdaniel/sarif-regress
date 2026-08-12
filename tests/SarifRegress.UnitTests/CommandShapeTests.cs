@@ -8,7 +8,11 @@ public sealed class CommandShapeTests
     private static readonly string[] ExpectedOptionNames =
     [
         "--baseline",
+        "--baseline-repo",
+        "--baseline-snapshot-manifest",
         "--candidate",
+        "--candidate-repo",
+        "--candidate-snapshot-manifest",
         "--config",
         "--html-out",
         "--json-out",

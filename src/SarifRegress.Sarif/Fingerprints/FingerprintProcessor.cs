@@ -33,6 +33,18 @@ public static class FingerprintProcessor
     public const string DerivedAlgorithmVersion =
         "rule-path-context/v2";
 
+    /// <summary>
+    /// Gets the manifest-verified lexical source fingerprint name.
+    /// </summary>
+    public const string TrustedLexicalFingerprintName =
+        "sarifregress/trusted-filename-lexical-context/v1";
+
+    /// <summary>
+    /// Gets the manifest-verified lexical source fingerprint algorithm identifier.
+    /// </summary>
+    public const string TrustedLexicalAlgorithmVersion =
+        "trusted-filename-lexical-context/v1";
+
     private const string EmbeddedSnippetAlgorithmVersion =
         "embedded-snippet/v1";
 
@@ -275,6 +287,52 @@ public static class FingerprintProcessor
             DerivedFingerprintName,
             value,
             DerivedAlgorithmVersion);
+    }
+
+    /// <summary>
+    /// Binds a rule-neutral atom from manifest-verified bytes to its canonical file name.
+    /// </summary>
+    /// <param name="canonicalRepositoryRelativePath">
+    /// The exact canonical path admitted by the trusted snapshot manifest. Its final
+    /// segment is compared with ordinal, case-sensitive semantics.
+    /// </param>
+    /// <param name="trustedLexicalContextHash">
+    /// The versioned scope-header and exact-statement hash from repository context.
+    /// </param>
+    /// <returns>A project-namespaced fingerprint, or null when the atom is unavailable.</returns>
+    public static DerivedFingerprint? DeriveTrustedLexicalContext(
+        string? canonicalRepositoryRelativePath,
+        string? trustedLexicalContextHash)
+    {
+        var canonicalFileName = ExtractCanonicalFileName(
+            canonicalRepositoryRelativePath);
+        if (canonicalFileName is null ||
+            string.IsNullOrEmpty(trustedLexicalContextHash))
+        {
+            return null;
+        }
+
+        return new DerivedFingerprint(
+            TrustedLexicalFingerprintName,
+            VersionedHash.Compute(
+                TrustedLexicalAlgorithmVersion,
+                canonicalFileName,
+                trustedLexicalContextHash),
+            TrustedLexicalAlgorithmVersion);
+    }
+
+    private static string? ExtractCanonicalFileName(
+        string? canonicalRepositoryRelativePath)
+    {
+        if (string.IsNullOrEmpty(canonicalRepositoryRelativePath) ||
+            canonicalRepositoryRelativePath[^1] == '/' ||
+            canonicalRepositoryRelativePath.Contains('\\'))
+        {
+            return null;
+        }
+
+        var separatorIndex = canonicalRepositoryRelativePath.LastIndexOf('/');
+        return canonicalRepositoryRelativePath[(separatorIndex + 1)..];
     }
 
     private static void ImportMap(

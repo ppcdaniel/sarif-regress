@@ -1,12 +1,12 @@
 # Release readiness
 
-Audit date: 2026-08-03
+Audit date: 2026-08-13
 
-Planned version: `0.1.0`
+Planned version: `0.1.0-rc.1`
 
 Product matcher: `sarifregress/matcher/v3.2`
 
-Recommendation: **blocked; do not tag, publish, or create a release**
+Recommendation: **preview channel ready after the exact-head gates below pass; stable blocked**
 
 This document is the release decision record, not a claim that the current branch has been
 released. It distinguishes the frozen independent matcher-v2 baseline from matcher-v3/v3.1/v3.2 results
@@ -30,7 +30,7 @@ thresholds were not changed.
 | Gitleaks 8.30.1 | 25 | 0 | 0 | 1.000000 | 1.000000 | 1.000000 | Exposed-holdout regression result; five v3 classification defects corrected in v3.1 |
 | Legacy PMD 7.26.0 holdout | 0 | 0 | 25 | 1.000000* | 0.000000 | 0.000000 | No accepted pairs; precision is the repository's zero-denominator convention, not demonstrated precision |
 | Aggregate holdout | 50 | 0 | 25 | 1.000000 | 0.666667 | 0.800000 | Fails aggregate recall `>= 0.90` and PMD recall `>= 0.80` |
-| Clean sparse-PMD research, best variant | 9 | 0 | 10 | 1.000000 | 0.473684 | 0.642857 | Fails the fixed PMD recall gate; research only |
+| Clean sparse PMD, trusted filename/lexical product profile | 18 | 0 | 1 | 1.000000 | 0.947368 | 0.972973 | Meets issue #11 identity gates; one filename-and-type rename deliberately refused |
 
 The current holdout also reports zero classification mismatches, zero ingestion failures, zero
 structural failures, four correct ambiguity refusals, and zero labelled ambiguity auto-matches.
@@ -45,32 +45,30 @@ relationships it records `47 TP / 17 FP / 25 FN`, precision `0.734375`, recall `
 
 ## Sparse-SARIF decision
 
-Matcher v4 was not created. The clean corpus has two separately designed fixture families,
-19 labelled relationships, three new findings, three resolved findings, and three refused ambiguity
-groups covering nine endpoints. Its best source-context experiment result was
-`9 TP / 0 FP / 10 FN`; recall `0.473684` is below the fixed `0.80` PMD threshold. The original
-75-relationship universe also remains at recall `0.666667`; the clean corpus cannot be substituted
-for the contaminated legacy PMD snapshots to manufacture aggregate recall.
+Matcher v4 was not created. Instead, the adapter exposes
+`trusted-filename-lexical-context/v1` only when the caller supplies two physical repository roots
+and two independent raw-byte SHA-256 manifests. The source bytes are opened through retained root
+handles, verified before decoding, cached under aggregate bounds, stripped of comments, and reduced
+to a bounded method-header/exact-statement atom bound to the ordinal final filename.
 
-This corpus is controlled research designed after the legacy PMD failure was known and frozen
-before its first scored run. It is not a second independent holdout. All four source-backed variants
-failed all three no-trusted-hash wrong-root scenarios; the tied `relative-context` and
-`agreement-only-combination` variants also failed family B's no-hash mismatched-snapshot scenario.
+The clean corpus has 19 labelled relationships, three new, three resolved, and nine ambiguity
+endpoints. The product profile yields `18 TP / 0 FP / 1 FN`, precision `1.0`, recall `0.947368`, and
+F1 `0.972973`; it auto-matches zero labelled ambiguity. Six repeated endpoints are explicit
+ambiguity. Three method-renamed ambiguity endpoints and the one filename-and-type rename remain
+new/resolved because no equal identity atom exists.
 
-The experiment additionally leaves production blockers: the tree preflight and later context reads
-do not share one immutable snapshot handle, one-sided source mutation is not fully isolated by the
-current scenario matrix, physical root aliases are not proved, and the normal matcher benchmarks do
-not execute source projection. Separate `--baseline-repo` and `--candidate-repo` options therefore
-remain a design experiment and are not part of the CLI or configuration contract.
+The original legacy PMD labels remain unchanged. Five labelled 5-by-5 relationship groups and one
+2-by-2 ambiguity group are observationally symmetric after comment removal. Safe uniqueness
+returns 0/25; source-order pairing returns 25 TP and 2 FP, precision 0.925926, and silently consumes
+the deliberate ambiguity. The stable aggregate/PMD thresholds are therefore jointly unattainable
+without violating the repository's no-order/no-cardinality/no-label-leakage rules. ADR 0004 records
+the counterexample and owner-accepted preview limitation.
 
-Authenticated workflow artifacts and individually reproduced role projections are bound to source
-head `4cc6faf0167d7da385c1d204cba97d1f34ccb479`. The checked-in
-`sparse-experiment-limitation/v1` record names decision `document-limitation`, confirms that matcher
-v4 was not implemented, and records `blockedCompositeValidationIssue: 27`. Those artifacts are not
-the still-missing composite cross-binding. Issue #27 requires an explicit derivation from full
-resource evidence to the stable projection. Issue #28's invalid source-preflight derivation for the
-SARIF-only `0/0/19` control is corrected without changing the control. No composite
-`experiment-report.json` was promoted, and neither source nor resource evidence was falsified.
+Issue #27 is addressed by a dedicated compositor. It authenticates three exact-head successful
+workflow runs, exact artifact IDs/names/digests, complete coordinator manifests and referenced raw
+bytes, and the full-resource-to-stable derivation before emitting one atomic deterministic v2
+bundle. The experiment decision remains `document-limitation`; provenance completion does not
+change failed gates or authorise matcher v4.
 
 ## Supported evidence profile
 
@@ -81,6 +79,8 @@ independently bounded evidence to admit an edge, such as:
 - a reliable producer fingerprint that is not degraded by a collision;
 - reliable embedded source context, or optional token context read under the existing single,
   shared approved repository root;
+- a manifest-verified, non-colliding filename/lexical atom from explicit independent baseline and
+  candidate roots;
 - explicit, safe URI-base configuration that makes repository-relative path evidence resolvable,
   combined with another qualifying identity signal; or
 - an explicit rule alias for cross-producer rule identity, still combined with qualifying path and
@@ -91,10 +91,9 @@ conflicting context vetoes collided or weak admission, and code-flow anchors can
 rank only when unique on both sides. Exact-head product suites on hosted Ubuntu and Windows covered
 both revisions during each bootstrap stage and normal-mode run `30763347894`.
 
-`--repo` and configuration `repoRoot` bind both inputs to one shared root. Independently supplied
-baseline and candidate roots could become a supported evidence source only after a future design
-passes the fixed security, determinism, resource, precision, and recall gates. They are not shipped
-in v3.2.
+`--repo` and configuration `repoRoot` retain their shared-root behavior. The four side-specific
+CLI inputs are all-or-nothing and cannot be mixed with either shared-root mechanism. Configuration
+schema 1 intentionally gains no implicit side-root precedence.
 
 The unsupported SARIF-only profile has all of these properties:
 
@@ -112,13 +111,13 @@ continuity proof.
 | Contract | Current value | Release assessment |
 |---|---|---|
 | CLI commands | `compare`, `validate`, `canonicalise`, `corpus run`, `bench` | No command removed; exit codes `0`, `1`, `3`, and `4` retained; `2` reserved |
-| Repository option | shared `--repo` only | Backward compatible; no side-specific options shipped |
+| Repository option | shared `--repo`, or four explicit side-root/manifest options | Shared behavior is backward compatible; trusted mode is opt-in and all-or-nothing |
 | Configuration | schema `1` | Reader/schema remain version 1, but `uriBaseMappings` added behavior to the existing version; document this pre-release compatibility limitation |
 | Product comparison JSON | output schema `1` | No field removal or reinterpretation claimed |
 | Holdout validation report | evidence schema `3` | Exposed-holdout report kind; historical v2/v3/v3.1 schema-2 bytes are frozen |
 | External comparison summary | evidence schema `4` | v3.1 and v3.1-to-v3.2 hashes replace schema-3 fields; historical schema-3 bytes are frozen |
 | Cross-platform attestation | evidence schema `4` | Workflow and coordinator conclusions are recorded separately |
-| Product version | `0.1.0` | Unreleased |
+| Product version | `0.1.0-rc.1` | Preview candidate; stable remains blocked |
 | Matcher v2 | `sarifregress/matcher/v2` | Frozen independent baseline: `0/0/75` |
 | Matcher v3 | `sarifregress/matcher/v3` | Exposed-holdout regression: `50/0/25`, five Gitleaks classification mismatches |
 | Matcher v3.1 | `sarifregress/matcher/v3.1` | Same correspondence metrics; zero classification mismatches |
@@ -129,7 +128,8 @@ Current matching evidence identifiers include `sarifregress/rule-identity/v2`,
 `sarifregress/rule-alias/v2`, `sarifregress/derived-fingerprint-compare/v2`,
 `sarifregress/context-evidence/v2`, `sarifregress/evidence-occurrence/v1`, the v3.1
 classification explanation `sarifregress/message-location-template/v1`, and the v3.2
-`sarifregress/code-flow-occurrence/v1` degradation record. Historical reports retain
+`sarifregress/code-flow-occurrence/v1` degradation record. Opt-in trusted snapshots add
+`sarifregress/trusted-filename-lexical-context/v1`. Historical reports retain
 the identifiers that were current when their bytes were frozen.
 
 ## Build, package, and reproducibility audit
@@ -152,7 +152,8 @@ that earlier exact head and those runs. Current matcher-v3.2 head
 in run `30761620627`. Holdout/sparse run `30761620623`, determinism run `30761620626`, and resource
 run `30761620637` authenticated and uploaded exact-head candidates before their expected stale-byte
 comparison or deliberate promotion refusal. Issue #28's implementation is covered by the exact-head
-sparse admission path and is now closed; issue #27 remains open for composite evidence promotion.
+sparse admission path and is now closed. Those runs are historical; the current candidate requires
+fresh exact-head evidence and a composite promotion before publication.
 
 On the stage-two promotion head `ac081e70ab2911c02bafffce5661eaec76a871fa`, CI run `30762486272`,
 determinism run `30762486305`, and benchmark run `30762486292` succeeded. Holdout run `30762486314`
@@ -189,7 +190,7 @@ smoke_root="$(mktemp -d)"
 trap 'rm -rf -- "${smoke_root}"' EXIT
 mkdir -p -- "${smoke_root}/release"
 cp -- \
-  ./artifacts/release/SarifRegress.Tool.0.1.0.nupkg \
+  ./artifacts/release/SarifRegress.Tool.0.1.0-rc.1.nupkg \
   "${smoke_root}/release/"
 cp -- ./NuGet.ReleaseSmoke.config "${smoke_root}/"
 NUGET_PACKAGES="${smoke_root}/packages" \
@@ -198,13 +199,13 @@ dotnet tool install \
   --configfile "${smoke_root}/NuGet.ReleaseSmoke.config" \
   --no-cache \
   SarifRegress.Tool \
-  --version 0.1.0
+  --version 0.1.0-rc.1
 "${smoke_root}/tool/sarif-regress" --help
 installed_package="$(find "${smoke_root}/tool/.store" \
   -type f -iname 'sarifregress.tool.*.nupkg' -print -quit)"
 test -n "${installed_package}"
 cmp --silent -- \
-  ./artifacts/release/SarifRegress.Tool.0.1.0.nupkg \
+  ./artifacts/release/SarifRegress.Tool.0.1.0-rc.1.nupkg \
   "${installed_package}"
 ```
 
@@ -250,9 +251,10 @@ exercises a Linux symlink and a Windows junction against external canaries.
 - All external GitHub Actions are pinned to full commit SHAs. Workflows default to
   `contents: read`, checkout credentials are not persisted, and only the tag-only draft-release
   job requests `contents: write`.
-- The tag-only draft-release job invokes the runner-provided `gh` executable without pinning its
-  binary version or hash. This agent did not invoke it. Replace it with a pinned/reviewed mechanism
-  or record and verify its exact provenance before calling the release workflow reproducible.
+- The tag-only job uses the repository-owned bounded Python REST client rather than a runner-provided
+  release CLI. Tests run without the write token; only the invocation receives `contents: write`.
+  Redirects are refused, asset names/digests are exact, and any authenticated partial draft is
+  retained for explicit owner review rather than deleted automatically.
 
 ## Security audit
 
@@ -271,33 +273,33 @@ The security claims must remain qualified by these unresolved or not-yet-verifie
   ancestors plus known remote/device roots, and keep later reads anchored across root replacement;
 - `corpus run --json-out` now refuses lexical and physical destinations under its input tree;
 - transactional output still has a hostile-parent TOCTOU window; and
-- the sparse experiment's release/determinism/resource projections are exact-head authenticated,
-  and the scanner derives the stable resource subset from the full volatile shape, but no complete
-  composite report yet cross-binds every authenticated supporting byte (#27).
+- trusted side-specific source reads add independent digest manifests, immutable verified-byte
+  caches, comment-blind bounded lexical extraction, wrong-root/mutation refusal, and filename-bound
+  identity; renamed files remain unsupported;
+- the dedicated sparse compositor independently authenticates and cross-binds every role artifact
+  and derives the stable resource subset from the full volatile shape; final exact-head promotion
+  remains an operational prerequisite.
 
 See the top-level `SECURITY.md` for safe reporting. Do not attach private SARIF, source, secrets, or
 exploit payloads to a public issue.
 
-## Open release blockers
+## Release issue disposition
 
-GitHub issue state was checked on 2026-08-12. A code change that appears to address an open issue is
-not treated as closed evidence until its acceptance criteria and final exact-head run are recorded.
+GitHub issue state was checked on 2026-08-13. Code is not treated as release evidence until its
+acceptance criteria and final exact-head run are recorded.
 
 | Tracking | Blocker |
 |---|---|
-| #7 / PR #8 | Independent holdout infrastructure remains an open, unmerged draft stack dependency |
-| #11 / #12 / PR #13 | Sparse SARIF remains unsupported; aggregate and PMD recall miss fixed gates; the matcher work remains draft and unmerged |
-| PR #23 | Nightly hardening, release audit, and limitation evidence remain draft and unmerged |
-| #19 | Authenticated release gating is implemented and test-covered, but no tagged-commit run was performed because this mission forbids tags |
-| #22 | Compact pre-materialisation edge retention and exact-global-cap stress coverage are implemented; final exact-head cross-platform verification remains |
-| #25 | Sparse decision/evidence gate tracking remains open; no v4 may be authorised |
-| #27 | Composite evidence needs an explicit full-resource-to-stable-projection derivation and cross-binding |
+| #7 | Owner accepts hosted Ubuntu verification instead of the historical local-Linux checkbox |
+| #11 | Filename-bound trusted snapshot design meets clean PMD identity gates; close after exact-head hosted verification |
+| #12 | Stable legacy gate is formally unsatisfiable without forbidden order/cardinality leakage; close as not planned with ADR 0004, while retaining stable-channel block |
+| #19 | Code, tests, draft-only client, and tag rules are complete; close only after the real tag-triggered run succeeds |
+| #27 | Composite generator/workflow are complete; close after authenticated candidate promotion and strict rerun |
 
 The remaining Medium findings listed in the adversarial review require release disposition:
 lifecycle metric naming, vacuous precision, the hostile-parent atomic-output boundary, binary
-reproducibility wording, configuration schema-v1 evolution, runner-provided release tooling,
-durable retention of raw runtime measurements, and a stricter stable-projection schema and
-behavioral test.
+reproducibility wording, configuration schema-v1 evolution, and durable retention of raw runtime
+measurements. The owner accepts these documented limitations for a preview, not for a stable claim.
 
 Issue #31 now has a reusable bounded deterministic `--check`/`--write` refresh command plus focused
 tests and a required workflow freshness check. The current implementation and corpus inventories
@@ -318,8 +320,9 @@ A **stable** release additionally requires aggregate holdout precision `>= 0.95`
 ingestion/structural failures, the complete label graph, verified notice inclusion, and a release
 workflow that refuses a blocked recommendation.
 
-Neither threshold set is currently met. The correct action is to keep the work in draft pull
-requests and publish nothing.
+The source tree is eligible only for the preview channel. Stable remains blocked by aggregate and
+legacy-PMD recall plus the incomplete legacy label graph. Preview publication additionally waits
+for the final exact-head gates, authenticated composite promotion, tag run, and draft inspection.
 
 ## Rollback procedure
 

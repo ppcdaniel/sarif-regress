@@ -308,8 +308,14 @@ public sealed class CoreContractTests
             .Descendants("VersionPrefix")
             .Select(element => element.Value)
             .Single();
+        var versionSuffix = buildProperties
+            .Descendants("VersionSuffix")
+            .Select(element => element.Value)
+            .Single();
 
-        Assert.Equal(ProductInformation.Version, versionPrefix);
+        Assert.Equal(
+            ProductInformation.Version,
+            $"{versionPrefix}-{versionSuffix}");
     }
 
     private static Finding CreateFinding(

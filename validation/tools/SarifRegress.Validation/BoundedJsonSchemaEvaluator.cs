@@ -90,6 +90,7 @@ internal sealed class BoundedJsonSchemaEvaluator
         ValidateTypeKeyword(schemaObject);
         ValidateSchemaMap(schemaObject, "$defs", depth);
         ValidateSchemaMap(schemaObject, "properties", depth);
+        ValidateSchemaKeyword(schemaObject, "propertyNames", depth);
         ValidateDependentRequired(schemaObject);
         ValidateRequired(schemaObject);
         ValidateSchemaKeyword(schemaObject, "additionalProperties", depth);
@@ -326,6 +327,24 @@ internal sealed class BoundedJsonSchemaEvaluator
         }
 
         JsonObject? propertySchemas = schema["properties"] as JsonObject;
+        if (schema.TryGetPropertyValue(
+                "propertyNames",
+                out JsonNode? propertyNameSchema))
+        {
+            foreach ((string propertyName, _) in instanceObject)
+            {
+                SpendEvaluationStep();
+                if (!EvaluateSchema(
+                    propertyNameSchema!,
+                    JsonValue.Create(propertyName)!,
+                    checked(depth + 1),
+                    semanticComparer))
+                {
+                    return false;
+                }
+            }
+        }
+
         if (propertySchemas is not null)
         {
             foreach ((string propertyName, JsonNode? propertySchema) in propertySchemas)
@@ -1182,6 +1201,7 @@ internal sealed class BoundedJsonSchemaEvaluator
         or "const"
         or "enum"
         or "properties"
+        or "propertyNames"
         or "required"
         or "additionalProperties"
         or "dependentRequired"

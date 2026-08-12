@@ -315,7 +315,8 @@ Optional Linux-only recapture is deliberately separate:
   quality, severity, or security coverage.
 - PMD emits neither fingerprints nor snippets here. The SARIF-only result must
   not be generalized to a comparison supplied with faithful side-specific
-  source context; the current product exposes only one shared repository root.
+  source context; the product at this frozen matcher-v2 evaluation exposed only
+  one shared repository root.
 - Semgrep's unresolved `%SRCROOT%` shape prevents matching from being tested
   at all until ingestion succeeds.
 - Multitool's taxonomy and project configuration semantics only partially

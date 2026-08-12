@@ -437,6 +437,7 @@ public sealed class SarifIngestor
             sourceReference.JsonPointer + "/locations/0",
             findingDiagnostics);
         ContextEvidence? context = null;
+        string? trustedLexicalContextHash = null;
         if (primaryLocation?.Path.RepositoryRelativePath is string repositoryPath &&
             request.Configuration.Matching.EnableRepositoryContext &&
             repositoryContext is not null)
@@ -452,6 +453,8 @@ public sealed class SarifIngestor
                     cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             context = repositoryResult.Evidence;
+            trustedLexicalContextHash =
+                repositoryResult.TrustedLexicalContextHash;
             if (!request.Configuration.Matching.EnableTokenWindows &&
                 context is not null)
             {
@@ -526,11 +529,28 @@ public sealed class SarifIngestor
             lossiness,
             findingDiagnostics,
             metadata);
-        var derivedFingerprint =
+        var derivedFingerprints = new List<DerivedFingerprint>(capacity: 2);
+        var rulePathContextFingerprint =
             FingerprintProcessor.DeriveRulePathContext(finding);
-        if (derivedFingerprint is not null)
+        if (rulePathContextFingerprint is not null)
         {
-            finding = CloneWithDerivedFingerprint(finding, derivedFingerprint);
+            derivedFingerprints.Add(rulePathContextFingerprint);
+        }
+
+        var trustedLexicalFingerprint =
+            FingerprintProcessor.DeriveTrustedLexicalContext(
+                finding.PrimaryLocation?.Path.RepositoryRelativePath,
+                trustedLexicalContextHash);
+        if (trustedLexicalFingerprint is not null)
+        {
+            derivedFingerprints.Add(trustedLexicalFingerprint);
+        }
+
+        if (derivedFingerprints.Count > 0)
+        {
+            finding = CloneWithDerivedFingerprints(
+                finding,
+                derivedFingerprints);
         }
 
         AddRange(documentDiagnostics, findingDiagnostics);
@@ -775,9 +795,9 @@ public sealed class SarifIngestor
             location.Region?.EndLine ?? location.Region?.StartLine);
     }
 
-    private static Finding CloneWithDerivedFingerprint(
+    private static Finding CloneWithDerivedFingerprints(
         Finding finding,
-        DerivedFingerprint derivedFingerprint) =>
+        IEnumerable<DerivedFingerprint> derivedFingerprints) =>
         new(
             finding.FindingKey,
             finding.SourceReference,
@@ -787,7 +807,7 @@ public sealed class SarifIngestor
             finding.PrimaryLocation,
             finding.Message,
             finding.ProducerFingerprints,
-            [derivedFingerprint],
+            derivedFingerprints,
             finding.Context,
             finding.RelatedLocations,
             finding.CodeFlow,

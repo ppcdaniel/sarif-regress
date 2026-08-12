@@ -42,6 +42,22 @@ public static class CompareCommandFactory
             "--repo",
             "Optional path to the repository root.",
             isRequired: false);
+        Option<string?> baselineRepositoryOption = CreatePathOption(
+            "--baseline-repo",
+            "Baseline repository root; requires both snapshot option pairs.",
+            isRequired: false);
+        Option<string?> baselineSnapshotManifestOption = CreatePathOption(
+            "--baseline-snapshot-manifest",
+            "Independent SHA-256 manifest for the baseline repository snapshot.",
+            isRequired: false);
+        Option<string?> candidateRepositoryOption = CreatePathOption(
+            "--candidate-repo",
+            "Candidate repository root; requires both snapshot option pairs.",
+            isRequired: false);
+        Option<string?> candidateSnapshotManifestOption = CreatePathOption(
+            "--candidate-snapshot-manifest",
+            "Independent SHA-256 manifest for the candidate repository snapshot.",
+            isRequired: false);
         Option<string?> configurationOption = CreatePathOption(
             "--config",
             "Optional path to a SarifRegress configuration file.",
@@ -63,6 +79,10 @@ public static class CompareCommandFactory
         compareCommand.Options.Add(baselineOption);
         compareCommand.Options.Add(candidateOption);
         compareCommand.Options.Add(repositoryOption);
+        compareCommand.Options.Add(baselineRepositoryOption);
+        compareCommand.Options.Add(baselineSnapshotManifestOption);
+        compareCommand.Options.Add(candidateRepositoryOption);
+        compareCommand.Options.Add(candidateSnapshotManifestOption);
         compareCommand.Options.Add(configurationOption);
         compareCommand.Options.Add(jsonOutputOption);
         compareCommand.Options.Add(htmlOutputOption);
@@ -75,6 +95,10 @@ public static class CompareCommandFactory
                     parseResult.GetValue(baselineOption)!,
                     parseResult.GetValue(candidateOption)!,
                     parseResult.GetValue(repositoryOption),
+                    parseResult.GetValue(baselineRepositoryOption),
+                    parseResult.GetValue(baselineSnapshotManifestOption),
+                    parseResult.GetValue(candidateRepositoryOption),
+                    parseResult.GetValue(candidateSnapshotManifestOption),
                     parseResult.GetValue(configurationOption),
                     parseResult.GetValue(jsonOutputOption),
                     parseResult.GetValue(htmlOutputOption),

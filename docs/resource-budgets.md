@@ -59,6 +59,20 @@ Token-window evidence is omitted rather than partially compared when a bound is 
 exceeding `maximumStringCharacters`. The source read remains independently capped by
 `maximumRepositoryFileBytes`.
 
+Trusted snapshot manifests are capped by `maximumInputBytes`, `maximumJsonDepth`,
+`maximumStringCharacters`, and `maximumRunCollectionItems`. Each verified source file remains
+subject to `maximumRepositoryFileBytes`; each successful file is decoded and lexically indexed
+once per side into an immutable normalized string, line-offset array, and per-line result array.
+Subsequent findings use constant-time line and lexical lookups plus work proportional only to the
+returned snippet. The retained string, indexes, and conservative per-hash allowance are charged to
+the side's `maximumInputBytes` aggregate ceiling. Failed verification and budget results are cached
+as well, so an adversarial repeated path cannot force repeated file reads. After one uncached file
+cannot fit, the side refuses every later uncached path without opening it; this bounds aggregate
+verification work to the admitted cache plus one file-size-limited refusal. One indexing pass is
+linear in verified source characters and retains at most `maximumJsonDepth` scope entries and
+`maximumTokenWindowTerms` tokens for a header or statement. Overflow omits the identity or fails
+the affected trusted read; no prefix is treated as a complete fingerprint.
+
 ## Candidate-edge global-cap stress evidence
 
 `CandidateEdgeMemoryTests.Many_small_buckets_at_the_global_cap_remain_bounded_and_complete`

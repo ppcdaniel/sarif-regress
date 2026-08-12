@@ -113,7 +113,9 @@ whose digest differs.
 Before tagging:
 
 1. choose a Semantic Version;
-2. update `VersionPrefix` in `Directory.Build.props`;
+2. align `VersionPrefix` and optional `VersionSuffix` in `Directory.Build.props`,
+   `ProductInformation.Version`, the release-note filename, the package version, and the intended
+   tag;
 3. update lock files only if dependency, framework, runtime, or project-graph inputs changed;
 4. for every matching change that can alter classifications, increment the matcher algorithm
    version and retain before/after corpus reports;
@@ -125,7 +127,7 @@ Before tagging:
 9. confirm a repository ruleset restricts creation of release tags to authorised maintainers and
    prevents their update or deletion after creation.
 
-The tag form is `v<version>`, for example `v0.1.0`. A tag whose version does not match the generated
+The tag form is `v<version>`, for example `v0.1.0` or preview `v0.1.0-rc.1`. A tag whose version does not match the generated
 `SarifRegress.Tool.<version>.nupkg` is rejected by the workflow.
 
 Automatic GitHub release notes are a change index, not the required behavioral record. The

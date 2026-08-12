@@ -2,6 +2,9 @@
 
 Status: **draft, unreleased, and blocked**
 
+> Superseded blocked stable draft. The active unreleased candidate is `v0.1.0-rc.1`; the text below
+> is historical release-planning evidence rather than a current product-status claim.
+
 No package, executable, Git tag, or GitHub release has been published. These notes describe the
 current candidate so its claims can be reviewed before any release decision.
 

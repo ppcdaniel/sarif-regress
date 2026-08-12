@@ -4,12 +4,18 @@
 
 Matcher v3.2 retains matcher v3's general Semgrep ingestion and repeated-context Gitleaks fixes,
 retains v3.1's correction for the five exposed-holdout Gitleaks classification mismatches, and
-closes two unsafe weak-evidence admission paths. It does not add a
-sparse-SARIF continuity rule for PMD. A clean side-specific source-context experiment reached only
-`9 TP / 0 FP / 10 FN` and failed the fixed recall and production-safety gates, so matcher v4 was
-not created.
+closes two unsafe weak-evidence admission paths. The first side-specific source-context experiment
+reached `9 TP / 0 FP / 10 FN`; that safe stop is preserved below as historical evidence.
 
-The release recommendation remains:
+The current preview candidate adds a separately versioned, opt-in
+`trusted-filename-lexical-context/v1` adapter without creating matcher v4. Independent raw-byte
+manifests and retained per-side root capabilities close the original snapshot-safety gaps. On the
+predeclared controlled clean PMD corpus, the filename-bound profile produces `18 TP / 0 FP / 1 FN`
+(precision `1.0`, recall `0.947368`) and auto-matches no labelled ambiguity. The frozen legacy PMD
+oracle remains formally unsatisfiable without an unsafe order/cardinality rule; ADR 0004 records
+the proof.
+
+Stable release policy remains:
 
 ```json
 {
@@ -17,7 +23,8 @@ The release recommendation remains:
 }
 ```
 
-The implementation is stacked on the still-open independent-validation PR:
+The following table records the historical stacked implementation lineage; PR #32 has since merged
+that history to `main`:
 
 | Item | Value |
 |---|---|
@@ -183,11 +190,12 @@ variants fail the selection rule.
 
 ### Option B: separate baseline and candidate repositories
 
-Side-specific read-only source roots remain a plausible future design, but
+At the time of this historical experiment, side-specific read-only source roots were only a
+plausible future design, and
 the current holdout snapshots contain adjacent semantic identity markers used
 to construct ground truth. Deriving source context from those files would
 leak labels into the matcher. Removing those markers or changing labels would
-invalidate the holdout. No CLI or configuration option was added.
+invalidate the holdout. No CLI or configuration option was added in that experiment.
 
 Any future implementation must preserve shared-`--repo` compatibility,
 bind every source read to its correct side, and independently enforce
@@ -200,8 +208,8 @@ leakage. It was rejected.
 
 ### Decision
 
-No sparse-continuity tier was added. PMD remains unmatched and issue #11
-remains open. This is the required stop condition: a safe partial improvement
+No sparse-continuity tier was added at this historical stage. PMD remained unmatched. This was the
+required stop condition: a safe partial improvement
 is preferable to a rule below 0.95 precision or one that silently resolves
 ambiguity.
 
@@ -229,8 +237,9 @@ source projection was not benchmarked.
 
 The clean 19-relationship universe cannot replace the frozen 75-relationship holdout. Historical
 aggregate recall therefore remains `0.666667`, and best clean-PMD recall is `0.473684`; both miss
-their fixed gates. Separate repository roots remain validation-only research, issue #11 stays open,
-and no matcher-v4 implementation or product option was added.
+their fixed gates. At that evidence head, separate repository roots remained validation-only
+research and no matcher-v4 implementation or product option was added. The later preview adapter
+and ADR 0004 supersede only that product-implementation conclusion, not these frozen measurements.
 
 ## Matcher-v3 evidence hierarchy and versions
 
@@ -413,22 +422,26 @@ Remaining failures are exactly:
 - two PMD ambiguity units that remain unmatched rather than being silently
   paired.
 
-The clean corpus does not change that universe. Its best variants reached only `9 TP / 0 FP /
-10 FN`, recall `0.473684`. All source-backed variants failed the three no-trusted-hash wrong-root
-scenarios; the tied best variants also failed family B's mismatched-snapshot scenario. Snapshot
-preflight and later reads are not one immutable operation, and source projection lacks bounded
-resource evidence. Issue #27 additionally requires an explicit full-resource-to-stable-projection
-derivation and cross-binding. Issue #28's incorrect source-preflight derivation for the SARIF-only
-`0/0/19` control is fixed without changing that control. The typed
-`sparse-experiment-limitation/v1` record and individually authenticated role projections are
-preserved without changing either source or resource evidence.
+The first clean experiment reached `9 TP / 0 FP / 10 FN`. A later predeclared design closes its
+snapshot-safety gaps with independent raw-byte manifests, retained physical root handles,
+immutable bounded caches, and comment-blind filename/lexical identity. It reaches `18 TP / 0 FP /
+1 FN`, precision `1.0`, recall `0.947368`, with zero labelled ambiguity auto-matched. The remaining
+relationship renames its filename and type and is deliberately refused.
+
+That result cannot repair the frozen legacy oracle. Its repeated 2-by-2 ambiguity and five 5-by-5
+relationship groups are equal-evidence complete bipartite graphs. Safe uniqueness yields 0/25;
+source-order pairing yields 25 TP and 2 FP and silently matches the deliberate ambiguity. ADR 0004
+records why issue #12's stable gates are unsatisfiable without a forbidden corpus-specific rule.
+The authenticated compositor implementation addresses issue #27's derivation gap while preserving
+the `document-limitation` decision. Issue #27 remains open until its exact same-head candidate is
+promoted and accepted by the strict scanner.
 
 Supported automatic evidence requires a reliable non-colliding fingerprint; reliable embedded
-context or bounded token context from the current shared root; or safe URI-base resolution combined
-with another qualifying identity signal. Explicit aliases still require qualifying path/context.
+context or bounded token context from the current shared root; a manifest-verified non-colliding
+filename/lexical atom from explicit side roots; or safe URI-base resolution combined with another
+qualifying identity signal. Explicit aliases still require qualifying path/context.
 The unsupported profile has no reliable fingerprint, no embedded snippet, no trusted source
-snapshot, and only non-unique rule/path/message/location evidence. Side-specific roots are not
-shipped.
+snapshot, and only non-unique rule/path/message/location evidence.
 
 The holdout is one controlled case per producer, not an ecosystem-wide
 sample. Producer capture remains Linux-only, while evaluation of committed

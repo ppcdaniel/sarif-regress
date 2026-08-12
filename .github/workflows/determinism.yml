@@ -382,6 +382,36 @@ jobs:
               },
               "comparison": {"byteIdentical": True},
           }
+          stable_evidence = copy.deepcopy(evidence)
+          supporting_values = {
+              "linux": {
+                  "firstOutputSha256": hashes["linux"][0],
+                  "secondOutputSha256": hashes["linux"][1],
+              },
+              "windows": {
+                  "firstOutputSha256": hashes["windows"][0],
+                  "secondOutputSha256": hashes["windows"][1],
+              },
+              "comparison": {"byteIdentical": True},
+          }
+          supporting_paths = {
+              "linux": "expected/supporting/determinism/linux.json",
+              "windows": "expected/supporting/determinism/windows.json",
+              "comparison": "expected/supporting/determinism/comparison.json",
+          }
+          for name, value in supporting_values.items():
+              payload = (
+                  json.dumps(value, ensure_ascii=False, indent=2) + "\n"
+              ).encode("utf-8")
+              (verified / f"sparse-experiment-determinism-{name}.json").write_bytes(
+                  payload
+              )
+              evidence[name].update(
+                  {
+                      "artifactPath": supporting_paths[name],
+                      "artifactSha256": hashlib.sha256(payload).hexdigest(),
+                  }
+              )
           variant_ids = (
               "sarif-only-control",
               "exact-region-snippet",
@@ -400,7 +430,7 @@ jobs:
                   (research / "experiment-implementation-manifest.json").read_bytes()
               ).hexdigest(),
               "variants": [
-                  {"id": variant_id, "value": copy.deepcopy(evidence)}
+                  {"id": variant_id, "value": copy.deepcopy(stable_evidence)}
                   for variant_id in variant_ids
               ],
           }
@@ -409,6 +439,23 @@ jobs:
               (json.dumps(projection, ensure_ascii=False, indent=2) + "\n").encode(
                   "utf-8"
               )
+          )
+          composite_projection = {
+              **projection,
+              "variants": [
+                  {"id": variant_id, "value": copy.deepcopy(evidence)}
+                  for variant_id in variant_ids
+              ],
+          }
+          composite_projection_path = (
+              verified
+              / "sparse-experiment-determinism-composite-projection.json"
+          )
+          composite_projection_path.write_bytes(
+              (
+                  json.dumps(composite_projection, ensure_ascii=False, indent=2)
+                  + "\n"
+              ).encode("utf-8")
           )
           files = sorted(
               path for path in verified.iterdir()

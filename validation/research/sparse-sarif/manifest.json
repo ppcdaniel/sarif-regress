@@ -156,7 +156,7 @@
     "files": [
       {
         "path": "README.md",
-        "sha256": "d33e46927411b2cfc19fb4dfc02a0610c5fe869810f176e6a20be69ff356e3e0"
+        "sha256": "d8f6c14bab838958075fd848f6f1f8331653b3ee50fe972003c882c99d077aff"
       },
       {
         "path": "capture-evidence/projection-audits/pmd-clean-a/baseline.json",
@@ -348,7 +348,7 @@
       },
       {
         "path": "experiment-implementation-manifest.json",
-        "sha256": "7e985d0f7ececfc86408785d1f0219e7299ccd7f8021b5d43f080807dd869110"
+        "sha256": "728af1dcf6543791b5aad1ad5be8e784577b8400e18071875eda2c53b4f0edd1"
       },
       {
         "path": "schemas/experiment-gate-evidence.schema.json",
@@ -391,6 +391,10 @@
         "sha256": "68807e3dda0427be32ba313b8c18d60fd5b45fc48523b86d4ee52f421d1b61ea"
       },
       {
+        "path": "tools/analyze_duplicate_symmetry.py",
+        "sha256": "070ff18fe1621cfb00234bd5b61892e362e2de8bfdeb7d988557fcc158cbfc13"
+      },
+      {
         "path": "tools/capture_pmd.sh",
         "sha256": "0301931849443923b1376675ccda6ad44c49b7dfe92415aff9729098eee7d07e"
       },
@@ -409,6 +413,10 @@
       {
         "path": "tools/scan_contamination.py",
         "sha256": "38814cedfebb0cd1cf0f2d70e2be972d5fdf44a20319b6babb6c5fd0de7d76e2"
+      },
+      {
+        "path": "tools/test_analyze_duplicate_symmetry.py",
+        "sha256": "c28a8cc9df9cfaddfdc6c0f6592374dbe0cbfd27bdc84811294c03a621375703"
       },
       {
         "path": "tools/test_pmd_capture_tools.py",
