@@ -1,0 +1,78 @@
+{
+  "benchmarkSchemaVersion": "1",
+  "tool": {
+    "name": "sarif-regress",
+    "version": "0.1.0-rc.1"
+  },
+  "dataset": {
+    "kind": "pathological-bucket",
+    "findingCountPerSide": 1000,
+    "baselineBytes": 296015,
+    "candidateBytes": 296015
+  },
+  "limits": {
+    "maximumCandidatePairsPerFinding": 256,
+    "maximumCandidatePairs": 1000000
+  },
+  "operations": {
+    "parsedDocumentCount": 2,
+    "canonicalFindingCount": 2000,
+    "maximumCandidateBucketSize": 1000,
+    "candidateBucketSizeDistribution": [
+      {
+        "size": 1000,
+        "count": 1
+      }
+    ],
+    "candidateEdgeCount": 0,
+    "componentCount": 1,
+    "maximumComponentFindingCount": 2000,
+    "componentSizeDistribution": [
+      {
+        "size": 2000,
+        "count": 1
+      }
+    ],
+    "ambiguousComponentCount": 1,
+    "classifications": {
+      "new": 0,
+      "unchanged": 0,
+      "moved": 0,
+      "modified": 0,
+      "resolved": 0,
+      "ambiguous": 2000
+    },
+    "diagnosticCount": 1,
+    "explanationOutputBytes": 358000,
+    "comparisonOutputBytes": 3108307,
+    "comparisonOutputSha256": "0ed66394aca990aaf7811d1d0229ddb6936092c7af73b42babce5648ef5f5b71",
+    "diagnosticCodes": [
+      "MATCH0007"
+    ]
+  },
+  "observations": {
+    "parseLatencyMilliseconds": 18.5184,
+    "parseThroughputBytesPerSecond": 31969825,
+    "canonicaliseLatencyMilliseconds": 251.4905,
+    "canonicaliseThroughputFindingsPerSecond": 7953,
+    "compareLatencyMilliseconds": 43.9978,
+    "serializeLatencyMilliseconds": 45.2159,
+    "parseAllocatedBytesProxy": 524312,
+    "canonicaliseAllocatedBytesProxy": 11963968,
+    "compareAllocatedBytesProxy": 1159728,
+    "serializeAllocatedBytesProxy": 870120,
+    "allocatedBytesProxy": 14518128,
+    "workingSetBytes": 69689344,
+    "peakWorkingSetBytes": 69689344
+  },
+  "budget": {
+    "maximumPipelineLatencyMilliseconds": 10000,
+    "maximumPeakWorkingSetBytes": 536870912,
+    "passed": true,
+    "failureCodes": []
+  },
+  "determinism": {
+    "datasetGenerator": "sarifregress/benchmark-dataset/v1",
+    "comparisonOutputHash": "sha256"
+  }
+}

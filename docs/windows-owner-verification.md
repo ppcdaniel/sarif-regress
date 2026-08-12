@@ -493,22 +493,24 @@ foreach ($Line in Get-Content -LiteralPath (Join-Path $SparseExpectedRoot 'check
     }
 }
 
-$Limitation = Get-Content -Raw -LiteralPath `
-    (Join-Path $SparseExpectedRoot 'sparse-experiment-limitation.json') |
+$Composite = Get-Content -Raw -LiteralPath `
+    (Join-Path $SparseExpectedRoot 'experiment-report.json') |
     ConvertFrom-Json
 if (
-    $Limitation.kind -ne 'sparse-experiment-limitation/v1' -or
-    $Limitation.decision -ne 'document-limitation' -or
-    $Limitation.matcherV4Implemented -ne $false -or
-    $Limitation.sourceHeadSha -ne '4cc6faf0167d7da385c1d204cba97d1f34ccb479' -or
-    $Limitation.matcherAlgorithmVersion -ne 'sarifregress/matcher/v3.2' -or
-    $Limitation.blockedCompositeValidationIssue -ne 27
+    $Composite.schemaVersion -ne '2' -or
+    $Composite.decision -ne 'document-limitation' -or
+    $null -ne $Composite.selectedVariant -or
+    $Composite.implementation.version -ne 'sparse-experiment/v2' -or
+    $Composite.evidence.release.kind -ne 'sparse-experiment-release-evidence/v1' -or
+    $Composite.evidence.determinism.kind -ne 'sparse-experiment-determinism-evidence/v1' -or
+    $Composite.evidence.resources.kind -ne 'sparse-experiment-resource-evidence/v1' -or
+    (Test-Path -LiteralPath `
+        (Join-Path $SparseExpectedRoot 'sparse-experiment-limitation.json'))
 ) {
-    throw 'The sparse limitation record does not match the reviewed safe stop.'
+    throw 'The sparse composite does not match the reviewed document-limitation decision.'
 }
-$Limitation |
-    Select-Object kind, decision, matcherV4Implemented, sourceHeadSha,
-        matcherAlgorithmVersion, blockedCompositeValidationIssue |
+$Composite |
+    Select-Object schemaVersion, decision, selectedVariant |
     Format-List
 ```
 

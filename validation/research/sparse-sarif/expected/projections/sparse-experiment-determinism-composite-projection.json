@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-determinism-projection/v1",
+  "corpusManifestSha256": "7972294ee1794f726b065b838524e7bdb06b8eb1379bc4132ad972e780eba20c",
+  "implementationManifestSha256": "c11caba9b14ec63dbb725646e24173d23b70e2493019410ba9f7e96d8b299cf7",
+  "variants": [
+    {
+      "id": "sarif-only-control",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/linux.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "windows": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/windows.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "comparison": {
+          "byteIdentical": true,
+          "artifactPath": "expected/supporting/determinism/comparison.json",
+          "artifactSha256": "30c5408fb48598d47778b1fe5e691d6a95ec8014553f156bc4669e8908011e61"
+        }
+      }
+    },
+    {
+      "id": "exact-region-snippet",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/linux.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "windows": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/windows.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "comparison": {
+          "byteIdentical": true,
+          "artifactPath": "expected/supporting/determinism/comparison.json",
+          "artifactSha256": "30c5408fb48598d47778b1fe5e691d6a95ec8014553f156bc4669e8908011e61"
+        }
+      }
+    },
+    {
+      "id": "token-window",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/linux.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "windows": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/windows.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "comparison": {
+          "byteIdentical": true,
+          "artifactPath": "expected/supporting/determinism/comparison.json",
+          "artifactSha256": "30c5408fb48598d47778b1fe5e691d6a95ec8014553f156bc4669e8908011e61"
+        }
+      }
+    },
+    {
+      "id": "relative-context",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/linux.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "windows": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/windows.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "comparison": {
+          "byteIdentical": true,
+          "artifactPath": "expected/supporting/determinism/comparison.json",
+          "artifactSha256": "30c5408fb48598d47778b1fe5e691d6a95ec8014553f156bc4669e8908011e61"
+        }
+      }
+    },
+    {
+      "id": "agreement-only-combination",
+      "value": {
+        "repeatedRunByteIdentical": true,
+        "linuxWindowsByteIdentical": true,
+        "linux": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/linux.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "windows": {
+          "firstOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "secondOutputSha256": "269540f7cd7fc9cf4d1e870898e5336461567ae8b76889b013aed990d4bedc8b",
+          "artifactPath": "expected/supporting/determinism/windows.json",
+          "artifactSha256": "c921ff899b84e26c19e3c0ca685c12f58213627e8eb32234afdda4b08522e1aa"
+        },
+        "comparison": {
+          "byteIdentical": true,
+          "artifactPath": "expected/supporting/determinism/comparison.json",
+          "artifactSha256": "30c5408fb48598d47778b1fe5e691d6a95ec8014553f156bc4669e8908011e61"
+        }
+      }
+    }
+  ]
+}

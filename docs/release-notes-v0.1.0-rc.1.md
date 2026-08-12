@@ -1,10 +1,9 @@
 # SarifRegress 0.1.0-rc.1 release notes
 
-Status: **unreleased preview release candidate**
+Status: **preview release; stable channel blocked**
 
-This preview is intended for evaluation in CI and local developer workflows. Publication requires
-final exact-head evidence, composite promotion, a successful immutable-tag workflow, and draft-asset
-inspection. It is not described as a stable or broadly validated release.
+This preview is intended for evaluation in CI and local developer workflows. It is not described as
+a stable or broadly validated release.
 
 ## What is included
 
@@ -80,8 +79,12 @@ evidence, not a new independent generalisation claim.
 A dedicated manual compositor now cross-binds the exact successful holdout, determinism, and
 12-cell resource runs. It authenticates the source SHA, workflow path, run status, artifact
 ID/name/digest, complete coordinator manifests, raw report hashes, Windows/Linux comparisons, and
-the full-resource-to-stable projection derivation. Candidate output is deterministic, atomic, and
-independently checked by the existing contamination scanner.
+the full-resource-to-stable projection derivation. The authenticated roles share source head
+`4838532f5e808f97bf8804b772d153d294181aee`: holdout run `31638319042`, determinism run
+`31638319041`, and benchmark run `31638349628`. Compositor run `31638669221` emitted promoted
+candidate artifact `9157965667` with archive digest
+`48bfb81237357c80e3d42a4913ecb256b913675a6da767a0966fecc8c50f18b5`. The promoted output is
+deterministic, atomic, and independently checked by the existing contamination scanner.
 
 The resulting experiment decision remains `document-limitation`. Stronger provenance does not
 change failed metrics or authorise matcher v4.
@@ -106,7 +109,7 @@ verify `checksums.sha256` plus `source-commit.txt` against the immutable tag.
 
 ## Assets
 
-The draft release workflow produces exactly:
+The release bundle contains exactly:
 
 - `SarifRegress.Tool.0.1.0-rc.1.nupkg`;
 - self-contained `sarif-regress-linux-x64` and `sarif-regress-win-x64.exe`;

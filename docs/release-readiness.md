@@ -70,6 +70,14 @@ bytes, and the full-resource-to-stable derivation before emitting one atomic det
 bundle. The experiment decision remains `document-limitation`; provenance completion does not
 change failed gates or authorise matcher v4.
 
+The final support head is `4838532f5e808f97bf8804b772d153d294181aee`: holdout run
+`31638319042`, determinism run `31638319041`, and benchmark run `31638349628` succeeded.
+Compositor run `31638669221` authenticated those roles and emitted candidate artifact `9157965667`
+with archive digest
+`48bfb81237357c80e3d42a4913ecb256b913675a6da767a0966fecc8c50f18b5`. The exact candidate is
+promoted as the schema-version-2 composite; its decision and every fixed scientific gate remain
+unchanged.
+
 ## Supported evidence profile
 
 The endorsed v3.2 evidence profile is conservative and intended for same-producer-family
@@ -152,8 +160,8 @@ that earlier exact head and those runs. Current matcher-v3.2 head
 in run `30761620627`. Holdout/sparse run `30761620623`, determinism run `30761620626`, and resource
 run `30761620637` authenticated and uploaded exact-head candidates before their expected stale-byte
 comparison or deliberate promotion refusal. Issue #28's implementation is covered by the exact-head
-sparse admission path and is now closed. Those runs are historical; the current candidate requires
-fresh exact-head evidence and a composite promotion before publication.
+sparse admission path and is now closed. Those runs are historical; at that checkpoint the
+then-current candidate still required fresh exact-head evidence before publication.
 
 On the stage-two promotion head `ac081e70ab2911c02bafffce5661eaec76a871fa`, CI run `30762486272`,
 determinism run `30762486305`, and benchmark run `30762486292` succeeded. Holdout run `30762486314`
@@ -173,6 +181,13 @@ and artifact `8838184822` attested workflow/coordinator success plus cross-platf
 All twelve extended benchmark cells passed. Issues #16, #20, #21, #28, and #30 were closed with
 this evidence. Issue #19 remains open because its acceptance criteria require a real tagged-commit
 run, which this no-tag mission intentionally did not create.
+
+The subsequent composite refresh used one exact support head
+`4838532f5e808f97bf8804b772d153d294181aee`. Holdout run `31638319042`, determinism run
+`31638319041`, and all twelve benchmark cells in run `31638349628` succeeded. Authenticated
+compositor run `31638669221` produced the promoted candidate and independently derived the stable
+resource subset from the complete volatile runtime evidence. This closes the provenance gap; it
+does not convert the safe-stop experiment into an implementation recommendation.
 
 Matcher-v3.2 promotion used a deliberate two-stage protocol. The first failed workflow authenticated
 the unbound report bytes and recorded the failed workflow separately from its successful
@@ -277,8 +292,8 @@ The security claims must remain qualified by these unresolved or not-yet-verifie
   caches, comment-blind bounded lexical extraction, wrong-root/mutation refusal, and filename-bound
   identity; renamed files remain unsupported;
 - the dedicated sparse compositor independently authenticates and cross-binds every role artifact
-  and derives the stable resource subset from the full volatile shape; final exact-head promotion
-  remains an operational prerequisite.
+  and derives the stable resource subset from the full volatile shape; the exact authenticated
+  candidate is promoted without retaining ambient GitHub metadata or absolute fixture paths.
 
 See the top-level `SECURITY.md` for safe reporting. Do not attach private SARIF, source, secrets, or
 exploit payloads to a public issue.
@@ -291,20 +306,19 @@ acceptance criteria and final exact-head run are recorded.
 | Tracking | Blocker |
 |---|---|
 | #7 | Owner accepts hosted Ubuntu verification instead of the historical local-Linux checkbox |
-| #11 | Filename-bound trusted snapshot design meets clean PMD identity gates; close after exact-head hosted verification |
-| #12 | Stable legacy gate is formally unsatisfiable without forbidden order/cardinality leakage; close as not planned with ADR 0004, while retaining stable-channel block |
+| #11 | Closed: filename-bound trusted snapshot identity met the clean PMD gates and exact-head hosted verification |
+| #12 | Closed as not planned: the legacy gate is formally unsatisfiable without forbidden order/cardinality leakage; ADR 0004 retains the stable-channel block |
 | #19 | Code, tests, draft-only client, and tag rules are complete; close only after the real tag-triggered run succeeds |
-| #27 | Composite generator/workflow are complete; close after authenticated candidate promotion and strict rerun |
+| #27 | Exact-head roles and compositor are authenticated and the candidate is promoted; close after the hosted strict mainline rerun records acceptance |
 
 The remaining Medium findings listed in the adversarial review require release disposition:
 lifecycle metric naming, vacuous precision, the hostile-parent atomic-output boundary, binary
 reproducibility wording, configuration schema-v1 evolution, and durable retention of raw runtime
 measurements. The owner accepts these documented limitations for a preview, not for a stable claim.
 
-Issue #31 now has a reusable bounded deterministic `--check`/`--write` refresh command plus focused
-tests and a required workflow freshness check. The current implementation and corpus inventories
-must still be refreshed and exercised through the exact-head hosted evidence cascade before the
-issue can close; historical metric bytes are not rebound by the inventory refresh.
+Issue #31 is closed with a reusable bounded deterministic `--check`/`--write` refresh command,
+focused tests, a required workflow freshness check, and refreshed implementation/corpus inventories.
+Historical metric bytes were not rebound by that inventory refresh.
 
 ## Preview and stable criteria
 
@@ -322,7 +336,7 @@ workflow that refuses a blocked recommendation.
 
 The source tree is eligible only for the preview channel. Stable remains blocked by aggregate and
 legacy-PMD recall plus the incomplete legacy label graph. Preview publication additionally waits
-for the final exact-head gates, authenticated composite promotion, tag run, and draft inspection.
+for the final exact-head gates, tag run, and draft inspection.
 
 ## Rollback procedure
 

@@ -102,7 +102,7 @@ Fingerprint-free, snippet-free findings without another admissible evidence mech
 unmatched. Duplicate signatures are never resolved by input order, and the deliberate PMD
 ambiguity is not silently auto-matched.
 
-Issue #11 remains open. The stop conditions are demonstrably met:
+At this decision point, issue #11 remained open. The stop conditions were demonstrably met:
 
 - the proposed exact-signature rule produces five false positives: three false cross-pairs and two
   ambiguity intersection pairs;
@@ -124,7 +124,8 @@ decision.
 - Tests freeze the audit counts, unsafe-refusal behavior, input-order invariance, and absence of a
   sparse evidence tier.
 
-Reconsider #11 only with producer-agnostic development evidence that was not derived from this
-holdout, plus source snapshots without semantic identity markers. Any future design must predeclare
-its evidence tier and algorithm version, preserve independent root containment, recover non-zero
-relationships, achieve at least 0.95 precision, and auto-match zero labelled ambiguity.
+At this decision point, reconsidering #11 required producer-agnostic development evidence that was
+not derived from this holdout, plus source snapshots without semantic identity markers. The later
+trusted filename/lexical design met those criteria on the separately designed clean corpus and
+closed #11; ADR 0004 records that result and the remaining duplicate-symmetry boundary. That later
+result does not reverse this ADR's rejection of exact location and message as identity evidence.
