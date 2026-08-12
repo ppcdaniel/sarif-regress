@@ -17,6 +17,8 @@ from pathlib import Path
 
 from compose_sparse_experiment_evidence import (
     CompositionError,
+    DEVELOPMENT_RELEASE_EVIDENCE_KIND,
+    DEVELOPMENT_RELEASE_EVIDENCE_NAME,
     ROLE_CONFIG,
     _copy_bound_reference,
     authenticate_workflow,
@@ -47,6 +49,9 @@ class CompositeEvidenceTests(unittest.TestCase):
             "head_sha": SOURCE_HEAD,
             "repository": {"full_name": "ppcdaniel/sarif-regress"},
             "head_repository": {"full_name": "ppcdaniel/sarif-regress"},
+            "created_at": "2026-08-13T00:00:00Z",
+            "updated_at": "2026-08-13T00:01:00Z",
+            "repository_url": "https://api.github.com/repos/ppcdaniel/sarif-regress",
         }
         self.artifacts = []
         for index, name in enumerate(ROLE_CONFIG["release"]["artifacts"]):
@@ -120,6 +125,8 @@ class CompositeEvidenceTests(unittest.TestCase):
                     "digest": f"sha256:{artifact_id_offset + index:064x}",
                     "expired": False,
                     "workflow_run": {"id": run_id, "head_sha": source_head},
+                    "created_at": "2026-08-13T00:00:00Z",
+                    "expires_at": "2026-11-11T00:00:00Z",
                 }
             )
             self.assertTrue((download_root / name).is_dir())
@@ -200,6 +207,26 @@ class CompositeEvidenceTests(unittest.TestCase):
             "passed": True,
             "failures": [],
             "aggregate": {"silentAmbiguousMatches": 0},
+            "cases": [
+                {
+                    "artifact": {
+                        "findings": [
+                            {
+                                "transforms": [
+                                    {
+                                        "originalValue": (
+                                            "file:///C:/old-agent/work/repo/source.cs"
+                                        ),
+                                        "transformedValue": (
+                                            "file:///opt/new-agent/work/repo/source.cs"
+                                        ),
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ],
         }
         release_cross = release_root / "holdout-cross-platform"
         release_linux = release_root / "holdout-linux"
@@ -211,10 +238,31 @@ class CompositeEvidenceTests(unittest.TestCase):
         holdout_digest = hashlib.sha256(
             (release_cross / "sarif-regress-holdout.json").read_bytes()
         ).hexdigest()
-        development_digest = hashlib.sha256(
-            (release_cross / "development-corpus-report.json").read_bytes()
+        write_json(
+            release_cross / "sparse-experiment-release-projection.json",
+            release_projection,
+        )
+        development_summary = {
+            "schemaVersion": "1",
+            "kind": DEVELOPMENT_RELEASE_EVIDENCE_KIND,
+            "corpusManifestSha256": corpus_sha256,
+            "implementationManifestSha256": implementation_sha256,
+            "sourceReport": {
+                "artifactPath": "development-corpus-report.json",
+                "artifactSha256": hashlib.sha256(
+                    (release_cross / "development-corpus-report.json").read_bytes()
+                ).hexdigest(),
+            },
+            "value": copy.deepcopy(
+                release_projection["variants"][0]["value"]["developmentCorpus"]
+            ),
+        }
+        write_json(release_cross / DEVELOPMENT_RELEASE_EVIDENCE_NAME, development_summary)
+        development_summary_digest = hashlib.sha256(
+            (release_cross / DEVELOPMENT_RELEASE_EVIDENCE_NAME).read_bytes()
         ).hexdigest()
-        for variant in release_projection["variants"]:
+        composite_release_projection = copy.deepcopy(release_projection)
+        for variant in composite_release_projection["variants"]:
             variant["value"]["holdout"].update(
                 {
                     "reportPath": (
@@ -226,14 +274,15 @@ class CompositeEvidenceTests(unittest.TestCase):
             variant["value"]["developmentCorpus"].update(
                 {
                     "reportPath": (
-                        "expected/supporting/release/development-corpus-report.json"
+                        "expected/supporting/release/"
+                        + DEVELOPMENT_RELEASE_EVIDENCE_NAME
                     ),
-                    "reportSha256": development_digest,
+                    "reportSha256": development_summary_digest,
                 }
             )
         write_json(
             release_cross / "sparse-experiment-release-composite-projection.json",
-            release_projection,
+            composite_release_projection,
         )
         for name in (
             "sparse-experiment-observations.json",
@@ -508,6 +557,31 @@ class CompositeEvidenceTests(unittest.TestCase):
                 hashlib.sha256(raw.read_bytes()).hexdigest(),
             )
 
+    def test_development_summary_must_be_derived_from_the_raw_report(self) -> None:
+        arguments = self._prepare_complete_fixture()
+        summary_path = (
+            arguments["release_root"]
+            / "holdout-cross-platform"
+            / DEVELOPMENT_RELEASE_EVIDENCE_NAME
+        )
+        summary = load_bounded_json(summary_path)
+        self.assertIsInstance(summary, dict)
+        summary["value"]["regressions"] = 1
+        write_json(summary_path, summary)
+        self._write_flat_manifest(
+            arguments["release_root"] / "holdout-cross-platform",
+            "cross-platform-checksums.sha256",
+        )
+
+        with self.assertRaisesRegex(
+            CompositionError,
+            "summary disagrees with its exact report",
+        ):
+            compose_evidence(
+                **arguments,
+                output_root=self.root / "tampered-development-summary",
+            )
+
     def test_coordinator_manifest_must_enumerate_the_exact_artifact(self) -> None:
         coordinator = self.root / "coordinator"
         coordinator.mkdir()
@@ -527,6 +601,22 @@ class CompositeEvidenceTests(unittest.TestCase):
         first = self.root / "candidate-one"
         second = self.root / "candidate-two"
         compose_evidence(**arguments, output_root=first)
+
+        for role in ("release", "determinism", "resources"):
+            run_path = self.metadata / f"{role}-run.json"
+            run_metadata = load_bounded_json(run_path)
+            self.assertIsInstance(run_metadata, dict)
+            run_metadata["updated_at"] = "2099-12-31T23:59:59Z"
+            run_metadata["url"] = (
+                "https://api.github.com/repos/ppcdaniel/sarif-regress/"
+                "actions/runs/volatile"
+            )
+            write_json(run_path, run_metadata)
+            artifacts_path = self.metadata / f"{role}-artifacts.json"
+            artifact_metadata = load_bounded_json(artifacts_path)
+            self.assertIsInstance(artifact_metadata, dict)
+            artifact_metadata["generated_at"] = "2099-12-31T23:59:59Z"
+            write_json(artifacts_path, artifact_metadata)
         compose_evidence(**arguments, output_root=second)
 
         def snapshot(root: Path) -> dict[str, bytes]:
@@ -541,12 +631,19 @@ class CompositeEvidenceTests(unittest.TestCase):
         self.assertFalse(
             (first / "expected/sparse-experiment-limitation.json").exists()
         )
-        self.assertEqual(
-            (self.metadata / "release-run.json").read_bytes(),
+        self.assertFalse((first / "expected/supporting/github").exists())
+        self.assertFalse(
             (
                 first
-                / "expected/supporting/github/release-run.json"
-            ).read_bytes(),
+                / "expected/supporting/release/development-corpus-report.json"
+            ).exists()
+        )
+        self.assertTrue(
+            (
+                first
+                / "expected/supporting/release"
+                / DEVELOPMENT_RELEASE_EVIDENCE_NAME
+            ).is_file()
         )
 
         scanner_repository = self.root / "scanner-repository"

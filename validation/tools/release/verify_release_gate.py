@@ -42,7 +42,12 @@ REQUIRED_EVIDENCE_FILES = frozenset(
         "development-corpus-report.json",
         "sarif-multitool-baseline.json",
         "sarif-regress-holdout.json",
+        "sparse-experiment-development-corpus-release-evidence.json",
+        "sparse-experiment-gate-evidence.json",
+        "sparse-experiment-observations.json",
+        "sparse-experiment-release-composite-projection.json",
         "sparse-experiment-release-projection.json",
+        "sparse-experiment-workflow-provenance.json",
         "v3.1-to-v3.2-delta.json",
     }
 )
