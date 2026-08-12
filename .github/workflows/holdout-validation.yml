@@ -2089,6 +2089,33 @@ jobs:
                   "utf-8"
               )
           )
+          development_summary = {
+              "schemaVersion": "1",
+              "kind": (
+                  "sparse-experiment-development-corpus-release-evidence/v1"
+              ),
+              "corpusManifestSha256": projection["corpusManifestSha256"],
+              "implementationManifestSha256": projection[
+                  "implementationManifestSha256"
+              ],
+              "sourceReport": {
+                  "artifactPath": "development-corpus-report.json",
+                  "artifactSha256": hashlib.sha256(
+                      (verified / "development-corpus-report.json").read_bytes()
+                  ).hexdigest(),
+              },
+              "value": copy.deepcopy(release["developmentCorpus"]),
+          }
+          development_summary_output = (
+              verified
+              / "sparse-experiment-development-corpus-release-evidence.json"
+          )
+          development_summary_output.write_bytes(
+              (
+                  json.dumps(development_summary, ensure_ascii=False, indent=2)
+                  + "\n"
+              ).encode("utf-8")
+          )
           composite_release = copy.deepcopy(release)
           composite_release["holdout"].update(
               {
@@ -2103,10 +2130,11 @@ jobs:
           composite_release["developmentCorpus"].update(
               {
                   "reportPath": (
-                      "expected/supporting/release/development-corpus-report.json"
+                      "expected/supporting/release/"
+                      "sparse-experiment-development-corpus-release-evidence.json"
                   ),
                   "reportSha256": hashlib.sha256(
-                      (verified / "development-corpus-report.json").read_bytes()
+                      development_summary_output.read_bytes()
                   ).hexdigest(),
               }
           )
@@ -2406,6 +2434,7 @@ jobs:
               "development-corpus-report.json",
               "sarif-multitool-baseline.json",
               "sarif-regress-holdout.json",
+              "sparse-experiment-development-corpus-release-evidence.json",
               "sparse-experiment-gate-evidence.json",
               "sparse-experiment-observations.json",
               "sparse-experiment-release-composite-projection.json",

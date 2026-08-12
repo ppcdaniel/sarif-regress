@@ -3,7 +3,10 @@
 
 The caller is responsible for downloading artifacts with GitHub's digest-verifying
 download action and for recording the unmodified workflow/artifact API responses.
-This tool treats those files and every artifact byte as untrusted input.
+This tool treats those files and every artifact byte as untrusted input. Raw API
+responses authenticate the input transaction but are deliberately not promoted;
+the deterministic supporting documents retain only the normalized identities used
+by the admission decision.
 """
 
 from __future__ import annotations
@@ -51,6 +54,12 @@ VARIANT_DESCRIPTIONS: Final = {
 }
 PRODUCER_ORDER: Final = ("semgrep", "gitleaks", "pmd")
 RELATIONSHIPS_PER_PRODUCER: Final = 25
+DEVELOPMENT_RELEASE_EVIDENCE_KIND: Final = (
+    "sparse-experiment-development-corpus-release-evidence/v1"
+)
+DEVELOPMENT_RELEASE_EVIDENCE_NAME: Final = (
+    "sparse-experiment-development-corpus-release-evidence.json"
+)
 RESOURCE_CELL_KEYS: Final = tuple(
     (operating_system, finding_count, dataset)
     for operating_system in ("ubuntu", "windows")
@@ -500,6 +509,12 @@ def _admit_release(
     implementation_sha256: str,
     research_root: Path,
 ) -> tuple[list[Mapping[str, object]], Path, Path, Path, Path]:
+    """Cross-bind raw release reports to their portable coordinator projections.
+
+    Time: O(v + b), where v is the fixed variant count and b is admitted report
+    bytes. Space: O(b), bounded by the shared evidence input limits.
+    """
+
     cross = _artifact(workflow, "holdout-cross-platform").root
     verify_flat_checksum_manifest(cross, "cross-platform-checksums.sha256")
     projection_path = (
@@ -507,6 +522,13 @@ def _admit_release(
     )
     variants = _validate_projection(
         load_bounded_json(projection_path),
+        kind=str(ROLE_CONFIG["release"]["projectionKind"]),
+        corpus_sha256=corpus_sha256,
+        implementation_sha256=implementation_sha256,
+    )
+    stable_projection_path = cross / "sparse-experiment-release-projection.json"
+    stable_variants = _validate_projection(
+        load_bounded_json(stable_projection_path),
         kind=str(ROLE_CONFIG["release"]["projectionKind"]),
         corpus_sha256=corpus_sha256,
         implementation_sha256=implementation_sha256,
@@ -542,11 +564,48 @@ def _admit_release(
     if projected_release is None:
         raise CompositionError("Release reports cannot be projected safely.")
 
+    if any(variant["value"] != projected_release for variant in stable_variants):
+        raise CompositionError(
+            "Stable release projection disagrees with the exact reports."
+        )
+
+    projected_release_mapping = _require_mapping(
+        projected_release, "projected release evidence"
+    )
+    projected_development = _require_mapping(
+        projected_release_mapping.get("developmentCorpus"),
+        "projected development corpus evidence",
+    )
+    raw_development_sha256 = sha256_file(
+        cross / "development-corpus-report.json"
+    )
+    expected_development_summary = {
+        "schemaVersion": "1",
+        "kind": DEVELOPMENT_RELEASE_EVIDENCE_KIND,
+        "corpusManifestSha256": corpus_sha256,
+        "implementationManifestSha256": implementation_sha256,
+        "sourceReport": {
+            "artifactPath": "development-corpus-report.json",
+            "artifactSha256": raw_development_sha256,
+        },
+        "value": dict(projected_development),
+    }
+    development_summary_path = cross / DEVELOPMENT_RELEASE_EVIDENCE_NAME
+    if load_bounded_json(development_summary_path) != expected_development_summary:
+        raise CompositionError(
+            "Development corpus release summary disagrees with its exact report."
+        )
+
     expected_paths = {
         "holdout": "expected/supporting/release/sarif-regress-holdout.json",
         "developmentCorpus": (
-            "expected/supporting/release/development-corpus-report.json"
+            "expected/supporting/release/"
+            + DEVELOPMENT_RELEASE_EVIDENCE_NAME
         ),
+    }
+    expected_digests = {
+        "holdout": sha256_file(cross / "sarif-regress-holdout.json"),
+        "developmentCorpus": sha256_file(development_summary_path),
     }
     for variant in variants:
         value = _require_mapping(variant["value"], "release variant value")
@@ -573,20 +632,31 @@ def _admit_release(
         if (
             holdout.get("reportPath") != expected_paths["holdout"]
             or development.get("reportPath") != expected_paths["developmentCorpus"]
+            or holdout.get("reportSha256") != expected_digests["holdout"]
+            or development.get("reportSha256")
+            != expected_digests["developmentCorpus"]
         ):
-            raise CompositionError("Release projection uses a noncanonical raw-report path.")
-        _copy_bound_reference(
-            cross / "sarif-regress-holdout.json",
-            stage_expected,
-            holdout.get("reportPath"),
-            holdout.get("reportSha256"),
-        )
-        _copy_bound_reference(
-            cross / "development-corpus-report.json",
-            stage_expected,
-            development.get("reportPath"),
-            development.get("reportSha256"),
-        )
+            raise CompositionError(
+                "Release projection uses a noncanonical supporting reference."
+            )
+    _copy_bound_reference(
+        cross / "sarif-regress-holdout.json",
+        stage_expected,
+        expected_paths["holdout"],
+        expected_digests["holdout"],
+    )
+    _copy_bound_reference(
+        development_summary_path,
+        stage_expected,
+        expected_paths["developmentCorpus"],
+        expected_digests["developmentCorpus"],
+    )
+    _copy_bound_reference(
+        stable_projection_path,
+        stage_expected,
+        "expected/projections/sparse-experiment-release-projection.json",
+        sha256_file(stable_projection_path),
+    )
     observations = cross / "sparse-experiment-observations.json"
     gates = cross / "sparse-experiment-gate-evidence.json"
     provenance = cross / "sparse-experiment-workflow-provenance.json"
@@ -976,13 +1046,6 @@ def compose_evidence(
         stage_expected = temporary / "expected"
         stage_expected.mkdir()
         _copy_existing_expected(expected_source, stage_expected)
-        for role in ("release", "determinism", "resources"):
-            for metadata_kind in ("run", "artifacts"):
-                name = f"{role}-{metadata_kind}.json"
-                _copy_file(
-                    metadata_root / name,
-                    stage_expected / "supporting/github" / name,
-                )
 
         release_variants, release_projection, observations, gates, provenance = (
             _admit_release(

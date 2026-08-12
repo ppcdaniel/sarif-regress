@@ -494,6 +494,16 @@ class ReleaseGateTests(unittest.TestCase):
         with self.assertRaisesRegex(GateError, "Evidence root differs"):
             self._verify("v0.1.0-rc.1")
 
+    def test_missing_composite_coordinator_entry_is_rejected(self) -> None:
+        self._write_policy(preview="ready")
+        self._write_evidence()
+        (
+            self.evidence
+            / "sparse-experiment-release-composite-projection.json"
+        ).unlink()
+        with self.assertRaisesRegex(GateError, "Evidence root differs"):
+            self._verify("v0.1.0-rc.1")
+
     def test_checksum_tampering_is_rejected(self) -> None:
         self._write_policy(preview="ready")
         self._write_evidence()
