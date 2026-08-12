@@ -42,8 +42,12 @@ Do not lower benchmark thresholds or relabel holdout cases to complete the check
 - [x] Its holdout report and comparison summary reproduce byte-for-byte.
 - [x] Its sparse observations, gate evidence, limitation record, and every supporting
   projection authenticate and reproduce byte-for-byte.
-- [ ] Promote issue #27's exact-head authenticated composite candidate and independently validate
-  its full-resource-to-stable derivation before claiming `experiment-report.json`.
+- [x] Composite support head `4838532f5e808f97bf8804b772d153d294181aee` passed holdout run
+  `31638319042`, determinism run `31638319041`, and benchmark run `31638349628`.
+- [x] Compositor run `31638669221` authenticated those exact roles and promoted candidate artifact
+  `9157965667` (archive digest
+  `48bfb81237357c80e3d42a4913ecb256b913675a6da767a0966fecc8c50f18b5`), including independent
+  full-resource-to-stable derivation.
 - [x] Any “independent” claim refers only to the original matcher-v2 holdout or a genuinely new
   blinded corpus; v3/v3.1/v3.2 is labelled exposed/post-hoc regression evidence.
 
@@ -143,14 +147,16 @@ requires the authenticated hosted evidence-refresh cascade. On a clean owner clo
   `d880bd0a0495650a34ae2faa8521f170af80d7a9` in run `30763347889`.
 - [x] Hosted Ubuntu and Windows holdout and sparse research jobs succeeded on that head in run
   `30763347894`.
+- [x] The final composite support roles share exact head
+  `4838532f5e808f97bf8804b772d153d294181aee` and authenticated successfully.
 - [ ] Hosted package smoke succeeds on both operating systems for the exact same release bundle.
 
 ## Determinism and resources
 
 - [x] Linux and Windows normalized reports are byte-identical, including holdout, delta, sparse
   experiment, and deterministic benchmark projections.
-- [x] 1k, 10k, and 100k unique and pathological benchmark gates passed in run `30763347910`
-  without raising limits.
+- [x] 1k, 10k, and 100k unique and pathological benchmark gates passed in final support run
+  `31638349628` without raising limits.
 - [x] Trusted source context is bounded by repository-file, manifest, token/scope, and aggregate
   immutable-cache ceilings, with focused overflow refusal tests.
 - [ ] Repeated independent package builds either compare byte-identical or release wording clearly
@@ -198,4 +204,5 @@ If a future draft or publication must be rolled back:
 - [ ] Publish an advisory and workaround without exposing private reporter data.
 - [ ] Fix forward under a new version and repeat this checklist from a clean clone.
 
-No publication or rollback action is part of this checklist's current execution.
+Tag creation, draft inspection, publication, and any rollback remain unchecked until each action is
+directly observed and recorded.

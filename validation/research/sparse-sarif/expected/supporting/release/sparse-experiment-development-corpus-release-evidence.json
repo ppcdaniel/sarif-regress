@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-development-corpus-release-evidence/v1",
+  "corpusManifestSha256": "7972294ee1794f726b065b838524e7bdb06b8eb1379bc4132ad972e780eba20c",
+  "implementationManifestSha256": "c11caba9b14ec63dbb725646e24173d23b70e2493019410ba9f7e96d8b299cf7",
+  "sourceReport": {
+    "artifactPath": "development-corpus-report.json",
+    "artifactSha256": "41e771a55d5725ffe10ecbf35c15a1de7dc86eb842b120a628682c4a20dfa5d4"
+  },
+  "value": {
+    "passed": true,
+    "regressions": 0,
+    "silentlyMatchedAmbiguity": 0
+  }
+}

@@ -1,0 +1,376 @@
+{
+  "schemaVersion": "1",
+  "kind": "sparse-experiment-release-evidence/v1",
+  "corpusManifestSha256": "7972294ee1794f726b065b838524e7bdb06b8eb1379bc4132ad972e780eba20c",
+  "implementationManifestSha256": "c11caba9b14ec63dbb725646e24173d23b70e2493019410ba9f7e96d8b299cf7",
+  "workflow": {
+    "runId": 31638319042,
+    "sourceHeadSha": "4838532f5e808f97bf8804b772d153d294181aee",
+    "artifacts": [
+      {
+        "name": "holdout-linux",
+        "id": 9157891072,
+        "digest": "e789bfff4b6750a1af60b6a1974efd8851d0ae3112d947946ead864e94f8e605"
+      },
+      {
+        "name": "holdout-windows",
+        "id": 9157925745,
+        "digest": "dba2f5300aa8c2925459ca33242979375c07d7538560063f405408d2c3458632"
+      },
+      {
+        "name": "holdout-cross-platform",
+        "id": 9157947148,
+        "digest": "497dbe14bc58eb19e5c644825ff7d23a778702571bdca0a724f26ffda5656473"
+      }
+    ]
+  },
+  "projectionPath": "expected/projections/sparse-experiment-release-composite-projection.json",
+  "projectionSha256": "c0623c885b464c84467ed82ddb83ddd69584f29ddb2140601fa43dec84891c60",
+  "variants": [
+    {
+      "id": "sarif-only-control",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "reportPath": "expected/supporting/release/sarif-regress-holdout.json",
+          "reportSha256": "8414ba57151f447a091467c985e4e4dbe2d2a0af6f5d17f490a9d8a882aacc1d"
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0,
+          "reportPath": "expected/supporting/release/sparse-experiment-development-corpus-release-evidence.json",
+          "reportSha256": "12359f89b882a115753abb080e79fe7900e7951d072a0ff7e0278596f204b2ee"
+        }
+      }
+    },
+    {
+      "id": "exact-region-snippet",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "reportPath": "expected/supporting/release/sarif-regress-holdout.json",
+          "reportSha256": "8414ba57151f447a091467c985e4e4dbe2d2a0af6f5d17f490a9d8a882aacc1d"
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0,
+          "reportPath": "expected/supporting/release/sparse-experiment-development-corpus-release-evidence.json",
+          "reportSha256": "12359f89b882a115753abb080e79fe7900e7951d072a0ff7e0278596f204b2ee"
+        }
+      }
+    },
+    {
+      "id": "token-window",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "reportPath": "expected/supporting/release/sarif-regress-holdout.json",
+          "reportSha256": "8414ba57151f447a091467c985e4e4dbe2d2a0af6f5d17f490a9d8a882aacc1d"
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0,
+          "reportPath": "expected/supporting/release/sparse-experiment-development-corpus-release-evidence.json",
+          "reportSha256": "12359f89b882a115753abb080e79fe7900e7951d072a0ff7e0278596f204b2ee"
+        }
+      }
+    },
+    {
+      "id": "relative-context",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "reportPath": "expected/supporting/release/sarif-regress-holdout.json",
+          "reportSha256": "8414ba57151f447a091467c985e4e4dbe2d2a0af6f5d17f490a9d8a882aacc1d"
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0,
+          "reportPath": "expected/supporting/release/sparse-experiment-development-corpus-release-evidence.json",
+          "reportSha256": "12359f89b882a115753abb080e79fe7900e7951d072a0ff7e0278596f204b2ee"
+        }
+      }
+    },
+    {
+      "id": "agreement-only-combination",
+      "value": {
+        "holdout": {
+          "relationshipCount": 75,
+          "metrics": {
+            "acceptedPairs": 50,
+            "truePositives": 50,
+            "falsePositives": 0,
+            "falseNegatives": 25,
+            "precision": 1.0,
+            "recall": 0.666667,
+            "f1": 0.8
+          },
+          "byProducer": [
+            {
+              "producerFamily": "semgrep",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "gitleaks",
+              "metrics": {
+                "acceptedPairs": 25,
+                "truePositives": 25,
+                "falsePositives": 0,
+                "falseNegatives": 0,
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1": 1.0
+              },
+              "regressions": 0
+            },
+            {
+              "producerFamily": "pmd",
+              "metrics": {
+                "acceptedPairs": 0,
+                "truePositives": 0,
+                "falsePositives": 0,
+                "falseNegatives": 25,
+                "precision": 1.0,
+                "recall": 0.0,
+                "f1": 0.0
+              },
+              "regressions": 0
+            }
+          ],
+          "ingestionFailures": 0,
+          "structuralFailures": 0,
+          "reportPath": "expected/supporting/release/sarif-regress-holdout.json",
+          "reportSha256": "8414ba57151f447a091467c985e4e4dbe2d2a0af6f5d17f490a9d8a882aacc1d"
+        },
+        "developmentCorpus": {
+          "passed": true,
+          "regressions": 0,
+          "silentlyMatchedAmbiguity": 0,
+          "reportPath": "expected/supporting/release/sparse-experiment-development-corpus-release-evidence.json",
+          "reportSha256": "12359f89b882a115753abb080e79fe7900e7951d072a0ff7e0278596f204b2ee"
+        }
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@ namespace SarifRegress.ValidationTests;
 public sealed class SparseSarifResearchTests
 {
     [Fact]
-    public void Authenticated_sparse_limitation_evidence_satisfies_its_schemas()
+    public void Authenticated_sparse_composite_evidence_satisfies_its_schemas()
     {
         string root = ValidationTestRepository.FindRoot();
         string researchRoot = Path.Combine(
@@ -36,8 +36,8 @@ public sealed class SparseSarifResearchTests
                     "sparse-experiment-workflow-provenance.schema.json"),
                 Path.Combine(expectedRoot, "sparse-experiment-workflow-provenance.json")),
             (
-                Path.Combine(rootSchemaRoot, "sparse-experiment-limitation.schema.json"),
-                Path.Combine(expectedRoot, "sparse-experiment-limitation.json")),
+                Path.Combine(researchSchemaRoot, "experiment-report.schema.json"),
+                Path.Combine(expectedRoot, "experiment-report.json")),
         ];
         foreach ((string schema, string instance) in checks)
         {
@@ -60,6 +60,23 @@ public sealed class SparseSarifResearchTests
                     $"sparse-experiment-{role}-projection.json"),
                 ValidationLimits.Default.MaximumManifestBytes);
         }
+
+        string supportingEvidenceSchema = Path.Combine(
+            researchSchemaRoot,
+            "experiment-supporting-evidence.schema.json");
+        foreach (string role in new[] { "release", "determinism", "resources" })
+        {
+            _ = validator.ValidateFile(
+                supportingEvidenceSchema,
+                Path.Combine(
+                    expectedRoot,
+                    $"sparse-experiment-{role}-evidence.json"),
+                ValidationLimits.Default.MaximumManifestBytes);
+        }
+
+        Assert.False(File.Exists(Path.Combine(
+            expectedRoot,
+            "sparse-experiment-limitation.json")));
     }
 
     [Fact]

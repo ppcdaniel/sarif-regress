@@ -40,6 +40,7 @@ that history to `main`:
 | Authenticated sparse-evidence source head | `4cc6faf0167d7da385c1d204cba97d1f34ccb479` |
 | Stage-two promotion source head | `ac081e70ab2911c02bafffce5661eaec76a871fa` |
 | Normal verification source head | `d880bd0a0495650a34ae2faa8521f170af80d7a9` |
+| Composite-evidence support head | `4838532f5e808f97bf8804b772d153d294181aee` |
 | Matcher | `sarifregress/matcher/v3.2` |
 | Product output/configuration schemas | `1` / `1` |
 | Holdout manifest SHA-256 | `b9cf6325e2758889449aa021b5b45b3636e17a0dcf65d3c7dba215c2964fe379` |
@@ -379,7 +380,7 @@ The 1,000-finding resource smoke remains part of normal CI. No assignment,
 candidate-pair, retained-edge, repository-containment, or source-read ceiling
 was increased.
 
-The current sparse experiment role artifacts are bound to source head
+The earlier sparse experiment role artifacts were bound to source head
 `4cc6faf0167d7da385c1d204cba97d1f34ccb479`: CI run `30761620627` succeeded; holdout/sparse run
 `30761620623`, determinism run `30761620626`, and resource run `30761620637` generated authenticated
 promotion candidates. Their coordinators authenticated exact artifact
@@ -401,6 +402,15 @@ all succeeded. Each hosted OS passed 545 tests in CI; the holdout coordinator se
 authenticated its inputs, reproduced committed reports and sparse projections byte-for-byte, and
 emitted a success attestation. All twelve 1k/10k/100k benchmark cells passed without changing a
 budget or product limit.
+
+The final composite support roles share source head
+`4838532f5e808f97bf8804b772d153d294181aee`: holdout run `31638319042`, determinism run
+`31638319041`, and benchmark run `31638349628` all succeeded. Compositor run `31638669221`
+authenticated their workflow paths, heads, conclusions, artifact identities, archive digests, and
+complete coordinator manifests. Its candidate artifact `9157965667` has archive digest
+`48bfb81237357c80e3d42a4913ecb256b913675a6da767a0966fecc8c50f18b5`; the promoted deterministic
+bundle cross-binds the complete semantic release and determinism projections and derives its stable
+resource projection from all twelve authenticated runtime cells.
 
 Configured bases remain local, lexical, non-fetching, and fail closed.
 Occurrence indexing is bounded by the already ingested findings and stores
@@ -432,9 +442,10 @@ That result cannot repair the frozen legacy oracle. Its repeated 2-by-2 ambiguit
 relationship groups are equal-evidence complete bipartite graphs. Safe uniqueness yields 0/25;
 source-order pairing yields 25 TP and 2 FP and silently matches the deliberate ambiguity. ADR 0004
 records why issue #12's stable gates are unsatisfiable without a forbidden corpus-specific rule.
-The authenticated compositor implementation addresses issue #27's derivation gap while preserving
-the `document-limitation` decision. Issue #27 remains open until its exact same-head candidate is
-promoted and accepted by the strict scanner.
+The authenticated compositor closes issue #27's derivation gap while preserving the
+`document-limitation` decision. The exact same-head candidate is promoted and accepted by the
+strict scanner; this provenance result changes neither the failed scientific gates nor the stable
+channel decision.
 
 Supported automatic evidence requires a reliable non-colliding fingerprint; reliable embedded
 context or bounded token context from the current shared root; a manifest-verified non-colliding
@@ -493,8 +504,9 @@ python3 -B validation/research/sparse-sarif/tools/scan_contamination.py \
 ```
 
 See `validation/research/sparse-sarif/README.md` for label-neutral execution and post-run scoring.
-No composite `expected/experiment-report.json` is currently claimed while issue #27 remains open;
-the checked-in `sparse-experiment-limitation.json` is the authoritative safe-stop record.
+The checked-in schema-version-2 `expected/experiment-report.json` is the authenticated composite
+decision record. It records `document-limitation` with no selected variant and does not authorize
+matcher v4.
 
 Extended deterministic datasets use:
 

@@ -33,12 +33,12 @@ The experiment ran at source head `94c906d485f55bb1900f159caa1abd73d71ee56c`. It
 supporting artifacts came from holdout/sparse run `30725861186`, determinism run `30725861139`, and
 resource run `30725861161`. After the stable resource projection excluded volatile measurements,
 exact-head runs `30727269210`, `30727269224`, and `30727269219` independently reproduced the
-release, determinism, and resource projections. The checked-in decision is
-`expected/sparse-experiment-limitation.json`; it records `document-limitation` and
-`matcherV4Implemented: false`. The composite `expected/experiment-report.json` was not promoted:
-issue #27 requires an explicit full-resource-to-stable-projection derivation and cross-binding,
-while issue #28's validator incorrectly requires source preflight for the SARIF-only control. No
-control or resource evidence was changed to satisfy either contract gap.
+release, determinism, and resource projections. At that checkpoint, the checked-in decision was
+`expected/sparse-experiment-limitation.json`; it recorded `document-limitation` and
+`matcherV4Implemented: false`. At that checkpoint the composite `expected/experiment-report.json`
+was not promoted: issue #27 required an explicit full-resource-to-stable-projection derivation and
+cross-binding, while issue #28's validator incorrectly required source preflight for the SARIF-only
+control. No control or resource evidence was changed to satisfy either contract gap.
 
 The promotion addendum re-ran every role on matcher v3.2 source head
 `4cc6faf0167d7da385c1d204cba97d1f34ccb479` in runs `30761620623`, `30761620626`, and
@@ -53,18 +53,28 @@ original-holdout, development, resource, security, and cross-platform evidence f
 hash-valid file cannot satisfy more than one evidence role. This fail-closed restriction may be
 relaxed only by a separately reviewed experiment-evidence change; it is not a gate waiver.
 
-The intended composite contract gives each hosted supporting-evidence role one coordinator
+The promoted composite contract gives each hosted supporting-evidence role one coordinator
 projection and SHA-256. Release and determinism projections are closed, role-specific documents
 whose admitted corpus/implementation hashes and complete ordered five-variant semantic payloads
 equal their supporting documents. The resource role now deliberately projects only stable
 pass/structure references while its supporting artifact retains volatile timing and peak-memory
 cells. The scanner now derives the stable resource subset and binds its structural-observation
-digest, but the retained limitation does not yet cross-bind every full authenticated supporting
-byte into one composite report; issue #27 tracks that remaining gap. A missing reference, digest
-mismatch, wrong role, or unrelated hash-valid file still fails closed. Workflow run/head/artifact
-identities remain in the wrapper rather than the projection, because artifact IDs and digests do
-not exist until upload and would otherwise make a coordinator projection self-referential and
-unstable across strict reruns.
+digest, and the composite cross-binds every admitted supporting byte through five role-specific
+evidence documents. Raw GitHub API responses and the raw development report are transient
+authentication inputs rather than promoted evidence: the coordinator instead emits deterministic
+wrappers and a bounded semantic development summary, each bound to the authenticated archive and
+complete coordinator manifest. A missing reference, digest mismatch, wrong role, or unrelated
+hash-valid file fails closed. Workflow run/head/artifact identities remain in deterministic
+wrappers rather than semantic projections, because artifact IDs and digests do not exist until
+upload and would otherwise make a projection self-referential and unstable across strict reruns.
+
+The final supporting roles were generated at source head
+`4838532f5e808f97bf8804b772d153d294181aee` by holdout run `31638319042`, determinism run
+`31638319041`, and benchmark run `31638349628`. Compositor run `31638669221` authenticated those
+runs and produced candidate artifact `9157965667`, archive digest
+`48bfb81237357c80e3d42a4913ecb256b913675a6da767a0966fecc8c50f18b5`. The candidate was promoted
+without changing the experiment's fixed gates, observations, metrics, or `document-limitation`
+decision.
 
 This local binding is necessary but is not a signature: a repository editor could replace a
 projection and its digest together. Final evidence therefore additionally requires an
@@ -327,8 +337,8 @@ field or authorize matcher v4.
 All three labelled ambiguity units, covering nine endpoints, were refused. Classification
 mismatches, ingestion failures, and structural failures were zero. Semgrep and Gitleaks did not
 regress, and each supporting role projection was independently authenticated and byte-identical
-across hosted Ubuntu and Windows. Those facts do not constitute the still-missing composite
-cross-binding tracked by #27.
+across hosted Ubuntu and Windows. The later authenticated compositor cross-bound those facts into
+the promoted schema-version-2 report; it did not alter any scientific result.
 
 No variant passed all gates. Best PMD recall was `0.473684`, below `0.80`; the non-substitutable
 legacy aggregate remained `50 TP / 0 FP / 25 FN`, recall `0.666667`, below `0.90`. All four
@@ -363,20 +373,20 @@ product remained `sarifregress/matcher/v3.1` with one shared `--repo`/`repoRoot`
 revision did not change the experiment or add sparse evidence; it only hardened the existing
 context-conflict and code-flow admission boundaries.
 
-The checked-in decision record is schema version `1`, kind
-`sparse-experiment-limitation/v1`. It has no `selectedVariant` field. It binds the label-neutral
-observations, post-label gate evidence, authenticated workflow provenance, stable resource
-observations, and three coordinator projections through exact SHA-256 references. Exact timing and
-peak-memory measurements remain in per-run resource artifacts; the stable resource projection
-contains only reproducible pass/fail and structural evidence references.
+The checked-in decision record is the schema-version-2 `experiment-report.json`. Its
+`selectedVariant` is `null` and its decision is `document-limitation`. It binds the label-neutral
+observations, post-label gate evidence, authenticated workflow provenance, deterministic
+development-corpus summary, stable resource observations, and five coordinator evidence documents
+through exact SHA-256 references. Exact timing and peak-memory measurements remain in the
+authenticated per-run resource evidence; the stable resource projection contains only reproducible
+pass/fail and structural references derived from that full shape.
 
-The planned composite schema-version-2 `experiment-report.json` is intentionally absent. Issue #27
-requires the scanner to derive a versioned stable resource subset from full authenticated runtime
-evidence and cross-bind its structural-observation digest into the complete evidence graph. Issue
-#28's separate validator defect is corrected: source-preflight requirements are derived only for
-variants that consume source context, so the SARIF-only control remains source-free. Closing #27
-would make the composite report representable; it would not change any metric, pass a safety gate,
-or authorize matcher v4.
+Issue #27's compositor derives the versioned stable resource subset from full authenticated runtime
+evidence and cross-binds its structural-observation digest into the complete evidence graph. Issue
+#28's separate validator defect remains corrected: source-preflight requirements are derived only
+for variants that consume source context, so the SARIF-only control remains source-free. Composite
+promotion makes the decision representable and auditable; it does not change any metric, pass a
+safety gate, or authorize matcher v4.
 
 The supported product evidence profile remains at least one reliable bounded identity source: a
 non-colliding producer fingerprint; reliable embedded source context or bounded token context from

@@ -88,10 +88,13 @@ all four baseline/candidate root and manifest options, uses distinct retained ro
 verified immutable caches, and never falls back to unverified context. The older `9/19` research
 result and its no-trusted-hash failures remain historical evidence, not the current product contract.
 
-The sparse-evidence compositor now implements full-resource-to-stable derivation and exact raw-byte
-cross-binding. Issue #27 remains open until a same-head holdout, determinism, and resource run is
-authenticated, composed, promoted, and accepted by a strict rerun. Until then no committed composite
-report is claimed. This evidence-provenance state does not weaken or extend runtime containment.
+The sparse-evidence compositor implements full-resource-to-stable derivation and exact raw-byte
+cross-binding. It authenticated holdout run `31638319042`, determinism run `31638319041`, and
+benchmark run `31638349628` at source head `4838532f5e808f97bf8804b772d153d294181aee`;
+compositor run `31638669221` produced the promoted deterministic composite. Raw GitHub responses
+and raw development output remain transient authentication inputs, while their archive and
+coordinator bindings are retained in bounded deterministic evidence. This provenance completion
+does not weaken or extend runtime containment.
 
 Optional `token-window/v1` evidence is enabled only by
 `matching.enableTokenWindows`. It normalises whitespace and ignores blank-line-only movement, but
